@@ -5,10 +5,15 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
+const url = new URL(window.location.href);
+const params = url.searchParams;
+//<React.StrictMode>
+//</React.StrictMode>
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  
+    <App playerID={params.get('playerID')}/>
+  
 );
 
 // If you want to start measuring performance in your app, pass a function

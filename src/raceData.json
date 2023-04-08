@@ -1,0 +1,129 @@
+{
+    "1": {
+
+        "name": "The Federation of Sol"
+    },
+    "2": {
+
+        "name": "The Mentak Coalition"
+
+    },
+    "3": {
+
+        "name": "The Yin Brotherhood"
+    },
+    "4": {
+
+        "name": "The Embers of Muaat"
+    },
+    "5": {
+
+        "name": "The Arborec"
+    },
+    "6": {
+
+        "name": "The Lizix Mindnet"
+    },
+    "7": {
+
+        "name": "The Winnu"
+    },
+    "8": {
+
+        "name": "The Nekro Virus"
+    },
+    "9": {
+
+        "name": "The Naalu Collective"
+    },
+    "10": {
+
+        "name": "The Barony of Letnev"
+    },
+    "11": {
+
+        "name": "The Clan of Saar"
+    },
+    "12": {
+
+        "name": "The Universities of Jol-Nar"
+    },
+    "13": {
+
+        "name": "Sardakk N'orr"
+    },
+    "14": {
+
+        "name": "The Xxcha Kingdom"
+    },
+    "15": {
+
+        "name": "The Yssaril Tribes",
+        "startingUnits": {
+            "fleet": {
+                "carrier": 2,
+                "cruiser": 1,
+                "fighter": 2
+            },
+            "ground": {
+                "infantry": 5,
+                "dock": 1,
+                "pds": 1
+            }
+        },
+        "technologies": ["NEURAL_MOTIVATOR"]
+    },
+    "16": {
+
+        "name": "The Emirates of Hacan"
+    },
+    "17": {
+
+        "name": "The Ghosts of Creuss"
+    },
+    "52": {
+
+        "name": "The Mahact Gene-sorcerers"
+
+    },
+    "53": {
+
+        "name": "The Nomad"
+        
+    },
+    "54": {
+
+        "name": "The Vuil'raith Cabal",
+        "startingUnits": {
+            "fleet": {
+                "carrier": 1,
+                "cruiser": 1,
+                "fighter": 3,
+                "dreadnought": 1
+            },
+            "ground": {
+                "infantry": 3,
+                "dock": 1
+            }
+        },
+        "technologies": ["SELF_ASSEMBLY_ROUTINES"]
+        
+    },
+    "55": {
+
+        "name": "The Titans of Ul"
+
+    },
+    "56": {
+
+        "name": "The Empyrean"
+    },
+    "57": {
+
+        "name": "The Naaz-Rokha Alliance"
+    },
+    "58": {
+
+        "name": "The Argent Flight"
+    }
+}
