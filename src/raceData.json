@@ -15,6 +15,82 @@
         "abilities": [
             {"id": "ORBITAL_DROP", "type": "ACTION", "effect": "Spend 1 token from your strategy pool to place 2 infantry from your reinforcements on 1 planet you control."},
             {"id": "VERSATILE", "effect": "When you gain command tokens during the status phase, gain 1 additional command token."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "GENESIS",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 5,
+                "shot": 2,
+                "move": 1,
+                "capacity": 12,
+                "sustain": true,
+                "bombardment": false,
+                "effect": "At the end of the status phase, place 1 infantry from your reinforcements in this system’s space area."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "ZS THUNDERBOLT M2",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "deploy": "After you use your ORBITAL DROP faction ability, you may spend 3 resources to place 1 mech on that planet."
+            },
+            {
+                "id": "CARRIER",
+                "type": "unit",
+                "description": "ADVANCED CARRIER I",
+                "prereq": { },
+                "cost": 3,
+                "combat": 9,
+                "move": 1,
+                "capacity": 6,
+                "sustain": false,
+                "bombardment": false,
+                "barrage": false,
+                "shot": 1
+            },
+            {
+                "id": "INFANTRY",
+                "type": "unit",
+                "description": "SPEC OPS I",
+                "prereq": { },
+                "cost": 0.5,
+                "combat": 7,
+                "sustain": false,
+                "shot": 1
+            },
+            {
+                "id": "CARRIER2",
+                "type": "unit",
+                "description": "ADVANCED CARRIER II",
+                "prereq": { "propulsion": 2 },
+                "cost": 3,
+                "combat": 9,
+                "move": 2,
+                "capacity": 8,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": false,
+                "shot": 1
+            },
+            {
+                "id": "INFANTRY2",
+                "type": "unit",
+                "description": "SPEC OPS II",
+                "prereq": { "biotic": 2 },
+                "cost": 0.5,
+                "combat": 6,
+                "sustain": false,
+                "shot": 1,
+                "effect": "After this unit is destroyed, roll 1 die. If the result is 5 or greater, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."
+            }
         ]
     },
     "2": {
@@ -58,7 +134,7 @@
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "deploy": "Other players’ ground forces on this planet cannot use SUSTAIN DAMAGE."
+                "effect": "Other players’ ground forces on this planet cannot use SUSTAIN DAMAGE."
             },
             {
                 "id": "SALVAGE_OPERATIONS",
@@ -94,6 +170,50 @@
         "abilities": [
             {"id": "INDOCTRINATION", "effect": "At the start of a ground combat, you may spend 2 influence to replace 1 of your opponent’s participating infantry with 1 infantry from your reinforcements."},
             {"id": "DEVOTION", "effect": "After each space battle round, you may destroy 1 of your cruisers or destroyers in the active system to produce 1 hit and assign it to 1 of your opponent’s ships in that system."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "VAN HAUGE",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 9,
+                "shot": 2,
+                "move": 1,
+                "capacity": 3,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": false,
+                "effect": "When this ship is destroyed, destroy all ships in this system."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "MOYIN’S ASHES",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "deploy": "When you use your INDOCTRINATION faction ability, you may spend 1 additional influence to replace your opponent’s unit with 1 mech instead of 1 infantry."
+            },
+            {
+                "id": "YIN_SPINNER",
+                "type": "biotic",
+                "description": "After you produce units, place up to 2 infantry from your reinforcements on any planet you control or in any space area that contains 1 or more of your ships.",
+                "prereq": { "biotic": 2 },
+                "action": false,
+                "exhaust": false
+            },
+            {
+                "id": "IMPULSE_CORE",
+                "type": "cybernetic",
+                "description": "At the start of a space combat, you may destroy 1 of your cruisers or destroyers in the active system to produce 1 hit against your opponent’s ships; your opponent must assign that hit to 1 of his non-fighter ships, if able.",
+                "prereq": { "cybernetic": 2 },
+                "action": false,
+                "exhaust": false
+            }
         ]
     },
     "4": {
@@ -112,6 +232,72 @@
         "abilities": [
             {"id": "STAR_FORGE", "type": "ACTION", "effect": "Spend 1 token from your strategy pool to place either 2 fighters or 1 destroyer from your reinforcements in a system that contains 1 or more of your war suns."},
             {"id": "GASHLAI_PHYSIOLOGY", "effect": "Your ships can move through supernovas."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "THE INFERNO",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 5,
+                "shot": 2,
+                "move": 1,
+                "capacity": 3,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": false,
+                "action": "Spend 1 token from your strategy pool to place 1 cruiser in this unit’s system."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "EMBER COLOSSUS",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "effect": "When you use your STAR FORGE faction ability in this system or an adjacent system, you may place 1 infantry from your reinforcements with this unit."
+            },
+            {
+                "id": "WARSUN",
+                "type": "unit",
+                "description": "PROTOTYPE WAR SUN I",
+                "prereq": { },
+                "cost": 12,
+                "combat": 3,
+                "move": 1,
+                "capacity": 6,
+                "sustain": true,
+                "bombardment": { "count": 3, "value": 3 },
+                "barrage": false,
+                "shot": 3,
+                "effect": "Other players’ units in this system lose PLANETARY SHIELD."
+            },
+            {
+                "id": "MAGMUS_REACTOR",
+                "type": "warfare",
+                "description": "Your ships can move into supernovas. Each supernova that contains 1 or more of your units gains the PRODUCTION 5 ability as if it were 1 of your units.",
+                "prereq": { "warfare": 2 },
+                "action": false,
+                "exhaust": false
+            },
+            {
+                "id": "WARSUN2",
+                "type": "unit",
+                "description": "PROTOTYPE WAR SUN II",
+                "prereq": { },
+                "cost": 10,
+                "combat": 3,
+                "move": 3,
+                "capacity": 6,
+                "sustain": true,
+                "bombardment": { "count": 3, "value": 3 },
+                "barrage": false,
+                "shot": 3,
+                "effect": "Other players’ units in this system lose PLANETARY SHIELD."
+            }    
         ]
     },
     "5": {
@@ -295,6 +481,49 @@
         "abilities": [
             {"id": "BLOOD_TIES", "effect": "You do not have to spend influence to remove the custodians token from Mecatol Rex."},
             {"id": "RECLAMATION", "effect": "After you resolve a tactical action during which you gained control of Mecatol Rex, you may place 1 PDS and 1 space dock from your reinforcements on Mecatol Rex."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "SALAI SAI CORIAN",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 7,
+                "shot": 1,
+                "move": 1,
+                "capacity": 3,
+                "sustain": true,
+                "bombardment": false,
+                "effect": "When this unit makes a combat roll, it rolls a number of dice equal to the number of your opponent’s non-fighter ships in this system."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "RECLAIMER",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "effect": "After you resolve a tactical action during which you gained control of this planet, you may place 1 PDS or 1 space dock from your reinforcements on this planet."
+            },
+            {
+                "id": "HEGEMONIC_TRADE_POLICY",
+                "type": "cybernetic",
+                "description": "Exhaust this card when 1 or more of your units use PRODUCTION; swap the resource and influence values of 1 planet you control during that use of PRODUCTION.",
+                "prereq": { "cybernetic": 2 },
+                "action": false,
+                "exhaust": true
+            },
+            {
+                "id": "LAZAX_GATE_FOLDING",
+                "type": "propulsion",
+                "description": "During your tactical actions, if you do not control Mecatol Rex, treat its system as if it contains both an alpha and beta wormhole. If you control Mecatol Rex, exhaust this card to place 1 infantry from your reinforcements on Mecatol Rex.",
+                "prereq": { "propulsion": 2 },
+                "action": true,
+                "exhaust": true
+            }
         ]
     },
     "8": {
@@ -314,6 +543,50 @@
             {"id": "GALACTIC_THREAT", "effect": "You cannot vote on agendas. Once per agenda phase, after an agenda is revealed, you may predict aloud the outcome of that agenda. If your prediction is correct, gain 1 technology that is owned by a player who voted how you predicted."},
             {"id": "TECHNOLOGICAL_SINGULARITY","effect": "Once per combat, after 1 of your opponent’s units is destroyed, you may gain 1 technology that is owned by that player."},
             {"id": "PROPAGATION", "effect": "You cannot research technology. When you would research a technology, gain 3 command tokens instead."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "THE ALASTOR",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 9,
+                "shot": 2,
+                "move": 1,
+                "capacity": 4,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": false,
+                "effect": "At the start of a space combat, choose any number of your ground forces in this system to participate in that combat as if they were ships."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "MORDRED",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "effect": "During combat against an opponent who has an 'X' or 'Y' token on 1 or more of their technologies, apply +2 to the result of this unit’s combat rolls."
+            },
+            {
+                "id": "VALEFAR_ASSIMILATOR_X",
+                "type": "faction",
+                "description": "When you would gain another player’s technology using 1 of your faction abilities, you may place an assimilator token on a faction technology owned by that player instead. While that token is on a technology, this card gains that technology’s text. You cannot place an assimilator token on technology that already has an assimilator token.",
+                "prereq": {  },
+                "action": false,
+                "exhaust": false
+            },
+            {
+                "id": "VALEFAR_ASSIMILATOR_Y",
+                "type": "faction",
+                "description": "When you would gain another player’s technology using 1 of your faction abilities, you may place an assimilator token on a faction technology owned by that player instead. While that token is on a technology, this card gains that technology’s text. You cannot place an assimilator token on technology that already has an assimilator token.",
+                "prereq": {  },
+                "action": false,
+                "exhaust": false
+            }     
         ]
     },
     "9": {
@@ -331,6 +604,72 @@
         "abilities": [
             {"id": "TELEPATHIC", "effect": "At the end of the strategy phase, place the Naalu '0' token on your strategy card; you are first in initiative order."},
             {"id": "FORESIGHT", "effect": "After another player moves ships into a system that contains 1 or more of your ships, you may place 1 token from your strategy pool in an adjacent system that does not contain another player's ships; move your ships from the active system into that system."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "MATRIARCH",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 9,
+                "shot": 2,
+                "move": 1,
+                "capacity": 6,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": false,
+                "effect": "During an invasion in this system, you may commit fighters to planets as if they were ground forces. When combat ends, return those units to the space area."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "ICONOCLAST",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "effect": "During combat against an opponent who has at least 1 relic fragment, apply +2 to the results of this unit’s combat rolls."
+            },
+            {
+                "id": "FIGHTER",
+                "type": "unit",
+                "description": "HYBRID CRYSTAL FIGHTER I",
+                "prereq": { },
+                "cost": 0.5,
+                "combat": 8,
+                "move": false,
+                "capacity": false,
+                "sustain": false,
+                "bombardment": false,
+                "barrage": false,
+                "shot": 1
+            },
+            {
+                "id": "NEUROGLAVE",
+                "type": "biotic",
+                "description": "After another player activates a system that contains 1 or more of your ships, that player removes 1 token from his fleet pool and returns it to his reinforcements.",
+                "prereq": { "biotic": 3 },
+                "action": false,
+                "exhaust": false
+            },
+            {
+                "id": "FIGHTER2",
+                "type": "unit",
+                "description": "HYBRID CRYSTAL FIGHTER II",
+                "prereq": { "biotic": 1, "propulsion": 1 },
+                "cost": 0.5,
+                "combat": 7,
+                "move": 2,
+                "capacity": false,
+                "sustain": false,
+                "bombardment": false,
+                "barrage": false,
+                "shot": 1,
+                "effect": "This unit may move without being transported. Each fighter in excess of your ships' capacity counts as ½ of a ship against your fleet pool.",
+                "size": 0.5
+            }    
         ]
     },
     "10": {
@@ -411,6 +750,61 @@
         "abilities": [
             {"id": "SCAVENGE", "effect": "After you gain control of a planet, gain 1 trade good."},
             {"id": "NOMADIC", "effect": "You can score objectives even if you do not control the planets in your home system."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "SON OF RAGH",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 5,
+                "shot": 2,
+                "move": 1,
+                "capacity": 3,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": {"value": 6, "count": 4}
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "SCAVENGER ZETA",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "deploy": "After you gain control of a planet, you may spend 1 trade good to place 1 mech on that planet."
+            },
+            {
+                "id": "SPACEDOCK",
+                "type": "unit",
+                "description": "FLOATING FACTORY I",
+                "prereq": { },
+                "move": 1,
+                "production": 5,
+                "capacity": 4,
+                "effect": "This unit is placed in a space area instead of on a planet. This unit can move and retreat as if it were a ship. If this unit is blockaded, it is destroyed."
+            },
+            {
+                "id": "CHAOS_MAPPING",
+                "type": "propulsion",
+                "description": "Other players cannot activate asteroid fields that contain 1 or more of your ships. At the start of your turn during the action phase, you may produce 1 unit in a system that contains at least 1 of your units that has PRODUCTION.",
+                "prereq": { "propulsion": 1 },
+                "action": false,
+                "exhaust": false
+            },
+            {
+                "id": "SPACEDOCK2",
+                "type": "unit",
+                "description": "FLOATING FACTORY II",
+                "prereq": { "cybernetic": 2 },
+                "move": 2,
+                "production": 7,
+                "capacity": 5,
+                "effect": "This unit is placed in a space area instead of on a planet. This unit can move and retreat as if it were a ship. If this unit is blockaded, it is destroyed."
+            }   
         ]
     },
     "12": {
@@ -490,6 +884,72 @@
         "commodities": 3,
         "abilities": [
             {"id": "UNRELENTING", "effect": "Apply +1 to the result of each of your unit’s combat rolls."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "C'MORRAN N'ORR",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 6,
+                "shot": 2,
+                "move": 1,
+                "capacity": 3,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": false,
+                "effect": "Apply +1 to the result of each of your other ship's combat rolls in this system."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "VALKYRIE EXOSKELETON",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "effect": "After this unit uses its SUSTAIN DAMAGE ability during ground combat, it produces 1 hit against your opponent’s ground forces on this planet."
+            },
+            {
+                "id": "DREADNOUGHT",
+                "type": "unit",
+                "description": "EXOTRIREME I",
+                "prereq": { },
+                "cost": 4,
+                "combat": 5,
+                "move": 1,
+                "capacity": 1,
+                "sustain": true,
+                "bombardment": { "count": 2, "value": 4 },
+                "barrage": false,
+                "shot": 1
+            },
+            {
+                "id": "VALKYRIE_PARTICLE_WEAVE",
+                "type": "warfare",
+                "description": "After making combat rolls during a round of ground combat, if your opponent produced 1 or more hits, you produce 1 additional hit.",
+                "prereq": { "warfare": 2 },
+                "action": false,
+                "exhaust": false
+            },
+            {
+                "id": "DREADNOUGHT2",
+                "type": "unit",
+                "description": "EXOTRIREME II",
+                "prereq": { "propulsion": 2, "cybernetic": 1 },
+                "cost": 4,
+                "combat": 5,
+                "move": 2,
+                "capacity": 1,
+                "sustain": true,
+                "bombardment": { "count": 2, "value": 4 },
+                "barrage": false,
+                "shot": 1,
+                "noDirectHit": true,
+                "effect": "This unit cannot be destroyed by “Direct Hit” action cards. After a round of space combat, you may destroy this unit to destroy up to 2 ships in this system."
+            }   
         ]
     },
     "14": {
@@ -509,6 +969,52 @@
         "abilities": [
             {"id": "PEACE_ACCORDS", "effect": "After you resolve the primary or secondary ability of the 'Diplomacy' strategy card, you may gain control of 1 planet other than Mecatol Rex that does not contain any units and is in a system that is adjacent to a planet you control."},
             {"id": "QUASH", "effect": "When an agenda is revealed, you may spend 1 token from your strategy pool to discard that agenda and reveal 1 agenda from the top of the deck. Players vote on this agenda instead."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "LONCARA SSODU",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 7,
+                "shot": 2,
+                "move": 1,
+                "capacity": 3,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": false,
+                "spaceCannon": { "value": 5, "count": 3, "range": 2 },
+                "effect": "You may use this unit’s SPACE CANNON against ships that are in adjacent systems."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "INDOMITUS",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "spaceCannon": { "value": 8, "count": 1, "range": 2 },
+                "effect": "You may use this unit’s SPACE CANNON against ships that are in adjacent systems."
+            },
+            {
+                "id": "INSTINCT_TRAINING",
+                "type": "biotic",
+                "description": "You may exhaust this card and spend 1 token from your strategy pool when another player plays an action card; cancel that action card.",
+                "prereq": { "biotic": 1 },
+                "action": false,
+                "exhaust": true
+            },
+            {
+                "id": "NULLIFICATION_FIELD",
+                "type": "cybernetic",
+                "description": "After another player activates a system that contains 1 or more of your ships, you may exhaust this card and spend 1 token from your strategy pool; immediately end that player’s turn.",
+                "prereq": { "cybernetic": 2 },
+                "action": false,
+                "exhaust": true
+            }
         ]
     },
     "15": {
@@ -528,6 +1034,50 @@
             {"id": "STALL_TACTICS", "type": "ACTION", "effect": "Discard 1 action card from your hand."},
             {"id": "SCHEMING", "effect": "When you draw 1 or more action cards, draw 1 additional action card. Then, choose and discard 1 action card from your hand."},
             {"id": "CRAFTY", "effect": "You can have any number of action cards in your hand. Game effects cannot prevent you from using this ability."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "Y’SIA Y’SSRILA",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 5,
+                "shot": 2,
+                "move": 2,
+                "capacity": 3,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": false,
+                "effect": "This ship can move through systems that contain other players’ ships."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "BLACKSHADE INFILTRATOR",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "deploy": "After you use your STALL TACTICS faction ability, you may place 1 mech on a planet you control."
+            },
+            {
+                "id": "TRANSPARASTEEL_PLATING",
+                "type": "biotic",
+                "description": "During your turn of the action phase, players that have passed cannot play action cards.",
+                "prereq": { "biotic": 1 },
+                "action": false,
+                "exhaust": false
+            },
+            {
+                "id": "MAGEON_IMPLANTS",
+                "type": "biotic",
+                "description": "Exhaust this card to look at another player’s hand of action cards. Choose 1 of those cards and add it to your hand.",
+                "prereq": { "biotic": 3 },
+                "action": true,
+                "exhaust": true
+            }
         ]
     },
     "16": {
@@ -698,7 +1248,7 @@
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "deploy": "After a player activates this system, you may spend 1 of their tokens from your fleet pool to end their turn; they gain that token."
+                "effect": "After a player activates this system, you may spend 1 of their tokens from your fleet pool to end their turn; they gain that token."
             },
             {
                 "id": "INFANTRY",
@@ -752,6 +1302,57 @@
         "abilities": [
             {"id": "THE_COMPANY", "effect": "During setup, take the 2 additional Nomad faction agents and place them next to your faction sheet; you have 3 agents."},
             {"id": "FUTURE_SIGHT", "effect": "During the agenda phase, after an outcome you voted for or predicted is resolved, gain 1 trade good."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "MEMORIA I",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 7,
+                "shot": 2,
+                "move": 1,
+                "capacity": 3,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": {"value": 5, "count": 3},
+                "effect": "You may treat this unit as if it were adjacent to systems that contain 1 or more of your mechs."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "QUANTUM MANIPULATOR",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "effect": "While this unit is in a space area during combat, you may use its SUSTAIN DAMAGE ability to cancel a hit produced against your ships in this system."
+            },
+            {
+                "id": "TEMPORAL_COMMAND_SUITE",
+                "type": "cybernetic",
+                "description": "After any player’s agent becomes exhausted, you may exhaust this card to ready that agent; if you ready another player’s agent, you may perform a transaction with that player.",
+                "prereq": { "cybernetic": 1 },
+                "action": false,
+                "exhaust": false
+            },
+            {
+                "id": "FLAGSHIP2",
+                "type": "unit",
+                "description": "MEMORIA II",
+                "prereq": { "biotic": 1, "propulsion": 1, "cybernetic": 1 },
+                "cost": 8,
+                "combat": 5,
+                "shot": 2,
+                "move": 2,
+                "capacity": 6,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": {"value": 5, "count": 3},
+                "effect": "You may treat this unit as if it were adjacent to systems that contain 1 or more of your mechs."
+            }    
         ]
     },
     "54": {
@@ -771,6 +1372,59 @@
             {"id": "DEVOUR", "effect": "Capture your opponent’s non-structure units that are destroyed during combat."},
             {"id": "AMALGAMATION", "effect": "When you produce a unit, you may return 1 captured unit of that type to produce that unit without spending resources."},
             {"id": "RIFTMELD", "effect": "When you research a unit upgrade technology, you may return 1 captured unit of that type to ignore all of that technology’s prerequisites."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "THE TERROR BETWEEN",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 5,
+                "shot": 2,
+                "move": 1,
+                "capacity": 3,
+                "sustain": true,
+                "bombardment": {"value": 5, "count": 1},
+                "effect": "Capture all other non-structure units that are destroyed in this unit’s system, including your own."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "REANIMATOR",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "effect": "When your infantry on this planet are destroyed, place them on your faction sheet; those units are captured."
+            },
+            {
+                "id": "SPACEDOCK",
+                "type": "unit",
+                "description": "DIMENSIONAL TEAR I",
+                "prereq": { },
+                "production": 5,
+                "capacity": 6,
+                "effect": "This system is a gravity rift; your ships do not roll for this gravity rift. Up to 6 fighters in this system do not count against your ships’ capacity."
+            },
+            {
+                "id": "SPACEDOCK2",
+                "type": "unit",
+                "description": "DIMENSIONAL TEAR II",
+                "prereq": { "cybernetic": 2 },
+                "production": 7,
+                "capacity": 12,
+                "effect": "This system is a gravity rift; your ships do not roll for this gravity rift. Up to 12 fighters in this system do not count against your ships’ capacity."
+            },
+            {
+                "id": "VORTEX",
+                "type": "warfare",
+                "description": "Exhaust this card to choose another player’s non-structure unit in a system that is adjacent to 1 or more of your space docks. Capture 1 unit of that type from that player’s reinforcements.",
+                "prereq": { "warfare": 1 },
+                "action": true,
+                "exhaust": true
+            }
         ]
     },
     "55": {
@@ -789,6 +1443,85 @@
         "abilities": [
             {"id": "TERRAGENESIS", "effect": "After you explore a planet that does not have a sleeper token, you may place or move 1 sleeper token onto that planet."},
             {"id": "AWAKEN", "effect": "After you activate a system that contains 1 or more of your sleeper tokens, you may replace each of those tokens with 1 PDS from your reinforcements."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "OURANOS",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 7,
+                "shot": 2,
+                "move": 1,
+                "capacity": 3,
+                "sustain": true,
+                "bombardment": false,
+                "deploy": "After you activate a system that contains 1 or more of your PDS, you may replace 1 of those PDS with this unit."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "HECATONCHEIRES",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 1,
+                "deploy": "When you would place a PDS on a planet, you may place 1 mech and 1 infantry on that planet instead."
+            },
+            {
+                "id": "CRUISER",
+                "type": "unit",
+                "description": "SATURN ENGINE I",
+                "prereq": { },
+                "cost": 2,
+                "combat": 7,
+                "move": 2,
+                "capacity": 1,
+                "sustain": false,
+                "bombardment": false,
+                "barrage": false,
+                "shot": 1
+            },
+            {
+                "id": "PDS",
+                "type": "unit",
+                "description": "HEL-TITAN I",
+                "prereq": { },
+                "combat": 7,
+                "sustain": true,
+                "planetaryShield": true,
+                "production": 1,
+                "spaceCannon": {"value": 6, "range": 1},
+                "effect": "This unit is treated as both a structure and a ground force. It cannot be transported."
+            },
+            {
+                "id": "CRUISER2",
+                "type": "unit",
+                "description": "SATURN ENGINE II",
+                "prereq": { "biotic": 1, "cybernetic": 1, "warfare": 1 },
+                "cost": 2,
+                "combat": 6,
+                "move": 3,
+                "capacity": 2,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": false,
+                "shot": 1
+            },
+            {
+                "id": "PDS2",
+                "type": "unit",
+                "description": "HEL-TITAN II",
+                "prereq": { "cybernetic": 1, "warfare": 1 },
+                "combat": 6,
+                "sustain": true,
+                "planetaryShield": true,
+                "production": 1,
+                "spaceCannon": { "value": 5, "range": 2 },
+                "effect": "This unit is treated as both a structure and a ground force. It cannot be transported. You may use this unit’s SPACE CANNON against ships that are adjacent to this unit’s system."
+            }
         ]
     },
     "56": {
@@ -870,6 +1603,61 @@
         "abilities": [
             {"id": "DISTANT_SUNS", "effect": "When you explore a planet that contains 1 of your mechs, you may draw 1 additional card; choose 1 to resolve and discard the rest."},
             {"id": "FABRICATION", "type": "ACTION", "effect": "Either purge 2 of your relic fragments of the same type to gain 1 relic or purge 1 of your relic fragments to gain 1 command token."}
+        ],
+        "technologies": [
+            {
+                "id": "FLAGSHIP",
+                "type": "unit",
+                "description": "VISZ EL VIR",
+                "prereq": {  },
+                "cost": 8,
+                "combat": 9,
+                "shot": 2,
+                "move": 1,
+                "capacity": 4,
+                "sustain": true,
+                "bombardment": false,
+                "barrage": false,
+                "effect": "Your mechs in this system roll 1 additional die during combat."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "EIDOLON",
+                "prereq": { },
+                "cost": 2,
+                "combat": 6,
+                "sustain": true,
+                "shot": 2,
+                "effect": "If this unit is in the space area at the start of space combat, flip this card. This card begins the game with this side face up."
+            },
+            {
+                "id": "MECH",
+                "type": "unit",
+                "description": "Z-GRAV EIDOLON",
+                "prereq": { },
+                "cost": 2,
+                "combat": 8,
+                "sustain": false,
+                "shot": 2,
+                "effect": "If this unit is in the space area of the active system, it is also a ship. At the end of a space battle in the active system, flip this card."
+            },
+            {
+                "id": "PRE-FAB_ARCOLOGIES",
+                "type": "biotic",
+                "description": "After you explore a planet, ready that planet.",
+                "prereq": { "biotic": 3 },
+                "action": false,
+                "exhaust": false
+            },
+            {
+                "id": "SUPERCHARGE",
+                "type": "warfare",
+                "description": "At the start of a combat round, you may exhaust this card to apply +1 to the result of each of your unit’s combat rolls during this combat round.",
+                "prereq": { "warfare": 1 },
+                "action": false,
+                "exhaust": true
+            }    
         ]
     },
     "58": {
