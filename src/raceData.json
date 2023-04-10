@@ -10,7 +10,7 @@
             "fleet": {"carrier": 2, "destroyer": 1, "fighter": 3},
             "ground": {"infantry": 5,"dock": 1}
         },
-        "startingTechs": ["NEURAL_MOTIVATOR", "ANTIMASS_DEFLECTORS"],
+        "knownTechs": ["NEURAL_MOTIVATOR", "ANTIMASS_DEFLECTORS"],
         "commodities": 4,
         "abilities": [
             {"id": "ORBITAL_DROP", "type": "ACTION", "effect": "Spend 1 token from your strategy pool to place 2 infantry from your reinforcements on 1 planet you control."},
@@ -91,6 +91,13 @@
                 "shot": 1,
                 "effect": "After this unit is destroyed, roll 1 die. If the result is 5 or greater, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."
             }
+        ],
+        "promissory": [
+            {
+                "id": "MILITARY_SUPPORT",
+                "when": "ACT_TURN",
+                "effect": "At the start of the Sol player’s turn: Remove 1 token from the Sol player’s strategy pool, if able, and return it to his reinforcements. Then, you may place 2 infantry from your reinforcements on any planet you control." 
+            }
         ]
     },
     "2": {
@@ -103,7 +110,7 @@
             "fleet": {"carrier": 1, "cruiser": 2, "fighter": 3},
             "ground": {"infantry": 4, "dock": 1, "pds": 1}
         },
-        "startingTechs": ["SARWEEN_TOOLS", "PLASMA_SCORING"],
+        "knownTechs": ["SARWEEN_TOOLS", "PLASMA_SCORING"],
         "commodities": 2,
         "abilities": [
             {"id": "AMBUSH", "effect": "At the start of a space combat, you may roll 1 die for each of up to 2 of your cruisers or destroyers in the system. For each result equal to or greater than that ship’s combat value, produce 1 hit; your opponent must assign it to 1 of his ships."},
@@ -152,6 +159,13 @@
                 "action": false,
                 "exhaust": false
             }       
+        ],
+        "promissory": [
+            {
+                "id": "PROMISE_OF_PROTECTION",
+                "type": "ACTION",
+                "effect": "Place this card faceup in your play area. While this card is in your play area, the Mentak player cannot use his PILLAGE faction ability against you. If you activate a system that contains 1 or more of the Mentak player’s units, return this card." 
+            }
         ]
     },
     "3": {
@@ -165,7 +179,7 @@
             "fleet": {"carrier": 2, "destroyer": 1, "fighter": 4},
             "ground": {"infantry": 4, "dock": 1}
         },
-        "startingTechs": ["SARWEEN_TOOLS"],
+        "knownTechs": ["SARWEEN_TOOLS"],
         "commodities": 2,
         "abilities": [
             {"id": "INDOCTRINATION", "effect": "At the start of a ground combat, you may spend 2 influence to replace 1 of your opponent’s participating infantry with 1 infantry from your reinforcements."},
@@ -214,6 +228,13 @@
                 "action": false,
                 "exhaust": false
             }
+        ],
+        "promissory": [
+            {
+                "id": "GREYFIRE_MUTAGEN",
+                "when": "COMBAT",
+                "effect": "At the start of a ground combat against 2 or more ground forces that are not controlled by the Yin player: Replace 1 of your opponent’s infantry with 1 infantry from your reinforcements. Then, return this card to the Yin player." 
+            }
         ]
     },
     "4": {
@@ -227,7 +248,7 @@
             "fleet": {"warsun": 1, "fighter": 2},
             "ground": {"infantry": 4, "dock": 1}
         },
-        "startingTechs": ["PLASMA_SCORING"],
+        "knownTechs": ["PLASMA_SCORING"],
         "commodities": 4,
         "abilities": [
             {"id": "STAR_FORGE", "type": "ACTION", "effect": "Spend 1 token from your strategy pool to place either 2 fighters or 1 destroyer from your reinforcements in a system that contains 1 or more of your war suns."},
@@ -298,6 +319,13 @@
                 "shot": 3,
                 "effect": "Other players’ units in this system lose PLANETARY SHIELD."
             }    
+        ],
+        "promissory": [
+            {
+                "id": "FIRES_OF_GASHLAI",
+                "type": "ACTION",
+                "effect": "Remove 1 token from the Muaat player’s fleet pool and return it to his reinforcements. Then, gain your war sun unit upgrade technology card. Then, return this card to the Muaat player." 
+            }
         ]
     },
     "5": {
@@ -312,7 +340,7 @@
             "fleet": {"carrier": 1, "cruiser": 1, "fighter": 2},
             "ground": {"infantry": 4, "dock": 1, "pds": 1}
         },
-        "startingTechs": ["MAGEN_DEFENSE_GRID"],
+        "knownTechs": ["MAGEN_DEFENSE_GRID"],
         "commodities": 3,
         "abilities": [
             {"id": "MITOSIS", "effect": "Your space docks cannot produce infantry. At the start of the status phase, place 1 infantry from your reinforcements on any planet you control."}
@@ -377,6 +405,13 @@
                 "production": 2,
                 "effect": "After this unit is destroyed, roll 1 die. If the result is 6 or greater, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."
             }
+        ],
+        "promissory": [
+            {
+                "id": "STYMIE",
+                "when": "AFTER_MOVE",
+                "effect": "After another player moves ships into a system that contains 1 or more of your units: You may place 1 command token from that player’s reinforcements in any non-home system. Then, return this card to the Arborec player." 
+            }
         ]
     },
     "6": {
@@ -390,7 +425,7 @@
             "fleet": {"dreadnought": 1, "carrier": 1, "fighter": 3},
             "ground": {"infantry": 5, "dock": 1, "pds": 1}
         },
-        "startingTechs": ["NEURAL_MOTIVATOR", "PLASMA_SCORING"],
+        "knownTechs": ["NEURAL_MOTIVATOR", "PLASMA_SCORING"],
         "commodities": 2,
         "abilities": [
             {"id": "ASSIMILATE", "effect": "When you gain control of a planet, replace each PDS and space dock that is on that planet with a matching unit from your reinforcements."},
@@ -462,6 +497,13 @@
                 "noDirectHit": true,
                 "effect": "This unit cannot be destroyed by 'Direct Hit' action cards."
             }
+        ],
+        "promissory": [
+            {
+                "id": "CYBERNETIC_ENHANCEMENTS",
+                "when": "STAT_TURN",
+                "effect": "When you gain command tokens during the status phase: Gain 1 additional command token. Then, return this card to the L1Z1X player." 
+            }
         ]
     },
     "7": {
@@ -475,7 +517,7 @@
             "fleet": {"carrier": 1, "cruiser": 1, "fighter": 2},
             "ground": {"infantry": 2, "dock": 1, "pds": 1}
         },
-        "startingTechs": ["ANTIMASS_DEFLECTORS", "DARK_ENERGY_TAP", "SARWEEN_TOOLS", "SCANLINK_DRONE_NETWORK", "NEURAL_MOTIVATOR", "PSYCHOARCHAEOLOGY", "PLASMA_SCORING", "AI_DEVELOPMENT_ALGORITHM"],
+        "knownTechs": ["ANTIMASS_DEFLECTORS", "DARK_ENERGY_TAP", "SARWEEN_TOOLS", "SCANLINK_DRONE_NETWORK", "NEURAL_MOTIVATOR", "PSYCHOARCHAEOLOGY", "PLASMA_SCORING", "AI_DEVELOPMENT_ALGORITHM"],
         "startingTechsChoice": 1,
         "commodities": 3,
         "abilities": [
@@ -524,6 +566,13 @@
                 "action": true,
                 "exhaust": true
             }
+        ],
+        "promissory": [
+            {
+                "id": "ACQUIESCENCE",
+                "when": "ACT_STRAT",
+                "effect": "When the Winnu player resolves a strategic action: You do not have to spend or place a command token to resolve the secondary ability of that strategy card. Then, return this card to the Winnu player." 
+            }
         ]
     },
     "8": {
@@ -537,7 +586,7 @@
             "fleet": {"dreadnought": 1, "carrier": 1, "cruiser": 1, "fighter": 2},
             "ground": {"infantry": 2, "dock": 1}
         },
-        "startingTechs": ["DACXIVE_ANIMATORS", "VALEFAR_ASSIMILATOR_X", "VALEFAR_ASSIMILATOR_Y"],
+        "knownTechs": ["DACXIVE_ANIMATORS", "VALEFAR_ASSIMILATOR_X", "VALEFAR_ASSIMILATOR_Y"],
         "commodities": 3,
         "abilities": [
             {"id": "GALACTIC_THREAT", "effect": "You cannot vote on agendas. Once per agenda phase, after an agenda is revealed, you may predict aloud the outcome of that agenda. If your prediction is correct, gain 1 technology that is owned by a player who voted how you predicted."},
@@ -587,6 +636,13 @@
                 "action": false,
                 "exhaust": false
             }     
+        ],
+        "promissory": [
+            {
+                "id": "ANTI-VIRUS",
+                "when": "COMBAT",
+                "effect": "At the start of a combat: Place this card faceup in your play area. While this card is in your play area, the Nekro player cannot use his TECHNOLOGICAL SINGULARITY ability against you." 
+            }
         ]
     },
     "9": {
@@ -599,7 +655,7 @@
             "fleet": {"carrier": 1, "cruiser": 1, "destroyer": 1, "fighter": 3},
             "ground": {"infantry": 4, "dock": 1, "pds": 1}
         },
-        "startingTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS"],
+        "knownTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS"],
         "commodities": 3,
         "abilities": [
             {"id": "TELEPATHIC", "effect": "At the end of the strategy phase, place the Naalu '0' token on your strategy card; you are first in initiative order."},
@@ -670,6 +726,13 @@
                 "effect": "This unit may move without being transported. Each fighter in excess of your ships' capacity counts as ½ of a ship against your fleet pool.",
                 "size": 0.5
             }    
+        ],
+        "promissory": [
+            {
+                "id": "GIFT_OF_PRESCIENCE",
+                "when": "STRAT_TURN",
+                "effect": "At the end of the strategy phase: Place this card faceup in your play area and place the Naalu '0' token on your strategy card; you are first in initiative order." 
+            }
         ]
     },
     "10": {
@@ -683,7 +746,7 @@
             "fleet": {"dreadnought": 1, "carrier": 1, "destroyer": 1, "fighter": 1},
             "ground": {"infantry": 3, "dock": 1}
         },
-        "startingTechs": ["ANTIMASS_DEFLECTORS", "PLASMA_SCORING"],
+        "knownTechs": ["ANTIMASS_DEFLECTORS", "PLASMA_SCORING"],
         "commodities": 2,
         "abilities": [
             {"id": "MUNITIONS_RESERVES", "effect": "At the start of each round of space combat, you may spend 2 trade goods; you may reroll any number of your dice during that combat round."},
@@ -732,6 +795,13 @@
                 "action": false,
                 "exhaust": false
             }           
+        ],
+        "promissory": [
+            {
+                "id": "WAR_FUNDING",
+                "when": "COMBAT",
+                "effect": "After you and your opponent roll dice during space combat: You may reroll all of your opponent’s dice. You may reroll any number of your dice. Then, return this card to the Letnev player." 
+            }
         ]
     },
     "11": {
@@ -745,7 +815,7 @@
             "fleet": {"carrier": 2, "cruiser": 1, "fighter": 2},
             "ground": {"infantry": 4, "dock": 1}
         },
-        "startingTechs": ["ANTIMASS_DEFLECTORS"],
+        "knownTechs": ["ANTIMASS_DEFLECTORS"],
         "commodities": 3,
         "abilities": [
             {"id": "SCAVENGE", "effect": "After you gain control of a planet, gain 1 trade good."},
@@ -805,7 +875,15 @@
                 "capacity": 5,
                 "effect": "This unit is placed in a space area instead of on a planet. This unit can move and retreat as if it were a ship. If this unit is blockaded, it is destroyed."
             }   
+        ],
+        "promissory": [
+            {
+                "id": "RAGHS_CALL",
+                "when": "COMBAT",
+                "effect": "After you commit 1 or more of your units to land on a planet: Remove all of the Saar player’s ground forces from that planet and place them on a planet controlled by the Saar player." 
+            }
         ]
+        
     },
     "12": {
         "name": "The Universities of Jol-Nar",
@@ -818,7 +896,7 @@
             "fleet": {"dreadnought": 1, "carrier": 2, "fighter": 1},
             "ground": {"infantry": 2, "dock": 1, "pds": 2}
         },
-        "startingTechs": ["NEURAL_MOTIVATOR", "ANTIMASS_DEFLECTORS", "SARWEEN_TOOLS", "PLASMA_SCORING"],
+        "knownTechs": ["NEURAL_MOTIVATOR", "ANTIMASS_DEFLECTORS", "SARWEEN_TOOLS", "PLASMA_SCORING"],
         "commodities": 4,
         "abilities": [
             {"id": "FRAGILE", "effect": "Apply -1 to the result of each of your unit’s combat rolls."},
@@ -868,6 +946,13 @@
                 "action": false,
                 "exhaust": false
             }
+        ],
+        "promissory": [
+            {
+                "id": "RESEARCH_AGREEMENT",
+                "when": "RESEARCH",
+                "effect": "After the Jol-Nar player researches a technology that is not a faction technology: Gain that technology. Then, return this card to the Jol-Nar player." 
+            }
         ]
     },
     "13": {
@@ -880,7 +965,7 @@
             "fleet": {"carrier": 2, "cruiser": 1},
             "ground": {"infantry": 5, "dock": 1, "pds": 1}
         },
-        "startingTechs": [],
+        "knownTechs": [],
         "commodities": 3,
         "abilities": [
             {"id": "UNRELENTING", "effect": "Apply +1 to the result of each of your unit’s combat rolls."}
@@ -950,6 +1035,13 @@
                 "noDirectHit": true,
                 "effect": "This unit cannot be destroyed by “Direct Hit” action cards. After a round of space combat, you may destroy this unit to destroy up to 2 ships in this system."
             }   
+        ],
+        "promissory": [
+            {
+                "id": "TEKKLAR_LEGION",
+                "when": "COMBAT",
+                "effect": "At the start of an invasion combat: Apply +1 to the result of each of your unit’s combat rolls during this combat. If your opponent is the N’orr player, apply -1 to the result of each of his unit’s combat rolls during this combat." 
+            }
         ]
     },
     "14": {
@@ -964,7 +1056,7 @@
             "fleet": {"carrier": 1, "cruiser": 2, "fighter": 3},
             "ground": {"infantry": 4, "dock": 1, "pds": 1}
         },
-        "startingTechs": ["GRAVITON_LASER_SYSTEM"],
+        "knownTechs": ["GRAVITON_LASER_SYSTEM"],
         "commodities": 4,
         "abilities": [
             {"id": "PEACE_ACCORDS", "effect": "After you resolve the primary or secondary ability of the 'Diplomacy' strategy card, you may gain control of 1 planet other than Mecatol Rex that does not contain any units and is in a system that is adjacent to a planet you control."},
@@ -1015,6 +1107,13 @@
                 "action": false,
                 "exhaust": true
             }
+        ],
+        "promissory": [
+            {
+                "id": "POLITICAL_FAVOR",
+                "when": "AGENDA",
+                "effect": "When an agenda is revealed: Remove 1 token from the Xxcha player’s strategy pool and return it to his reinforcements. Then, discard the revealed agenda and reveal 1 agenda from the top of the deck. Players vote on this agenda instead." 
+            }
         ]
     },
     "15": {
@@ -1028,7 +1127,7 @@
             "fleet": {"carrier": 2, "cruiser": 1, "fighter": 2},
             "ground": {"infantry": 5, "dock": 1, "pds": 1}
         },
-        "startingTechs": ["NEURAL_MOTIVATOR"],
+        "knownTechs": ["NEURAL_MOTIVATOR"],
         "commodities": 3,
         "abilities": [
             {"id": "STALL_TACTICS", "type": "ACTION", "effect": "Discard 1 action card from your hand."},
@@ -1078,6 +1177,13 @@
                 "action": true,
                 "exhaust": true
             }
+        ],
+        "promissory": [
+            {
+                "id": "SPY_NET",
+                "when": "ACT_TURN",
+                "effect": "At the start of your turn: Look at the Yssaril player’s hand of action cards. Choose 1 of those cards and add it to your hand. Then, return this card to the Yssaril player." 
+            }
         ]
     },
     "16": {
@@ -1090,7 +1196,7 @@
             "fleet": {"carrier": 2, "cruiser": 1, "fighter": 2},
             "ground": {"infantry": 4, "dock": 1}
         },
-        "startingTechs": ["ANTIMASS_DEFLECTORS", "SARWEEN_TOOLS"],
+        "knownTechs": ["ANTIMASS_DEFLECTORS", "SARWEEN_TOOLS"],
         "commodities": 6,
         "abilities": [
             {"id": "MASTERS_OF_TRADE", "effect": "You do not have to spend a command token to resolve the secondary ability of the 'Trade' strategy card."},
@@ -1140,6 +1246,13 @@
                 "action": false,
                 "exhaust": false
             }
+        ],
+        "promissory": [
+            {
+                "id": "TRADE_CONVOYS",
+                "type": "ACTION",
+                "effect": "Place this card faceup in your play area. While this card is in your play area, you may negotiate transactions with players who are not your neighbor. If you activate a system that contains 1 or more of the Hacan player’s units, return this card to the Hacan player." 
+            }
         ]
     },
     "17": {
@@ -1153,7 +1266,7 @@
             "fleet": {"carrier": 1, "destroyer": 2, "fighter": 2},
             "ground": {"infantry": 4, "dock": 1}
         },
-        "startingTechs": ["GRAVITY_DRIVE"],
+        "knownTechs": ["GRAVITY_DRIVE"],
         "commodities": 4,
         "abilities": [
             {"id": "QUANTUM_ENTANGLEMENT", "effect": "You treat all systems that contain either an alpha or beta wormhole as adjacent to each other. Game effects cannot prevent you from using this ability."},
@@ -1203,6 +1316,13 @@
                 "action": false,
                 "exhaust": false
             }
+        ],
+        "promissory": [
+            {
+                "id": "CREUSS_IFF",
+                "when": "ACT_TURN",
+                "effect": "At the start of your turn during the action phase: Place or move a Creuss wormhole token into either a system that contains a planet you control or a non-home system that does not contain another player’s ships." 
+            }
         ]
     },
     "52": {
@@ -1216,7 +1336,7 @@
             "fleet": {"dreadnought": 1, "carrier": 1, "cruiser": 1, "fighter": 2},
             "ground": {"infantry": 3, "dock": 1}
         },
-        "startingTechs": ["BIO_STIMS", "PREDICTIVE_INTELLIGENCE"],
+        "knownTechs": ["BIO_STIMS", "PREDICTIVE_INTELLIGENCE"],
         "commodities": 3,
         "abilities": [
             {"id": "EDICT", "effect": "When you win a combat, place 1 command token from your opponent’s reinforcements in your fleet pool if it does not already contain 1; other players’ tokens increase your fleet limit but cannot be redistributed."},
@@ -1280,6 +1400,13 @@
                 "shot": 1,
                 "effect": "After this unit is destroyed, gain 1 commodity or convert 1 commodity. Then, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."
             }       
+        ],
+        "promissory": [
+            {
+                "id": "SCEPTER_OF_DOMINION",
+                "when": "STRAT_TURN",
+                "effect": "At the start of the strategy phase: Choose 1 non-home system that contains your units; each other player who has a token on the Mahact command sheet places a token from their reinforcements into that system." 
+            }
         ]
     },
     "53": {
@@ -1297,7 +1424,7 @@
             "fleet": {"flagship": 1, "carrier": 1, "destroyer": 1, "fighter": 3},
             "ground": {"infantry": 4, "dock": 1}
         },
-        "startingTechs": ["SLING_RELAY"],
+        "knownTechs": ["SLING_RELAY"],
         "commodities": 4,
         "abilities": [
             {"id": "THE_COMPANY", "effect": "During setup, take the 2 additional Nomad faction agents and place them next to your faction sheet; you have 3 agents."},
@@ -1353,6 +1480,13 @@
                 "barrage": {"value": 5, "count": 3},
                 "effect": "You may treat this unit as if it were adjacent to systems that contain 1 or more of your mechs."
             }    
+        ],
+        "promissory": [
+            {
+                "id": "THE_CAVALRY",
+                "when": "COMBAT",
+                "effect": "At the start of a space combat against a player other than the Nomad: During this combat, treat 1 of your non-fighter ships as if it has the SUSTAIN DAMAGE ability, combat value, and ANTI-FIGHTER BARRAGE values of the Nomad’s flagship. Return this card to the Nomad player at the end of the combat." 
+            }
         ]
     },
     "54": {
@@ -1366,7 +1500,7 @@
             "fleet": {"carrier": 1, "cruiser": 1, "fighter": 3, "dreadnought": 1},
             "ground": {"infantry": 3, "dock": 1}
         },
-        "startingTechs": ["SELF_ASSEMBLY_ROUTINES"],
+        "knownTechs": ["SELF_ASSEMBLY_ROUTINES"],
         "commodities": 2,
         "abilities": [
             {"id": "DEVOUR", "effect": "Capture your opponent’s non-structure units that are destroyed during combat."},
@@ -1425,6 +1559,13 @@
                 "action": true,
                 "exhaust": true
             }
+        ],
+        "promissory": [
+            {
+                "id": "CRUCIBLE",
+                "when": "ACT_TURN",
+                "effect": "After you activate a system: Your ships do not roll for gravity rifts during this movement; apply an additional +1 to the move values of your ships that would move out of or through a gravity rift instead." 
+            }
         ]
     },
     "55": {
@@ -1438,7 +1579,7 @@
             "fleet": {"dreadnought": 1, "cruiser": 2, "fighter": 2},
             "ground": {"infantry": 3, "dock": 1}
         },
-        "startingTechs": ["ANTIMASS_DEFLECTORS", "SCANLINK_DRONE_NETWORK"],
+        "knownTechs": ["ANTIMASS_DEFLECTORS", "SCANLINK_DRONE_NETWORK"],
         "commodities": 2,
         "abilities": [
             {"id": "TERRAGENESIS", "effect": "After you explore a planet that does not have a sleeper token, you may place or move 1 sleeper token onto that planet."},
@@ -1522,6 +1663,13 @@
                 "spaceCannon": { "value": 5, "range": 2 },
                 "effect": "This unit is treated as both a structure and a ground force. It cannot be transported. You may use this unit’s SPACE CANNON against ships that are adjacent to this unit’s system."
             }
+        ],
+        "promissory": [
+            {
+                "id": "TERRAFORM",
+                "type": "ACTION",
+                "effect": "Attach this card to a non-home planet you control other than Mecatol Rex. Its resource and influence values are each increased by 1, and it is treated as having all 3 planet traits." 
+            }
         ]
     },
     "56": {
@@ -1535,7 +1683,7 @@
             "fleet": {"carrier": 2, "destroyer": 1, "fighter": 2},
             "ground": {"infantry": 4, "dock": 1}
         },
-        "startingTechs": ["DARK_ENERGY_TAP"],
+        "knownTechs": ["DARK_ENERGY_TAP"],
         "commodities": 4,
         "abilities": [
             {"id": "VOIDBORN", "effect": "Nebulae do not affect your ships’ movement."},
@@ -1585,6 +1733,18 @@
                 "action": false,
                 "exhaust": false
             }
+        ],
+        "promissory": [
+            {
+                "id": "BLOOD_PACT",
+                "type": "ACTION",
+                "effect": "Place this card faceup in your play area. When you and the Empyrean player cast votes for the same outcome, cast 4 additional votes for that outcome. If you activate a system that contains 1 or more of the Empyrean player’s units, return this card to the Empyrean player." 
+            },
+            {
+                "id": "DARK_PACT",
+                "type": "ACTION",
+                "effect": "Place this card faceup in your play area. When you give a number of commodities to the Empyrean player equal to your maximum commodity value, you each gain 1 trade good.  If you activate a system that contains 1 or more of the Empyrean player’s units, return this card to the Empyrean player." 
+            }
         ]
     },
     "57": {
@@ -1598,7 +1758,7 @@
             "fleet": {"carrier": 2, "destroyer": 1, "fighter": 2},
             "ground": {"mech": 1, "infantry": 3, "dock": 1}
         },
-        "startingTechs": ["PSYCHOARCHAEOLOGY", "AI_DEVELOPMENT_ALGORITHM"],
+        "knownTechs": ["PSYCHOARCHAEOLOGY", "AI_DEVELOPMENT_ALGORITHM"],
         "commodities": 3,
         "abilities": [
             {"id": "DISTANT_SUNS", "effect": "When you explore a planet that contains 1 of your mechs, you may draw 1 additional card; choose 1 to resolve and discard the rest."},
@@ -1658,6 +1818,13 @@
                 "action": false,
                 "exhaust": true
             }    
+        ],
+        "promissory": [
+            {
+                "id": "BLACK_MARKET_FORGERY",
+                "type": "ACTION",
+                "effect": "Purge 2 of your relic fragments of the same type to gain 1 relic. Then, return this card to the Naaz-Rokha player." 
+            }
         ]
     },
     "58": {
@@ -1671,7 +1838,7 @@
             "fleet": {"carrier": 1, "destroyer": 2, "fighter": 2},
             "ground": {"infantry": 5, "dock": 1, "pds": 1}
         },
-        "startingTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS", "PLASMA_SCORING"],
+        "knownTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS", "PLASMA_SCORING"],
         "startingTechsChoice": 2,
         "commodities": 3,
         "abilities": [
@@ -1736,6 +1903,13 @@
                 "shot": 1,
                 "capacity": 1,
                 "barrage": { "count": 3, "value": 6 }
+            }
+        ],
+        "promissory": [
+            {
+                "id": "STRIKE_WING_AMBUSCADE",
+                "when": "ROLL",
+                "effect": "When 1 or more of your units make a roll for a unit ability: Choose 1 of those units to roll 1 additional die. Then, return this card to the Argent player." 
             }
         ]
     }

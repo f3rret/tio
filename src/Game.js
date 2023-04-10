@@ -489,21 +489,23 @@ export const TIO = {
 
           },
           learnTechnology: ({ G, playerID }, techId) => {
-
             const technology = techData.find( t => t.id === techId);
+
             if(!technology){
               console.log('no such technology');
               return INVALID_MOVE;
             }
 
-            if(G.races[playerID].technologies.indexOf(techId) > -1){
+            const knownTechs = G.races[playerID].knownTechs;
+
+            if(knownTechs.indexOf(techId) > -1){
               console.log('already learned');
               return INVALID_MOVE;
             }
 
             if(technology.prereq){
               const available = { "warfare": 0, "biotic": 0, "cybernetic": 0, "propulsion": 0 };
-              G.races[playerID].technologies.forEach( t => {
+              knownTechs.forEach( t => {
                 const av = techData.find( a => a.id === t);
                 if(av){
                   available[av.type]++;
@@ -519,7 +521,7 @@ export const TIO = {
               }
             }
 
-            G.races[playerID].technologies.push(techId);            
+            knownTechs.push(techId);            
           },
           pass: ({ G, playerID, events }) => {
             if(G.passedPlayers.indexOf(playerID) === -1){

@@ -167,7 +167,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                   {'Units: '} <br/>
                   {Object.keys(UNITS).map((k, i) => <li key={i}>{k + ': ' + UNITS[k]}</li>)} <br/>
                   {'Technologies: '} <br/>
-                  {race && race.technologies.map((t, i) => <li key={i}>{t.toLowerCase().replaceAll('_', ' ')}</li>)} <br/>
+                  {race && race.knownTechs.map((t, i) => <li key={i}>{t.toLowerCase().replaceAll('_', ' ')}</li>)} <br/>
               </div>
             </div>
           </div>)
