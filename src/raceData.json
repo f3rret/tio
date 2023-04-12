@@ -69,6 +69,7 @@
             {
                 "id": "CARRIER2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "ADVANCED CARRIER II",
                 "prereq": { "propulsion": 2 },
                 "cost": 3,
@@ -83,6 +84,7 @@
             {
                 "id": "INFANTRY2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "SPEC OPS II",
                 "prereq": { "biotic": 2 },
                 "cost": 0.5,
@@ -307,6 +309,7 @@
             {
                 "id": "WARSUN2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "PROTOTYPE WAR SUN II",
                 "prereq": { },
                 "cost": 10,
@@ -396,6 +399,7 @@
             {
                 "id": "INFANTRY2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "LETANI WARRIOR II",
                 "prereq": { },
                 "cost": 0.5,
@@ -484,6 +488,7 @@
             {
                 "id": "DREADNOUGHT2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "SUPER-DREADNOUGHT II",
                 "prereq": { "propulsion": 2, "cybernetic": 1},
                 "cost": 4,
@@ -713,6 +718,7 @@
             {
                 "id": "FIGHTER2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "HYBRID CRYSTAL FIGHTER II",
                 "prereq": { "biotic": 1, "propulsion": 1 },
                 "cost": 0.5,
@@ -868,6 +874,7 @@
             {
                 "id": "SPACEDOCK2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "FLOATING FACTORY II",
                 "prereq": { "cybernetic": 2 },
                 "move": 2,
@@ -1022,6 +1029,7 @@
             {
                 "id": "DREADNOUGHT2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "EXOTRIREME II",
                 "prereq": { "propulsion": 2, "cybernetic": 1 },
                 "cost": 4,
@@ -1392,6 +1400,7 @@
             {
                 "id": "INFANTRY2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "CRIMSON LEGIONNAIRE II",
                 "prereq": { },
                 "cost": 0.5,
@@ -1468,6 +1477,7 @@
             {
                 "id": "FLAGSHIP2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "MEMORIA II",
                 "prereq": { "biotic": 1, "propulsion": 1, "cybernetic": 1 },
                 "cost": 8,
@@ -1545,6 +1555,7 @@
             {
                 "id": "SPACEDOCK2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "DIMENSIONAL TEAR II",
                 "prereq": { "cybernetic": 2 },
                 "production": 7,
@@ -1640,6 +1651,7 @@
             {
                 "id": "CRUISER2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "SATURN ENGINE II",
                 "prereq": { "biotic": 1, "cybernetic": 1, "warfare": 1 },
                 "cost": 2,
@@ -1654,6 +1666,7 @@
             {
                 "id": "PDS2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "HEL-TITAN II",
                 "prereq": { "cybernetic": 1, "warfare": 1 },
                 "combat": 6,
@@ -1895,6 +1908,7 @@
             {
                 "id": "DESTROYER2",
                 "type": "unit",
+                "upgrade": true,
                 "description": "STRIKE WING ALPHA II",
                 "prereq": { "warfare": 2 },
                 "cost": 1,

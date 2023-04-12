@@ -220,6 +220,7 @@
         "move": 2,
         "capacity": 6,
         "sustain": false,
+        "upgrade": true,
         "bombardment": false,
         "barrage": false,
         "shot": 1
@@ -248,6 +249,7 @@
         "move": 2,
         "capacity": false,
         "sustain": false,
+        "upgrade": true,
         "bombardment": false,
         "barrage": false,
         "shot": 1
@@ -275,6 +277,7 @@
         "combat": 8,
         "move": 2,
         "capacity": false,
+        "upgrade": true,
         "sustain": false,
         "bombardment": false,
         "barrage": { "count": 3, "value": 6 },
@@ -304,6 +307,7 @@
         "move": 2,
         "capacity": 1,
         "sustain": true,
+        "upgrade": true,
         "bombardment": { "count": 1, "value": 5 },
         "noDirectHit": true,
         "barrage": false,
@@ -333,6 +337,7 @@
         "move": 3,
         "capacity": 1,
         "sustain": false,
+        "upgrade": true,
         "bombardment": false,
         "barrage": false,
         "shot": 1
@@ -379,6 +384,7 @@
         "id": "INFANTRY2",
         "type": "unit",
         "description": "",
+        "upgrade": true,
         "prereq": { "biotic": 2 },
         "cost": 0.5,
         "combat": 7,
@@ -406,6 +412,7 @@
     {
         "id": "PDS2",
         "type": "unit",
+        "upgrade": true,
         "description": "",
         "prereq": { "cybernetic": 1, "warfare": 1 },
         "spaceCannon": { "value": 5, "range": 2 },
@@ -422,6 +429,7 @@
     {
         "id": "SPACEDOCK2",
         "type": "unit",
+        "upgrade": true,
         "description": "",
         "prereq": { "cybernetic": 2 },
         "production": 4,

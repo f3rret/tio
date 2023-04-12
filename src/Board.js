@@ -1,11 +1,13 @@
 /* eslint eqeqeq: 0 */
 import { Stage, Graphics, Text, Container } from '@pixi/react';
 import { HexGrid } from './Grid';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
+import { Navbar, Nav, NavItem } from 'reactstrap';
+import { PaymentDialog } from './payment';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
-  const stagew = 800
-  const stageh = 800
+  const stagew = window.innerWidth;
+  const stageh = window.innerHeight;
 
   const stageOnclick = (e) => {
     const x = e.clientX - stagew/2;
@@ -15,8 +17,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     if(hex){
       G.tiles.forEach((v, i) => {
         if(v.q === hex.q && v.r === hex.r){
-          //moves.captureTile(i)
-          //events.setStage({ stage: 'tileView' });
           moves.selectTile(i);
         }
       });
@@ -38,16 +38,40 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     }
   }
 
-  const WIN_POINTS = useMemo(()=>{
-    const players = [];
-    G.activeGoals.forEach( v => {
-      if(v.players.length){
-        v.players.forEach(p => players[p] ? players[p]++ : players[p]=1 )
-      }
-    });
+  const [payObj, setPayObj] = useState(-1);
+  const togglePaymentDialog = (payment) => {
+    if(payment && Object.keys(payment).length > 0){
+      moves.completePublicObjective(payObj, payment);
+    }
+    setPayObj(-1);
+  };
 
-    return ctx.playOrder.map( o => ' player ' + o + ' wp: ' + (players[o] ? players[o]:0));
-  }, [G.activeGoals, ctx.playOrder]);
+  const completePubObj = (e, i) => {
+    e.preventDefault();
+
+    if(G.pubObjectives[i].type === 'SPEND'){
+      setPayObj(i);
+      //moves.completePublicObjective(i, payment);
+    }
+    else{
+      moves.completePublicObjective(i);
+    }
+
+  }
+
+  /*const VPs = useMemo(()=>{
+    const players = [];
+
+    if(G.pubObjectives && G.pubObjectives.length){
+      G.pubObjectives.forEach( v => {
+        if(v.players && v.players.length){
+          v.players.forEach(p => players[p] ? players[p]++ : players[p]=1 )
+        }
+      });
+
+      return ctx.playOrder.map( o => ' player ' + o + ' vp: ' + (players[o] ? players[o]:0));
+    }
+  }, [G.pubObjectives, ctx.playOrder]);*/
 
   const PLANETS = useMemo(()=> {
     const arr = [];
@@ -118,13 +142,41 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
         g.endFill();
       }
     });
-  }, [G.tiles]);
+  }, [G.tiles, stageh, stagew]);
 
   const race = useMemo(() => G.races[playerID], [G.races, playerID]);
+  const [objVisible, setObjVisible] = useState(true);
 
-  return (<div style={{ display: 'flex' }}>
-            <Stage width={stagew} height={stageh} onClick={stageOnclick} onContextMenu={stageOncontext}
-              options={{ antialias: true, autoDensity: true, backgroundColor: 0xeef1f5 }}>
+  return (<>
+            <Navbar style={{ position: 'fixed', height: '3rem'}}>
+              <Nav navbar>
+                <NavItem onClick={()=>setObjVisible(!objVisible)} style={{cursor: 'pointer'}}>
+                  <h4>Objectives</h4>
+                </NavItem>
+              </Nav>
+            </Navbar>
+            
+            {objVisible && <div style={{ margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
+              {ctx.gameover && <div>{'Player ' + ctx.gameover.winner + ' wins'}</div>}
+              {G.pubObjectives && G.pubObjectives.length &&
+              <div id='public_objectives'>
+                <h4>Public objectives:</h4><br />
+                {G.pubObjectives.map((o, i) => {
+                  const complete = o.players.indexOf(playerID) > -1;
+                  return <li style={{padding: '1rem', cursor: complete ? 'default':'pointer', backgroundColor: complete ? 'rgba(154, 205, 50, 0.25)':'rgba(255, 100, 0, 0.25)' }} key={i} onClick={(e) => {if(!complete)completePubObj(e, i)}}>
+                    <b style={{fontSize: '0.7rem'}}>{o.id}</b>{' [ '}{o.players.map((p, pi) => <b key={pi}>{p}</b>)}{' ]  '}
+                    <br/>
+                    <i style={{fontSize: '0.7rem'}}>{o.title}</i>
+                  </li>})
+                }
+              </div>
+              }
+            </div>}
+            
+
+            <Stage width={stagew} height={stageh} onClick={stageOnclick} onContextMenu={stageOncontext} options={{ resizeTo: window, antialias: true, autoDensity: true, backgroundColor: 0xeef1f5 }}>
+                <Graphics draw={draw}/>
+                
                 {G.tiles.map((element, index) => {
                     const [firstCorner] = element.corners;
                     const fill = element.tdata.type;
@@ -146,15 +198,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                           </Container>
                   })}
                 
-                <Graphics draw={draw}/>
             </Stage>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ margin: '1rem' }}>
-                {ctx.gameover && <div>{'Player ' + ctx.gameover.winner + ' wins'}</div>}
-                {'Active goals: ' + G.activeGoals.length }<br />
-                {WIN_POINTS.map((wp, i) => <div key={i}>{wp}<br/></div>)}
-              </div>
-            
+
+            <div style={{ display: 'flex', flexDirection: 'column', position:'fixed', right: 0, top: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)', height: '100%', width: '30%' }}>
               <div style={{ margin: '1rem' }}>
                   {'Player ' + ctx.currentPlayer + ' turns '} 
                   {ctx.currentPlayer == playerID && ctx.numMoves > 0 && <button style={{width: '5rem', height: '1rem', fontSize: '0.7rem'}} onClick={() => undo()}>Undo move</button>} <br/>
@@ -170,9 +216,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                   {race && race.knownTechs.map((t, i) => <li key={i}>{t.toLowerCase().replaceAll('_', ' ')}</li>)} <br/>
               </div>
             </div>
-          </div>)
-}
 
+            {payObj !== -1 && <PaymentDialog objective={G.pubObjectives[payObj]} race={race} planets={PLANETS} isOpen={payObj !== -1} toggle={(e, payment)=>togglePaymentDialog(payment)}/>}
+          </>)
+}
+/*
+
+*/
 
 const getUnitsString = (units) => {
   var s = '';
@@ -214,5 +264,4 @@ const getUnitsString = (units) => {
   });
   return s;
 }
-
 

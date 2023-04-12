@@ -1,11 +1,12 @@
 /* eslint eqeqeq: 0 */
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
-import { HexGrid } from './Grid';
+import { HexGrid, neighbors } from './Grid';
 import tileData from './tileData.json';
 import raceData from './raceData.json';
 import techData from './techData.json';
 import cardData from './cardData.json';
 import { produce } from 'immer';
+import { getPlayerUnits, getPlayerPlanets } from './utils';
  
 export const TIO = {
     
@@ -13,7 +14,7 @@ export const TIO = {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: tileData.all[h.tileId], q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 )
-                  .map( r => ({...r, ...raceData[r.rid], tokens: { t: 3, f: 3, s: 2}}) );
+                  .map( r => ({...r, ...raceData[r.rid], tg: 10, tokens: { t: 3, f: 3, s: 2}}) );
 
       tiles.forEach( (t, i) => {
         if( t.tdata.type === 'green' ){
@@ -34,7 +35,7 @@ export const TIO = {
 
       return { 
         tiles,
-        activeGoals: [{gid: 0, players: []}],
+        pubObjectives: [],
         passedPlayers: [],
         races
       }
@@ -42,7 +43,7 @@ export const TIO = {
 
     phases: {
       strat: {
-        
+        //start: true,
         next: 'acts',
         turn: {
           order: TurnOrder.ONCE,
@@ -65,14 +66,15 @@ export const TIO = {
             events.endTurn();
           }
         },
-        onBegin: ({ G, ctx }) => {
+        onBegin: ({ G, ctx, random }) => {
           G.races.forEach( r => r.strategy = undefined );
+
+         //obj
         },
-        onEnd: ({ G }) => {
-          
-        }
+        onEnd: ({ G, random }) => {}
       },
       stats: {
+        start: true,
         next: 'strat',
         turn: {
           order: TurnOrder.ONCE,
@@ -80,22 +82,216 @@ export const TIO = {
           maxMoves: 1
         },
         moves: {
-          completeGoal: ({G, playerID, events}, id) => {
-            if(G.activeGoals[id] && G.activeGoals[id].players.indexOf(playerID) === -1 && GOALS[G.activeGoals[id].gid](G, playerID)){
-              G.activeGoals[id].players.push(playerID);
+          completePublicObjective: ({G, playerID, events}, oid, payment) => {
+            
+            if(G.pubObjectives[oid] && G.pubObjectives[oid].players.indexOf(playerID) === -1){
+              const req = G.pubObjectives[oid].req;
+              const race = G.races[playerID];
+              const planets = getPlayerPlanets(G.tiles, playerID);
+              
+              if(G.pubObjectives[oid].type === 'SPEND'){
+                const rkeys = Object.keys(req);
+
+                if(rkeys.indexOf('token') > -1){
+                  if(race.tokens && payment.tokens){
+                    race.tokens.t -= payment.tokens.t;
+                    race.tokens.s -= payment.tokens.s;
+                  }
+                }
+                else{
+                  if(req.influence && payment.influence){
+                    if(payment.influence.planets) payment.influence.planets.forEach( p => planets.find( pl => pl.name === p).exhausted = true );
+                    if(payment.influence.tg) race.tg -= payment.influence.tg;
+                  }
+                  if(req.resource && payment.resource){
+                    if(payment.resource.planets) payment.resource.planets.forEach( p => planets.find( pl => pl.name === p).exhausted = true );
+                    if(payment.resource.tg) race.tg -= payment.resource.tg;
+                  }
+                  if(req.tg && payment.tg){
+                    race.tg -= payment.tg;
+                  }
+                }           
+
+                G.pubObjectives[oid].players.push(playerID);
+              }
+              else if(G.pubObjectives[oid].type === 'HAVE'){
+
+                const units = getPlayerUnits(G.tiles, playerID);
+                
+                if(req.unit && Array.isArray(req.unit)){
+                  if(req.squadron){
+                    let systems = G.tiles.filter( s => s.occupied === playerID && s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
+                    const goal = systems.some( s => {
+                      let sum = 0;
+                      Object.keys(s.tdata.fleet).forEach( k => {
+                        if(req.unit.indexOf(k) > -1) sum += s.tdata.fleet[k];
+                      });
+                      return sum >= req.squadron;
+                    });
+
+                    if(goal == 0){
+                      return;
+                    }
+                  }
+                  else{
+                    let sum = 0;
+                    req.unit.forEach(u => { if(units[u]) { sum += units[u] } });
+                    if(sum < req.count) return;
+                  }
+                }
+                else if(req.trait){
+                  const traits = {'industrial': 0, 'cultural': 0, 'hazardous': 0};
+
+                  planets.forEach(p => {
+                    if(p.trait && traits[p.trait] !== undefined){
+                      traits[p.trait]++;
+                    }
+                  });
+
+                  if(traits['industrial'] < req.trait && traits['cultural'] < req.trait && traits['hazardous'] < req.trait){
+                    return;
+                  }
+                }
+                else if(req.upgrade){
+                  const upgrades = race.knownTechs.filter(t => t.type === 'unit' && t.upgrade === true);
+                  if(upgrades.length < req.upgrade){
+                    return;
+                  }
+                }
+                else if(req.attachment){
+                  let sum = 0;
+                  planets.forEach(p => {
+                    if(p.attachment) sum++;
+                  });
+
+                  if(sum < req.attachment){
+                    return;
+                  }
+                }
+                else if(req.technnology){
+                  const colors = {'biotic': 0, 'warfare': 0, 'cybernetic': 0, 'propulsion': 0};
+                  race.knownTechs.forEach(t => {if(colors[t.type] !== undefined){ colors[t.type]++; }});
+
+                  let goals = 0;
+                  Object.keys(colors).forEach(c => {if(colors[c] >= req.technology.count) goals++;});
+
+                  if(goals < req.technology.colors){
+                    return;
+                  }
+                }
+                else if(req.planet){
+                  let result = planets;
+                  if(req.nhs){
+                    result = result.filter( p => p.tid !== race.rid );
+                  }
+                  if(req.ground){
+                    result = result.filter( p => p.units && Object.keys(p.units).some( key => req.ground.indexOf(key) > -1));
+                  }
+
+                  if(result.count < req.planet){
+                    return;
+                  }
+                }
+                else if(req.system){
+                  let systems = G.tiles.filter( t => t.tdata.occupied === playerID || (t.tdata.planets && t.tdata.planets.some( p => p.occupied === playerID)) );
+                  if(req.fleet && req.ground){
+                    systems = systems.filter( s => 
+                      (s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0) || 
+                      (s.tdata.planets && s.tdata.planets.length && s.tdata.planets.some( p => p.occupied === playerID && p.units && p.units.length ))
+                    );
+                  }
+                  else if(req.fleet){
+                    systems = systems.filter( s => s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
+                  }
+
+                  if(req.noPlanet){
+                    systems = systems.filter( s => s.tdata.planets.length == 0);
+                  }
+                  if(req.adjacentMR){
+                    systems = systems.filter( s => (s.q >= -1 && s.q <= 1) && (s.r >=-1 && s.q <= -1) && !(s.r == 0 && s.q == 0));
+                  }
+                  if(req.MR && req.legendary && req.anomaly){
+                    systems = systems.filter( s => s.tid == 18 || [65, 66, 82].indexOf(s.tid) > -1 || tileData.anomaly.indexOf(s.tid) > -1);
+                  }
+                  if(req.edge){
+                    systems = systems.filter( s => neighbors([s.q, s.r]).toArray().length < 6);
+                  }
+
+                  if(systems.length < req.system){
+                    return;
+                  }
+                }
+                else if(req.speciality){
+                  let sum = 0;
+                  planets.forEach(p => {
+                    if(p.speciality) sum++;
+                  });
+
+                  if(sum < req.speciality){
+                    return;
+                  }
+                }
+                else if(req.neighbor){
+                  let systems = G.tiles.filter( t => t.tdata.occupied === playerID || (t.tdata.planets && t.tdata.planets.some( p => p.occupied === playerID)) );
+                  let neighbors = [];
+
+                  systems.forEach( s => neighbors([s.q, s.r]).forEach( n => {
+                    if(n.tdata.occupied !== undefined && n.tdata.occupied !== playerID){
+                      if(neighbors.indexOf(n.tdata.occupied) === -1) neighbors.push(n.tdata.occupied);
+                    }
+                    else if(n.tdata.planets){
+                      n.tdata.planets.forEach( p => { if(p.occupied !== undefined && p.occupied !== playerID){ 
+                        if(neighbors.indexOf(n.tdata.occupied) === -1) neighbors.push(p.occupied) 
+                      } })
+                    }
+                  }));
+
+                  if(neighbors.length < req.neighbor){
+                    return;
+                  }
+
+                  let goals = 0;
+
+                  if(req.more === 'planet'){
+                    neighbors.forEach( n => {
+                      const pl = getPlayerPlanets(G.tiles, n);
+                      if(pl.length < planets.length) goals++;
+                    });
+                  }
+
+                  if(goals < req.neighbor){
+                    return;
+                  }
+                }
+
+
+                G.pubObjectives[oid].players.push(playerID);
+              }
+              else{
+                return;
+              }
+
+              
             }
             events.endTurn();
           }
         },
-        onBegin: ({ G }) => {
-          return {...G, passedPlayers: []}
+        onBegin: ({ G, random }) => {
+          if(!G.pubObjectives.length){ // to strat phase!
+            cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
+          }
+          //G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+          G.pubObjectives.push({ ...cardData.objectives.public.find( o => o.id === 'Amass Wealth'), players: [] });
+
+          G.passedPlayers = [];
+          //return {...G, passedPlayers: []}
         },
         onEnd: ({ G }) => {
-          //add new random goal
+          //add new random public objective
         }
       },
       acts: {
-        start: true,
+        
         next: 'stats',
         turn: {
             /*minMoves: 1,
@@ -402,6 +598,10 @@ export const TIO = {
               });
             }
 
+            if(!Object.keys[src.tdata.fleet].length){
+              src.tdata.occupied = undefined;
+            }
+
             if(dst.tdata.occupied != playerID){
               Object.keys(squadron).forEach( u => {
                 if(!dst.tdata.fleet[u]){
@@ -504,13 +704,14 @@ export const TIO = {
             }
 
             if(technology.prereq){
-              const available = { "warfare": 0, "biotic": 0, "cybernetic": 0, "propulsion": 0 };
+              const available = { 'warfare': 0, 'biotic': 0, 'cybernetic': 0, 'propulsion': 0 };
               knownTechs.forEach( t => {
                 const av = techData.find( a => a.id === t);
                 if(av){
                   available[av.type]++;
                 }
               });
+
               const prereq = Object.keys(technology.prereq);
               for(var i=0; i<prereq.length; i++){
                 const p = prereq[i];
@@ -543,12 +744,10 @@ export const TIO = {
     },
 };
 
-const GOALS = [
-    (G, playerID) => { return G.tiles.filter(t => t && t.playerID === playerID).length > 2 }
-];
-const WIN_POINTS = 10;
+//const WIN_POINTS = 10;
 const IsVictory = (G, ctx) => {
     
-  return G.activeGoals.filter( ag => ag.players.indexOf(ctx.currentPlayer) > -1 ) >= WIN_POINTS;
+  return false;//G.pubObjectives.filter( ag => ag.players.indexOf(ctx.currentPlayer) > -1 ) >= WIN_POINTS;
 
 }
+
