@@ -1,0 +1,19 @@
+
+// Default variable overrides
+/*$body-bg: #000;
+$body-color: #111;*/
+$enable-rounded: false;
+$border-radius: 0;
+/*$font-family-sans-serif: Handel Gothic, Slider, sans-serif;
+
+
+$body-bg: rgba(74, 111, 144);
+$body-color: #fff;*/
+body{
+    overflow: hidden;
+}
+h4 {
+    font-family: Handel Gothic;
+}
+
+@import "../../node_modules/bootstrap/scss/bootstrap";
