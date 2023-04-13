@@ -1,8 +1,9 @@
+/* eslint eqeqeq: 0 */
 export const getPlayerUnits = (tiles, playerID)=> {
     const units = [];
   
     tiles.forEach( t => {
-      if(t.tdata.occupied === playerID){
+      if(t.tdata.occupied == playerID){
         if(t.tdata.fleet){
           Object.keys(t.tdata.fleet).forEach( k => {
             if(!units[k]) units[k] = 0;
@@ -13,7 +14,7 @@ export const getPlayerUnits = (tiles, playerID)=> {
   
       if(t.tdata.planets && t.tdata.planets.length){
         t.tdata.planets.forEach(p => {
-          if(p.occupied === playerID){
+          if(p.occupied == playerID){
             if(p.units){
               Object.keys(p.units).forEach( k => {
                 if(!units[k]) units[k] = 0;
@@ -35,7 +36,7 @@ export const getPlayerPlanets = (tiles, playerID)=> {
       if(t.tdata.planets && t.tdata.planets.length){
   
           t.tdata.planets.forEach(p => {
-            if(p.occupied === playerID){
+            if(p.occupied == playerID){
               arr.push({...p, 'systemType': t.tdata.type, 'tid': t.tid});
             }
           })
@@ -44,7 +45,7 @@ export const getPlayerPlanets = (tiles, playerID)=> {
     });
   
     return arr;
-  };
+};
   
 export const checkSpend = (G, req, playerID) => {
   

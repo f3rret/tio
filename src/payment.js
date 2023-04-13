@@ -40,6 +40,13 @@ export function PaymentDialog(args) {
             draft[type].tg += 1;
         }));
     }, [payment]);
+
+    const flushTg = useCallback(() => {
+        setPayment(produce(payment, draft => {
+            draft['influence'].tg = 0;
+            draft['resources'].tg = 0;
+        }));
+    }, [payment]);
     
     const tg = useMemo(() => args.race.tg - payment.influence.tg - payment.resources.tg, [payment, args]);
 
@@ -89,7 +96,8 @@ export function PaymentDialog(args) {
                         
                         return <div key={i} style={{display: 'flex', justifyContent: 'flex-end'}}>
                                 <Badge color={k ==='influence' ? 'info': ( k === 'resources' ? 'warning' : 'secondary' )} 
-                                        style={{cursor: 'default', fontSize: '1.25rem', marginBottom: '.5rem'}}>
+                                        style={{cursor: (k ==='tg'?'pointer':'default'), fontSize: '1.25rem', marginBottom: '.5rem'}}
+                                        onClick={(e)=> k ==='tg' && flushTg()}>
                                     {payment[k].planets && payment[k].planets.reduce((a,b) => b[k] + a, 0)}
                                     {!payment[k].planets && tg}
                                     {payment[k].tg > 0 && '+' + payment[k].tg}

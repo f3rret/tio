@@ -74,12 +74,12 @@ export const TIO = {
         onEnd: ({ G, random }) => {}
       },
       stats: {
-        start: true,
+
         next: 'strat',
         turn: {
           order: TurnOrder.ONCE,
-          minMoves: 1,
-          maxMoves: 1
+          /*minMoves: 1,
+          maxMoves: 1*/
         },
         moves: {
           completePublicObjective: ({G, playerID, events}, oid, payment) => {
@@ -100,12 +100,20 @@ export const TIO = {
                 }
                 else{
                   if(req.influence && payment.influence){
-                    if(payment.influence.planets) payment.influence.planets.forEach( p => planets.find( pl => pl.name === p).exhausted = true );
+                    if(payment.influence.planets){
+                      payment.influence.planets.forEach( p => {
+                        const tile = G.tiles.find( t => t.tid === p.tid);
+                        tile.tdata.planets.find( pl => pl.name === p.name).exhausted = true; 
+                      });
+                    }
                     if(payment.influence.tg) race.tg -= payment.influence.tg;
                   }
-                  if(req.resource && payment.resource){
-                    if(payment.resource.planets) payment.resource.planets.forEach( p => planets.find( pl => pl.name === p).exhausted = true );
-                    if(payment.resource.tg) race.tg -= payment.resource.tg;
+                  if(req.resources && payment.resources){
+                    if(payment.resources.planets) payment.resources.planets.forEach( p => {
+                        const tile = G.tiles.find( t => t.tid === p.tid);
+                        tile.tdata.planets.find( pl => pl.name === p.name).exhausted = true; 
+                    });
+                    if(payment.resources.tg) race.tg -= payment.resources.tg;
                   }
                   if(req.tg && payment.tg){
                     race.tg -= payment.tg;
@@ -120,7 +128,8 @@ export const TIO = {
                 
                 if(req.unit && Array.isArray(req.unit)){
                   if(req.squadron){
-                    let systems = G.tiles.filter( s => s.occupied === playerID && s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
+                    let systems = G.tiles.filter( s => s.tdata.occupied == playerID && s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
+
                     const goal = systems.some( s => {
                       let sum = 0;
                       Object.keys(s.tdata.fleet).forEach( k => {
@@ -153,7 +162,10 @@ export const TIO = {
                   }
                 }
                 else if(req.upgrade){
-                  const upgrades = race.knownTechs.filter(t => t.type === 'unit' && t.upgrade === true);
+                  const upgrades = race.knownTechs.filter(t => {
+                    const tech = techData.find(td => td.id === t);
+                    return tech.type === 'unit' && tech.upgrade === true
+                  });
                   if(upgrades.length < req.upgrade){
                     return;
                   }
@@ -168,27 +180,32 @@ export const TIO = {
                     return;
                   }
                 }
-                else if(req.technnology){
+                else if(req.technology){
                   const colors = {'biotic': 0, 'warfare': 0, 'cybernetic': 0, 'propulsion': 0};
-                  race.knownTechs.forEach(t => {if(colors[t.type] !== undefined){ colors[t.type]++; }});
+                  race.knownTechs.forEach(t => {
+                    const tech = techData.find(td => td.id === t);
+                    if(colors[tech.type] !== undefined){ colors[tech.type]++; }
+                  });
 
                   let goals = 0;
-                  Object.keys(colors).forEach(c => {if(colors[c] >= req.technology.count) goals++;});
+                  Object.keys(colors).forEach(c => {
+                    if(colors[c] >= parseInt(req.technology.count)) goals++;
+                  });
 
-                  if(goals < req.technology.colors){
+                  if(goals < parseInt(req.technology.color)){
                     return;
                   }
                 }
                 else if(req.planet){
                   let result = planets;
                   if(req.nhs){
-                    result = result.filter( p => p.tid !== race.rid );
+                    result = result.filter( p => p.tid != race.rid );
                   }
                   if(req.ground){
                     result = result.filter( p => p.units && Object.keys(p.units).some( key => req.ground.indexOf(key) > -1));
                   }
 
-                  if(result.count < req.planet){
+                  if(result.length < req.planet){
                     return;
                   }
                 }
@@ -221,13 +238,13 @@ export const TIO = {
                     return;
                   }
                 }
-                else if(req.speciality){
+                else if(req.specialty){
                   let sum = 0;
                   planets.forEach(p => {
-                    if(p.speciality) sum++;
+                    if(p.specialty) sum++;
                   });
 
-                  if(sum < req.speciality){
+                  if(sum < req.specialty){
                     return;
                   }
                 }
@@ -277,12 +294,6 @@ export const TIO = {
           }
         },
         onBegin: ({ G, random }) => {
-          if(!G.pubObjectives.length){ // to strat phase!
-            cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
-          }
-          //G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-          G.pubObjectives.push({ ...cardData.objectives.public.find( o => o.id === 'Amass Wealth'), players: [] });
-
           G.passedPlayers = [];
           //return {...G, passedPlayers: []}
         },
@@ -291,7 +302,7 @@ export const TIO = {
         }
       },
       acts: {
-        
+        start: true,
         next: 'stats',
         turn: {
             /*minMoves: 1,
@@ -527,15 +538,15 @@ export const TIO = {
           },
           activateTile: ({ G, playerID }, id) => {
 
-            if(G.races[playerID].tokens.t <= 0){
+            /*if(G.races[playerID].tokens.t <= 0){
               console.log('not enough tokens');
               return INVALID_MOVE;
-            }
+            }*/
 
-            if(G.races[playerID].actions.length > 0){
+            /*if(G.races[playerID].actions.length > 0){
               console.log('too many actions');
               return INVALID_MOVE;
-            }
+            }*/
 
             let tile;
             if(id !== undefined){
@@ -598,7 +609,7 @@ export const TIO = {
               });
             }
 
-            if(!Object.keys[src.tdata.fleet].length){
+            if(!src.tdata.fleet || !Object.keys(src.tdata.fleet).length){
               src.tdata.occupied = undefined;
             }
 
@@ -622,7 +633,7 @@ export const TIO = {
                 }
               });
 
-              if(Object.keys(dst.tdata.fleet).length > 0){
+              if(dst.tdata.fleet && Object.keys(dst.tdata.fleet).length > 0){
                 return;
               }
               else{
@@ -670,7 +681,7 @@ export const TIO = {
             }
 
             const fleet = ['carrier', 'fighter', 'cruiser', 'dreadnought', 'destroyer', 'warsun', 'flagship'];
-            const ground = ['infantry', 'mech'];
+            const ground = ['infantry', 'mech', 'pds'];
 
             Object.keys(units).forEach( u => {
               if( fleet.indexOf(u) > -1 ){
@@ -730,6 +741,16 @@ export const TIO = {
             }
             events.endTurn();
           }
+        },
+        onBegin: ({ G, random }) => {
+          if(!G.pubObjectives.length){ // to strat phase!
+            //cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
+            cardData.objectives.public.filter( o => o.vp === 1).forEach( o => {
+              G.pubObjectives.push({ ...o, players: [] });
+            });
+          }
+          //G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+          
         },
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers,
       }

@@ -6,7 +6,7 @@ import { Navbar, Nav, NavItem } from 'reactstrap';
 import { PaymentDialog } from './payment';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
-  const stagew = window.innerWidth;
+  const stagew = window.innerWidth * 0.7;
   const stageh = window.innerHeight;
 
   const stageOnclick = (e) => {
@@ -79,7 +79,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
       if(t.tdata.planets && t.tdata.planets.length){
         t.tdata.planets.forEach(p => {
           if(p.occupied == playerID){
-            arr.push(p);
+            arr.push({...p, tid: t.tid});
           }
         })
       }
@@ -161,14 +161,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
               {G.pubObjectives && G.pubObjectives.length &&
               <div id='public_objectives'>
                 <h4>Public objectives:</h4><br />
-                {G.pubObjectives.map((o, i) => {
-                  const complete = o.players.indexOf(playerID) > -1;
-                  return <li style={{padding: '1rem', cursor: complete ? 'default':'pointer', backgroundColor: complete ? 'rgba(154, 205, 50, 0.25)':'rgba(255, 100, 0, 0.25)' }} key={i} onClick={(e) => {if(!complete)completePubObj(e, i)}}>
-                    <b style={{fontSize: '0.7rem'}}>{o.id}</b>{' [ '}{o.players.map((p, pi) => <b key={pi}>{p}</b>)}{' ]  '}
-                    <br/>
-                    <i style={{fontSize: '0.7rem'}}>{o.title}</i>
-                  </li>})
-                }
+                <div style={{maxHeight: '30rem', overflowY: 'scroll'}}>
+                  {G.pubObjectives.map((o, i) => {
+                    const complete = o.players.indexOf(playerID) > -1;
+                    return <li style={{padding: '1rem', cursor: complete ? 'default':'pointer', backgroundColor: complete ? 'rgba(154, 205, 50, 0.25)':'rgba(255, 100, 0, 0.25)' }} key={i} onClick={(e) => {if(!complete)completePubObj(e, i)}}>
+                      <b style={{fontSize: '0.7rem'}}>{o.id}</b>{' [ '}{o.players.map((p, pi) => <b key={pi}>{p}</b>)}{' ]  '}
+                      <br/>
+                      <i style={{fontSize: '0.7rem'}}>{o.title}</i>
+                    </li>})
+                  }
+                </div>
               </div>
               }
             </div>}
@@ -189,7 +191,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                               x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2 + element.w/1.5} /> }
                             { element.tdata.planets.map( (p, i) => 
                                 <Text key={i} 
-                                text={ p.name + ' ' + p.resources + '/' + p.influence + 
+                                text={ (p.specialty ? '[' + p.specialty[0] + '] ':'') + p.name + (p.trait ? ' [' + p.trait[0] + '] ':'') + ' ' + p.resources + '/' + p.influence + 
                                 (p.occupied !== undefined ? ' [' + p.occupied + ':' + (p.units ? getUnitsString(p.units) : '-') + ']':'') } 
                                 style={{ fontSize: 10, fill: 'grey' }} 
                                 x={firstCorner.x + stagew/2 - element.w/1.5} y={firstCorner.y + stageh/2 + element.w/6 + element.w/8 * (i+1)} />
@@ -203,13 +205,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
             <div style={{ display: 'flex', flexDirection: 'column', position:'fixed', right: 0, top: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)', height: '100%', width: '30%' }}>
               <div style={{ margin: '1rem' }}>
                   {'Player ' + ctx.currentPlayer + ' turns '} 
-                  {ctx.currentPlayer == playerID && ctx.numMoves > 0 && <button style={{width: '5rem', height: '1rem', fontSize: '0.7rem'}} onClick={() => undo()}>Undo move</button>} <br/>
+                  {ctx.currentPlayer == playerID && ctx.numMoves > 0 && <button style={{width: '5rem', height: '1.2rem', fontSize: '0.7rem'}} onClick={() => undo()}>Undo move</button>} <br/>
                   {race && 'Race id: ' + race.rid + ' name: ' + race.name} <br/>
                   {race && race.strategy && 'Strategy: ' + race.strategy.id}
                   {race && race.strategy && race.strategy.exhausted && ' (exhausted)'} <br/>
                   {race && 'Command tokens: ' + race.tokens.t + '/' + race.tokens.f + '/' + race.tokens.s + (race.tokens.new ? ' +'+race.tokens.new : '')} <br/><br/>
                   {'Planets: '} <br/>
-                  {PLANETS.map((p,i) => <li key={i}>{p.name + ' ' + p.resources + '/' + p.influence}</li>)} <br/>
+                  {PLANETS.map((p,i) => {
+                    return <li key={i} style={{padding: '.5rem', width: '20rem', backgroundColor: (p.exhausted === true ? 'rgba(74, 111, 144, 0.42)':'')}}>
+                            {p.name + ' ' + p.resources + '/' + p.influence + (p.trait ? ' ['+p.trait+']' : '') + (p.specialty ? ' ['+p.specialty+']' : '')}</li>
+                  })} <br/>
                   {'Units: '} <br/>
                   {Object.keys(UNITS).map((k, i) => <li key={i}>{k + ': ' + UNITS[k]}</li>)} <br/>
                   {'Technologies: '} <br/>
