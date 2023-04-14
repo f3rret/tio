@@ -1,15 +1,16 @@
 /* eslint eqeqeq: 0 */
-import { Stage, Graphics, Text, Container } from '@pixi/react';
-import { HexGrid } from './Grid';
+import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
+//import { HexGrid } from './Grid';
 import { useMemo, useCallback, useState } from 'react';
-import { Navbar, Nav, NavItem } from 'reactstrap';
+import { Navbar, Nav, NavItem, Button } from 'reactstrap';
 import { PaymentDialog } from './payment';
+import { PixiViewport } from './viewport';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
-  const stagew = window.innerWidth * 0.7;
+  const stagew = window.innerWidth;
   const stageh = window.innerHeight;
 
-  const stageOnclick = (e) => {
+  /*const stageOnclick = (e) => {
     const x = e.clientX - stagew/2;
     const y = e.clientY - stageh/2;
     const hex = HexGrid.pointToHex({x, y}, {allowOutside: false});
@@ -36,7 +37,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
         }
       });
     }
-  }
+  }*/
 
   const [payObj, setPayObj] = useState(-1);
   const togglePaymentDialog = (payment) => {
@@ -124,14 +125,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     G.tiles.forEach(element => {
       if(element.active === true){
         g.beginFill('yellow', .15);
-        g.lineStyle(2,  'yellow');
+        g.lineStyle(10,  'yellow');
       }
       else if(element.selected === true){
         g.beginFill('lightblue', .15);
-        g.lineStyle(2,  'lightblue');
+        g.lineStyle(10,  'lightblue');
       }
       else{
-        g.lineStyle(1,  0x999999);
+        g.lineStyle(3,  0x999999);
       }
       const [firstCorner, ...otherCorners] = element.corners
       g.moveTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2)
@@ -146,12 +147,22 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
 
   const race = useMemo(() => G.races[playerID], [G.races, playerID]);
   const [objVisible, setObjVisible] = useState(true);
-
+  const [tilesPng, setTilesPng] = useState(true);
+  const [tilesTxt, setTilesTxt] = useState(true);
+//onClick={stageOnclick} onContextMenu={stageOncontext}
   return (<>
-            <Navbar style={{ position: 'fixed', height: '3rem'}}>
-              <Nav navbar>
+            <Navbar style={{ position: 'fixed', height: '3rem', width: '70%'}}>
+              <Nav>
                 <NavItem onClick={()=>setObjVisible(!objVisible)} style={{cursor: 'pointer'}}>
                   <h4>Objectives</h4>
+                </NavItem>
+              </Nav>
+              <Nav style={{float: 'right'}}>
+                <NavItem style={{marginRight: '1rem'}}>
+                  <Button outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
+                </NavItem>
+                <NavItem style={{marginRight: '1rem'}}>
+                  <Button outline={!tilesTxt} onClick={()=>setTilesTxt(!tilesTxt)}>Text</Button>
                 </NavItem>
               </Nav>
             </Navbar>
@@ -160,14 +171,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
               {ctx.gameover && <div>{'Player ' + ctx.gameover.winner + ' wins'}</div>}
               {G.pubObjectives && G.pubObjectives.length &&
               <div id='public_objectives'>
-                <h4>Public objectives:</h4><br />
+                <h5>Public objectives:</h5><br />
                 <div style={{maxHeight: '30rem', overflowY: 'scroll'}}>
                   {G.pubObjectives.map((o, i) => {
                     const complete = o.players.indexOf(playerID) > -1;
                     return <li style={{padding: '1rem', cursor: complete ? 'default':'pointer', backgroundColor: complete ? 'rgba(154, 205, 50, 0.25)':'rgba(255, 100, 0, 0.25)' }} key={i} onClick={(e) => {if(!complete)completePubObj(e, i)}}>
-                      <b style={{fontSize: '0.7rem'}}>{o.id}</b>{' [ '}{o.players.map((p, pi) => <b key={pi}>{p}</b>)}{' ]  '}
+                      <b style={{}}>{o.id}</b>{' [ '}{o.players.map((p, pi) => <b key={pi}>{p}</b>)}{' ]  '}
                       <br/>
-                      <i style={{fontSize: '0.7rem'}}>{o.title}</i>
+                      <i style={{fontSize: '0.8rem'}}>{o.title}</i>
                     </li>})
                   }
                 </div>
@@ -176,33 +187,39 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
             </div>}
             
 
-            <Stage width={stagew} height={stageh} onClick={stageOnclick} onContextMenu={stageOncontext} options={{ resizeTo: window, antialias: true, autoDensity: true, backgroundColor: 0xeef1f5 }}>
-                <Graphics draw={draw}/>
+            <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
+              <PixiViewport>
                 
                 {G.tiles.map((element, index) => {
                     const [firstCorner] = element.corners;
                     const fill = element.tdata.type;
                     
                     return <Container key={index}>
-                            <Text style={{fontSize: 10}} text={"(" + element.q + "," + element.r + ")"} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
-                            <Text style={{fontSize: 10, fill: fill}} text={ element.tid } x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2}/>
-                            { element.tdata.occupied!==undefined && <Text style={{fontSize: 12, fill: 'green'}} 
-                              text={element.tdata.occupied + ':' + (element.tdata.fleet ? getUnitsString(element.tdata.fleet) : '-')} 
-                              x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2 + element.w/1.5} /> }
-                            { element.tdata.planets.map( (p, i) => 
-                                <Text key={i} 
-                                text={ (p.specialty ? '[' + p.specialty[0] + '] ':'') + p.name + (p.trait ? ' [' + p.trait[0] + '] ':'') + ' ' + p.resources + '/' + p.influence + 
-                                (p.occupied !== undefined ? ' [' + p.occupied + ':' + (p.units ? getUnitsString(p.units) : '-') + ']':'') } 
-                                style={{ fontSize: 10, fill: 'grey' }} 
-                                x={firstCorner.x + stagew/2 - element.w/1.5} y={firstCorner.y + stageh/2 + element.w/6 + element.w/8 * (i+1)} />
-                              )}
-                            
+                            {tilesPng && <Sprite interactive={true} pointerdown={(e)=>{e.preventDefault(); moves.selectTile(index);}} 
+                                        image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }} 
+                                        x={firstCorner.x + stagew/2 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2}/>}
+                            {tilesTxt && <>
+                              <Text style={{fontSize: 20, fill:'white'}} text={"(" + element.q + "," + element.r + ")"} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
+                              <Text style={{fontSize: 25, fill: fill}} text={ element.tid } x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2}/>
+                                { element.tdata.occupied!==undefined && <Text style={{fontSize: 22, fill: 'green'}} 
+                                text={element.tdata.occupied + ':' + (element.tdata.fleet ? getUnitsString(element.tdata.fleet) : '-')} 
+                                x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2 + element.w/1.5} /> }
+                                { element.tdata.planets.map( (p, i) => 
+                                  <Text key={i} 
+                                    text={ (p.specialty ? '[' + p.specialty[0] + '] ':'') + p.name + (p.trait ? ' [' + p.trait[0] + '] ':'') + ' ' + p.resources + '/' + p.influence + 
+                                    (p.occupied !== undefined ? ' [' + p.occupied + ':' + (p.units ? getUnitsString(p.units) : '-') + ']':'') } 
+                                    style={{ fontSize: 20, fill: 'white' }} 
+                                    x={firstCorner.x + stagew/2 - element.w/1.5} y={firstCorner.y + stageh/2 + element.w/6 + element.w/8 * (i+1)} />
+                                  )}
+                            </>}
                           </Container>
                   })}
-                
+
+                <Graphics draw={draw}/>
+              </PixiViewport> 
             </Stage>
 
-            <div style={{ display: 'flex', flexDirection: 'column', position:'fixed', right: 0, top: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)', height: '100%', width: '30%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', position:'fixed', right: 0, top: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)', height: '100%', width: '25%' }}>
               <div style={{ margin: '1rem' }}>
                   {'Player ' + ctx.currentPlayer + ' turns '} 
                   {ctx.currentPlayer == playerID && ctx.numMoves > 0 && <button style={{width: '5rem', height: '1.2rem', fontSize: '0.7rem'}} onClick={() => undo()}>Undo move</button>} <br/>
