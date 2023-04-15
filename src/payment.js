@@ -66,7 +66,7 @@ export function PaymentDialog(args) {
     return (
         <Modal isOpen={args.isOpen} toggle={args.toggle}>
         <ModalHeader toggle={args.toggle}>{args.objective.id}</ModalHeader>
-        <ModalBody>
+        <ModalBody style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>
             {args.objective.title}
             <div style={{display: 'flex'}}>
                 {args.planets && 
@@ -95,7 +95,7 @@ export function PaymentDialog(args) {
                     {Object.keys(args.objective.req).map((k, i) =>{
                         
                         return <div key={i} style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <Badge color={k ==='influence' ? 'info': ( k === 'resources' ? 'warning' : 'secondary' )} 
+                                <Badge color={k ==='influence' ? 'info': ( k === 'resources' ? 'warning' : 'dark' )} 
                                         style={{cursor: (k ==='tg'?'pointer':'default'), fontSize: '1.25rem', marginBottom: '.5rem'}}
                                         onClick={(e)=> k ==='tg' && flushTg()}>
                                     {payment[k].planets && payment[k].planets.reduce((a,b) => b[k] + a, 0)}
@@ -104,7 +104,7 @@ export function PaymentDialog(args) {
                                     {' / '}{args.objective.req[k]}
                                 </Badge>
                                 {(k === 'influence' || k === 'resources') && 
-                                <Button disabled={tg < 1} onClick={()=>payTg(k)} size='sm' style={{margin: '0 0 .5rem .5rem'}}>+</Button>}
+                                <Button disabled={tg < 1} onClick={()=>payTg(k)} size='sm' color='dark' style={{margin: '0 0 .5rem .5rem'}}>+</Button>}
                             </div>
                     }
                     )}
@@ -112,7 +112,7 @@ export function PaymentDialog(args) {
             </div>
         </ModalBody>
         <ModalFooter>
-            <Button color="primary" disabled = {!acceptable} onClick={(e) => args.toggle(e, payment)}>
+            <Button color="light" disabled = {!acceptable} onClick={(e) => args.toggle(e, payment)}>
                 Confirm
             </Button>
         </ModalFooter>

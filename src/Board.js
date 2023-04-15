@@ -2,7 +2,8 @@
 import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
 //import { HexGrid } from './Grid';
 import { useMemo, useCallback, useState } from 'react';
-import { Navbar, Nav, NavItem, Button } from 'reactstrap';
+import { Navbar, Nav, NavItem, Button, Card, CardImg, CardText, CardTitle, 
+  /*CardSubtitle,*/ CardColumns, CardBody, ListGroup, ListGroupItem } from 'reactstrap';
 import { PaymentDialog } from './payment';
 import { PixiViewport } from './viewport';
 
@@ -147,45 +148,78 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
 
   const race = useMemo(() => G.races[playerID], [G.races, playerID]);
   const [objVisible, setObjVisible] = useState(true);
+  const [techVisible, setTechVisible] = useState(false);
   const [tilesPng, setTilesPng] = useState(true);
   const [tilesTxt, setTilesTxt] = useState(true);
+  const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
+
+  const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
+  const TOKENS_STYLE = { display: 'flex', flex: 'auto', alignItems: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
+
 //onClick={stageOnclick} onContextMenu={stageOncontext}
+//{ctx.gameover && <div>{'Player ' + ctx.gameover.winner + ' wins'}</div>}
   return (<>
             <Navbar style={{ position: 'fixed', height: '3rem', width: '70%'}}>
-              <Nav>
+              <div style={{display: 'flex'}}>
+              <Nav style={{marginRight: '2rem'}}>
                 <NavItem onClick={()=>setObjVisible(!objVisible)} style={{cursor: 'pointer'}}>
-                  <h4>Objectives</h4>
+                  <h5>Objectives</h5>
                 </NavItem>
+              </Nav>
+              <Nav>
+                <NavItem onClick={()=>setTechVisible(!techVisible)} style={{cursor: 'pointer'}}>
+                  <h5>Technologies</h5>
+                </NavItem>
+              </Nav>
+              </div>
+              <Nav>
+                <h4 style={{backgroundColor: ( isMyTurn ? 'rgba(45,255,0,.75)':'rgba(255,255,0,.75)'), color: 'black', padding: '1rem'}}>
+                  {isMyTurn ? 'You turn' : G.races[ctx.currentPlayer].name + ' turns '}
+                </h4>
               </Nav>
               <Nav style={{float: 'right'}}>
                 <NavItem style={{marginRight: '1rem'}}>
-                  <Button outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
+                  <Button disabled={!isMyTurn || ctx.numMoves == 0} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}>Undo</Button></NavItem>
+                <NavItem style={{marginRight: '1rem'}}>
+                  <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
                 </NavItem>
                 <NavItem style={{marginRight: '1rem'}}>
-                  <Button outline={!tilesTxt} onClick={()=>setTilesTxt(!tilesTxt)}>Text</Button>
+                  <Button color='light' outline={!tilesTxt} onClick={()=>setTilesTxt(!tilesTxt)}>Text</Button>
                 </NavItem>
               </Nav>
             </Navbar>
             
-            {objVisible && <div style={{ margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
-              {ctx.gameover && <div>{'Player ' + ctx.gameover.winner + ' wins'}</div>}
-              {G.pubObjectives && G.pubObjectives.length &&
-              <div id='public_objectives'>
-                <h5>Public objectives:</h5><br />
-                <div style={{maxHeight: '30rem', overflowY: 'scroll'}}>
-                  {G.pubObjectives.map((o, i) => {
+            <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '30rem'}}>
+
+              {objVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
+              <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Public objectives</h6></CardTitle>
+              
+                <ListGroup style={{maxHeight: '30rem', overflowY: 'scroll', border: 'none'}}>
+                {G.pubObjectives && G.pubObjectives.length &&
+                  G.pubObjectives.map((o, i) => {
                     const complete = o.players.indexOf(playerID) > -1;
-                    return <li style={{padding: '1rem', cursor: complete ? 'default':'pointer', backgroundColor: complete ? 'rgba(154, 205, 50, 0.25)':'rgba(255, 100, 0, 0.25)' }} key={i} onClick={(e) => {if(!complete)completePubObj(e, i)}}>
-                      <b style={{}}>{o.id}</b>{' [ '}{o.players.map((p, pi) => <b key={pi}>{p}</b>)}{' ]  '}
-                      <br/>
-                      <i style={{fontSize: '0.8rem'}}>{o.title}</i>
-                    </li>})
+                    return <ListGroupItem 
+                              style={{padding: '1rem', cursor: complete ? 'default':'pointer', 
+                                background: complete ? 'rgba(154, 205, 50, 0.25)':'none', color: 'white', border: 'none' }} 
+                                key={i} onClick={(e) => {if(!complete)completePubObj(e, i)}}>
+                              <b style={{}}>{o.id}</b>{' [ '}{o.players.map((p, pi) => <b key={pi}>{p}</b>)}{' ]  '}
+                              <br/>
+                              <i style={{fontSize: '0.8rem'}}>{o.title}</i>
+                            </ListGroupItem>})
                   }
-                </div>
-              </div>
-              }
-            </div>}
+                
+                </ListGroup>
+              
+            </Card>}
             
+            {techVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
+              <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Technologies map</h6></CardTitle>
+                <ListGroup style={{border: 'none'}}>
+                  {race && race.knownTechs.map((t, i) => <ListGroupItem key={i} style={{background: 'none', border: 'none', color: 'white'}}>{t.toLowerCase().replaceAll('_', ' ')}</ListGroupItem>)}
+                </ListGroup>
+            </Card>}
+
+            </CardColumns>
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport>
@@ -220,30 +254,47 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
             </Stage>
 
             <div style={{ display: 'flex', flexDirection: 'column', position:'fixed', right: 0, top: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)', height: '100%', width: '25%' }}>
-              <div style={{ margin: '1rem' }}>
-                  {'Player ' + ctx.currentPlayer + ' turns '} 
-                  {ctx.currentPlayer == playerID && ctx.numMoves > 0 && <button style={{width: '5rem', height: '1.2rem', fontSize: '0.7rem'}} onClick={() => undo()}>Undo move</button>} <br/>
-                  {race && 'Race id: ' + race.rid + ' name: ' + race.name} <br/>
+              <CardColumns style={{ margin: '1rem' }}>
+                  {race && <Card style={CARD_STYLE}>
+                    <CardImg src={'race/'+race.rid+'.png'} style={{opacity: .95, width: '205px'}}/>
+                    <CardBody>
+                      <CardText></CardText>
+                    </CardBody></Card>}
                   {race && race.strategy && 'Strategy: ' + race.strategy.id}
-                  {race && race.strategy && race.strategy.exhausted && ' (exhausted)'} <br/>
-                  {race && 'Command tokens: ' + race.tokens.t + '/' + race.tokens.f + '/' + race.tokens.s + (race.tokens.new ? ' +'+race.tokens.new : '')} <br/><br/>
+                  {race && race.strategy && race.strategy.exhausted && ' (exhausted)'}
+                  {race && <Card style={CARD_STYLE}>
+                    <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Command tokens</h6></CardTitle>
+
+                      <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
+                        <ListGroupItem tag='button' style={{...TOKENS_STYLE, border: 'none', margin: 0}} onClick={()=>ctx.phase === 'acts' && moves.activateTile()}>
+                          <img alt='race icon' className='tokenButton' src={'race/icons/' + race.rid + '.png'} />
+                        </ListGroupItem>
+                        <ListGroupItem style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.t}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', padding: '0 1.25rem', fontSize: '.9rem'}}>tactic</b></ListGroupItem>
+                        <ListGroupItem style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.f}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', padding: '0 1.5rem', fontSize: '.9rem'}}>fleet</b></ListGroupItem>
+                        <ListGroupItem style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.s}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', padding: '0 .5rem', fontSize: '.9rem'}}>strategic</b></ListGroupItem>
+                      </ListGroup>
+
+                    </Card>}
+                  
+                  <Card style={CARD_STYLE}>
+                    <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Units</h6></CardTitle>
+                    <ListGroup style={{border: 'none'}}>
+                    {Object.keys(UNITS).map((k, i) => <ListGroupItem key={i} style={{background: 'none', border: 'none', color: 'white'}}>{k + ': ' + UNITS[k]}</ListGroupItem>)}
+                    </ListGroup>
+                  </Card>
                   {'Planets: '} <br/>
                   {PLANETS.map((p,i) => {
                     return <li key={i} style={{padding: '.5rem', width: '20rem', backgroundColor: (p.exhausted === true ? 'rgba(74, 111, 144, 0.42)':'')}}>
                             {p.name + ' ' + p.resources + '/' + p.influence + (p.trait ? ' ['+p.trait+']' : '') + (p.specialty ? ' ['+p.specialty+']' : '')}</li>
-                  })} <br/>
-                  {'Units: '} <br/>
-                  {Object.keys(UNITS).map((k, i) => <li key={i}>{k + ': ' + UNITS[k]}</li>)} <br/>
-                  {'Technologies: '} <br/>
-                  {race && race.knownTechs.map((t, i) => <li key={i}>{t.toLowerCase().replaceAll('_', ' ')}</li>)} <br/>
-              </div>
+                  })}
+              </CardColumns>
             </div>
 
             {payObj !== -1 && <PaymentDialog objective={G.pubObjectives[payObj]} race={race} planets={PLANETS} isOpen={payObj !== -1} toggle={(e, payment)=>togglePaymentDialog(payment)}/>}
           </>)
 }
 /*
-
+{ctx.currentPlayer == playerID && ctx.numMoves > 0 && <button style={{width: '5rem', height: '1.2rem', fontSize: '0.7rem'}} onClick={() => undo()}>Undo move</button>} <br/>
 */
 
 const getUnitsString = (units) => {
