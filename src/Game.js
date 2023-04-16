@@ -538,15 +538,15 @@ export const TIO = {
           },
           activateTile: ({ G, playerID }, id) => {
 
-            /*if(G.races[playerID].tokens.t <= 0){
+            if(G.races[playerID].tokens.t <= 0){
               console.log('not enough tokens');
               return INVALID_MOVE;
-            }*/
+            }
 
-            /*if(G.races[playerID].actions.length > 0){
+            if(G.races[playerID].actions.length > 0){
               console.log('too many actions');
               return INVALID_MOVE;
-            }*/
+            }
 
             let tile;
             if(id !== undefined){

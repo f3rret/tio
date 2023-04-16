@@ -19,14 +19,20 @@ h4, h5, h6 {
     font-family: Handel Gothic;
 }
 
-.tokenButton{
+/*.tokenButton{
     transition: all .25s;
     padding: 1rem;
     border: solid 1px;
     border-color: transparent;
     border-radius: 5px;
+}*/
+.hoverable{
+    transition: all .25s;
+    border: solid 1px;
+    border-color: transparent;
+    border-radius: 5px;
 }
-.tokenButton:hover{
+.hoverable:hover{
     border: solid 1px rgba(255, 255, 255, 0.5)!important;
     background-color: rgba(255, 255, 255, 0.15)!important;
     transition: all .25s;

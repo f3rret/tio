@@ -11,7 +11,7 @@
             "ground": {"infantry": 5,"dock": 1}
         },
         "knownTechs": ["NEURAL_MOTIVATOR", "ANTIMASS_DEFLECTORS"],
-        "commodities": 4,
+        "commCap": 4,
         "abilities": [
             {"id": "ORBITAL_DROP", "type": "ACTION", "effect": "Spend 1 token from your strategy pool to place 2 infantry from your reinforcements on 1 planet you control."},
             {"id": "VERSATILE", "effect": "When you gain command tokens during the status phase, gain 1 additional command token."}
@@ -113,7 +113,7 @@
             "ground": {"infantry": 4, "dock": 1, "pds": 1}
         },
         "knownTechs": ["SARWEEN_TOOLS", "PLASMA_SCORING"],
-        "commodities": 2,
+        "commCap": 2,
         "abilities": [
             {"id": "AMBUSH", "effect": "At the start of a space combat, you may roll 1 die for each of up to 2 of your cruisers or destroyers in the system. For each result equal to or greater than that ship’s combat value, produce 1 hit; your opponent must assign it to 1 of his ships."},
             {"id": "PILLAGE", "effect": "After 1 of your neighbors gains trade goods or resolves a transaction, if he has 3 or more trade goods, you may take 1 of his trade goods or commodities."}
@@ -182,7 +182,7 @@
             "ground": {"infantry": 4, "dock": 1}
         },
         "knownTechs": ["SARWEEN_TOOLS"],
-        "commodities": 2,
+        "commCap": 2,
         "abilities": [
             {"id": "INDOCTRINATION", "effect": "At the start of a ground combat, you may spend 2 influence to replace 1 of your opponent’s participating infantry with 1 infantry from your reinforcements."},
             {"id": "DEVOTION", "effect": "After each space battle round, you may destroy 1 of your cruisers or destroyers in the active system to produce 1 hit and assign it to 1 of your opponent’s ships in that system."}
@@ -251,7 +251,7 @@
             "ground": {"infantry": 4, "dock": 1}
         },
         "knownTechs": ["PLASMA_SCORING"],
-        "commodities": 4,
+        "commCap": 4,
         "abilities": [
             {"id": "STAR_FORGE", "type": "ACTION", "effect": "Spend 1 token from your strategy pool to place either 2 fighters or 1 destroyer from your reinforcements in a system that contains 1 or more of your war suns."},
             {"id": "GASHLAI_PHYSIOLOGY", "effect": "Your ships can move through supernovas."}
@@ -344,7 +344,7 @@
             "ground": {"infantry": 4, "dock": 1, "pds": 1}
         },
         "knownTechs": ["MAGEN_DEFENSE_GRID"],
-        "commodities": 3,
+        "commCap": 3,
         "abilities": [
             {"id": "MITOSIS", "effect": "Your space docks cannot produce infantry. At the start of the status phase, place 1 infantry from your reinforcements on any planet you control."}
         ],
@@ -430,7 +430,7 @@
             "ground": {"infantry": 5, "dock": 1, "pds": 1}
         },
         "knownTechs": ["NEURAL_MOTIVATOR", "PLASMA_SCORING"],
-        "commodities": 2,
+        "commCap": 2,
         "abilities": [
             {"id": "ASSIMILATE", "effect": "When you gain control of a planet, replace each PDS and space dock that is on that planet with a matching unit from your reinforcements."},
             {"id": "HARROW", "effect": "At the end of each round of ground combat, your ships in the active system may use their BOMBARDMENT abilities against your opponent’s ground forces on that planet."}
@@ -524,7 +524,7 @@
         },
         "knownTechs": ["ANTIMASS_DEFLECTORS", "DARK_ENERGY_TAP", "SARWEEN_TOOLS", "SCANLINK_DRONE_NETWORK", "NEURAL_MOTIVATOR", "PSYCHOARCHAEOLOGY", "PLASMA_SCORING", "AI_DEVELOPMENT_ALGORITHM"],
         "startingTechsChoice": 1,
-        "commodities": 3,
+        "commCap": 3,
         "abilities": [
             {"id": "BLOOD_TIES", "effect": "You do not have to spend influence to remove the custodians token from Mecatol Rex."},
             {"id": "RECLAMATION", "effect": "After you resolve a tactical action during which you gained control of Mecatol Rex, you may place 1 PDS and 1 space dock from your reinforcements on Mecatol Rex."}
@@ -592,7 +592,7 @@
             "ground": {"infantry": 2, "dock": 1}
         },
         "knownTechs": ["DACXIVE_ANIMATORS", "VALEFAR_ASSIMILATOR_X", "VALEFAR_ASSIMILATOR_Y"],
-        "commodities": 3,
+        "commCap": 3,
         "abilities": [
             {"id": "GALACTIC_THREAT", "effect": "You cannot vote on agendas. Once per agenda phase, after an agenda is revealed, you may predict aloud the outcome of that agenda. If your prediction is correct, gain 1 technology that is owned by a player who voted how you predicted."},
             {"id": "TECHNOLOGICAL_SINGULARITY","effect": "Once per combat, after 1 of your opponent’s units is destroyed, you may gain 1 technology that is owned by that player."},
@@ -661,7 +661,7 @@
             "ground": {"infantry": 4, "dock": 1, "pds": 1}
         },
         "knownTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS"],
-        "commodities": 3,
+        "commCap": 3,
         "abilities": [
             {"id": "TELEPATHIC", "effect": "At the end of the strategy phase, place the Naalu '0' token on your strategy card; you are first in initiative order."},
             {"id": "FORESIGHT", "effect": "After another player moves ships into a system that contains 1 or more of your ships, you may place 1 token from your strategy pool in an adjacent system that does not contain another player's ships; move your ships from the active system into that system."}
@@ -753,7 +753,7 @@
             "ground": {"infantry": 3, "dock": 1}
         },
         "knownTechs": ["ANTIMASS_DEFLECTORS", "PLASMA_SCORING"],
-        "commodities": 2,
+        "commCap": 2,
         "abilities": [
             {"id": "MUNITIONS_RESERVES", "effect": "At the start of each round of space combat, you may spend 2 trade goods; you may reroll any number of your dice during that combat round."},
             {"id": "ARMADA", "effect": "The maximum number of non-fighter ships you can have in each system is equal to 2 more than the number of tokens in your fleet pool."}
@@ -822,7 +822,7 @@
             "ground": {"infantry": 4, "dock": 1}
         },
         "knownTechs": ["ANTIMASS_DEFLECTORS"],
-        "commodities": 3,
+        "commCap": 3,
         "abilities": [
             {"id": "SCAVENGE", "effect": "After you gain control of a planet, gain 1 trade good."},
             {"id": "NOMADIC", "effect": "You can score objectives even if you do not control the planets in your home system."}
@@ -904,7 +904,7 @@
             "ground": {"infantry": 2, "dock": 1, "pds": 2}
         },
         "knownTechs": ["NEURAL_MOTIVATOR", "ANTIMASS_DEFLECTORS", "SARWEEN_TOOLS", "PLASMA_SCORING"],
-        "commodities": 4,
+        "commCap": 4,
         "abilities": [
             {"id": "FRAGILE", "effect": "Apply -1 to the result of each of your unit’s combat rolls."},
             {"id": "BRILLIANT", "effect": "When you spend a command token to resolve the secondary ability of the 'Technology' strategy card, you may resolve the primary ability instead."},
@@ -973,7 +973,7 @@
             "ground": {"infantry": 5, "dock": 1, "pds": 1}
         },
         "knownTechs": [],
-        "commodities": 3,
+        "commCap": 3,
         "abilities": [
             {"id": "UNRELENTING", "effect": "Apply +1 to the result of each of your unit’s combat rolls."}
         ],
@@ -1065,7 +1065,7 @@
             "ground": {"infantry": 4, "dock": 1, "pds": 1}
         },
         "knownTechs": ["GRAVITON_LASER_SYSTEM"],
-        "commodities": 4,
+        "commCap": 4,
         "abilities": [
             {"id": "PEACE_ACCORDS", "effect": "After you resolve the primary or secondary ability of the 'Diplomacy' strategy card, you may gain control of 1 planet other than Mecatol Rex that does not contain any units and is in a system that is adjacent to a planet you control."},
             {"id": "QUASH", "effect": "When an agenda is revealed, you may spend 1 token from your strategy pool to discard that agenda and reveal 1 agenda from the top of the deck. Players vote on this agenda instead."}
@@ -1136,7 +1136,7 @@
             "ground": {"infantry": 5, "dock": 1, "pds": 1}
         },
         "knownTechs": ["NEURAL_MOTIVATOR"],
-        "commodities": 3,
+        "commCap": 3,
         "abilities": [
             {"id": "STALL_TACTICS", "type": "ACTION", "effect": "Discard 1 action card from your hand."},
             {"id": "SCHEMING", "effect": "When you draw 1 or more action cards, draw 1 additional action card. Then, choose and discard 1 action card from your hand."},
@@ -1205,7 +1205,7 @@
             "ground": {"infantry": 4, "dock": 1}
         },
         "knownTechs": ["ANTIMASS_DEFLECTORS", "SARWEEN_TOOLS"],
-        "commodities": 6,
+        "commCap": 6,
         "abilities": [
             {"id": "MASTERS_OF_TRADE", "effect": "You do not have to spend a command token to resolve the secondary ability of the 'Trade' strategy card."},
             {"id": "GUILD_SHIPS", "effect": "You can negotiate transactions with players who are not your neighbors."},
@@ -1275,7 +1275,7 @@
             "ground": {"infantry": 4, "dock": 1}
         },
         "knownTechs": ["GRAVITY_DRIVE"],
-        "commodities": 4,
+        "commCap": 4,
         "abilities": [
             {"id": "QUANTUM_ENTANGLEMENT", "effect": "You treat all systems that contain either an alpha or beta wormhole as adjacent to each other. Game effects cannot prevent you from using this ability."},
             {"id": "SLIPSTREAM", "effect": "During your tactical actions, apply +1 to the move value of each of your ships that starts its movement in your home system or in a system that contains either an alpha or beta wormhole."},
@@ -1345,7 +1345,7 @@
             "ground": {"infantry": 3, "dock": 1}
         },
         "knownTechs": ["BIO_STIMS", "PREDICTIVE_INTELLIGENCE"],
-        "commodities": 3,
+        "commCap": 3,
         "abilities": [
             {"id": "EDICT", "effect": "When you win a combat, place 1 command token from your opponent’s reinforcements in your fleet pool if it does not already contain 1; other players’ tokens increase your fleet limit but cannot be redistributed."},
             {"id": "IMPERIA", "effect": "While another player’s command token is in your fleet pool, you can use the ability of that player’s commander, if it is unlocked."},
@@ -1434,7 +1434,7 @@
             "ground": {"infantry": 4, "dock": 1}
         },
         "knownTechs": ["SLING_RELAY"],
-        "commodities": 4,
+        "commCap": 4,
         "abilities": [
             {"id": "THE_COMPANY", "effect": "During setup, take the 2 additional Nomad faction agents and place them next to your faction sheet; you have 3 agents."},
             {"id": "FUTURE_SIGHT", "effect": "During the agenda phase, after an outcome you voted for or predicted is resolved, gain 1 trade good."}
@@ -1511,7 +1511,7 @@
             "ground": {"infantry": 3, "dock": 1}
         },
         "knownTechs": ["SELF_ASSEMBLY_ROUTINES"],
-        "commodities": 2,
+        "commCap": 2,
         "abilities": [
             {"id": "DEVOUR", "effect": "Capture your opponent’s non-structure units that are destroyed during combat."},
             {"id": "AMALGAMATION", "effect": "When you produce a unit, you may return 1 captured unit of that type to produce that unit without spending resources."},
@@ -1591,7 +1591,7 @@
             "ground": {"infantry": 3, "dock": 1}
         },
         "knownTechs": ["ANTIMASS_DEFLECTORS", "SCANLINK_DRONE_NETWORK"],
-        "commodities": 2,
+        "commCap": 2,
         "abilities": [
             {"id": "TERRAGENESIS", "effect": "After you explore a planet that does not have a sleeper token, you may place or move 1 sleeper token onto that planet."},
             {"id": "AWAKEN", "effect": "After you activate a system that contains 1 or more of your sleeper tokens, you may replace each of those tokens with 1 PDS from your reinforcements."}
@@ -1697,7 +1697,7 @@
             "ground": {"infantry": 4, "dock": 1}
         },
         "knownTechs": ["DARK_ENERGY_TAP"],
-        "commodities": 4,
+        "commCap": 4,
         "abilities": [
             {"id": "VOIDBORN", "effect": "Nebulae do not affect your ships’ movement."},
             {"id": "AETHERPASSAGE", "effect": "After a player activates a system, you may allow that player to move their ships through systems that contain your ships."},
@@ -1772,7 +1772,7 @@
             "ground": {"mech": 1, "infantry": 3, "dock": 1}
         },
         "knownTechs": ["PSYCHOARCHAEOLOGY", "AI_DEVELOPMENT_ALGORITHM"],
-        "commodities": 3,
+        "commCap": 3,
         "abilities": [
             {"id": "DISTANT_SUNS", "effect": "When you explore a planet that contains 1 of your mechs, you may draw 1 additional card; choose 1 to resolve and discard the rest."},
             {"id": "FABRICATION", "type": "ACTION", "effect": "Either purge 2 of your relic fragments of the same type to gain 1 relic or purge 1 of your relic fragments to gain 1 command token."}
@@ -1853,7 +1853,7 @@
         },
         "knownTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS", "PLASMA_SCORING"],
         "startingTechsChoice": 2,
-        "commodities": 3,
+        "commCap": 3,
         "abilities": [
             {"id": "ZEAL", "effect": "You always vote first during the agenda phase. When you cast at least 1 vote, cast 1 additional vote for each player in the game, including you."},
             {"id": "RAID_FORMATION", "effect": "When 1 or more of your units use ANTI-FIGHTER BARRAGE, for each hit produced in excess of your opponent’s fighters, choose 1 of your opponent’s ships that has SUSTAIN DAMAGE to become damaged."}
