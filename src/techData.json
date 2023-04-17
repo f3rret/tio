@@ -321,7 +321,6 @@
         "cost": 2,
         "combat": 7,
         "move": 2,
-        "capacity": 0,
         "sustain": false,
         "bombardment": false,
         "barrage": false,
@@ -406,7 +405,7 @@
         "type": "unit",
         "description": "",
         "prereq": { },
-        "spaceCannon": { "value": 6, "range": 1 },
+        "spaceCannon": { "value": 6, "range": 1, "count": 1 },
         "planetaryShield": true
     },
     {
@@ -415,7 +414,7 @@
         "upgrade": true,
         "description": "",
         "prereq": { "cybernetic": 1, "warfare": 1 },
-        "spaceCannon": { "value": 5, "range": 2 },
+        "spaceCannon": { "value": 5, "range": 2, "count": 1},
         "planetaryShield": true
     },
     {

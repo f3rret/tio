@@ -8,6 +8,7 @@ import './scss/custom.scss'
 const App = Client({ 
   game: TIO,
   board: TIOBoard,
+  numPlayers: 6,
   multiplayer: Local()//SocketIO({ server: 'assist:8000' })
 });
 

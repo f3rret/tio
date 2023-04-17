@@ -1645,7 +1645,7 @@
                 "sustain": true,
                 "planetaryShield": true,
                 "production": 1,
-                "spaceCannon": {"value": 6, "range": 1},
+                "spaceCannon": {"value": 6, "range": 1, "count": 1},
                 "effect": "This unit is treated as both a structure and a ground force. It cannot be transported."
             },
             {
@@ -1673,7 +1673,7 @@
                 "sustain": true,
                 "planetaryShield": true,
                 "production": 1,
-                "spaceCannon": { "value": 5, "range": 2 },
+                "spaceCannon": { "value": 5, "range": 2, "count": 1 },
                 "effect": "This unit is treated as both a structure and a ground force. It cannot be transported. You may use this unit’s SPACE CANNON against ships that are adjacent to this unit’s system."
             }
         ],
@@ -1805,7 +1805,7 @@
                 "effect": "If this unit is in the space area at the start of space combat, flip this card. This card begins the game with this side face up."
             },
             {
-                "id": "MECH",
+                "id": "MECH Z-GRAV",
                 "type": "unit",
                 "description": "Z-GRAV EIDOLON",
                 "prereq": { },

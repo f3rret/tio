@@ -3,11 +3,10 @@ import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
 //import { HexGrid } from './Grid';
 import { useMemo, useCallback, useState } from 'react';
 import { Navbar, Nav, NavItem, Button, Card, CardImg, CardText, CardTitle, 
-  /*CardSubtitle,*/ CardColumns, CardBody, ListGroup, ListGroupItem,
-  Container as Cont, Row, Col, Badge, ButtonGroup } from 'reactstrap';
+  /*CardSubtitle,*/ CardColumns, ListGroup, ListGroupItem,
+  Container as Cont, Row, Col } from 'reactstrap';
 import { PaymentDialog } from './payment';
 import { PixiViewport } from './viewport';
-import techData from './techData.json';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const stagew = window.innerWidth;
@@ -155,13 +154,28 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const [tilesPng, setTilesPng] = useState(true);
   const [tilesTxt, setTilesTxt] = useState(true);
   const [unitsVisible, setUnitsVisible] = useState(true);
-  const [showUnit, setShowUnit] = useState('CARRIER');
+  const [showUnit, setShowUnit] = useState('FLAGSHIP');
   const [abilVisible, setAbilVisible] = useState(0);
   const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
-  const ALL_UNITS = techData.filter((t) => t.type === 'unit' && !t.upgrade);
+  const R_UNITS = useMemo(() => {
+    if(race){
+      const all_units = race.technologies.filter(t => t.type === 'unit' && !t.upgrade);
+      all_units.forEach(u => all_units[u.id] = u);
+      return all_units;
+    }
+  }, [race]);
+
+  const R_UPGRADES = useMemo(() => {
+    if(race){
+      const upgrades = race.technologies.filter(t => t.type === 'unit' && t.upgrade);
+      upgrades.forEach(u => upgrades[u.id] = u);
+      return upgrades;
+    }
+  }, [race]);
 
   const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
-  const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
+  const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
+  const B_STYLE = {backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}
 
 //onClick={stageOnclick} onContextMenu={stageOncontext}
 //{ctx.gameover && <div>{'Player ' + ctx.gameover.winner + ' wins'}</div>}
@@ -206,7 +220,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
               </Nav>
             </Navbar>
             
-            <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '30rem'}}>
+            <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
 
               {objVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
               <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Public objectives</h6></CardTitle>
@@ -259,14 +273,76 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                   </div>
               </Card>}
 
-              {unitsVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
+              {race && unitsVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
                 <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Units</h6></CardTitle>
                 <div style={{display: 'flex'}}>
-                  <div style={{display:'flex', flexFlow:'column', width: '10rem', border: 'none'}}>
-                    {ALL_UNITS.map((u, i) => <Button key={i} size='sm' color='dark' onClick={()=>setShowUnit(u.id)}>{u.id}</Button>)}
+                  <div style={{display:'flex', flexFlow:'column', width: '30%', border: 'none'}}>
+                    {R_UNITS.map((u, i) =>
+                      <Button key={i} size='sm' color={showUnit === u.id ? 'light':'dark'} onClick={()=>setShowUnit(u.id)}>
+                        <div style={{display: 'flex', justifyContent: 'space-between'}}><div>{u.id}</div><div>{UNITS[u.id.toLowerCase()]}</div></div>
+                      </Button>)}
                   </div>
-                  <div style={{padding: '1rem'}}>
-                    <CardImg src={'units/' + showUnit + '.png'} />
+                  <div style={{paddingLeft: '1rem', flex: 'auto', width: '70%'}}>
+                    <CardImg src={'units/' + showUnit + '.png'} style={{width: 'auto', float: 'left'}}/>
+                    <div style={{padding: '1rem', position: 'absolute', right: 0, textAlign: 'end'}}>
+                      {R_UNITS[showUnit].description && <h5>{R_UNITS[showUnit].description}</h5>}
+                      {R_UNITS[showUnit].sustain && <h6>♦ sustain damage</h6>}
+                      {R_UNITS[showUnit].bombardment && <h6>♦ bombardment {R_UNITS[showUnit].bombardment.value + ' x ' + R_UNITS[showUnit].bombardment.count}</h6>}
+                      {R_UNITS[showUnit].barrage && <h6>♦ barrage {R_UNITS[showUnit].barrage.value + ' x ' + R_UNITS[showUnit].barrage.count}</h6>}
+                      {R_UNITS[showUnit].planetaryShield && <h6>♦ planetary shield</h6>}
+                      {R_UNITS[showUnit].spaceCannon && <h6>♦ space cannon {R_UNITS[showUnit].spaceCannon.value + ' x ' + R_UNITS[showUnit].spaceCannon.count + ' range ' + R_UNITS[showUnit].spaceCannon.range}</h6>}
+                      {R_UNITS[showUnit].production && <h6>♦ production {R_UNITS[showUnit].production}</h6>}
+                      {R_UPGRADES[showUnit+'2'] && <>
+                        <h6 style={{marginTop: '2rem'}}>{'upgradable '}
+                        {Object.keys(R_UPGRADES[showUnit+'2'].prereq).map(p => {
+                          let result = [];
+                          for(var i=1; i<=R_UPGRADES[showUnit+'2'].prereq[p]; i++){
+                            result.push(<img alt='requirement' style={{width: '1.25rem'}} src={'icons/'+p+'.png'}/>);
+                          }
+                          return result;
+                        })}</h6>
+                          <ul style={{fontSize: '.8rem', marginTop: '-.5rem', opacity: '.8', listStyle: 'none'}}>
+                            {Object.keys(R_UPGRADES[showUnit+'2']).map((k, i) => {
+                              const L1 = R_UNITS[showUnit][k];
+                              const L2 = R_UPGRADES[showUnit+'2'][k];
+                              if(['cost', 'combat', 'move', 'capacity', 'shot', 'production'].indexOf(k) > -1){
+                                if(L2 !== L1){
+                                  return <li key={i}>{k + ' ' + L2}</li>
+                                }
+                              }
+                              else if(['bombardment', 'barrage'].indexOf(k) > -1 && L2){
+                                if(!L1 || L2.value != L1.value || L2.count != L1.count){
+                                  return <li key={i}>{k + ' ' + R_UPGRADES[showUnit+'2'][k].value + ' x ' + L2.count}</li>
+                                }
+                              }
+                              else if(k === 'spaceCannon' && L2){
+                                if(!L1 || L2.value != L1.value || L2.count != L1.count || L2.range != L1.range){
+                                  return <li key={i}>{'space cannon ' + L2.value + ' x ' + L2.count + ' range ' + L2.range}</li>
+                                }
+                              }
+                              else if( k === 'sustain' && L2){
+                                return <li key={i}>sustain damage</li>
+                              }
+                              return <></>
+                            })}
+                          </ul>
+                        </>
+                      }
+                    </div>
+                    
+                    <div style={{clear: 'both'}}/>
+                                        
+                    <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center', marginBottom: '.5rem'}}>
+                      {R_UNITS[showUnit].cost && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].cost}</h6><b style={B_STYLE}>cost</b></ListGroupItem>}
+                      {R_UNITS[showUnit].combat && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}>
+                        <h6 style={{fontSize: 30}}>{R_UNITS[showUnit].combat}{R_UNITS[showUnit].shot && R_UNITS[showUnit].shot > 1 && 
+                          <i style={{position: 'absolute', fontSize: '1.25rem', top: '0.5rem', right: 0, transform: 'rotate(90deg)'}}>{'♦'.repeat(R_UNITS[showUnit].shot)}</i>}
+                        </h6><b style={B_STYLE}>combat</b></ListGroupItem>}
+                      {R_UNITS[showUnit].move && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].move}</h6><b style={B_STYLE}>move</b></ListGroupItem>}
+                      {R_UNITS[showUnit].capacity && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].capacity}</h6><b style={B_STYLE}>capacity</b></ListGroupItem>}
+                    </ListGroup>
+                    {R_UNITS[showUnit].effect && <CardText style={{fontSize: '0.8rem'}}>{R_UNITS[showUnit].effect}</CardText>}
+                    {R_UNITS[showUnit].deploy && <CardText style={{fontSize: '0.8rem'}}><b>DEPLOY</b>{' '+R_UNITS[showUnit].deploy}</CardText>}
                   </div>
                 </div>
               </Card>}
