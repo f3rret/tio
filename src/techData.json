@@ -353,6 +353,7 @@
         "sustain": true,
         "bombardment": { "count": 3, "value": 3 },
         "barrage": false,
+        "upgrade": true,
         "shot": 3
     },
     {

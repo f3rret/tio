@@ -2,11 +2,12 @@
 import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
 //import { HexGrid } from './Grid';
 import { useMemo, useCallback, useState } from 'react';
-import { Navbar, Nav, NavItem, Button, Card, CardImg, CardText, CardTitle, 
-  /*CardSubtitle,*/ CardColumns, ListGroup, ListGroupItem,
-  Container as Cont, Row, Col } from 'reactstrap';
+import { Navbar, Nav, NavItem, Button, Card, CardImg, CardText, CardTitle, UncontrolledCollapse, CardBody, CardFooter,
+  /*CardSubtitle,*/ CardColumns, ListGroup, ListGroupItem, Container as Cont, Row, Col } from 'reactstrap';
 import { PaymentDialog } from './payment';
 import { PixiViewport } from './viewport';
+import techData from './techData.json';
+import cardData from './cardData.json';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const stagew = window.innerWidth;
@@ -62,20 +63,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
 
   }
 
-  /*const VPs = useMemo(()=>{
-    const players = [];
-
-    if(G.pubObjectives && G.pubObjectives.length){
-      G.pubObjectives.forEach( v => {
-        if(v.players && v.players.length){
-          v.players.forEach(p => players[p] ? players[p]++ : players[p]=1 )
-        }
-      });
-
-      return ctx.playOrder.map( o => ' player ' + o + ' vp: ' + (players[o] ? players[o]:0));
-    }
-  }, [G.pubObjectives, ctx.playOrder]);*/
-
   const PLANETS = useMemo(()=> {
     const arr = [];
     G.tiles.forEach( t => {
@@ -119,7 +106,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     
     return units;
   }, [G.tiles, playerID]);
-
 
   const draw = useCallback((g) => {
     g.clear();
@@ -177,178 +163,266 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
   const B_STYLE = {backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}
 
+  const MyNavbar = () => (
+    <Navbar style={{ position: 'fixed', height: '3rem', width: '70%'}}>
+      <div style={{display: 'flex'}}>
+        
+        <Nav style={{marginRight: '2rem'}}>
+          <NavItem onClick={()=>setTechVisible(!techVisible)} style={{cursor: 'pointer'}}>
+            <h5>Technologies</h5>
+          </NavItem>
+        </Nav>
+        <Nav style={{marginRight: '2rem'}}>
+          <NavItem onClick={()=>setObjVisible(!objVisible)} style={{cursor: 'pointer'}}>
+            <h5>Objectives</h5>
+          </NavItem>
+        </Nav>
+        <Nav style={{marginRight: '2rem'}}>
+          <NavItem onClick={()=>setPlanetsVisible(!planetsVisible)} style={{cursor: 'pointer'}}>
+            <h5>Planets</h5>
+          </NavItem>
+        </Nav>
+        <Nav>
+          <NavItem onClick={()=>setUnitsVisible(!unitsVisible)} style={{cursor: 'pointer'}}>
+            <h5>Units</h5>
+          </NavItem>
+        </Nav>
+    </div>
+    <Nav>
+      <h4 style={{backgroundColor: ( isMyTurn ? 'rgba(45,255,0,.75)':'rgba(255,255,0,.75)'), color: 'black', padding: '1rem'}}>
+        {isMyTurn ? 'You turn' : G.races[ctx.currentPlayer].name + ' turns '}
+      </h4>
+    </Nav>
+    <Nav style={{float: 'right', marginRight: '5rem'}}>
+      <NavItem style={{marginRight: '1rem'}}>
+        <Button disabled={!isMyTurn || ctx.numMoves == 0} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}>Undo</Button></NavItem>
+      <NavItem style={{marginRight: '1rem'}}>
+        <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
+      </NavItem>
+      <NavItem style={{marginRight: '1rem'}}>
+        <Button color='light' outline={!tilesTxt} onClick={()=>setTilesTxt(!tilesTxt)}>Text</Button>
+      </NavItem>
+    </Nav>
+  </Navbar>);
+
+  const Objectives = () => (
+    <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Public objectives</h6></CardTitle>
+      
+      <ListGroup style={{maxHeight: '30rem', overflowY: 'auto', border: 'none', paddingRight: '1rem'}}>
+      {G.pubObjectives && G.pubObjectives.length &&
+        G.pubObjectives.map((o, i) => {
+          const complete = o.players.indexOf(playerID) > -1;
+          return <ListGroupItem className='hoverable'
+                    style={{padding: '1rem', cursor: complete ? 'default':'pointer', 
+                      background: complete ? 'rgba(154, 205, 50, 0.25)':'none', color: 'white', border: 'solid 1px transparent' }} 
+                      key={i} onClick={(e) => {if(!complete)completePubObj(e, i)}}>
+                    <b style={{}}>{o.id}</b>{' [ '}{o.players.map((p, pi) => <b key={pi}>{p}</b>)}{' ]  '}
+                    <br/>
+                    <i style={{fontSize: '0.8rem'}}>{o.title}</i>
+                  </ListGroupItem>})
+        }
+      
+      </ListGroup>
+    </Card>
+  );
+
+  const PlanetsList = () => (
+    <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Planets</h6></CardTitle>
+        <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
+          <Cont style={{border: 'none'}}>
+            {PLANETS.map((p,i) => {
+              let trait;
+              if(p.trait) trait = <img alt='trait' style={{width: '1.5rem'}} src={'icons/' + p.trait + '.png'}/>;
+              let specialty;
+              if(p.specialty) specialty = <img alt='specialty' style={{width: '1.5rem'}} src={'icons/' + p.specialty + '.png'}/>;
+              
+              return (<Row className='hoverable' key={i} style={{cursor: 'default', fontSize: '1.25rem', lineHeight: '2.2rem', height: '2.5rem', opacity: p.exhausted ? '.25':'1', color: 'white'}}>
+                        <Col xs='6'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem'}} src={'icons/legendary_complete.png'}/>:'' } {p.name}</Col>
+                        <Col xs='1' style={{padding: 0}}>{specialty}</Col>
+                        <Col xs='1' style={{padding: 0}}>{trait}</Col>
+                        <Col xs='1' style={{background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
+                        <Col xs='1'/>
+                        <Col xs='1' style={{background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b>{p.influence}</b></Col>
+                        <Col xs='1'/>
+                      </Row>)
+            })}
+          </Cont>
+        </div>
+    </Card>
+  );
+
+  const UnitsList = () => (
+    <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Units</h6></CardTitle>
+      <div style={{display: 'flex'}}>
+        <div style={{display:'flex', flexFlow:'column', width: '30%', border: 'none'}}>
+          {R_UNITS.map((u, i) =>
+            <Button key={i} size='sm' color={showUnit === u.id ? 'light':'dark'} onClick={()=>setShowUnit(u.id)}>
+              <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                <div>{u.alreadyUpgraded && <span style={{color: 'coral', marginRight: '.5rem'}}>▲</span>}{u.id}</div>
+                <div>{UNITS[u.id.toLowerCase()]}</div>
+              </div>
+            </Button>)}
+        </div>
+        <div style={{paddingLeft: '1rem', flex: 'auto', width: '70%'}}>
+          <CardImg src={'units/' + showUnit + '.png'} style={{width: 'auto', float: 'left'}}/>
+          <div style={{padding: '1rem', position: 'absolute', right: 0, textAlign: 'end'}}>
+            {R_UNITS[showUnit].description && <h5>{R_UNITS[showUnit].description}</h5>}
+            {R_UNITS[showUnit].sustain && <h6>♦ sustain damage</h6>}
+            {R_UNITS[showUnit].bombardment && <h6>♦ bombardment {R_UNITS[showUnit].bombardment.value + ' x ' + R_UNITS[showUnit].bombardment.count}</h6>}
+            {R_UNITS[showUnit].barrage && <h6>♦ barrage {R_UNITS[showUnit].barrage.value + ' x ' + R_UNITS[showUnit].barrage.count}</h6>}
+            {R_UNITS[showUnit].planetaryShield && <h6>♦ planetary shield</h6>}
+            {R_UNITS[showUnit].spaceCannon && <h6>♦ space cannon {R_UNITS[showUnit].spaceCannon.value + ' x ' + R_UNITS[showUnit].spaceCannon.count + ' range ' + R_UNITS[showUnit].spaceCannon.range}</h6>}
+            {R_UNITS[showUnit].production && <h6>♦ production {R_UNITS[showUnit].production}</h6>}
+            {!R_UNITS[showUnit].alreadyUpgraded && R_UPGRADES[showUnit+'2'] && <>
+              <h6 style={{marginTop: '2rem'}}>{'upgradable '}
+              {Object.keys(R_UPGRADES[showUnit+'2'].prereq).map((p, j) => {
+                let result = [];
+                for(var i=1; i<=R_UPGRADES[showUnit+'2'].prereq[p]; i++){
+                  result.push(<img key={j+' '+i} alt='requirement' style={{width: '1.25rem'}} src={'icons/'+p+'.png'}/>);
+                }
+                return result;
+              })}</h6>
+                <ul style={{fontSize: '.8rem', marginTop: '-.5rem', opacity: '.8', listStyle: 'none'}}>
+                  {Object.keys(R_UPGRADES[showUnit+'2']).map((k, i) => {
+                    const L1 = R_UNITS[showUnit][k];
+                    const L2 = R_UPGRADES[showUnit+'2'][k];
+                    if(['cost', 'combat', 'move', 'capacity', 'shot', 'production'].indexOf(k) > -1){
+                      if(L2 !== L1){
+                        return <li key={i}>{k + ' ' + L2}</li>
+                      }
+                    }
+                    else if(['bombardment', 'barrage'].indexOf(k) > -1 && L2){
+                      if(!L1 || L2.value != L1.value || L2.count != L1.count){
+                        return <li key={i}>{k + ' ' + R_UPGRADES[showUnit+'2'][k].value + ' x ' + L2.count}</li>
+                      }
+                    }
+                    else if(k === 'spaceCannon' && L2){
+                      if(!L1 || L2.value != L1.value || L2.count != L1.count || L2.range != L1.range){
+                        return <li key={i}>{'space cannon ' + L2.value + ' x ' + L2.count + ' range ' + L2.range}</li>
+                      }
+                    }
+                    else if( k === 'sustain' && L2){
+                      return <li key={i}>sustain damage</li>
+                    }
+                    return null
+                  })}
+                </ul>
+              </>
+            }
+          </div>
+          
+          <div style={{clear: 'both'}}/>
+                              
+          <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center', marginBottom: '.5rem'}}>
+            {R_UNITS[showUnit].cost && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].cost}</h6><b style={B_STYLE}>cost</b></ListGroupItem>}
+            {R_UNITS[showUnit].combat && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}>
+              <h6 style={{fontSize: 30}}>{R_UNITS[showUnit].combat}{R_UNITS[showUnit].shot && R_UNITS[showUnit].shot > 1 && 
+                <i style={{position: 'absolute', fontSize: '1.25rem', top: '0.5rem', right: 0, transform: 'rotate(90deg)'}}>{'♦'.repeat(R_UNITS[showUnit].shot)}</i>}
+              </h6><b style={B_STYLE}>combat</b></ListGroupItem>}
+            {R_UNITS[showUnit].move && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].move}</h6><b style={B_STYLE}>move</b></ListGroupItem>}
+            {R_UNITS[showUnit].capacity && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].capacity}</h6><b style={B_STYLE}>capacity</b></ListGroupItem>}
+          </ListGroup>
+          {R_UNITS[showUnit].effect && <CardText style={{fontSize: '0.8rem'}}>{R_UNITS[showUnit].effect}</CardText>}
+          {R_UNITS[showUnit].deploy && <CardText style={{fontSize: '0.8rem'}}><b>DEPLOY</b>{' '+R_UNITS[showUnit].deploy}</CardText>}
+        </div>
+      </div>
+    </Card>
+  );
+
+  const TechMap = () => {
+
+    const getTechType = (typ) => {
+      const techs = (typ === 'unit' ? race.technologies.filter(t => t.type === typ && t.upgrade):[...techData, ...race.technologies.map(r=>({...r, racial: true}))].filter(t => t.type === typ));
+
+      return (<div style={{width: typ === 'unit' ? '23%':'19%', border: 'solid 1px rgba(255,255,255,.42)', alignSelf:'flex-start'}}>
+        <img alt='tech type' style={{width: '1.5rem', position: 'absolute', marginTop: '.2rem', marginLeft: '.5rem'}} src={'icons/'+typ+'.png'}/>
+        <h6 style={{backgroundColor: 'rgba(74, 111, 144, 0.42)', width: '100%', textAlign: 'center', padding: '.5rem'}}>
+          {typ === 'unit' ? 'UPGRADES':typ.toUpperCase()}
+        </h6>
+        
+        <ListGroup>
+          {techs.map((t, i) => 
+            <ListGroupItem key={i} style={{background: 'none', padding: '.25rem', color: 'white', borderBottom: 'solid 1px rgba(255,255,255,.15)'}}>
+              <Button size='sm' color={race.knownTechs.indexOf(t.id) > -1 ? 'success':'dark'} id={t.id} style={{width: '100%', fontSize: '.7rem', textAlign: 'left'}}>
+                {t.id.replaceAll('_', ' ').replaceAll('2', ' II')}
+                {t.racial && <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.6rem'}} src={'race/icons/'+ race.rid +'.png'}/>}
+                {t.type === 'unit' && t.prereq && Object.keys(t.prereq).length > 0 && <div style={{textAlign: 'right', position: 'absolute', right: '.5rem', top: '.5rem'}}>
+                  {Object.keys(t.prereq).map((p, j) =>{
+                    let result = [];
+                    for(var i=1; i<=t.prereq[p]; i++){
+                      result.push(<img key={j+''+i} alt='requirement' style={{width: '1rem'}} src={'icons/'+p+'.png'}/>);
+                    }
+                    return result;
+                  })}
+                  </div>
+                }
+              </Button>
+              <UncontrolledCollapse toggler={'#'+t.id} style={{fontSize: '.7rem', padding: '.2rem'}}>
+                {t.type !== 'unit' && t.prereq && Object.keys(t.prereq).length > 0 && <div style={{textAlign: 'right'}}>
+                  <b>require: </b>
+                  {Object.keys(t.prereq).map((p, j) =>{
+                    let result = [];
+                    for(var i=1; i<=t.prereq[p]; i++){
+                      result.push(<img key={j+''+i} alt='requirement' style={{width: '1rem'}} src={'icons/'+p+'.png'}/>);
+                    }
+                    return result;
+                  })}
+                  </div>
+                }
+                {t.type !== 'unit' && t.description}
+                {t.type === 'unit' && <div style={{fontSize: '.7rem'}}>
+                  <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center', marginBottom: '.5rem'}}>
+                  {t.cost && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.cost}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>cost</b></ListGroupItem>}
+                  {t.combat && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}>
+                    <h6 style={{margin: 0}}>{t.combat}{t.shot && t.shot > 1 && 
+                      <i style={{position: 'absolute', fontSize: 10, top: '0.5rem', right: 0, transform: 'rotate(90deg)'}}>{'♦'.repeat(t.shot)}</i>}
+                    </h6><b style={{...B_STYLE, fontSize: '.5rem'}}>combat</b></ListGroupItem>}
+                  {t.move && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.move}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>move</b></ListGroupItem>}
+                  {t.capacity && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.capacity}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>capacity</b></ListGroupItem>}
+                </ListGroup>
+                {t.sustain && <p style={{margin: 0}}>♦ sustain damage </p>}
+                {t.bombardment && <p style={{margin: 0}}>♦ bombardment {t.bombardment.value + ' x ' + t.bombardment.count}</p>}
+                {t.barrage && <p style={{margin: 0}}>♦ barrage {t.barrage.value + ' x ' + t.barrage.count} </p>}
+                {t.planetaryShield && <p style={{margin: 0}}>♦ planetary shield </p>}
+                {t.spaceCannon && <p style={{margin: 0}}>♦ space cannon {t.spaceCannon.value + ' x ' + t.spaceCannon.count + ' range ' + t.spaceCannon.range}</p>}
+                {t.production && <p style={{margin: 0}}>♦ production {t.production}</p>}
+                {t.effect && <CardText style={{paddingTop: '.5rem'}}>{t.effect}</CardText>}
+                {t.deploy && <CardText style={{paddingTop: '.5rem'}}><b>DEPLOY</b>{' '+t.deploy}</CardText>}
+                </div>
+                }
+              </UncontrolledCollapse>
+            </ListGroupItem>)}
+        </ListGroup>
+      </div>
+    )};
+
+    return (
+    <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '1rem', position: 'relative', width: '70rem'}}>
+      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Technologies map</h6></CardTitle>
+      
+      <div style={{display: 'flex', justifyContent: 'space-between'}}>
+        {getTechType('propulsion')}
+        {getTechType('biotic')}
+        {getTechType('warfare')}
+        {getTechType('cybernetic')}
+        {getTechType('unit')}
+      </div>
+    </Card>)
+  };
+
 //onClick={stageOnclick} onContextMenu={stageOncontext}
 //{ctx.gameover && <div>{'Player ' + ctx.gameover.winner + ' wins'}</div>}
   return (<>
-            <Navbar style={{ position: 'fixed', height: '3rem', width: '70%'}}>
-              <div style={{display: 'flex'}}>
-                <Nav style={{marginRight: '2rem'}}>
-                  <NavItem onClick={()=>setObjVisible(!objVisible)} style={{cursor: 'pointer'}}>
-                    <h5>Objectives</h5>
-                  </NavItem>
-                </Nav>
-                <Nav style={{marginRight: '2rem'}}>
-                  <NavItem onClick={()=>setTechVisible(!techVisible)} style={{cursor: 'pointer'}}>
-                    <h5>Technologies</h5>
-                  </NavItem>
-                </Nav>
-                <Nav style={{marginRight: '2rem'}}>
-                  <NavItem onClick={()=>setPlanetsVisible(!planetsVisible)} style={{cursor: 'pointer'}}>
-                    <h5>Planets</h5>
-                  </NavItem>
-                </Nav>
-                <Nav>
-                  <NavItem onClick={()=>setUnitsVisible(!unitsVisible)} style={{cursor: 'pointer'}}>
-                    <h5>Units</h5>
-                  </NavItem>
-                </Nav>
-              </div>
-              <Nav>
-                <h4 style={{backgroundColor: ( isMyTurn ? 'rgba(45,255,0,.75)':'rgba(255,255,0,.75)'), color: 'black', padding: '1rem'}}>
-                  {isMyTurn ? 'You turn' : G.races[ctx.currentPlayer].name + ' turns '}
-                </h4>
-              </Nav>
-              <Nav style={{float: 'right'}}>
-                <NavItem style={{marginRight: '1rem'}}>
-                  <Button disabled={!isMyTurn || ctx.numMoves == 0} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}>Undo</Button></NavItem>
-                <NavItem style={{marginRight: '1rem'}}>
-                  <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
-                </NavItem>
-                <NavItem style={{marginRight: '1rem'}}>
-                  <Button color='light' outline={!tilesTxt} onClick={()=>setTilesTxt(!tilesTxt)}>Text</Button>
-                </NavItem>
-              </Nav>
-            </Navbar>
+            <MyNavbar />
             
             <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
-
-              {objVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
-              <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Public objectives</h6></CardTitle>
-              
-                <ListGroup style={{maxHeight: '30rem', overflowY: 'auto', border: 'none', paddingRight: '1rem'}}>
-                {G.pubObjectives && G.pubObjectives.length &&
-                  G.pubObjectives.map((o, i) => {
-                    const complete = o.players.indexOf(playerID) > -1;
-                    return <ListGroupItem className='hoverable'
-                              style={{padding: '1rem', cursor: complete ? 'default':'pointer', 
-                                background: complete ? 'rgba(154, 205, 50, 0.25)':'none', color: 'white', border: 'solid 1px transparent' }} 
-                                key={i} onClick={(e) => {if(!complete)completePubObj(e, i)}}>
-                              <b style={{}}>{o.id}</b>{' [ '}{o.players.map((p, pi) => <b key={pi}>{p}</b>)}{' ]  '}
-                              <br/>
-                              <i style={{fontSize: '0.8rem'}}>{o.title}</i>
-                            </ListGroupItem>})
-                  }
-                
-                </ListGroup>
-              </Card>}
-            
-              {techVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
-                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Technologies map</h6></CardTitle>
-                  <ListGroup style={{border: 'none'}}>
-                    {race && race.knownTechs.map((t, i) => <ListGroupItem key={i} style={{background: 'none', border: 'none', color: 'white'}}>{t.toLowerCase().replaceAll('_', ' ')}</ListGroupItem>)}
-                  </ListGroup>
-              </Card>}
-
-              {planetsVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
-                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Planets</h6></CardTitle>
-                  <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
-                  <Cont style={{border: 'none'}}>
-                    {PLANETS.map((p,i) => {
-                      let trait;
-                      if(p.trait) trait = <img alt='trait' style={{width: '1.5rem'}} src={'icons/' + p.trait + '.png'}/>;
-                      let specialty;
-                      if(p.specialty) specialty = <img alt='specialty' style={{width: '1.5rem'}} src={'icons/' + p.specialty + '.png'}/>;
-                      
-                      return (<Row className='hoverable' key={i} style={{cursor: 'default', fontSize: '1.25rem', lineHeight: '2.2rem', height: '2.5rem', opacity: p.exhausted ? '.25':'1', color: 'white'}}>
-                                <Col xs='6'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem'}} src={'icons/legendary_complete.png'}/>:'' } {p.name}</Col>
-                                <Col xs='1' style={{padding: 0}}>{specialty}</Col>
-                                <Col xs='1' style={{padding: 0}}>{trait}</Col>
-                                <Col xs='1' style={{background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
-                                <Col xs='1'/>
-                                <Col xs='1' style={{background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b>{p.influence}</b></Col>
-                                <Col xs='1'/>
-                              </Row>)
-                    })}
-                  </Cont>
-                  </div>
-              </Card>}
-
-              {race && unitsVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
-                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Units</h6></CardTitle>
-                <div style={{display: 'flex'}}>
-                  <div style={{display:'flex', flexFlow:'column', width: '30%', border: 'none'}}>
-                    {R_UNITS.map((u, i) =>
-                      <Button key={i} size='sm' color={showUnit === u.id ? 'light':'dark'} onClick={()=>setShowUnit(u.id)}>
-                        <div style={{display: 'flex', justifyContent: 'space-between'}}><div>{u.id}</div><div>{UNITS[u.id.toLowerCase()]}</div></div>
-                      </Button>)}
-                  </div>
-                  <div style={{paddingLeft: '1rem', flex: 'auto', width: '70%'}}>
-                    <CardImg src={'units/' + showUnit + '.png'} style={{width: 'auto', float: 'left'}}/>
-                    <div style={{padding: '1rem', position: 'absolute', right: 0, textAlign: 'end'}}>
-                      {R_UNITS[showUnit].description && <h5>{R_UNITS[showUnit].description}</h5>}
-                      {R_UNITS[showUnit].sustain && <h6>♦ sustain damage</h6>}
-                      {R_UNITS[showUnit].bombardment && <h6>♦ bombardment {R_UNITS[showUnit].bombardment.value + ' x ' + R_UNITS[showUnit].bombardment.count}</h6>}
-                      {R_UNITS[showUnit].barrage && <h6>♦ barrage {R_UNITS[showUnit].barrage.value + ' x ' + R_UNITS[showUnit].barrage.count}</h6>}
-                      {R_UNITS[showUnit].planetaryShield && <h6>♦ planetary shield</h6>}
-                      {R_UNITS[showUnit].spaceCannon && <h6>♦ space cannon {R_UNITS[showUnit].spaceCannon.value + ' x ' + R_UNITS[showUnit].spaceCannon.count + ' range ' + R_UNITS[showUnit].spaceCannon.range}</h6>}
-                      {R_UNITS[showUnit].production && <h6>♦ production {R_UNITS[showUnit].production}</h6>}
-                      {R_UPGRADES[showUnit+'2'] && <>
-                        <h6 style={{marginTop: '2rem'}}>{'upgradable '}
-                        {Object.keys(R_UPGRADES[showUnit+'2'].prereq).map(p => {
-                          let result = [];
-                          for(var i=1; i<=R_UPGRADES[showUnit+'2'].prereq[p]; i++){
-                            result.push(<img alt='requirement' style={{width: '1.25rem'}} src={'icons/'+p+'.png'}/>);
-                          }
-                          return result;
-                        })}</h6>
-                          <ul style={{fontSize: '.8rem', marginTop: '-.5rem', opacity: '.8', listStyle: 'none'}}>
-                            {Object.keys(R_UPGRADES[showUnit+'2']).map((k, i) => {
-                              const L1 = R_UNITS[showUnit][k];
-                              const L2 = R_UPGRADES[showUnit+'2'][k];
-                              if(['cost', 'combat', 'move', 'capacity', 'shot', 'production'].indexOf(k) > -1){
-                                if(L2 !== L1){
-                                  return <li key={i}>{k + ' ' + L2}</li>
-                                }
-                              }
-                              else if(['bombardment', 'barrage'].indexOf(k) > -1 && L2){
-                                if(!L1 || L2.value != L1.value || L2.count != L1.count){
-                                  return <li key={i}>{k + ' ' + R_UPGRADES[showUnit+'2'][k].value + ' x ' + L2.count}</li>
-                                }
-                              }
-                              else if(k === 'spaceCannon' && L2){
-                                if(!L1 || L2.value != L1.value || L2.count != L1.count || L2.range != L1.range){
-                                  return <li key={i}>{'space cannon ' + L2.value + ' x ' + L2.count + ' range ' + L2.range}</li>
-                                }
-                              }
-                              else if( k === 'sustain' && L2){
-                                return <li key={i}>sustain damage</li>
-                              }
-                              return <></>
-                            })}
-                          </ul>
-                        </>
-                      }
-                    </div>
-                    
-                    <div style={{clear: 'both'}}/>
-                                        
-                    <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center', marginBottom: '.5rem'}}>
-                      {R_UNITS[showUnit].cost && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].cost}</h6><b style={B_STYLE}>cost</b></ListGroupItem>}
-                      {R_UNITS[showUnit].combat && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}>
-                        <h6 style={{fontSize: 30}}>{R_UNITS[showUnit].combat}{R_UNITS[showUnit].shot && R_UNITS[showUnit].shot > 1 && 
-                          <i style={{position: 'absolute', fontSize: '1.25rem', top: '0.5rem', right: 0, transform: 'rotate(90deg)'}}>{'♦'.repeat(R_UNITS[showUnit].shot)}</i>}
-                        </h6><b style={B_STYLE}>combat</b></ListGroupItem>}
-                      {R_UNITS[showUnit].move && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].move}</h6><b style={B_STYLE}>move</b></ListGroupItem>}
-                      {R_UNITS[showUnit].capacity && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].capacity}</h6><b style={B_STYLE}>capacity</b></ListGroupItem>}
-                    </ListGroup>
-                    {R_UNITS[showUnit].effect && <CardText style={{fontSize: '0.8rem'}}>{R_UNITS[showUnit].effect}</CardText>}
-                    {R_UNITS[showUnit].deploy && <CardText style={{fontSize: '0.8rem'}}><b>DEPLOY</b>{' '+R_UNITS[showUnit].deploy}</CardText>}
-                  </div>
-                </div>
-              </Card>}
-
-
-
+              {race && techVisible && <TechMap />}
+              {objVisible && <Objectives />}
+              {planetsVisible && <PlanetsList />}
+              {race && unitsVisible && <UnitsList />}
             </CardColumns>
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
@@ -382,41 +456,62 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                 <Graphics draw={draw}/>
               </PixiViewport> 
             </Stage>
-
-            <div style={{ display: 'flex', flexDirection: 'column', position:'fixed', right: 0, top: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)', height: '100%', width: '25%' }}>
-              <CardColumns style={{ margin: '1rem' }}>
-                  {race && <Card style={CARD_STYLE}>
-                    <div style={{display: 'flex'}}>
-                      <CardImg src={'race/'+race.rid+'.png'} style={{width: '205px'}}/>
-                      <div style={{paddingLeft: '1rem', display: 'flex', flexFlow: 'column'}}>
-                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.commodity || 0 + '/' + race.commCap}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>commodity</b></Button>
-                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>trade goods</b></Button>
-                      </div>
-                    </div>
-                    <div style={{display: 'flex', paddingTop: '1rem'}}>
-                      {race.abilities.map((a, i) => 
-                          <Button key={i} size='sm' onClick={()=>setAbilVisible(i)} color={abilVisible === i ? 'light':'dark'} style={{marginRight: '.5rem'}}>{a.id.replaceAll('_', ' ')}</Button>
-                        )}
-                    </div>
-
-                    {race.abilities.map((a, i) => 
-                      <CardText key={i} style={{marginTop:'1rem', display: abilVisible === i ? 'unset':'none'}}>{a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}</CardText>
-                    )}
-                  </Card>}
-                  {race && race.strategy && 'Strategy: ' + race.strategy.id}
-                  {race && race.strategy && race.strategy.exhausted && ' (exhausted)'}
-                  {race && <Card style={CARD_STYLE}>
-                    <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Command tokens</h6></CardTitle>
-
-                      <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
-                        <ListGroupItem className='hoverable' tag='button' style={TOKENS_STYLE} onClick={()=>ctx.phase === 'acts' && moves.activateTile()}><h6 style={{fontSize: 50}}>{race.tokens.t}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>tactic</b></ListGroupItem>
-                        <ListGroupItem tag='button' style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.f}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>fleet</b></ListGroupItem>
-                        <ListGroupItem tag='button' style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.s}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>strategic</b></ListGroupItem>
-                      </ListGroup>
-
-                    </Card>}
-                  
+            
+            <div style={{ display:'flex', flexDirection: 'row', justifyContent: 'flex-end', position:'fixed', right: 0, top: 0, height: '100%', width: '35%' }}>
+              <CardColumns style={{width: '20rem'}}>
+                {race && race.strategy.length > 0 && 
+                  race.strategy.map((s, i) =>{
+                    let borderColor = 'rgba(255, 255, 0, .6)';
+                    if(s.id === 'WARFARE') borderColor = 'rgba(0, 83, 189, .6)';
+                    else if(s.id === 'TRADE') borderColor = 'rgba(20, 94, 95, .6)';
+                    else if(s.id === 'LEADERSHIP') borderColor = 'rgba(119, 22, 31, .6)';
+                    else if(s.id === 'CONSTRUCTION') borderColor = 'rgba(30, 78, 54, .6)';
+                    else if(s.id === 'DIPLOMACY') borderColor = 'rgba(157, 84, 15, .6)';
+                    else if(s.id === 'TECHNOLOGY') borderColor = 'rgba(26, 40, 105, .6)';
+                    else if(s.id === 'IMPERIAL') borderColor = 'rgba(153, 33, 133, .6)';
+                    return <Card style={{border: 'none', background: 'none', marginTop: '5rem', alignItems: 'end'}}>
+                      <CardImg key={i} src={'strategy/'+ s.id + '.png'} style={{position: 'relative', top: '2rem'}}></CardImg>
+                      <CardBody style={{background: 'rgba(33, 37, 41, 0.65)', marginRight: '.5rem', border: 'solid 1px ' + borderColor, padding: '1.5rem 1rem', fontSize: '.8rem'}}>
+                        <CardText><h6>Primary:</h6>{cardData.strategy[s.id].primary}</CardText>
+                        <CardText><h6>Secondary:</h6>{cardData.strategy[s.id].secondary}</CardText>
+                      </CardBody>
+                      <CardFooter><Button size='sm' color='warning'>Activate</Button></CardFooter>
+                    </Card>})
+                }
               </CardColumns>
+              <div style={{ display: 'flex', flexDirection: 'column', width: '80%', backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
+                <CardColumns style={{ margin: '1rem' }}>
+                    {race && <Card style={CARD_STYLE}>
+                      <div style={{display: 'flex'}}>
+                        <CardImg src={'race/'+race.rid+'.png'} style={{width: '205px'}}/>
+                        <div style={{paddingLeft: '1rem', display: 'flex', flexFlow: 'column'}}>
+                          <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.commodity || 0 + '/' + race.commCap}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>commodity</b></Button>
+                          <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>trade goods</b></Button>
+                        </div>
+                      </div>
+                      <div style={{display: 'flex', paddingTop: '1rem'}}>
+                        {race.abilities.map((a, i) => 
+                            <Button key={i} size='sm' onClick={()=>setAbilVisible(i)} color={abilVisible === i ? 'light':'dark'} style={{marginRight: '.5rem'}}>{a.id.replaceAll('_', ' ')}</Button>
+                          )}
+                      </div>
+
+                      {race.abilities.map((a, i) => 
+                        <CardText key={i} style={{marginTop:'1rem', display: abilVisible === i ? 'unset':'none'}}>{a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}</CardText>
+                      )}
+                    </Card>}
+                    {race && <Card style={CARD_STYLE}>
+                      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Command tokens</h6></CardTitle>
+
+                        <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
+                          <ListGroupItem className='hoverable' tag='button' style={TOKENS_STYLE} onClick={()=>ctx.phase === 'acts' && moves.activateTile()}><h6 style={{fontSize: 50}}>{race.tokens.t}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>tactic</b></ListGroupItem>
+                          <ListGroupItem tag='button' style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.f}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>fleet</b></ListGroupItem>
+                          <ListGroupItem tag='button' style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.s}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>strategic</b></ListGroupItem>
+                        </ListGroup>
+
+                      </Card>}
+                    
+                </CardColumns>
+              </div>
             </div>
 
             {payObj !== -1 && <PaymentDialog objective={G.pubObjectives[payObj]} race={race} planets={PLANETS} isOpen={payObj !== -1} toggle={(e, payment)=>togglePaymentDialog(payment)}/>}

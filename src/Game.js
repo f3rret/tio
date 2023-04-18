@@ -14,13 +14,17 @@ export const TIO = {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: tileData.all[h.tileId], q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 )
-                  .map( r => ({...r, ...raceData[r.rid], tg: 0, tokens: { t: 3, f: 3, s: 2}}) );
+                  .map( r => ({...r, ...raceData[r.rid], strategy:[], tg: 0, tokens: { t: 3, f: 3, s: 2}}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
       races.forEach( r => {
         all_units.forEach( t => {
-          if(!r.technologies.find( f => f.id === t.id)){
+          const tch = r.technologies.find( f => f.id === t.id);
+          if(!tch){
             r.technologies.push(t);
+          }
+          else{
+            tch.racial = true;
           }
         });
       });
@@ -52,7 +56,7 @@ export const TIO = {
 
     phases: {
       strat: {
-        //start: true,
+        start: true,
         next: 'acts',
         turn: {
           order: TurnOrder.ONCE,
@@ -66,17 +70,17 @@ export const TIO = {
               return INVALID_MOVE;
             }
 
-            if(G.races.find( r => r.strategy && r.strategy.id === sid)){
+            if(G.races.find( r => r.strategy.length && r.strategy.find(s => s.id === sid))){
               console.log('already picked');
               return INVALID_MOVE;
             }
 
-            G.races[playerID].strategy = { id: sid };
+            G.races[playerID].strategy.push({ id: sid });
             events.endTurn();
           }
         },
         onBegin: ({ G, ctx, random }) => {
-          G.races.forEach( r => r.strategy = undefined );
+          G.races.forEach( r => r.strategy = [] );
 
          //obj
         },
@@ -311,7 +315,7 @@ export const TIO = {
         }
       },
       acts: {
-        start: true,
+        //start: true,
         next: 'stats',
         turn: {
             /*minMoves: 1,
@@ -364,13 +368,15 @@ export const TIO = {
             }
         },
         moves: {
-          useStrategy: ({ G, events, playerID}) => {
+          useStrategy: ({ G, events, playerID}, idx) => {
             if(G.races[playerID].actions.length > 0){
               console.log('too many actions');
               return INVALID_MOVE;
             }
 
-            const strategy = G.races[playerID].strategy;
+            if(idx === undefined) idx=0;
+            const strategy = G.races[playerID].strategy[idx];
+
             if(!strategy || strategy.exhausted){
               console.log('strategy card exhausted');
               return INVALID_MOVE;
@@ -742,7 +748,12 @@ export const TIO = {
               }
             }
 
-            knownTechs.push(techId);            
+            knownTechs.push(techId);
+            
+            if(technology.type === 'unit' && technology.upgrade === true){
+              const idx = G.races[playerID].technologies.findIndex(t => t.id + '2' === techId);
+              if(idx > -1) G.races[playerID].technologies[idx] = {...technology, upgrade: false, alreadyUpgraded: true, id: G.races[playerID].technologies[idx].id};
+            }
           },
           pass: ({ G, playerID, events }) => {
             if(G.passedPlayers.indexOf(playerID) === -1){
