@@ -2,8 +2,8 @@
 import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
 //import { HexGrid } from './Grid';
 import { useMemo, useCallback, useState } from 'react';
-import { Navbar, Nav, NavItem, Button, Card, CardImg, CardText, CardTitle, UncontrolledCollapse, CardBody, CardFooter,
-  /*CardSubtitle,*/ CardColumns, ListGroup, ListGroupItem, Container as Cont, Row, Col } from 'reactstrap';
+import { Navbar, Nav, NavItem, Button, Card, CardImg, CardText, CardTitle, UncontrolledCollapse, CardBody,
+  CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont, Row, Col } from 'reactstrap';
 import { PaymentDialog } from './payment';
 import { PixiViewport } from './viewport';
 import techData from './techData.json';
@@ -142,6 +142,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const [unitsVisible, setUnitsVisible] = useState(true);
   const [showUnit, setShowUnit] = useState('FLAGSHIP');
   const [abilVisible, setAbilVisible] = useState(0);
+  const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
+  const [stratUnfold, setStratUnfold] = useState(false);
   const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
   const R_UNITS = useMemo(() => {
     if(race){
@@ -210,7 +212,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
       <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Public objectives</h6></CardTitle>
       
       <ListGroup style={{maxHeight: '30rem', overflowY: 'auto', border: 'none', paddingRight: '1rem'}}>
-      {G.pubObjectives && G.pubObjectives.length &&
+      {G.pubObjectives && G.pubObjectives.length > 0 &&
         G.pubObjectives.map((o, i) => {
           const complete = o.players.indexOf(playerID) > -1;
           return <ListGroupItem className='hoverable'
@@ -413,17 +415,84 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     </Card>)
   };
 
+  const StrategyCard = ({card, idx, style}) => {
+
+    let borderColor = 'rgba(255, 255, 0, .6)';
+    if(card.id === 'WARFARE') borderColor = 'rgba(0, 83, 189, .6)';
+    else if(card.id === 'TRADE') borderColor = 'rgba(20, 94, 95, .6)';
+    else if(card.id === 'LEADERSHIP') borderColor = 'rgba(119, 22, 31, .6)';
+    else if(card.id === 'CONSTRUCTION') borderColor = 'rgba(30, 78, 54, .6)';
+    else if(card.id === 'DIPLOMACY') borderColor = 'rgba(157, 84, 15, .6)';
+    else if(card.id === 'TECHNOLOGY') borderColor = 'rgba(26, 40, 105, .6)';
+    else if(card.id === 'IMPERIAL') borderColor = 'rgba(153, 33, 133, .6)';
+
+    return <Card style={{...style, border: 'none', background: 'none', position: 'relative', marginTop: idx > 0 ? '-2rem':'5rem', alignItems: 'end'}}>
+      <CardImg onClick={()=>setStratUnfold(!stratUnfold)} src={'strategy/'+ card.id + '.png'} style={{position: 'relative', top: '2rem', cursor: 'pointer'}}></CardImg>
+      <div className={stratUnfold ? 'un fold':'fold'} style={{background: 'rgba(33, 37, 41, 0.65)', marginRight: '.5rem', border: 'solid 1px ' + borderColor, padding: '1.5rem 1rem', fontSize: '.8rem'}}>
+        {stratUnfold && <><h6>Primary:</h6>
+        <CardText>{cardData.strategy[card.id].primary}</CardText>
+        <h6>Secondary:</h6>
+        <CardText>{cardData.strategy[card.id].secondary}</CardText>
+        <Button size='sm' color='warning'>Activate</Button></>}
+      </div>
+      
+    </Card>
+  }
+
 //onClick={stageOnclick} onContextMenu={stageOncontext}
 //{ctx.gameover && <div>{'Player ' + ctx.gameover.winner + ' wins'}</div>}
   return (<>
             <MyNavbar />
             
-            <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
+            {ctx.phase !== 'strat' && <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
               {race && techVisible && <TechMap />}
               {objVisible && <Objectives />}
               {planetsVisible && <PlanetsList />}
               {race && unitsVisible && <UnitsList />}
-            </CardColumns>
+            </CardColumns>}
+
+            {ctx.phase === 'strat' && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '50%', position: 'absolute', margin: '10rem'}}>
+              <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>Strategy pick</h3></CardTitle>
+              <CardBody style={{display: 'flex'}}>
+                <ListGroup style={{background: 'none', width: '60%'}}>
+                    {Object.keys(cardData.strategy).map((key, idx) => {
+                      let backgroundColor = 'rgba(255, 255, 0, .3)';
+                      if(key === 'WARFARE') backgroundColor = 'rgba(0, 83, 189, .3)';
+                      else if(key === 'TRADE') backgroundColor = 'rgba(20, 94, 95, .3)';
+                      else if(key === 'LEADERSHIP') backgroundColor = 'rgba(119, 22, 31, .3)';
+                      else if(key === 'CONSTRUCTION') backgroundColor = 'rgba(30, 78, 54, .3)';
+                      else if(key === 'DIPLOMACY') backgroundColor = 'rgba(157, 84, 15, .3)';
+                      else if(key === 'TECHNOLOGY') backgroundColor = 'rgba(26, 40, 105, .3)';
+                      else if(key === 'IMPERIAL') backgroundColor = 'rgba(153, 33, 133, .3)';
+
+                      const r = G.races.find( r => r.strategy.length && r.strategy.find(s => s.id === key));
+
+                      return <ListGroupItem key={idx} style={{background: 'none', display:'flex', justifyContent: 'flex-end', border: 'none', padding: '1rem'}}>
+                        <div style={{width: 'auto'}}>
+                          {r && <div style={{position: 'absolute', left: '0', width: '100%'}}>
+                                  <img alt='race icon' src={'race/icons/'+r.rid+'.png'} style={{marginTop: '-.5rem', float: 'left', width: '3rem'}}/>
+                                  <h5 style={{marginLeft: '4rem'}}>{r.name}</h5>
+                                </div>}
+                        </div>
+                        <Button className='btn_hoverable' onMouseEnter={()=>setStrategyHover(key)} disabled = {r !== undefined} onClick={() => moves.pickStrategy(key)} size='sm' color='dark' 
+                            style={{opacity: r ? '.5':'1', width: '11rem', height: '2rem', backgroundColor, borderRadius: '3px'}}>
+                          <img alt='strategy' style={{width:'12rem', position: 'relative', top: '-1.1rem', left: '-.5rem'}} src={'strategy/'+ key + '.png'} />
+                        </Button>
+                      </ListGroupItem>
+                    })}
+                  </ListGroup>
+                  <Card style={{width: '40%', background: 'none', border: 'none', color: 'black'}}>
+                    <CardBody>
+                      <CardTitle><h4>{strategyHover}</h4></CardTitle>
+                      <CardSubtitle style={{margin: '2rem 0'}}>{cardData.strategy[strategyHover].hit}</CardSubtitle>
+                      <h5>Primary:</h5>
+                      <p>{cardData.strategy[strategyHover].primary}</p>
+                      <h5>Secondary:</h5>
+                      <p>{cardData.strategy[strategyHover].secondary}</p>
+                    </CardBody>
+                  </Card>
+              </CardBody>
+              </Card>}
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport>
@@ -458,25 +527,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
             </Stage>
             
             <div style={{ display:'flex', flexDirection: 'row', justifyContent: 'flex-end', position:'fixed', right: 0, top: 0, height: '100%', width: '35%' }}>
-              <CardColumns style={{width: '20rem'}}>
+              <CardColumns style={{width: '20rem', position: 'relative'}}>
                 {race && race.strategy.length > 0 && 
-                  race.strategy.map((s, i) =>{
-                    let borderColor = 'rgba(255, 255, 0, .6)';
-                    if(s.id === 'WARFARE') borderColor = 'rgba(0, 83, 189, .6)';
-                    else if(s.id === 'TRADE') borderColor = 'rgba(20, 94, 95, .6)';
-                    else if(s.id === 'LEADERSHIP') borderColor = 'rgba(119, 22, 31, .6)';
-                    else if(s.id === 'CONSTRUCTION') borderColor = 'rgba(30, 78, 54, .6)';
-                    else if(s.id === 'DIPLOMACY') borderColor = 'rgba(157, 84, 15, .6)';
-                    else if(s.id === 'TECHNOLOGY') borderColor = 'rgba(26, 40, 105, .6)';
-                    else if(s.id === 'IMPERIAL') borderColor = 'rgba(153, 33, 133, .6)';
-                    return <Card style={{border: 'none', background: 'none', marginTop: '5rem', alignItems: 'end'}}>
-                      <CardImg key={i} src={'strategy/'+ s.id + '.png'} style={{position: 'relative', top: '2rem'}}></CardImg>
-                      <CardBody style={{background: 'rgba(33, 37, 41, 0.65)', marginRight: '.5rem', border: 'solid 1px ' + borderColor, padding: '1.5rem 1rem', fontSize: '.8rem'}}>
-                        <CardText><h6>Primary:</h6>{cardData.strategy[s.id].primary}</CardText>
-                        <CardText><h6>Secondary:</h6>{cardData.strategy[s.id].secondary}</CardText>
-                      </CardBody>
-                      <CardFooter><Button size='sm' color='warning'>Activate</Button></CardFooter>
-                    </Card>})
+                  race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)
                 }
               </CardColumns>
               <div style={{ display: 'flex', flexDirection: 'column', width: '80%', backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>

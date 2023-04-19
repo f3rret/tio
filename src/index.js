@@ -10,9 +10,10 @@ const url = new URL(window.location.href);
 const params = url.searchParams;
 //<React.StrictMode>
 //</React.StrictMode>
+const pid = params.get('playerID') == null ? '0' : params.get('playerID');
 root.render(
   
-    <App playerID={params.get('playerID')}/>
+    <App playerID={pid}/>
   
 );
 

@@ -6,14 +6,15 @@ import raceData from './raceData.json';
 import techData from './techData.json';
 import cardData from './cardData.json';
 import { produce } from 'immer';
-import { getPlayerUnits, getPlayerPlanets } from './utils';
- 
+import { NUM_PLAYERS, getPlayerUnits, getPlayerPlanets } from './utils';
+
+
 export const TIO = {
     
     setup: () => {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: tileData.all[h.tileId], q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
-                  .filter( i => tileData.green.indexOf(i.rid) > -1 )
+                  .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
                   .map( r => ({...r, ...raceData[r.rid], strategy:[], tg: 0, tokens: { t: 3, f: 3, s: 2}}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
@@ -33,14 +34,16 @@ export const TIO = {
         if( t.tdata.type === 'green' ){
           tiles[i].tdata = produce(tiles[i].tdata, draft => {
             const idx = races.findIndex(r => r.rid === t.tid);
-            draft.occupied = idx;
+            if(idx > -1){
+              draft.occupied = idx;
 
-            for( let j=0; j < draft.planets.length; j++ ){
-              draft.planets[j].occupied = idx;
-            }
-            if(races[idx].startingUnits){
-              draft.fleet = races[idx].startingUnits.fleet;
-              draft.planets[0].units = races[idx].startingUnits.ground;
+              for( let j=0; j < draft.planets.length; j++ ){
+                draft.planets[j].occupied = idx;
+              }
+              if(races[idx].startingUnits){
+                draft.fleet = races[idx].startingUnits.fleet;
+                draft.planets[0].units = races[idx].startingUnits.ground;
+              }
             }
           });
         }
@@ -59,7 +62,7 @@ export const TIO = {
         start: true,
         next: 'acts',
         turn: {
-          order: TurnOrder.ONCE,
+          //order: TurnOrder.ONCE,
           minMoves: 1,
           maxMoves: 1
         },
@@ -75,16 +78,32 @@ export const TIO = {
               return INVALID_MOVE;
             }
 
-            G.races[playerID].strategy.push({ id: sid });
+            const init = cardData.strategy[sid].init;
+            
+            if(!G.races[playerID].initiative || G.races[playerID].initiative > init){
+              G.races[playerID].initiative = init;
+            }
+
+            G.races[playerID].strategy.push({ id: sid, init });
             events.endTurn();
           }
         },
         onBegin: ({ G, ctx, random }) => {
-          G.races.forEach( r => r.strategy = [] );
+          G.races.forEach( r => { r.strategy = []; r.initiative = undefined } );
 
-         //obj
+          if(!G.pubObjectives.length){
+            cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
+          }
+
+          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
         },
-        onEnd: ({ G, random }) => {}
+        onEnd: ({ G }) => {
+          G.TURN_ORDER = G.races.map((r, i) => ({initiative: r.initiative, i})).sort((a, b) => a.initiative > b.initiative ? 1 : (a.initiative < b.initiative ? -1 : 0)).map(r => r.i);
+        },
+        endIf: ({ G, ctx }) => {
+          const cardsCount = ctx.numPlayers > 4 ? 1 : 2; // more than 4!
+          return ctx.playOrder.every( r => G.races[r].strategy.length === cardsCount );
+        }
       },
       stats: {
 
@@ -311,7 +330,7 @@ export const TIO = {
           //return {...G, passedPlayers: []}
         },
         onEnd: ({ G }) => {
-          //add new random public objective
+          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
         }
       },
       acts: {
@@ -320,6 +339,7 @@ export const TIO = {
         turn: {
             /*minMoves: 1,
             maxMoves: 1,*/
+            order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
             stages: {
               strategyCard: {
                 minMoves: 0,
@@ -763,14 +783,7 @@ export const TIO = {
           }
         },
         onBegin: ({ G, random }) => {
-          if(!G.pubObjectives.length){ // to strat phase!
-            //cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
-            cardData.objectives.public.filter( o => o.vp === 1).forEach( o => {
-              G.pubObjectives.push({ ...o, players: [] });
-            });
-          }
-          //G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-          
+                   
         },
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers,
       }

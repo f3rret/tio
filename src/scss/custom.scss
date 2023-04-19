@@ -15,7 +15,7 @@ body{
     overflow: hidden;
     background-color: #141b24;
 }
-h4, h5, h6 {
+h3, h4, h5, h6 {
     font-family: Handel Gothic;
 }
 
@@ -36,6 +36,23 @@ h4, h5, h6 {
     border: solid 1px rgba(255, 255, 255, 0.5)!important;
     background-color: rgba(255, 255, 255, 0.15)!important;
     transition: all .25s;
+}
+
+.btn_hoverable{
+    transition: all .25s;
+    box-shadow: rgba(0,0,0,.15) -1px 1px 3px 3px!important;
+}
+
+.btn_hoverable:hover{
+    transition: all .25s;
+    box-shadow: rgba(0,0,0,.35) -1px 1px 3px 3px!important;
+}
+.fold{
+    transition: all 1s;
+    opacity: 0;
+}
+.un.fold{
+    opacity: 1;
 }
 
 /*.modal-content{
