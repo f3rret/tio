@@ -15,7 +15,7 @@ export const TIO = {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: tileData.all[h.tileId], q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
-                  .map( r => ({...r, ...raceData[r.rid], strategy:[], tg: 0, tokens: { t: 3, f: 3, s: 2}}) );
+                  .map( r => ({...r, ...raceData[r.rid], strategy:[], tg: 10, tokens: { t: 3, f: 3, s: 2}}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
       races.forEach( r => {
@@ -80,7 +80,7 @@ export const TIO = {
 
             const init = cardData.strategy[sid].init;
             
-            if(!G.races[playerID].initiative || G.races[playerID].initiative > init){
+            if(G.races[playerID].initiative === undefined || G.races[playerID].initiative > init){
               G.races[playerID].initiative = init;
             }
 
@@ -101,7 +101,7 @@ export const TIO = {
           G.TURN_ORDER = G.races.map((r, i) => ({initiative: r.initiative, i})).sort((a, b) => a.initiative > b.initiative ? 1 : (a.initiative < b.initiative ? -1 : 0)).map(r => r.i);
         },
         endIf: ({ G, ctx }) => {
-          const cardsCount = ctx.numPlayers > 4 ? 1 : 2; // more than 4!
+          const cardsCount = ctx.numPlayers > 1 ? 1 : 2; // more than 4!
           return ctx.playOrder.every( r => G.races[r].strategy.length === cardsCount );
         }
       },
@@ -342,14 +342,32 @@ export const TIO = {
             order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
             stages: {
               strategyCard: {
-                minMoves: 0,
+                minMoves: 1,
                 maxMoves: 1,
                 moves: {
-                  joinStrategy: ({ G, playerID }) => {
+                  joinStrategy: ({ G, playerID }, {exhausted, tg, result}) => {
                     
                     switch(G.strategy){
                       case 'LEADERSHIP':
-                        G.races[playerID].tokens.new = 1;
+                        if(exhausted && exhausted.length){
+                          G.tiles.forEach(tile => {
+                            const planets = tile.tdata.planets;
+
+                            if(planets && planets.length){
+                              planets.forEach( p => {
+                                if(p.occupied == playerID){
+                                  if(exhausted.indexOf(p.name) > -1){
+                                    p.exhausted = true;
+                                  }
+                                }
+                              });
+                            }
+                          });
+                        }
+
+                        G.races[playerID].tg -= tg;
+                        G.races[playerID].tokens.new = result;
+
                         break;
                       case 'DIPLOMACY':
                         break;
@@ -388,6 +406,10 @@ export const TIO = {
             }
         },
         moves: {
+          adjustToken: ({ G, playerID}, tag) => {
+            G.races[playerID].tokens.new--;
+            G.races[playerID].tokens[tag]++;
+          },
           useStrategy: ({ G, events, playerID}, idx) => {
             if(G.races[playerID].actions.length > 0){
               console.log('too many actions');
@@ -402,33 +424,11 @@ export const TIO = {
               return INVALID_MOVE;
             }
 
-            switch(strategy.id){
-              case 'LEADERSHIP':
-                G.races[playerID].tokens.new = 3;
-                break;
-              case 'DIPLOMACY':
-                break;
-              case 'POLITICS':
-                  break;
-              case 'CONSTRUCTION':
-                break;
-              case 'TRADE':
-                break;
-              case 'WARFARE':
-                break;
-              case 'TECHNOLOGY':
-                break;
-              case 'IMPERIAL':
-                break;
-              default:
-                break;
-            }
-
             strategy.exhausted = true;
             G.strategy = strategy.id;
             G.races[playerID].actions.push('STRATEGY_CARD');
 
-            events.setActivePlayers({ others: 'strategyCard', minMoves: 1, maxMoves: 1 });
+            events.setActivePlayers({ all: 'strategyCard', minMoves: 1, maxMoves: 1 });
           },
           selectTile: ({ G }, tid) => {
             if(G.tiles[tid].selected === true){

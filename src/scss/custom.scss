@@ -47,13 +47,6 @@ h3, h4, h5, h6 {
     transition: all .25s;
     box-shadow: rgba(0,0,0,.35) -1px 1px 3px 3px!important;
 }
-.fold{
-    transition: all 1s;
-    opacity: 0;
-}
-.un.fold{
-    opacity: 1;
-}
 
 /*.modal-content{
     background-color: rgba(74, 111, 144, 0.75)!important

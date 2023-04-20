@@ -3,8 +3,8 @@ import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
 //import { HexGrid } from './Grid';
 import { useMemo, useCallback, useState } from 'react';
 import { Navbar, Nav, NavItem, Button, Card, CardImg, CardText, CardTitle, UncontrolledCollapse, CardBody,
-  CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont, Row, Col } from 'reactstrap';
-import { PaymentDialog } from './payment';
+  CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont } from 'reactstrap';
+import { PaymentDialog, StrategyDialog, getStratColor, PlanetsRows } from './payment';
 import { PixiViewport } from './viewport';
 import techData from './techData.json';
 import cardData from './cardData.json';
@@ -143,7 +143,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const [showUnit, setShowUnit] = useState('FLAGSHIP');
   const [abilVisible, setAbilVisible] = useState(0);
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
-  const [stratUnfold, setStratUnfold] = useState(false);
+  const [stratUnfold, setStratUnfold] = useState(0);
   const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
   const R_UNITS = useMemo(() => {
     if(race){
@@ -234,22 +234,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
       <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Planets</h6></CardTitle>
         <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
           <Cont style={{border: 'none'}}>
-            {PLANETS.map((p,i) => {
-              let trait;
-              if(p.trait) trait = <img alt='trait' style={{width: '1.5rem'}} src={'icons/' + p.trait + '.png'}/>;
-              let specialty;
-              if(p.specialty) specialty = <img alt='specialty' style={{width: '1.5rem'}} src={'icons/' + p.specialty + '.png'}/>;
-              
-              return (<Row className='hoverable' key={i} style={{cursor: 'default', fontSize: '1.25rem', lineHeight: '2.2rem', height: '2.5rem', opacity: p.exhausted ? '.25':'1', color: 'white'}}>
-                        <Col xs='6'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem'}} src={'icons/legendary_complete.png'}/>:'' } {p.name}</Col>
-                        <Col xs='1' style={{padding: 0}}>{specialty}</Col>
-                        <Col xs='1' style={{padding: 0}}>{trait}</Col>
-                        <Col xs='1' style={{background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
-                        <Col xs='1'/>
-                        <Col xs='1' style={{background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b>{p.influence}</b></Col>
-                        <Col xs='1'/>
-                      </Row>)
-            })}
+            {<PlanetsRows PLANETS={PLANETS} />}
           </Cont>
         </div>
     </Card>
@@ -416,35 +401,35 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   };
 
   const StrategyCard = ({card, idx, style}) => {
+    const i = idx + 1;
 
-    let borderColor = 'rgba(255, 255, 0, .6)';
-    if(card.id === 'WARFARE') borderColor = 'rgba(0, 83, 189, .6)';
-    else if(card.id === 'TRADE') borderColor = 'rgba(20, 94, 95, .6)';
-    else if(card.id === 'LEADERSHIP') borderColor = 'rgba(119, 22, 31, .6)';
-    else if(card.id === 'CONSTRUCTION') borderColor = 'rgba(30, 78, 54, .6)';
-    else if(card.id === 'DIPLOMACY') borderColor = 'rgba(157, 84, 15, .6)';
-    else if(card.id === 'TECHNOLOGY') borderColor = 'rgba(26, 40, 105, .6)';
-    else if(card.id === 'IMPERIAL') borderColor = 'rgba(153, 33, 133, .6)';
-
-    return <Card style={{...style, border: 'none', background: 'none', position: 'relative', marginTop: idx > 0 ? '-2rem':'5rem', alignItems: 'end'}}>
-      <CardImg onClick={()=>setStratUnfold(!stratUnfold)} src={'strategy/'+ card.id + '.png'} style={{position: 'relative', top: '2rem', cursor: 'pointer'}}></CardImg>
-      <div className={stratUnfold ? 'un fold':'fold'} style={{background: 'rgba(33, 37, 41, 0.65)', marginRight: '.5rem', border: 'solid 1px ' + borderColor, padding: '1.5rem 1rem', fontSize: '.8rem'}}>
-        {stratUnfold && <><h6>Primary:</h6>
-        <CardText>{cardData.strategy[card.id].primary}</CardText>
-        <h6>Secondary:</h6>
-        <CardText>{cardData.strategy[card.id].secondary}</CardText>
-        <Button size='sm' color='warning'>Activate</Button></>}
+    return <Card onClick={()=>setStratUnfold((stratUnfold & i) === i ? stratUnfold - i:stratUnfold + i)} style={{...style, opacity: card.exhausted ? '.5':'.95', border: 'none', background: 'none', position: 'relative', marginTop: idx > 0 ? '-1rem':'5rem', alignItems: 'end'}}>
+      <CardImg src={'strategy/'+ card.id + '.png'} style={{position: 'relative', top: '2rem', cursor: 'pointer'}}></CardImg>
+      <div style={{width:'95%', borderRadius: '3px', padding: '.7rem', background: 'rgba(33, 37, 41, 0.65)', marginRight: '.5rem', border: 'solid 1px ' + getStratColor(card.id, '.6'), fontSize: '.8rem'}}>
+        {(stratUnfold & i) === i && <div>
+          <h6 style={{marginTop: '.5rem'}}>Primary:</h6>
+          <CardText>{cardData.strategy[card.id].primary}</CardText>
+          <h6>Secondary:</h6>
+          <CardText>{cardData.strategy[card.id].secondary}</CardText>
+          {!card.exhausted && <Button size='sm' color='warning' onClick={(e)=>{e.stopPropagation(); moves.useStrategy(idx)}}>Activate</Button>}
+        </div>}
       </div>
       
     </Card>
   }
 
-//onClick={stageOnclick} onContextMenu={stageOncontext}
-//{ctx.gameover && <div>{'Player ' + ctx.gameover.winner + ' wins'}</div>}
+  const strategyStage = useMemo(()=> {
+    return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && G.strategy !== undefined
+  }, [G, ctx]);
+
+  const AddToken = ({tag}) => {
+    return (<div size='sm' style={{position: 'absolute', top: 0, right: 0, borderTopRightRadius: '4px', backgroundColor: 'rgba(242, 183, 7, 1)'}}><h5 style={{margin: '.25rem .5rem'}}>+</h5></div>);
+  }
+
   return (<>
             <MyNavbar />
             
-            {ctx.phase !== 'strat' && <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
+            {ctx.phase !== 'strat' && !strategyStage && <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
               {race && techVisible && <TechMap />}
               {objVisible && <Objectives />}
               {planetsVisible && <PlanetsList />}
@@ -456,15 +441,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
               <CardBody style={{display: 'flex'}}>
                 <ListGroup style={{background: 'none', width: '60%'}}>
                     {Object.keys(cardData.strategy).map((key, idx) => {
-                      let backgroundColor = 'rgba(255, 255, 0, .3)';
-                      if(key === 'WARFARE') backgroundColor = 'rgba(0, 83, 189, .3)';
-                      else if(key === 'TRADE') backgroundColor = 'rgba(20, 94, 95, .3)';
-                      else if(key === 'LEADERSHIP') backgroundColor = 'rgba(119, 22, 31, .3)';
-                      else if(key === 'CONSTRUCTION') backgroundColor = 'rgba(30, 78, 54, .3)';
-                      else if(key === 'DIPLOMACY') backgroundColor = 'rgba(157, 84, 15, .3)';
-                      else if(key === 'TECHNOLOGY') backgroundColor = 'rgba(26, 40, 105, .3)';
-                      else if(key === 'IMPERIAL') backgroundColor = 'rgba(153, 33, 133, .3)';
-
                       const r = G.races.find( r => r.strategy.length && r.strategy.find(s => s.id === key));
 
                       return <ListGroupItem key={idx} style={{background: 'none', display:'flex', justifyContent: 'flex-end', border: 'none', padding: '1rem'}}>
@@ -475,7 +451,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                                 </div>}
                         </div>
                         <Button className='btn_hoverable' onMouseEnter={()=>setStrategyHover(key)} disabled = {r !== undefined} onClick={() => moves.pickStrategy(key)} size='sm' color='dark' 
-                            style={{opacity: r ? '.5':'1', width: '11rem', height: '2rem', backgroundColor, borderRadius: '3px'}}>
+                            style={{opacity: r ? '.5':'1', width: '11rem', height: '2rem', backgroundColor: getStratColor(key, '.3'), borderRadius: '3px'}}>
                           <img alt='strategy' style={{width:'12rem', position: 'relative', top: '-1.1rem', left: '-.5rem'}} src={'strategy/'+ key + '.png'} />
                         </Button>
                       </ListGroupItem>
@@ -493,6 +469,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                   </Card>
               </CardBody>
               </Card>}
+            
+            {strategyStage && <StrategyDialog G={G} ctx={ctx} playerID={playerID} PLANETS={PLANETS} onComplete={moves.joinStrategy}/>}
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport>
@@ -553,12 +531,23 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                       )}
                     </Card>}
                     {race && <Card style={CARD_STYLE}>
-                      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Command tokens</h6></CardTitle>
+                      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)', display:'flex', justifyContent: 'space-between'}}><h6>Command tokens</h6>{race.tokens.new > 0 && <h6>{race.tokens.new} unused</h6>}</CardTitle>
 
                         <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
-                          <ListGroupItem className='hoverable' tag='button' style={TOKENS_STYLE} onClick={()=>ctx.phase === 'acts' && moves.activateTile()}><h6 style={{fontSize: 50}}>{race.tokens.t}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>tactic</b></ListGroupItem>
-                          <ListGroupItem tag='button' style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.f}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>fleet</b></ListGroupItem>
-                          <ListGroupItem tag='button' style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.s}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>strategic</b></ListGroupItem>
+                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE} onClick={()=>{
+                              if(race.tokens.new){ moves.adjustToken('t') } else if(ctx.phase === 'acts'){moves.activateTile();} }}>
+                            <h6 style={{fontSize: 50}}>{race.tokens.t}</h6>
+                            {race.tokens.new > 0 && <AddToken tag={'t'}/>}
+                            <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>tactic</b>
+                          </ListGroupItem>
+                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} onClick={()=>{if(race.tokens.new){ moves.adjustToken('f') }}} tag='button' style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.f}</h6>
+                            {race.tokens.new > 0 && <AddToken tag={'f'}/>}
+                            <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>fleet</b>
+                          </ListGroupItem>
+                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} onClick={()=>{if(race.tokens.new){ moves.adjustToken('s') }}} tag='button' style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.s}</h6>
+                            {race.tokens.new > 0 && <AddToken tag={'s'}/>}
+                            <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>strategic</b>
+                            </ListGroupItem>
                         </ListGroup>
 
                       </Card>}
