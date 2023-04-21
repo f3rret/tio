@@ -1,6 +1,6 @@
 /* eslint eqeqeq: 0 */
 
-export const NUM_PLAYERS = 3;
+export const NUM_PLAYERS = 2;
 
 export const getPlayerUnits = (tiles, playerID)=> {
     const units = [];

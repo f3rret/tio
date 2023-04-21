@@ -107,32 +107,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     return units;
   }, [G.tiles, playerID]);
 
-  const draw = useCallback((g) => {
-    g.clear();
-
-    G.tiles.forEach(element => {
-      if(element.active === true){
-        g.beginFill('yellow', .15);
-        g.lineStyle(10,  'yellow');
-      }
-      else if(element.selected === true){
-        g.beginFill('lightblue', .15);
-        g.lineStyle(10,  'lightblue');
-      }
-      else{
-        g.lineStyle(3,  0x999999);
-      }
-      const [firstCorner, ...otherCorners] = element.corners
-      g.moveTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2)
-      otherCorners.forEach(({ x, y }) => g.lineTo(x + stagew/2, y + stageh/2))
-      g.lineTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2);
-
-      if(element.selected === true || element.active === true){
-        g.endFill();
-      }
-    });
-  }, [G.tiles, stageh, stagew]);
-
+  
   const race = useMemo(() => G.races[playerID], [G.races, playerID]);
   const [objVisible, setObjVisible] = useState(false);
   const [techVisible, setTechVisible] = useState(false);
@@ -144,6 +119,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const [abilVisible, setAbilVisible] = useState(0);
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
   const [stratUnfold, setStratUnfold] = useState(0);
+  const [selectedTile, setSelectedTile] = useState(-1);
   const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
   const R_UNITS = useMemo(() => {
     if(race){
@@ -166,7 +142,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const B_STYLE = {backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}
 
   const MyNavbar = () => (
-    <Navbar style={{ position: 'fixed', height: '3rem', width: '70%'}}>
+    <Navbar style={{ position: 'fixed', height: '3rem', width: '80%', zIndex: '1'}}>
       <div style={{display: 'flex'}}>
         
         <Nav style={{marginRight: '2rem'}}>
@@ -197,13 +173,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     </Nav>
     <Nav style={{float: 'right', marginRight: '5rem'}}>
       <NavItem style={{marginRight: '1rem'}}>
-        <Button disabled={!isMyTurn || ctx.numMoves == 0} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}>Undo</Button></NavItem>
-      <NavItem style={{marginRight: '1rem'}}>
         <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
       </NavItem>
       <NavItem style={{marginRight: '1rem'}}>
         <Button color='light' outline={!tilesTxt} onClick={()=>setTilesTxt(!tilesTxt)}>Text</Button>
       </NavItem>
+    {ctx.phase === 'acts' && isMyTurn &&
+      <NavItem style={{marginRight: '1rem'}}>
+        <Button disabled={ctx.numMoves == 0} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}><h5 style={{margin: '.5rem'}}>Undo</h5></Button>
+        <Button color='warning' onClick={()=>events.endTurn()}><h5 style={{margin: '.5rem'}}>End turn</h5></Button>
+      </NavItem>}
     </Nav>
   </Navbar>);
 
@@ -426,6 +405,54 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     return (<div size='sm' style={{position: 'absolute', top: 0, right: 0, borderTopRightRadius: '4px', backgroundColor: 'rgba(242, 183, 7, 1)'}}><h5 style={{margin: '.25rem .5rem'}}>+</h5></div>);
   }
 
+  const tileClick = (e, index) => {
+    e.preventDefault(); 
+
+    if(ctx.phase === 'acts'){
+      if(ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0){
+        const isMine = ctx.currentPlayer === playerID;
+      
+        if(isMine && G.strategy === 'DIPLOMACY'){
+          setSelectedTile(index);
+        }
+      }
+      else{
+        moves.selectTile(index);
+      }
+    }
+  }
+
+
+  const draw = useCallback((g) => {
+    g.clear();
+
+    G.tiles.forEach((element, index) => {
+      if(index === selectedTile){
+        g.beginFill('green', .15);
+        g.lineStyle(10,  'green');
+      }
+      else if(element.active === true){
+        g.beginFill('yellow', .15);
+        g.lineStyle(10,  'yellow');
+      }
+      else if(element.selected === true){
+        g.beginFill('lightblue', .15);
+        g.lineStyle(10,  'lightblue');
+      }
+      else{
+        g.lineStyle(3,  0x999999);
+      }
+      const [firstCorner, ...otherCorners] = element.corners
+      g.moveTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2)
+      otherCorners.forEach(({ x, y }) => g.lineTo(x + stagew/2, y + stageh/2))
+      g.lineTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2);
+
+      if(element.selected === true || element.active === true || index === selectedTile){
+        g.endFill();
+      }
+    });
+  }, [G.tiles, stageh, stagew, selectedTile]);
+
   return (<>
             <MyNavbar />
             
@@ -470,7 +497,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
               </CardBody>
               </Card>}
             
-            {strategyStage && <StrategyDialog G={G} ctx={ctx} playerID={playerID} PLANETS={PLANETS} onComplete={moves.joinStrategy}/>}
+            {strategyStage && <StrategyDialog G={G} ctx={ctx} playerID={playerID} PLANETS={PLANETS} onComplete={moves.joinStrategy} selectedTile={selectedTile}/>}
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport>
@@ -480,11 +507,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                     const fill = element.tdata.type;
                     
                     return <Container key={index}>
-                            {tilesPng && <Sprite interactive={true} pointerdown={(e)=>{e.preventDefault(); moves.selectTile(index);}} 
+                            {tilesPng && <Sprite interactive={true} pointerdown={(e)=>tileClick(e, index)} 
                                         image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }} 
                                         x={firstCorner.x + stagew/2 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2}/>}
                             {tilesTxt && <>
-                              <Text style={{fontSize: 20, fill:'white'}} text={"(" + element.q + "," + element.r + ")"} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
+                              <Text style={{fontSize: 20, fill:'white'}} text={'(' + element.q + ',' + element.r + ')'} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
                               <Text style={{fontSize: 25, fill: fill}} text={ element.tid } x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2}/>
                                 { element.tdata.occupied!==undefined && <Text style={{fontSize: 22, fill: 'green'}} 
                                 text={element.tdata.occupied + ':' + (element.tdata.fleet ? getUnitsString(element.tdata.fleet) : '-')} 

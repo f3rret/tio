@@ -135,16 +135,17 @@ export const getStratColor = (strat, op) => {
     return color;
   }
 
-export const StrategyDialog = ({ G, ctx, playerID, PLANETS, onComplete }) => {
+export const StrategyDialog = ({ G, ctx, playerID, PLANETS, selectedTile, onComplete }) => {
 
     const sid = G.strategy;
     const isMine = ctx.currentPlayer === playerID;
+    let lastStep = 1;
 
     switch(sid){
         case 'LEADERSHIP':
-          //G.races[playerID].tokens.new = 3;
           break;
         case 'DIPLOMACY':
+          lastStep = 2;
           break;
         case 'POLITICS':
             break;
@@ -183,15 +184,31 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, onComplete }) => {
     }, [ex, tg, isMine, sid, PLANETS]);
 
     const planetRowClick = useCallback((pname) => {
-        if(!PLANETS.find(p => p.name === pname).exhausted){
-            setEx(produce(ex, draft => {
-                if(draft[pname]){
-                    delete draft[pname];
-                }
-                else{
-                    draft[pname] = true;
-                }
-            }));
+        if(sid === 'LEADERSHIP'){
+            if(!PLANETS.find(p => p.name === pname).exhausted){
+                setEx(produce(ex, draft => {
+                    if(draft[pname]){
+                        delete draft[pname];
+                    }
+                    else{
+                        draft[pname] = true;
+                    }
+                }));
+            }
+        }
+        else if(sid === 'DIPLOMACY'){
+            if(PLANETS.find(p => p.name === pname).exhausted){
+                setEx(produce(ex, draft => {
+                    if(draft[pname]){
+                        delete draft[pname];
+                    }
+                    else{
+                        if(Object.keys(draft).length < 2){
+                            draft[pname] = 'ready';
+                        }
+                    }
+                }));
+            }
         }
     }, [ex, PLANETS]);
 
@@ -212,8 +229,28 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, onComplete }) => {
         return result;
     }
 
+    const cantNext = useMemo(() => {
+        let stopThere = false;
+
+        if(sid === 'DIPLOMACY' && step === 1 && isMine){
+            stopThere = true;
+
+            if(selectedTile > 0){
+                if(G.tiles[selectedTile].tdata.planets){
+                    // eslint-disable-next-line
+                    if(G.tiles[selectedTile].tdata.planets.some(p => p.occupied == playerID)){
+                        stopThere = false;
+                    }
+                }
+            }
+        }
+       
+        return stopThere;
+
+    }, [selectedTile, G.tiles, step, isMine, sid, playerID]);
+
     return (
-        <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', width: '40%', position: 'absolute', margin: '10rem'}}>
+        <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', width: '40%', position: 'absolute', margin: '5rem'}}>
               <CardTitle style={{borderBottom: '1px solid ' + getStratColor(sid, '.6'), color: 'black'}}><h3>{sid}</h3></CardTitle>
               <CardBody style={{display: 'flex', color: 'black'}}>
                     {step === 0 && <>
@@ -245,20 +282,30 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, onComplete }) => {
                                 <div style={{display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap'}}><Tokens count={result}/></div>
                             </div>
                         </div>}
-                        
+                        {sid === 'DIPLOMACY' && <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
+                            <div style={{width: '60%', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                                <h5 style={{textAlign: 'center'}}>Selected system</h5>
+                                {selectedTile > -1 && <CardImg style={{width: '75%'}} src={'tiles/ST_'+G.tiles[selectedTile].tid+'.png'} />}
+                            </div>
+                        </div>}
                     </div>}
-                    {step === 2 && <div style={{width: '100%', display: 'flex', flexFlow: 'column'}}>
+                    {lastStep > 1 && step === 2 && <div style={{width: '100%', display: 'flex', flexFlow: 'column'}}>
+                        <p style={{fontSize: '.9rem', margin: 0}}>{isMine ? cardData.strategy[sid].primary : cardData.strategy[sid].secondary}</p>
+                        {sid === 'DIPLOMACY' && <div style={{width: '60%', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                            {<PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>}
+                        </div>}
+                    </div>}
+                    {step > lastStep && <div style={{width: '100%', display: 'flex', flexFlow: 'column'}}>
                         <h5>Awaiting other players:</h5>
                         {Object.keys(ctx.activePlayers).map((a,i) => {
                             return <h6 key={i}>{G.races[a].name}</h6>
                         })}
-                    </div>
-                    }
+                    </div>}
               </CardBody>
-              {step < 2 && <CardFooter style={{background: 'none', border: 'none', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid ' + getStratColor(sid, '.6'),}}>
-                  {step === 1 && <Button style={{marginRight: '1rem'}} onClick={()=>setStep(step-1)}>Back</Button>}
-                  {step === 0 && <Button color='success' onClick={()=>setStep(step+1)}>Next</Button>}
-                  {step === 1 && <Button color='success' onClick={()=>{ onComplete({exhausted: Object.keys(ex), tg, result}); setStep(step+1) }}>Done</Button>}
+              {step <= lastStep && <CardFooter style={{background: 'none', border: 'none', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid ' + getStratColor(sid, '.6'),}}>
+                  {step > 0 && step <= lastStep && <Button style={{marginRight: '1rem'}} onClick={()=>setStep(step-(sid === 'DIPLOMACY' && !isMine ? 2:1))}>Back</Button>}
+                  {step < lastStep && <Button disabled={cantNext} color='success' onClick={()=>{let inc=1; if(sid==='DIPLOMACY' && !isMine){inc=2}; setStep(step+inc)}}>Next</Button>}
+                  {step === lastStep && <Button color='success' onClick={()=>{ onComplete({exhausted: Object.keys(ex), tg, result: (sid === 'DIPLOMACY' ? selectedTile: result)}); setStep(step+1) }}>Done</Button>}
               </CardFooter>}
         </Card>
     );
@@ -278,7 +325,9 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted}) => {
       let specialty;
       if(p.specialty) specialty = <img alt='specialty' style={{width: '1.5rem'}} src={'icons/' + p.specialty + '.png'}/>;
       
-      return (<Row className='hoverable' onClick={()=>onClick(p.name)} key={i} style={{cursor: 'default', fontSize: '1.25rem', lineHeight: '2.2rem', height: '2.5rem', opacity: p.exhausted || exhausted[p.name] ? '.25':'1', color: 'white'}}>
+      return (<Row className='hoverable' onClick={()=>onClick(p.name)} key={i} 
+                    style={{cursor: 'default', fontSize: '1.25rem', lineHeight: '2.2rem', height: '2.5rem', background: exhausted[p.name] === 'ready' ? 'green':'',
+                    opacity: p.exhausted || exhausted[p.name] ? (exhausted[p.name] === 'ready' ? '1': '.25'):'1', color: 'white'}}>
                 <Col xs='6'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem'}} src={'icons/legendary_complete.png'}/>:'' } {p.name}</Col>
                 <Col xs='1' style={{padding: 0}}>{specialty}</Col>
                 <Col xs='1' style={{padding: 0}}>{trait}</Col>

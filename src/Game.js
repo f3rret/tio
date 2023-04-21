@@ -345,31 +345,38 @@ export const TIO = {
                 minMoves: 1,
                 maxMoves: 1,
                 moves: {
-                  joinStrategy: ({ G, playerID }, {exhausted, tg, result}) => {
-                    
+                  joinStrategy: ({ G, ctx, playerID, events }, {exhausted, tg, result}) => {
+
+                    const exhaustPlanet = (revert) => {
+                      if(exhausted && exhausted.length){
+                        G.tiles.forEach(tile => {
+                          const planets = tile.tdata.planets;
+
+                          if(planets && planets.length){
+                            planets.forEach( p => {
+                              if(p.occupied == playerID){
+                                if(exhausted.indexOf(p.name) > -1){
+                                  p.exhausted = !revert;
+                                }
+                              }
+                            });
+                          }
+                        });
+                      }
+                    };
+
                     switch(G.strategy){
                       case 'LEADERSHIP':
-                        if(exhausted && exhausted.length){
-                          G.tiles.forEach(tile => {
-                            const planets = tile.tdata.planets;
-
-                            if(planets && planets.length){
-                              planets.forEach( p => {
-                                if(p.occupied == playerID){
-                                  if(exhausted.indexOf(p.name) > -1){
-                                    p.exhausted = true;
-                                  }
-                                }
-                              });
-                            }
-                          });
-                        }
+                        exhaustPlanet();
 
                         G.races[playerID].tg -= tg;
                         G.races[playerID].tokens.new = result;
-
                         break;
                       case 'DIPLOMACY':
+                        if(result > 0){
+                          console.log(result); //place other players tokens there
+                        }
+                        exhaustPlanet(true);
                         break;
                       case 'POLITICS':
                           break;
@@ -385,6 +392,10 @@ export const TIO = {
                         break;
                       default:
                         break;
+                    }
+                    
+                    if(ctx.currentPlayer != playerID){
+                      G.races[playerID].tokens.s--;
                     }
                     
                   },
@@ -411,10 +422,10 @@ export const TIO = {
             G.races[playerID].tokens[tag]++;
           },
           useStrategy: ({ G, events, playerID}, idx) => {
-            if(G.races[playerID].actions.length > 0){
+            /*if(G.races[playerID].actions.length > 0){
               console.log('too many actions');
               return INVALID_MOVE;
-            }
+            }*/
 
             if(idx === undefined) idx=0;
             const strategy = G.races[playerID].strategy[idx];
