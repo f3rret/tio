@@ -9,65 +9,7 @@ import { checkObjective } from './utils';
 
 export function PaymentDialog(args) {
     
-    const [payment, setPayment] = useState({ influence: { planets: [], tg: 0 }, resources: { planets: [], tg: 0 }, tg: 0 });
-    const [paid, setPaid] = useState({}); //exhausted
-
-    const payPlanet = useCallback((e, planet, type) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if(paid[planet.name] === undefined){
-            setPayment(produce(payment, draft => {
-                draft[type].planets.push(planet);
-            }));
-
-            setPaid(produce(paid, draft => {
-                draft[planet.name] = type;
-            }));
-        }
-    }, [paid, payment]);
-
-    const cancelPlanet = useCallback((pname) => {
-        if(paid[pname] !== undefined){
-            setPayment(produce(payment, draft => {
-                draft[paid[pname]].planets = draft[paid[pname]].planets.filter(p => p.name !== pname);
-            }));
-
-            setPaid(produce(paid, draft => {
-                delete draft[pname];
-            }));
-        }
-    }, [paid, payment]);
-
-    const payTg = useCallback((type) => {
-        setPayment(produce(payment, draft => {
-            draft[type].tg += 1;
-        }));
-    }, [payment]);
-
-    const flushTg = useCallback(() => {
-        setPayment(produce(payment, draft => {
-            draft['influence'].tg = 0;
-            draft['resources'].tg = 0;
-        }));
-    }, [payment]);
-    
-    const tg = useMemo(() => args.race.tg - payment.influence.tg - payment.resources.tg, [payment, args]);
-
-    const acceptable = useMemo(()=>{
-        return Object.keys(args.objective.req).every( tag => {
-            if(tag === 'influence' || tag === 'resources'){
-                const pp = payment[tag].planets.reduce((a,b) => b[tag] + a, 0);
-                return pp + payment[tag].tg >= args.objective.req[tag];
-            }
-            else if(tag === 'tg'){
-                return tg >= args.objective.req[tag];
-            }
-            return false;
-        });
-    }, [payment, args, tg]);
-
-    return (
+    /*return (
         <Modal isOpen={args.isOpen} toggle={args.toggle}>
         <ModalHeader toggle={args.toggle}>{args.objective.id}</ModalHeader>
         <ModalBody style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>
@@ -80,53 +22,7 @@ export function PaymentDialog(args) {
             </Button>
         </ModalFooter>
         </Modal>
-    );
-}
-
-const PaymentCard = (args) => {
-    
-    /*return <div style={{display: 'flex'}}>
-        {args.planets && 
-        <ListGroup style={{width: '50%', margin: '1rem'}}>
-            {args.planets.map((p, i) => {
-                    let bg = '';
-                    let disabled = false;
-
-                    if (paid[p.name] === 'resources'){ bg = 'beige'; disabled = true}
-                    else if (paid[p.name] === 'influence'){ bg ='aliceblue';  disabled = true}
-                    else if (p.exhausted){ bg = 'silver'; disabled = true}
-
-                    const style={backgroundColor: bg, display: 'flex', justifyContent: 'space-between', cursor: 'default'}
-
-                    return ( 
-                    <ListGroupItem key={i} onClick={(e) => cancelPlanet(p.name)} style={style}>
-                        <div>{p.name}</div>
-                        <div>
-                            <Button size='sm' style={{color: 'white'}} disabled={disabled} color='warning' onClick={(e)=>payPlanet(e, p, 'resources')}><b>{p.resources}</b></Button>
-                            <Button size='sm' style={{color: 'white'}} disabled={disabled} color='info' onClick={(e)=>payPlanet(e, p, 'influence')}><b>{p.influence}</b></Button>
-                        </div>
-                    </ListGroupItem>)}
-            )}
-        </ListGroup>}
-        <div style={{width: '30%', margin: '1rem', display: 'flex', flexDirection: 'column'}}>
-            {Object.keys(args.objective.req).map((k, i) =>{
-                
-                return <div key={i} style={{display: 'flex', justifyContent: 'flex-end'}}>
-                        <Badge color={k ==='influence' ? 'info': ( k === 'resources' ? 'warning' : 'dark' )} 
-                                style={{cursor: (k ==='tg'?'pointer':'default'), fontSize: '1.25rem', marginBottom: '.5rem'}}
-                                onClick={(e)=> k ==='tg' && flushTg()}>
-                            {payment[k].planets && payment[k].planets.reduce((a,b) => b[k] + a, 0)}
-                            {!payment[k].planets && tg}
-                            {payment[k].tg > 0 && '+' + payment[k].tg}
-                            {' / '}{args.objective.req[k]}
-                        </Badge>
-                        {(k === 'influence' || k === 'resources') && 
-                        <Button disabled={tg < 1} onClick={()=>payTg(k)} size='sm' color='dark' style={{margin: '0 0 .5rem .5rem'}}>+</Button>}
-                    </div>
-            }
-            )}
-        </div>
-    </div>*/
+    );*/
 }
 
 export const getStratColor = (strat, op) => {
@@ -197,7 +93,7 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
             break;
         case 'IMPERIAL':
             if(isMine)
-                lastStep = 2;
+                lastStep = 3;
             else
                 lastStep = 1;
           break;
@@ -435,7 +331,6 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
         return <>{result}</>;
     }, [ex2, G.races, playerID]);
 
-
     const cantNext = useMemo(() => {
         let stopThere = false;
 
@@ -483,12 +378,27 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
                     stopThere = checkObjective(G, playerID, selectedRace)
                 }
             }
+            if(isMine && step === 2){
+                if(G.pubObjectives[selectedRace].type === 'SPEND'){
+                    stopThere = !Object.keys(G.pubObjectives[selectedRace].req).every((k) => {
+                        if(k === 'influence' || k === 'resources'){
+                            return deploy[k].planets.planets.reduce((a,b) => b[k] + a, 0) + deploy[k].tg >= G.pubObjectives[selectedRace].req[k]
+                        }
+                        else if(k === 'tg'){
+                            return deploy[k] >= G.pubObjectives[selectedRace].req[k]
+                        }
+                        else if(k === 'token'){
+                            return deploy[k].t + deploy[k].s >= G.pubObjectives[selectedRace].req[k]
+                        }
+                        else return false;
+                    });
+                }
+            }
         }
     
         return stopThere;
 
-    }, [selectedTile, selectedRace, G, step, isMine, sid, playerID, ex, ex2, ct, deployPrice, result, UnmeetReqs]);
-
+    }, [selectedTile, selectedRace, G, step, isMine, sid, playerID, ex, ex2, ct, deployPrice, deploy, result, UnmeetReqs]);
 
     const placeAgendaTopOrBottom = useCallback((idx) => {
        setAgendaCards(produce(agendaCards, draft => {
@@ -738,7 +648,7 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
                                     <Row>
                                         <Col xs='4' style={TOKENS_STYLE}><b>tactic</b></Col>
                                         <Col xs='4' style={TOKENS_STYLE}><b>fleet</b></Col>
-                                        <Col xs='4' style={TOKENS_STYLE}><b>strategy</b></Col>
+                                        <Col xs='4' style={TOKENS_STYLE}><b>strategic</b></Col>
                                     </Row>
                                     <Row>
                                         <Col xs='4' style={TOKENS_STYLE}><h6 style={{fontSize: '50px'}}>{ct.t}</h6></Col>
@@ -795,9 +705,12 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
                         <div><UnmeetReqs /></div>
                         </>}
                         {sid === 'IMPERIAL' && <>
-                            {isMine && <div style={{display: 'flex', flexDirection: 'row', marginTop: '2rem'}}>
-                                <PaymentCard />
-                            </div>}
+                            {isMine && selectedRace > -1 && <>
+                                <p><b>{G.pubObjectives[selectedRace].id}</b>{' '+G.pubObjectives[selectedRace].title}</p>
+                                <div style={{display: 'flex', flexDirection: 'row'}}>
+                                    <PaymentCard race={G.races[playerID]} planets={PLANETS} objective={G.pubObjectives[selectedRace]} onPayment={setDeploy}/>
+                                </div>
+                            </>}
                         </>}
                     </div>}
                     {step === 3 && lastStep > 2 && <div>
@@ -942,9 +855,168 @@ export const ObjectivesList = ({G, playerID, onSelect, selected}) => {
     </ListGroup>
 }
 
-export const PlanetsRows = ({PLANETS, onClick, exhausted, variant}) => {
+const PaymentCard = (args) => {
+    const [payment, setPayment] = useState({ influence: { planets: [], tg: 0 }, resources: { planets: [], tg: 0 }, tg: 0, token: { s:0, t:0 } });
+    const [paid, setPaid] = useState({}); //exhausted
+
+    const payPlanet = useCallback((e, planet, type) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if(paid[planet.name] === undefined){
+            setPayment(produce(payment, draft => {
+                draft[type].planets.push(planet);
+            }));
+
+            setPaid(produce(paid, draft => {
+                draft[planet.name] = type;
+            }));
+        }
+    }, [paid, payment]);
+
+    const cancelPlanet = useCallback((pname) => {
+        if(paid[pname] !== undefined){
+            setPayment(produce(payment, draft => {
+                draft[paid[pname]].planets = draft[paid[pname]].planets.filter(p => p.name !== pname);
+            }));
+
+            setPaid(produce(paid, draft => {
+                delete draft[pname];
+            }));
+        }
+    }, [paid, payment]);
+
+    const payTg = useCallback((type, inc) => {
+        setPayment(produce(payment, draft => {
+            draft[type].tg += inc;
+        }));
+    }, [payment]);
+
+    const redistCt = useCallback((tag, inc) => {
+        setPayment(produce(payment, draft => {
+            if(inc > 0 && tokens[tag] > 0){
+                draft.token[tag]++;
+            }
+            else if(inc < 0 && payment.token[tag]>0){
+                draft.token[tag]--;
+            }
+        }));
+    }, [payment])
+    
+    const tg = useMemo(() => args.race.tg - payment.influence.tg - payment.resources.tg, [payment, args]);
+    const tokens = useMemo(()=> ({ t: args.race.tokens.t - payment.token.t, s: args.race.tokens.s - payment.token.s}), [payment, args]);
+
+    useEffect(()=>{
+        if(args.onPayment){
+            args.onPayment(payment);
+        }
+    },[payment]);
+
+    /*const acceptable = useMemo(()=>{
+        return Object.keys(args.objective.req).every( tag => {
+            if(tag === 'influence' || tag === 'resources'){
+                const pp = payment[tag].planets.reduce((a,b) => b[tag] + a, 0);
+                return pp + payment[tag].tg >= args.objective.req[tag];
+            }
+            else if(tag === 'tg'){
+                return tg >= args.objective.req[tag];
+            }
+            return false;
+        });
+    }, [payment, args, tg]);*/
+
+    const objKeys = Object.keys(args.objective.req);
+    const TOKENS_STYLE = { cursor:'pointer', display: 'flex', textAlign: 'center', padding: 0, flexFlow: 'column', background: 'none', color: 'white'}
+
+    return <>
+        {objKeys.indexOf('influence') + objKeys.indexOf('resources') > -2 && <div style={{width: '30rem', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+            <PlanetsRows PLANETS={args.planets} exhausted={paid} onClick={(p)=>cancelPlanet(p)}
+            resClick={objKeys.indexOf('resources') > -1 ? (e, p)=>payPlanet(e, p, 'resources'):undefined} infClick={objKeys.indexOf('influence') >-1? (e, p)=>payPlanet(e, p, 'influence'):undefined}/>
+        </div>}
+        {objKeys.indexOf('token') > -1 && <div style={{width: '20rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+            <Row>
+                <Col xs='6' style={TOKENS_STYLE}><b>tactic</b></Col>
+                <Col xs='6' style={TOKENS_STYLE}><b>strategic</b></Col>
+            </Row>
+            <Row>
+                <Col xs='6' className='hoverable' style={TOKENS_STYLE}><h6 style={{fontSize: '50px'}}>{tokens.t}</h6></Col>
+                <Col xs='6' className='hoverable' style={TOKENS_STYLE}><h6 style={{fontSize: '50px'}}>{tokens.s}</h6></Col>
+            </Row>
+            <Row>
+                <Col xs='3' style={{...TOKENS_STYLE, alignItems: 'flex-end'}}><Button onClick={()=>redistCt('t', -1)} color='dark' size='sm' style={{ opacity: '.5', width:'3rem', padding: 0,fontSize: '30px'}}>+</Button></Col>
+                <Col xs='3' style={{...TOKENS_STYLE}}><Button onClick={()=>redistCt('t', +1)} color='dark' style={{ opacity: '.5', width:'3rem', padding: 0,fontSize: '30px'}}>-</Button></Col>
+                <Col xs='3' style={{...TOKENS_STYLE, alignItems: 'flex-end'}}><Button onClick={()=>redistCt('s', -1)} color='dark' style={{ opacity: '.5', width:'3rem', padding: 0,fontSize: '30px'}}>+</Button></Col>
+                <Col xs='3' style={{...TOKENS_STYLE}}><Button onClick={()=>redistCt('s', +1)} color='dark' style={{ opacity: '.5', width:'3rem', padding: 0,fontSize: '30px'}}>-</Button></Col>
+            </Row>
+        </div>}
+        <div style={{width: '20rem', margin: '1rem', display: 'flex', flexDirection: 'column'}}>
+            {objKeys.map((k, i) =>{
+                
+                return <div key={i} style={{display: 'flex', justifyContent: 'flex-start'}}>
+                            {(k === 'influence' || k === 'resources') && <h5 style={{width: '4rem', display: 'flex', justifyContent: 'flex-start'}}>
+                                <Button disabled={tg < 1} tag='img' onClick={()=>payTg(k, 1)} src='/icons/trade_good_1.png' color='warning' 
+                                    style={{width: '2rem', padding: '.5rem', borderTopLeftRadius: '5px', 
+                                    borderBottomLeftRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}/>
+                                
+                                <Button disabled={payment[k].tg === 0} color='warning' 
+                                    style={{width: '1.5rem', borderLeft: 'none', color:'orange', backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: 0}} 
+                                    onClick={()=>payTg(k, -1)}>▼
+                                </Button>
+                            </h5>}
+                            {(k !== 'influence' && k !== 'resources') && <h5 style={{width: '4rem'}}></h5>}
+                            <div style={{display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap'}}>
+                                <h6 style={{textAlign: 'end'}}>{'Total ' + k + ': '}
+                                    {payment[k].planets && payment[k].planets.reduce((a,b) => b[k] + a, 0)}
+                                    {!payment[k].planets && k!=='token' && tg}
+                                    {k!=='token' && payment[k].tg > 0 && '+' + payment[k].tg + ' tg'}
+                                    {k==='token' && payment[k].t + payment[k].s}
+                                    {' / '}{args.objective.req[k]}
+                                </h6>
+                            </div>
+                    </div>
+            })}
+        </div>
+    </>
+/*
+<Badge color={k ==='influence' ? 'info': ( k === 'resources' ? 'warning' : 'dark' )} 
+                                style={{cursor: (k ==='tg'?'pointer':'default'), fontSize: '1.25rem', marginBottom: '.5rem'}}
+                                onClick={(e)=> k ==='tg' && flushTg()}>
+                            {payment[k].planets && payment[k].planets.reduce((a,b) => b[k] + a, 0)}
+                            {!payment[k].planets && tg}
+                            {payment[k].tg > 0 && '+' + payment[k].tg}
+                            {' / '}{args.objective.req[k]}
+                        </Badge>
+                        {(k === 'influence' || k === 'resources') && 
+                        <Button disabled={tg < 1} onClick={()=>payTg(k)} size='sm' color='dark' style={{margin: '0 0 .5rem .5rem'}}>+</Button>}
+*/
+    /*<ListGroup style={{width: '50%', margin: '1rem'}}>
+            {args.planets.map((p, i) => {
+                    let bg = '';
+                    let disabled = false;
+
+                    if (paid[p.name] === 'resources'){ bg = 'beige'; disabled = true}
+                    else if (paid[p.name] === 'influence'){ bg ='aliceblue';  disabled = true}
+                    else if (p.exhausted){ bg = 'silver'; disabled = true}
+
+                    const style={backgroundColor: bg, display: 'flex', justifyContent: 'space-between', cursor: 'default'}
+
+                    return ( 
+                    <ListGroupItem key={i} onClick={(e) => cancelPlanet(p.name)} style={style}>
+                        <div>{p.name}</div>
+                        <div>
+                            <Button size='sm' style={{color: 'white'}} disabled={disabled} color='warning' onClick={(e)=>payPlanet(e, p, 'resources')}><b>{p.resources}</b></Button>
+                            <Button size='sm' style={{color: 'white'}} disabled={disabled} color='info' onClick={(e)=>payPlanet(e, p, 'influence')}><b>{p.influence}</b></Button>
+                        </div>
+                    </ListGroupItem>)}
+            )}
+        </ListGroup>*/
+}
+
+export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, infClick}) => {
 
     if(!onClick) onClick = ()=>{};
+    if(!resClick) resClick = ()=>{};
+    if(!infClick) infClick = ()=>{};
     if(!exhausted) exhausted = {};
 
     return PLANETS.map((p,i) => {
@@ -968,9 +1040,9 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant}) => {
                 <Col xs='1' style={{padding: 0}}>{specialty}</Col>
                 <Col xs='1' style={{padding: 0}}>{trait}</Col>
                 {variant !== 'small' && <>
-                <Col xs='1' style={{background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
+                <Col xs='1' onClick={(e)=>resClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
                 <Col xs='1'/>
-                <Col xs='1' style={{background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b>{p.influence}</b></Col>
+                <Col xs='1' onClick={(e)=>infClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b>{p.influence}</b></Col>
                 <Col xs='1'/></>}
               </Row>)
     })

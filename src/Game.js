@@ -97,7 +97,8 @@ export const TIO = {
             cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
           }
 
-          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+          //G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+          G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Lead from the Front'), players: []});
 
           if(!G.actionsDeck.length){
             const deck = [];
