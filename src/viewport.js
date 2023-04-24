@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { PixiComponent, useApp } from "@pixi/react";
+import { PixiComponent, useApp/*, useTick*/ } from "@pixi/react";
 import { Viewport } from "pixi-viewport";
 // eslint-disable-next-line
 import { EventSystem } from "@pixi/events";
@@ -52,6 +52,7 @@ const PixiViewportComponent = PixiComponent("Viewport", {
     });
   },
   didMount() {
+    
     console.log("viewport mounted");
   }
 });

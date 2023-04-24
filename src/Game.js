@@ -1,21 +1,20 @@
 /* eslint eqeqeq: 0 */
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
-import { HexGrid, neighbors } from './Grid';
+import { HexGrid } from './Grid';
 import tileData from './tileData.json';
 import raceData from './raceData.json';
 import techData from './techData.json';
 import cardData from './cardData.json';
 import { produce } from 'immer';
-import { NUM_PLAYERS, getPlayerUnits, getPlayerPlanets } from './utils';
-
+import { NUM_PLAYERS, checkObjective } from './utils';
 
 export const TIO = {
     
     setup: () => {
-      const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: tileData.all[h.tileId], q: h.q, r: h.r, w: h.width, corners: h.corners}) );
+      const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
-                  .map( r => ({...r, ...raceData[r.rid], strategy:[], tg: 10, tokens: { t: 3, f: 3, s: 2}}) );
+                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], tg: 10, tokens: { t: 3, f: 3, s: 2}}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
       races.forEach( r => {
@@ -49,9 +48,12 @@ export const TIO = {
         }
       });
 
-      return { 
+      return {
+        speaker: races[0].rid, 
         tiles,
         pubObjectives: [],
+        actionsDeck: [],
+        agendaDeck: [],
         passedPlayers: [],
         races
       }
@@ -96,6 +98,27 @@ export const TIO = {
           }
 
           G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+
+          if(!G.actionsDeck.length){
+            const deck = [];
+            cardData.actions.forEach(a => {
+              if(a.count){
+                for(var i=0; i<a.count; i++){
+                  deck.push(a);
+                }
+              }
+              else{
+                deck.push(a);
+              }
+            });
+
+            G.actionsDeck = random.Shuffle(deck);
+          }
+
+          if(!G.agendaDeck.length){
+            G.agendaDeck = random.Shuffle(cardData.agenda);
+          }
+
         },
         onEnd: ({ G }) => {
           G.TURN_ORDER = G.races.map((r, i) => ({initiative: r.initiative, i})).sort((a, b) => a.initiative > b.initiative ? 1 : (a.initiative < b.initiative ? -1 : 0)).map(r => r.i);
@@ -117,209 +140,51 @@ export const TIO = {
           completePublicObjective: ({G, playerID, events}, oid, payment) => {
             
             if(G.pubObjectives[oid] && G.pubObjectives[oid].players.indexOf(playerID) === -1){
+
               const req = G.pubObjectives[oid].req;
               const race = G.races[playerID];
-              const planets = getPlayerPlanets(G.tiles, playerID);
               
               if(G.pubObjectives[oid].type === 'SPEND'){
                 const rkeys = Object.keys(req);
-
+        
                 if(rkeys.indexOf('token') > -1){
-                  if(race.tokens && payment.tokens){
+                    if(race.tokens && payment.tokens){
                     race.tokens.t -= payment.tokens.t;
                     race.tokens.s -= payment.tokens.s;
-                  }
+                    }
                 }
                 else{
-                  if(req.influence && payment.influence){
+                    if(req.influence && payment.influence){
                     if(payment.influence.planets){
-                      payment.influence.planets.forEach( p => {
+                        payment.influence.planets.forEach( p => {
                         const tile = G.tiles.find( t => t.tid === p.tid);
                         tile.tdata.planets.find( pl => pl.name === p.name).exhausted = true; 
-                      });
+                        });
                     }
                     if(payment.influence.tg) race.tg -= payment.influence.tg;
-                  }
-                  if(req.resources && payment.resources){
+                    }
+                    if(req.resources && payment.resources){
                     if(payment.resources.planets) payment.resources.planets.forEach( p => {
                         const tile = G.tiles.find( t => t.tid === p.tid);
                         tile.tdata.planets.find( pl => pl.name === p.name).exhausted = true; 
                     });
                     if(payment.resources.tg) race.tg -= payment.resources.tg;
-                  }
-                  if(req.tg && payment.tg){
+                    }
+                    if(req.tg && payment.tg){
                     race.tg -= payment.tg;
-                  }
+                    }
                 }           
-
+        
                 G.pubObjectives[oid].players.push(playerID);
               }
               else if(G.pubObjectives[oid].type === 'HAVE'){
-
-                const units = getPlayerUnits(G.tiles, playerID);
-                
-                if(req.unit && Array.isArray(req.unit)){
-                  if(req.squadron){
-                    let systems = G.tiles.filter( s => s.tdata.occupied == playerID && s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
-
-                    const goal = systems.some( s => {
-                      let sum = 0;
-                      Object.keys(s.tdata.fleet).forEach( k => {
-                        if(req.unit.indexOf(k) > -1) sum += s.tdata.fleet[k];
-                      });
-                      return sum >= req.squadron;
-                    });
-
-                    if(goal == 0){
-                      return;
-                    }
-                  }
-                  else{
-                    let sum = 0;
-                    req.unit.forEach(u => { if(units[u]) { sum += units[u] } });
-                    if(sum < req.count) return;
-                  }
+                if(checkObjective(G, playerID, oid) === true){
+                  G.pubObjectives[oid].players.push(playerID);
                 }
-                else if(req.trait){
-                  const traits = {'industrial': 0, 'cultural': 0, 'hazardous': 0};
-
-                  planets.forEach(p => {
-                    if(p.trait && traits[p.trait] !== undefined){
-                      traits[p.trait]++;
-                    }
-                  });
-
-                  if(traits['industrial'] < req.trait && traits['cultural'] < req.trait && traits['hazardous'] < req.trait){
-                    return;
-                  }
-                }
-                else if(req.upgrade){
-                  const upgrades = race.knownTechs.filter(t => {
-                    const tech = techData.find(td => td.id === t);
-                    return tech.type === 'unit' && tech.upgrade === true
-                  });
-                  if(upgrades.length < req.upgrade){
-                    return;
-                  }
-                }
-                else if(req.attachment){
-                  let sum = 0;
-                  planets.forEach(p => {
-                    if(p.attachment) sum++;
-                  });
-
-                  if(sum < req.attachment){
-                    return;
-                  }
-                }
-                else if(req.technology){
-                  const colors = {'biotic': 0, 'warfare': 0, 'cybernetic': 0, 'propulsion': 0};
-                  race.knownTechs.forEach(t => {
-                    const tech = techData.find(td => td.id === t);
-                    if(colors[tech.type] !== undefined){ colors[tech.type]++; }
-                  });
-
-                  let goals = 0;
-                  Object.keys(colors).forEach(c => {
-                    if(colors[c] >= parseInt(req.technology.count)) goals++;
-                  });
-
-                  if(goals < parseInt(req.technology.color)){
-                    return;
-                  }
-                }
-                else if(req.planet){
-                  let result = planets;
-                  if(req.nhs){
-                    result = result.filter( p => p.tid != race.rid );
-                  }
-                  if(req.ground){
-                    result = result.filter( p => p.units && Object.keys(p.units).some( key => req.ground.indexOf(key) > -1));
-                  }
-
-                  if(result.length < req.planet){
-                    return;
-                  }
-                }
-                else if(req.system){
-                  let systems = G.tiles.filter( t => t.tdata.occupied === playerID || (t.tdata.planets && t.tdata.planets.some( p => p.occupied === playerID)) );
-                  if(req.fleet && req.ground){
-                    systems = systems.filter( s => 
-                      (s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0) || 
-                      (s.tdata.planets && s.tdata.planets.length && s.tdata.planets.some( p => p.occupied === playerID && p.units && p.units.length ))
-                    );
-                  }
-                  else if(req.fleet){
-                    systems = systems.filter( s => s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
-                  }
-
-                  if(req.noPlanet){
-                    systems = systems.filter( s => s.tdata.planets.length == 0);
-                  }
-                  if(req.adjacentMR){
-                    systems = systems.filter( s => (s.q >= -1 && s.q <= 1) && (s.r >=-1 && s.q <= -1) && !(s.r == 0 && s.q == 0));
-                  }
-                  if(req.MR && req.legendary && req.anomaly){
-                    systems = systems.filter( s => s.tid == 18 || [65, 66, 82].indexOf(s.tid) > -1 || tileData.anomaly.indexOf(s.tid) > -1);
-                  }
-                  if(req.edge){
-                    systems = systems.filter( s => neighbors([s.q, s.r]).toArray().length < 6);
-                  }
-
-                  if(systems.length < req.system){
-                    return;
-                  }
-                }
-                else if(req.specialty){
-                  let sum = 0;
-                  planets.forEach(p => {
-                    if(p.specialty) sum++;
-                  });
-
-                  if(sum < req.specialty){
-                    return;
-                  }
-                }
-                else if(req.neighbor){
-                  let systems = G.tiles.filter( t => t.tdata.occupied === playerID || (t.tdata.planets && t.tdata.planets.some( p => p.occupied === playerID)) );
-                  let neighbors = [];
-
-                  systems.forEach( s => neighbors([s.q, s.r]).forEach( n => {
-                    if(n.tdata.occupied !== undefined && n.tdata.occupied !== playerID){
-                      if(neighbors.indexOf(n.tdata.occupied) === -1) neighbors.push(n.tdata.occupied);
-                    }
-                    else if(n.tdata.planets){
-                      n.tdata.planets.forEach( p => { if(p.occupied !== undefined && p.occupied !== playerID){ 
-                        if(neighbors.indexOf(n.tdata.occupied) === -1) neighbors.push(p.occupied) 
-                      } })
-                    }
-                  }));
-
-                  if(neighbors.length < req.neighbor){
-                    return;
-                  }
-
-                  let goals = 0;
-
-                  if(req.more === 'planet'){
-                    neighbors.forEach( n => {
-                      const pl = getPlayerPlanets(G.tiles, n);
-                      if(pl.length < planets.length) goals++;
-                    });
-                  }
-
-                  if(goals < req.neighbor){
-                    return;
-                  }
-                }
-
-
-                G.pubObjectives[oid].players.push(playerID);
               }
               else{
                 return;
               }
-
               
             }
             events.endTurn();
@@ -327,6 +192,9 @@ export const TIO = {
         },
         onBegin: ({ G, random }) => {
           G.passedPlayers = [];
+          G.races.forEach(r => {
+            r.actionCards.push(G.actionsDeck.pop());
+          });
           //return {...G, passedPlayers: []}
         },
         onEnd: ({ G }) => {
@@ -374,19 +242,152 @@ export const TIO = {
                         break;
                       case 'DIPLOMACY':
                         if(result > 0){
-                          console.log(result); //place other players tokens there
+                          G.races.forEach((r, i) => {
+                            if(i != playerID){
+                              G.tiles[result].tdata.tokens.push(r.rid);
+                            }
+                          });
                         }
                         exhaustPlanet(true);
                         break;
                       case 'POLITICS':
-                          break;
+                        if(result.selectedRace){
+                          G.speaker = result.selectedRace;
+                        }
+                        //draw certain action cards, maybe in parallel with others
+                        G.races[playerID].actionCards.push(G.actionsDeck.slice(-2 * (parseInt(playerID)+1)).slice(0, 2));
+                        G.actionsDeck[(G.actionsDeck.length - 1) - (parseInt(playerID)+1)].issued = true;
+                        G.actionsDeck[(G.actionsDeck.length - 1) - (parseInt(playerID)+1) - 1].issued = true;
+
+                        if(result.agendaCards && result.agendaCards.length){
+                          G.agendaDeck = G.agendaDeck.slice(0, -2);
+                          
+                          for(var i = 1; i >= 0; i--){
+                            const a = result.agendaCards[i];
+                            if(a.bottom){
+                              G.agendaDeck = [a, ...G.agendaDeck];
+                            }
+                            else{
+                              G.agendaDeck = [...G.agendaDeck, a];
+                            }
+                          }
+                        }
+                        break;
                       case 'CONSTRUCTION':
+                        const build = (obj)=>{
+                          const keys=Object.keys(obj);
+
+                          if(keys.length){
+                            G.tiles.forEach(tile => {
+                              const planets = tile.tdata.planets;
+    
+                              if(planets && planets.length){
+                                planets.some( p => {
+                                  if(p.occupied == playerID && p.name === keys[0]){
+                                    if(!p.units) p.units={}
+                                    if(!p.units[obj[keys[0]]]) p.units[obj[keys[0]]]=0;
+                                    p.units[obj[keys[0]]]++;
+
+                                    if(ctx.currentPlayer != playerID){
+                                      tile.tdata.tokens.push(G.races[playerID].rid);
+                                    }
+
+                                    return true;
+                                  }
+                                  return false;
+                                });
+                              }
+                            });
+                          }
+                        };
+
+                        build(result[0]);
+
+                        if(ctx.currentPlayer === playerID){
+                          build(result[1])
+                        }
+
                         break;
                       case 'TRADE':
+                        if(ctx.currentPlayer === playerID){
+                          G.races[playerID].tg += 3;
+                          G.races[playerID].commodity = G.races[playerID].commCap;
+
+                          if(result.length){
+                            G.races[playerID].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES = result;
+                          }
+                        }
+                        else{
+                          G.races[playerID].commodity = G.races[playerID].commCap;
+
+                          const noToken = G.races[ctx.currentPlayer].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES;
+                          if(noToken && noToken.length && noToken.indexOf(G.races[playerID].rid) > -1){
+                            G.races[playerID].tokens.s++;
+                          }
+                        }
                         break;
                       case 'WARFARE':
+                        if(ctx.currentPlayer === playerID){
+                          G.races[playerID].tokens = result.tokens;
+
+                          if(result.selectedTile && result.selectedTile > -1){
+                            const ar = [...G.tiles[result.selectedTile].tdata.tokens];
+                            const idx = ar.indexOf(G.races[playerID].rid);
+                            if(idx > -1){
+                              ar.splice(idx, 1);
+                              G.tiles[result.selectedTile].tdata.tokens = ar;
+                            }
+                          }
+                        }
+                        else{
+                          if(result.base && result.deploy){
+                            exhaustPlanet();
+
+                            if(tg){
+                              G.races[playerID].tg -= tg;
+                            }
+                            
+                            G.tiles.some(tile => {
+                              const planets = tile.tdata.planets;
+
+                              if(planets && planets.length){
+                                const found = planets.some( p => {
+                                  if(p.occupied == playerID && p.name === result.base){
+                                    const ukeys = Object.keys(result.deploy);
+                                    ukeys.forEach(uk => {
+                                      const ukl = uk.toLowerCase();
+                                      if(!tile.tdata.fleet[ukl]) tile.tdata.fleet[ukl] = 0;
+                                      tile.tdata.fleet[ukl] += result.deploy[uk];
+                                    });
+                                    return true;
+                                  }
+                                  return false;
+                                });
+                                return found.length > 0;
+                              }
+                              return false;
+                            });
+                              
+                          }
+                        }
                         break;
                       case 'TECHNOLOGY':
+                        const keys = Object.keys(result);
+
+                        if(keys.length){
+                          exhaustPlanet();
+                          if(tg){ G.races[playerID].tg -= tg;}
+
+                          keys.forEach(k => {
+                            G.races[playerID].knownTechs.push(result[k].id);
+          
+                            if(result[k].type === 'unit' && result[k].upgrade === true){
+                              const idx = G.races[playerID].technologies.findIndex(t => t.id + '2' === result[k].id);
+                              if(idx > -1) G.races[playerID].technologies[idx] = {...result[k], upgrade: false, alreadyUpgraded: true, id: G.races[playerID].technologies[idx].id};
+                            }
+                          });
+                          
+                        }
                         break;
                       case 'IMPERIAL':
                         break;
@@ -398,9 +399,14 @@ export const TIO = {
                       G.races[playerID].tokens.s--;
                     }
                     
+                    if(Object.keys(ctx.activePlayers).length === 1){
+                      G.actionsDeck = G.actionsDeck.filter(a => a.issued !== true);
+                    }
                   },
-                  passStrategy: ({ events }) => {
-                    
+                  passStrategy: ({ G, ctx }) => {
+                    if(Object.keys(ctx.activePlayers).length === 1){
+                      G.actionsDeck = G.actionsDeck.filter(a => a.issued !== true);
+                    }
                   }
                 }
               },
@@ -566,7 +572,7 @@ export const TIO = {
                       delete fleet['mech'];
                     }
                     delete units['pds'];
-                    delete units['dock'];
+                    delete units['spacedock'];
 
                     tile.tdata.planets[pid].occupied = playerID;
                   }
@@ -721,7 +727,7 @@ export const TIO = {
               return INVALID_MOVE;
             }
 
-            if(!tile.tdata.planets[pid] || !tile.tdata.planets[pid].units || !tile.tdata.planets[pid].units.dock){
+            if(!tile.tdata.planets[pid] || !tile.tdata.planets[pid].units || !tile.tdata.planets[pid].units.spacedock){
               console.log('no production unit');
               return INVALID_MOVE;
             }
@@ -793,15 +799,16 @@ export const TIO = {
             events.endTurn();
           }
         },
+        onEnd: ({ G }) => {
+          G.tiles.forEach( t => t.tdata.tokens = []);
+        },
         onBegin: ({ G, random }) => {
                    
         },
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers,
       }
     },
-    onBegin: ({ G }) => {
-      //G.tiles.forEach( t => t.blocked = [])
-    },
+    
     endIf: ({ G, ctx }) => {
         if (IsVictory(G, ctx)) {
           return { winner: ctx.currentPlayer };

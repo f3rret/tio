@@ -50,7 +50,7 @@
         }
     },
 
-    "action": [
+    "actions": [
         {"id":"Cripple Defenses", "when":"ACTION", "description":"Choose a planet. Destroy each PDS on that planet."},
         {"id":"Economic Initiative", "when":"ACTION", "description":"Ready each cultural planet you control."},
         {"id":"Fighter Conscription", "when":"ACTION","description":"Place 1 fighter from your reinforcements in each system that contains 1 or more of your space docks or units that have capacity; they cannot be placed in systems that contain other players' ships."},
@@ -153,7 +153,7 @@
         {"id": "Imperial Arbiter", "type": "LAW", "elect": "Player", "for": "At the end of the strategy phase this card may be discarded to swap one of this player's strategy cards with 1 of another player's strategy cards."},  
         {"id": "Incentive Program", "type": "DIRECTIVE", "for": "Draw and reveal an additional stage 1 public objective.", "against": "Draw and reveal an additional stage 2 public objective."},  
         {"id": "Ixthian Artifact", "type": "DIRECTIVE", "for": "The speaker rolls a die. 1-5: Destroy all units on Mecatol Rex & 3 units in each system adjacent to Mecatol Rex. 6-10: Each player researches 2 technologies."},  
-        {"id": "Judicial Abolishment", "type": "DIRECTIVE", "elect": "LAW", "for": "Discard elected law."},  
+        {"id": "Judicial Abolishment", "type": "DIRECTIVE", "elect": "Law", "for": "Discard elected law."},  
         {"id": "Minister of Commerce", "type": "LAW", "elect": "Player", "for": "After the owner of this card replenishes commodities, they gain a trade good for each player that is their neighbor."},  
         {"id": "Minister of Exploration", "type": "LAW", "elect": "Player", "for": "When the owner of this cards gains control of a planet, they gain a trade good."},  
         {"id": "Minister of Industry", "type": "LAW", "elect": "Player", "for": "When the owner of this card places a space dock in a system, their units in that system use Production abilities."},  
@@ -161,7 +161,7 @@
         {"id": "Minister of Policy", "type": "LAW", "elect": "Player", "for": "The owner draws an extra action card during the status phase."},  
         {"id": "Minister of Sciences", "type": "LAW", "elect": "Player", "for": "When the owner of this card resolves the primary or secondary ability of the Technology Strategy card, they do not need to spend resources."},  
         {"id": "Minister of War", "type": "LAW", "elect": "Player", "for": "The owner of this card may discard this card after performing an action to remove one of their command tokens on the board. Then, they may perform an additional action."},  
-        {"id": "Miscount Disclosed", "type": "DIRECTIVE", "elect": "LAW", "for": "Vote on that law again, as if it was revealed."},  
+        {"id": "Miscount Disclosed", "type": "DIRECTIVE", "elect": "Law", "for": "Vote on that law again, as if it was revealed."},  
         {"id": "Mutiny", "type": "DIRECTIVE", "for": "Each player who voted 'For' gains 1 VP.", "against": "Each player who voted 'For' loses 1 VP."},  
         {"id": "New Constitution", "type": "DIRECTIVE", "for": "Discard all laws in play. Exhaust all home systems next strategy phase."},  
         {"id": "Prophecy of Ixth", "type": "LAW", "elect": "Player", "for": "The owner of this card applies +1 to their fighter's combat rolls. When the owner of this card uses a Production ability they discard this card unless they produce at least 2 fighters."},  
