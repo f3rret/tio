@@ -2,7 +2,7 @@
 import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
 import { useMemo, useCallback, useState } from 'react';
 // eslint-disable-next-line
-import { Navbar, Nav, NavItem, Button, Card, CardImg, CardText, CardTitle, UncontrolledCollapse, CardBody,
+import { Navbar, Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledCollapse, CardBody,
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont } from 'reactstrap';
 import { PaymentDialog, StrategyDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList } from './payment';
 import { PixiViewport } from './viewport';
@@ -73,6 +73,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const [tilesTxt, setTilesTxt] = useState(true);
   const [unitsVisible, setUnitsVisible] = useState(true);
   const [abilVisible, setAbilVisible] = useState(0);
+  const [agentVisible, setAgentVisible] = useState('agent');
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
   const [stratUnfold, setStratUnfold] = useState(0);
   const [selectedTile, setSelectedTile] = useState(-1);
@@ -99,15 +100,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const MyNavbar = () => (
     <Navbar style={{ position: 'fixed', height: '3rem', width: '80%', zIndex: '1'}}>
       <div style={{display: 'flex'}}>
-        
         <Nav style={{marginRight: '2rem'}}>
-          <NavItem onClick={()=>setTechVisible(!techVisible)} style={{cursor: 'pointer'}}>
-            <h5>Technologies</h5>
+          <NavItem onClick={()=>setObjVisible(!objVisible)} style={{cursor: 'pointer'}}>
+            <CardImg src='icons/secret_to_public.png'/>
           </NavItem>
         </Nav>
         <Nav style={{marginRight: '2rem'}}>
-          <NavItem onClick={()=>setObjVisible(!objVisible)} style={{cursor: 'pointer'}}>
-            <h5>Objectives</h5>
+          <NavItem onClick={()=>setTechVisible(!techVisible)} style={{cursor: 'pointer'}}>
+            <h5>Technologies</h5>
           </NavItem>
         </Nav>
         <Nav style={{marginRight: '2rem'}}>
@@ -145,17 +145,17 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
 const completePubObj = (i) => {
   //e.preventDefault();
 
-  if(G.pubObjectives[i].type === 'SPEND'){
-    setPayObj(i);
+  /*if(G.pubObjectives[i].type === 'SPEND'){
+    //setPayObj(i);
     //moves.completePublicObjective(i, payment);
   }
   else{
     moves.completePublicObjective(i);
-  }
+  }*/
 }
   const Objectives = () => (
     <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Public objectives</h6></CardTitle>
+      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Objectives</h6></CardTitle>
       <ObjectivesList G={G} playerID={playerID} onSelect={completePubObj}/>
     </Card>
   );
@@ -356,7 +356,7 @@ const completePubObj = (i) => {
                 }
               </CardColumns>
               <div style={{ display: 'flex', flexDirection: 'column', width: '80%', backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
-                <CardColumns style={{ margin: '1rem' }}>
+                <CardColumns style={{ margin: '1rem', display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
                     {race && <Card style={CARD_STYLE}>
                       <div style={{display: 'flex'}}>
                         <CardImg src={'race/'+race.rid+'.png'} style={{width: '205px'}}/>
@@ -366,14 +366,14 @@ const completePubObj = (i) => {
                           <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>trade goods</b></Button>
                         </div>
                       </div>
-                      <div style={{display: 'flex', paddingTop: '1rem'}}>
+                      <div style={{display: 'flex', paddingTop: '1rem', fontSize: '.8rem'}}>
                         {race.abilities.map((a, i) => 
                             <Button key={i} size='sm' onClick={()=>setAbilVisible(i)} color={abilVisible === i ? 'light':'dark'} style={{marginRight: '.5rem'}}>{a.id.replaceAll('_', ' ')}</Button>
                           )}
                       </div>
 
                       {race.abilities.map((a, i) => 
-                        <CardText key={i} style={{marginTop:'1rem', display: abilVisible === i ? 'unset':'none'}}>{a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}</CardText>
+                        <CardText key={i} style={{marginTop:'1rem', fontSize: '.8rem', display: abilVisible === i ? 'unset':'none'}}>{a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}</CardText>
                       )}
                     </Card>}
                     {race && <Card style={CARD_STYLE}>
@@ -396,6 +396,28 @@ const completePubObj = (i) => {
                             </ListGroupItem>
                         </ListGroup>
 
+                      </Card>}
+                      {race && <Card style={{...CARD_STYLE, display: 'flex', fontSize: '.8rem'}}>
+                        <ButtonGroup>
+                          <Button size='sm' onClick={()=>setAgentVisible('agent')} color={agentVisible === 'agent' ? 'light':'dark'} style={{marginRight: '.5rem'}}>AGENT</Button>
+                          <Button size='sm' onClick={()=>setAgentVisible('commander')} color={agentVisible === 'commander' ? 'light':'dark'} style={{marginRight: '.5rem'}}>COMMANDER</Button>
+                          <Button size='sm' onClick={()=>setAgentVisible('hero')} color={agentVisible === 'hero' ? 'light':'dark'} style={{marginRight: '.5rem'}}>HERO</Button>
+                        </ButtonGroup>
+                        {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
+                          <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
+                          <CardText>{race.agentAbility}</CardText>
+                        </Card>}
+                        {agentVisible === 'commander' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
+                          <CardImg src={'race/commander/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
+                          <CardText>{race.commanderAbility}</CardText>
+                        </Card>}
+                        {agentVisible === 'hero' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
+                          <CardImg src={'race/hero/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
+                          <CardText><b>{race.heroAbilityType}</b>{' ' + race.heroAbility}</CardText>
+                        </Card>}
+                        {(agentVisible === 'agent') && <CardText><b>{'Ready'}</b></CardText>}
+                        {(agentVisible === 'commander') && <CardText><b>{'Unlock: '}</b> {race.commanderUnlock}</CardText>}
+                        {(agentVisible === 'hero') && <CardText><b>{'Unlock: '}</b> {'complete 3 objectives.'}</CardText>}
                       </Card>}
                     
                 </CardColumns>

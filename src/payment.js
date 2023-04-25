@@ -874,14 +874,21 @@ export const ObjectivesList = ({G, playerID, onSelect, selected}) => {
 
     return <ListGroup style={{maxHeight: '30rem', overflowY: 'auto', border: 'none', width: '100%', paddingRight: '1rem'}}>
       {G.pubObjectives && G.pubObjectives.length > 0 &&
-        G.pubObjectives.map((o, i) => {
-          const completed = o.players.indexOf(playerID) > -1;
+        G.races[playerID].secretObjCards.concat(G.pubObjectives).map((o, i) => {
+          const completed = o.players && o.players.length > 0 && o.players.indexOf(playerID) > -1;
           return <ListGroupItem className='hoverable'
-                    style={{padding: '1rem 1rem 0 1rem', cursor: completed ? 'default':'pointer', 
+                    style={{cursor: completed ? 'default':'pointer', 
                       background: completed ? 'green': (selected === i ? 'rgba(255,193,7,.75)':'none'), 
                       color: completed || selected === i ? 'black':'white', border: 'solid 1px transparent' }} 
                       key={i} onClick={() => {if(!completed) onSelect(i)}}>
-                    <b>{o.id}</b>{' [ '}{o.players.map((p, pi) => <b key={pi}>{p}</b>)}{' ]  '}
+                    <CardImg style={{display: 'inline-block', width: '2rem', margin: '0 1rem .5rem 0'}} 
+                        src={o.vp === 2 ? 'icons/public_2.png': o.vp === 1 ? 'icons/public_1.png':'icons/secret_regular.png'} />
+                    <b>{o.id}</b>
+                    <span style={{float: 'right'}}>
+                        {o.players && o.players.length > 0 && 
+                        o.players.map((p, pi) => <CardImg key={pi} src={'race/icons/' + G.races[p].rid + '.png'} 
+                        style={{display: 'inline-block', width: '1rem', marginRight: '.5rem'}}/>)}
+                    </span>
                     <p style={{fontSize: '0.8rem'}}>{o.title}</p>
                   </ListGroupItem>})
         }
