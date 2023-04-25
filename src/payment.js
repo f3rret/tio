@@ -1,6 +1,6 @@
 // eslint-disable-next-line
 import { Card, CardImg,  CardTitle, CardBody, CardText, CardFooter, Button, Row, Col, UncontrolledCollapse, UncontrolledTooltip,
-    Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Badge, Input } from 'reactstrap';
+    /*Modal, ModalHeader, ModalBody, ModalFooter,*/ ListGroup, ListGroupItem, Input } from 'reactstrap';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { produce } from 'immer';
 import cardData from './cardData.json';
@@ -92,10 +92,7 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
             lastStep = 2;
             break;
         case 'IMPERIAL':
-            if(isMine)
-                lastStep = 3;
-            else
-                lastStep = 1;
+            lastStep = 3;
           break;
         default:
           break;
@@ -305,6 +302,7 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
         });
 
         const learning = {biotic: 0, warfare: 0, propulsion: 0, cybernetic: 0, unit: 0};
+        
         keys.forEach((k, i)=>{
             const prekeys = Object.keys(ex2[k].prereq);
             if(prekeys && prekeys.length){
@@ -325,6 +323,9 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
                 });
 
                 if(pre.length)result.push(<p key={i}><b>{ex2[k].id.replaceAll('_', ' ').replace('2', ' II')}</b><span>{' have unmeet requirements: '}</span>{pre}</p>);
+            }
+            else{
+                if(learning[ex2[k].type] !== undefined) learning[ex2[k].type]++;
             }
         });
 
@@ -375,20 +376,20 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
         else if(sid === 'IMPERIAL'){
             if(isMine && step === 1 && selectedRace > -1){
                 if(G.pubObjectives[selectedRace] && G.pubObjectives[selectedRace].type !== 'SPEND' ){
-                    stopThere = checkObjective(G, playerID, selectedRace)
+                    stopThere = !checkObjective(G, playerID, selectedRace)
                 }
             }
             if(isMine && step === 2){
                 if(G.pubObjectives[selectedRace].type === 'SPEND'){
                     stopThere = !Object.keys(G.pubObjectives[selectedRace].req).every((k) => {
                         if(k === 'influence' || k === 'resources'){
-                            return deploy[k].planets.planets.reduce((a,b) => b[k] + a, 0) + deploy[k].tg >= G.pubObjectives[selectedRace].req[k]
+                            return deploy[k] && deploy[k].planets.reduce((a,b) => b[k] + a, 0) + deploy[k].tg >= G.pubObjectives[selectedRace].req[k]
                         }
                         else if(k === 'tg'){
-                            return deploy[k] >= G.pubObjectives[selectedRace].req[k]
+                            return G.races[playerID].tg >= G.pubObjectives[selectedRace].req[k]
                         }
                         else if(k === 'token'){
-                            return deploy[k].t + deploy[k].s >= G.pubObjectives[selectedRace].req[k]
+                            return deploy[k] && deploy[k].t + deploy[k].s >= G.pubObjectives[selectedRace].req[k]
                         }
                         else return false;
                     });
@@ -439,6 +440,7 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
 
     const doneButtonClick = ()=>{ 
         let r = result;
+        
         if(sid === 'DIPLOMACY') r = selectedTile;
         else if(sid === 'POLITICS') r = {selectedRace, agendaCards};
         else if(sid === 'CONSTRUCTION') r = [ex, ex2];
@@ -448,7 +450,9 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
             else r = {base: ex && Object.keys(ex) ? Object.keys(ex)[0]:undefined, deploy}
         }
         else if(sid === 'TECHNOLOGY') r = ex2;
-        
+        else if(sid === 'IMPERIAL'){
+            if(isMine) r = {objId: selectedRace, payment: deploy}
+        }        
 
         onComplete({exhausted: Object.keys(sid === 'WARFARE' ? ex2 : ex), tg, result: r});
         setStep(step+1) 
@@ -459,11 +463,16 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
         if(['DIPLOMACY', 'POLITICS'].indexOf(sid) > -1 && !isMine){
             inc = 2
         }
-        else if(sid === 'IMPERIAL' && isMine && step === 1){
-            inc = 2;
-            if(selectedRace > -1){
-                if(G.pubObjectives[selectedRace] && G.pubObjectives[selectedRace].type === 'SPEND'){
-                    inc = 1;
+        else if(sid === 'IMPERIAL'){
+            if(!isMine && step === 0){
+                inc = 3;
+            }
+            else if(isMine && step === 1){
+                inc = 2;
+                if(selectedRace > -1){
+                    if(G.pubObjectives[selectedRace] && G.pubObjectives[selectedRace].type === 'SPEND'){
+                        inc = 1;
+                    }
                 }
             }
         }
@@ -474,6 +483,17 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
         let inc = 1;
         if(['DIPLOMACY', 'POLITICS'].indexOf(sid) > -1 && !isMine){
             inc = 2
+        }
+        else if(sid === 'IMPERIAL'){
+            if(!isMine && step === 3){
+                inc = 3;
+            }
+            else if(isMine && step === 3){
+                inc = 2;
+                if(selectedRace > -1){
+                    inc = 1;
+                }
+            }
         }
         setStep(step-inc)
     }
@@ -728,6 +748,20 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
                                 </div>
                             )}
                         </div>}
+                        {sid === 'IMPERIAL' && <>
+                            {isMine && G.tiles[0].tdata.planets[0].occupied === playerID && <div style={{display: 'flex', padding: '1rem', flexDirection: 'column'}}>
+                                <h5 style={{textAlign: 'center'}}>You gain 1 VP</h5>
+                            </div>}
+                            {(!isMine || (G.tiles[0].tdata.planets[0].occupied !== playerID)) && <div style={{display: 'flex', padding: '1rem', flexDirection: 'column', fontSize: '.8rem'}}>
+                                <h5 style={{margin: '.5rem'}}>You gain secret objective:</h5>
+                                {G.secretObjDeck.slice(-1 * (parseInt(playerID)+1)).slice(0, 1).map((a,i) => 
+                                    <div key={i} style={{border: 'solid 1px', padding: '1rem', marginBottom: '1rem',  borderRadius: '5px'}}>
+                                        <img alt='action card' style={{width: '3rem', float: 'right', margin: '.5rem'}} src='icons/secret_regular.png'/>
+                                        <h6>{a.id}{a.type ? ' ' + a.type:''}</h6><p>{a.title}</p>
+                                    </div>
+                                )}
+                            </div>}
+                        </>}
                     </div>}
                     {step > lastStep && <div style={{width: '100%', display: 'flex', flexFlow: 'column'}}>
                         <h5>Awaiting other players:</h5>
@@ -858,6 +892,8 @@ export const ObjectivesList = ({G, playerID, onSelect, selected}) => {
 const PaymentCard = (args) => {
     const [payment, setPayment] = useState({ influence: { planets: [], tg: 0 }, resources: { planets: [], tg: 0 }, tg: 0, token: { s:0, t:0 } });
     const [paid, setPaid] = useState({}); //exhausted
+    const tg = useMemo(() => args.race.tg - payment.influence.tg - payment.resources.tg, [payment, args]);
+    const tokens = useMemo(()=> ({ t: args.race.tokens.t - payment.token.t, s: args.race.tokens.s - payment.token.s}), [payment, args]);
 
     const payPlanet = useCallback((e, planet, type) => {
         e.preventDefault();
@@ -901,29 +937,13 @@ const PaymentCard = (args) => {
                 draft.token[tag]--;
             }
         }));
-    }, [payment])
+    }, [payment, tokens])
     
-    const tg = useMemo(() => args.race.tg - payment.influence.tg - payment.resources.tg, [payment, args]);
-    const tokens = useMemo(()=> ({ t: args.race.tokens.t - payment.token.t, s: args.race.tokens.s - payment.token.s}), [payment, args]);
-
     useEffect(()=>{
         if(args.onPayment){
             args.onPayment(payment);
         }
-    },[payment]);
-
-    /*const acceptable = useMemo(()=>{
-        return Object.keys(args.objective.req).every( tag => {
-            if(tag === 'influence' || tag === 'resources'){
-                const pp = payment[tag].planets.reduce((a,b) => b[tag] + a, 0);
-                return pp + payment[tag].tg >= args.objective.req[tag];
-            }
-            else if(tag === 'tg'){
-                return tg >= args.objective.req[tag];
-            }
-            return false;
-        });
-    }, [payment, args, tg]);*/
+    },[payment, args]);
 
     const objKeys = Object.keys(args.objective.req);
     const TOKENS_STYLE = { cursor:'pointer', display: 'flex', textAlign: 'center', padding: 0, flexFlow: 'column', background: 'none', color: 'white'}
@@ -954,7 +974,7 @@ const PaymentCard = (args) => {
                 
                 return <div key={i} style={{display: 'flex', justifyContent: 'flex-start'}}>
                             {(k === 'influence' || k === 'resources') && <h5 style={{width: '4rem', display: 'flex', justifyContent: 'flex-start'}}>
-                                <Button disabled={tg < 1} tag='img' onClick={()=>payTg(k, 1)} src='/icons/trade_good_1.png' color='warning' 
+                                <Button disabled={args.objective.req['tg'] ? (tg <= args.objective.req['tg']) : (tg < 1)} tag='img' onClick={()=>payTg(k, 1)} src='/icons/trade_good_1.png' color='warning' 
                                     style={{width: '2rem', padding: '.5rem', borderTopLeftRadius: '5px', 
                                     borderBottomLeftRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}/>
                                 
@@ -963,7 +983,7 @@ const PaymentCard = (args) => {
                                     onClick={()=>payTg(k, -1)}>▼
                                 </Button>
                             </h5>}
-                            {(k !== 'influence' && k !== 'resources') && <h5 style={{width: '4rem'}}></h5>}
+                            
                             <div style={{display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap'}}>
                                 <h6 style={{textAlign: 'end'}}>{'Total ' + k + ': '}
                                     {payment[k].planets && payment[k].planets.reduce((a,b) => b[k] + a, 0)}
@@ -977,6 +997,7 @@ const PaymentCard = (args) => {
             })}
         </div>
     </>
+//{(k !== 'influence' && k !== 'resources') && <h5 style={{width: '4rem'}}></h5>}
 /*
 <Badge color={k ==='influence' ? 'info': ( k === 'resources' ? 'warning' : 'dark' )} 
                                 style={{cursor: (k ==='tg'?'pointer':'default'), fontSize: '1.25rem', marginBottom: '.5rem'}}

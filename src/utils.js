@@ -90,12 +90,12 @@ export const checkSpend = (G, req, playerID) => {
   }
 
   export const checkObjective = (G, playerID, oid) => {
-console.log('check ' + oid);
+
     const req = G.pubObjectives[oid].req;
     const race = G.races[playerID];
     const planets = getPlayerPlanets(G.tiles, playerID);
     const units = getPlayerUnits(G.tiles, playerID);
-    
+
     if(req.unit && Array.isArray(req.unit)){
         if(req.squadron){
         let systems = G.tiles.filter( s => s.tdata.occupied == playerID && s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
@@ -211,11 +211,11 @@ console.log('check ' + oid);
     else if(req.specialty){
         let sum = 0;
         planets.forEach(p => {
-        if(p.specialty) sum++;
+          if(p.specialty) sum++;
         });
 
         if(sum < req.specialty){
-        return;
+          return;
         }
     }
     else if(req.neighbor){

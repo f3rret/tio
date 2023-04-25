@@ -14,7 +14,7 @@ export const TIO = {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
-                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], tg: 10, tokens: { t: 3, f: 3, s: 2}}) );
+                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], secretObjCards:[], tg: 10, tokens: { t: 3, f: 3, s: 2}}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
       races.forEach( r => {
@@ -52,6 +52,7 @@ export const TIO = {
         speaker: races[0].rid, 
         tiles,
         pubObjectives: [],
+        secretObjDeck: [],
         actionsDeck: [],
         agendaDeck: [],
         passedPlayers: [],
@@ -97,8 +98,8 @@ export const TIO = {
             cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
           }
 
-          //G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-          G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Lead from the Front'), players: []});
+          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+          //G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Lead from the Front'), players: []});
 
           if(!G.actionsDeck.length){
             const deck = [];
@@ -120,6 +121,10 @@ export const TIO = {
             G.agendaDeck = random.Shuffle(cardData.agenda);
           }
 
+          if(!G.secretObjDeck.length){
+            G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
+          }
+
         },
         onEnd: ({ G }) => {
           G.TURN_ORDER = G.races.map((r, i) => ({initiative: r.initiative, i})).sort((a, b) => a.initiative > b.initiative ? 1 : (a.initiative < b.initiative ? -1 : 0)).map(r => r.i);
@@ -139,55 +144,7 @@ export const TIO = {
         },
         moves: {
           completePublicObjective: ({G, playerID, events}, oid, payment) => {
-            
-            if(G.pubObjectives[oid] && G.pubObjectives[oid].players.indexOf(playerID) === -1){
-
-              const req = G.pubObjectives[oid].req;
-              const race = G.races[playerID];
-              
-              if(G.pubObjectives[oid].type === 'SPEND'){
-                const rkeys = Object.keys(req);
-        
-                if(rkeys.indexOf('token') > -1){
-                    if(race.tokens && payment.tokens){
-                    race.tokens.t -= payment.tokens.t;
-                    race.tokens.s -= payment.tokens.s;
-                    }
-                }
-                else{
-                    if(req.influence && payment.influence){
-                    if(payment.influence.planets){
-                        payment.influence.planets.forEach( p => {
-                        const tile = G.tiles.find( t => t.tid === p.tid);
-                        tile.tdata.planets.find( pl => pl.name === p.name).exhausted = true; 
-                        });
-                    }
-                    if(payment.influence.tg) race.tg -= payment.influence.tg;
-                    }
-                    if(req.resources && payment.resources){
-                    if(payment.resources.planets) payment.resources.planets.forEach( p => {
-                        const tile = G.tiles.find( t => t.tid === p.tid);
-                        tile.tdata.planets.find( pl => pl.name === p.name).exhausted = true; 
-                    });
-                    if(payment.resources.tg) race.tg -= payment.resources.tg;
-                    }
-                    if(req.tg && payment.tg){
-                    race.tg -= payment.tg;
-                    }
-                }           
-        
-                G.pubObjectives[oid].players.push(playerID);
-              }
-              else if(G.pubObjectives[oid].type === 'HAVE'){
-                if(checkObjective(G, playerID, oid) === true){
-                  G.pubObjectives[oid].players.push(playerID);
-                }
-              }
-              else{
-                return;
-              }
-              
-            }
+            completeObjective({G, playerID, oid, payment});
             events.endTurn();
           }
         },
@@ -256,7 +213,7 @@ export const TIO = {
                           G.speaker = result.selectedRace;
                         }
                         //draw certain action cards, maybe in parallel with others
-                        G.races[playerID].actionCards.push(G.actionsDeck.slice(-2 * (parseInt(playerID)+1)).slice(0, 2));
+                        G.races[playerID].actionCards = G.races[playerID].actionCards.concat(G.actionsDeck.slice(-2 * (parseInt(playerID)+1)).slice(0, 2));
                         G.actionsDeck[(G.actionsDeck.length - 1) - (parseInt(playerID)+1)].issued = true;
                         G.actionsDeck[(G.actionsDeck.length - 1) - (parseInt(playerID)+1) - 1].issued = true;
 
@@ -391,6 +348,19 @@ export const TIO = {
                         }
                         break;
                       case 'IMPERIAL':
+                        if(ctx.currentPlayer === playerID){
+                          if(result.objId > -1){
+                            completeObjective({G, playerID, oid: result.objId, payment: result.payment});
+                          }
+                        }
+                        if((ctx.currentPlayer === playerID) && G.tiles[0].tdata.planets[0].occupied === playerID){
+                          G.races[playerID].VP++;
+                        }
+                        else{
+                          G.races[playerID].secretObjCards = G.races[playerID].secretObjCards.concat(G.secretObjDeck.slice(-1 * (parseInt(playerID)+1)).slice(0, 1));
+                          G.secretObjDeck[(G.secretObjDeck.length - 1) - (parseInt(playerID)+1)].issued = true;
+                        }
+
                         break;
                       default:
                         break;
@@ -402,11 +372,13 @@ export const TIO = {
                     
                     if(Object.keys(ctx.activePlayers).length === 1){
                       G.actionsDeck = G.actionsDeck.filter(a => a.issued !== true);
+                      G.secretObjDeck = G.secretObjDeck.filter(a => a.issued !== true);
                     }
                   },
                   passStrategy: ({ G, ctx }) => {
                     if(Object.keys(ctx.activePlayers).length === 1){
                       G.actionsDeck = G.actionsDeck.filter(a => a.issued !== true);
+                      G.secretObjDeck = G.secretObjDeck.filter(a => a.issued !== true);
                     }
                   }
                 }
@@ -824,3 +796,55 @@ const IsVictory = (G, ctx) => {
 
 }
 
+const completeObjective = ({G, playerID, oid, payment}) => {
+
+  if(G.pubObjectives[oid] && G.pubObjectives[oid].players.indexOf(playerID) === -1){
+
+    const req = G.pubObjectives[oid].req;
+    const race = G.races[playerID];
+    
+    if(G.pubObjectives[oid].type === 'SPEND'){
+      const rkeys = Object.keys(req);
+
+      if(rkeys.indexOf('token') > -1){
+          if(race.tokens && payment.tokens){
+            race.tokens.t -= payment.tokens.t;
+            race.tokens.s -= payment.tokens.s;
+          }
+      }
+      else{
+          if(req.influence && payment.influence){
+            if(payment.influence.planets){
+              payment.influence.planets.forEach( p => {
+              const tile = G.tiles.find( t => t.tid === p.tid);
+              tile.tdata.planets.find( pl => pl.name === p.name).exhausted = true; 
+              });
+            }
+            if(payment.influence.tg) race.tg -= payment.influence.tg;
+          }
+          if(req.resources && payment.resources){
+            if(payment.resources.planets) payment.resources.planets.forEach( p => {
+                const tile = G.tiles.find( t => t.tid === p.tid);
+                tile.tdata.planets.find( pl => pl.name === p.name).exhausted = true; 
+            });
+            if(payment.resources.tg) race.tg -= payment.resources.tg;
+          }
+          if(req.tg && payment.tg){
+            race.tg -= payment.tg;
+          }
+      }           
+
+      G.pubObjectives[oid].players.push(playerID);
+    }
+    else if(G.pubObjectives[oid].type === 'HAVE'){
+      if(checkObjective(G, playerID, oid) === true){
+        G.pubObjectives[oid].players.push(playerID);
+      }
+    }
+    else{
+      return;
+    }
+    
+  }
+
+}
