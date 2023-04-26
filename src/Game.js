@@ -6,7 +6,7 @@ import raceData from './raceData.json';
 import techData from './techData.json';
 import cardData from './cardData.json';
 import { produce } from 'immer';
-import { NUM_PLAYERS, checkObjective } from './utils';
+import { NUM_PLAYERS, checkObjective, /*getPlanetByName*/ } from './utils';
 
 export const TIO = {
     
@@ -14,7 +14,7 @@ export const TIO = {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
-                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], secretObjCards:[], tg: 10, tokens: { t: 3, f: 3, s: 2}}) );
+                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], secretObjectives:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2}}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
       races.forEach( r => {
@@ -356,10 +356,10 @@ export const TIO = {
                           }
                         }
                         if((ctx.currentPlayer === playerID) && G.tiles[0].tdata.planets[0].occupied === playerID){
-                          G.races[playerID].VP++;
+                          G.races[playerID].vp++;
                         }
                         else{
-                          G.races[playerID].secretObjCards = G.races[playerID].secretObjCards.concat(G.secretObjDeck.slice(-1 * (parseInt(playerID)+1)).slice(0, 1));
+                          G.races[playerID].secretObjectives = G.races[playerID].secretObjectives.concat(G.secretObjDeck.slice(-1 * (parseInt(playerID)+1)).slice(0, 1));
                           G.secretObjDeck[(G.secretObjDeck.length - 1) - (parseInt(playerID)+1)].issued = true;
                         }
 
@@ -422,7 +422,7 @@ export const TIO = {
 
             events.setActivePlayers({ all: 'strategyCard', minMoves: 1, maxMoves: 1 });
           },
-          selectTile: ({ G }, tid) => {
+          /*selectTile: ({ G }, tid) => {
             if(G.tiles[tid].selected === true){
               G.tiles[tid].selected = false;
             }
@@ -430,10 +430,9 @@ export const TIO = {
               G.tiles.forEach(t => t.selected = false);
               G.tiles[tid].selected = true;
             }
-          },
-          uploadUnits: ({ G, playerID }, planetId) => {
+          },*/
+          uploadUnits: ({ G, playerID }, tile, planetId) => {
 
-            const tile = G.tiles.find(t => t.selected === true);
             if( !tile ){
               console.log('no fleet');
               return INVALID_MOVE;
@@ -474,12 +473,13 @@ export const TIO = {
             }
 
           },
-          downloadUnits: ({ G, playerID }, planetId) => {
+          downloadUnits: ({ G, playerID }, tile, planetId) => {
 
-            let tile = G.tiles.find(t => t.active === true);
-            if(!tile){
-              tile = G.tiles.find(t => t.selected === true);
+            if( !tile ){
+              console.log('no fleet');
+              return INVALID_MOVE;
             }
+
             const pid = planetId || 0;
 
             if(tile.tdata.occupied != playerID){
@@ -563,28 +563,24 @@ export const TIO = {
             }
 
           },
-          activateTile: ({ G, playerID }, id) => {
+          activateTile: ({ G, playerID }, tIndex) => {
 
-            if(G.races[playerID].tokens.t <= 0){
+            const race = G.races[playerID];
+            if(race.tokens.t <= 0){
               console.log('not enough tokens');
               return INVALID_MOVE;
             }
 
-            if(G.races[playerID].actions.length > 0){
+            /*if(race.actions.length > 0){
               console.log('too many actions');
               return INVALID_MOVE;
-            }
+            }*/
 
-            let tile;
-            if(id !== undefined){
-              tile = G.tiles[id];
-            }
-            else{
-              tile = G.tiles.find(t => t.selected === true);
-            }
+            const tile = G.tiles[tIndex];
 
             if(tile){
-              tile.active = !tile.active;
+              tile.tdata.tokens.push(race.rid);
+              tile.active = true;
             }
             else{
               console.log('no tile selected');
@@ -592,16 +588,15 @@ export const TIO = {
             }
 
             if(tile.active){
-              G.races[playerID].tokens.t--;
-              G.races[playerID].actions.push('TILE_ACTIVATE');
+              race.tokens.t--;
+              race.actions.push('TILE_ACTIVATE');
             }
 
           },
-          moveFleet: ({ G, playerID }, squadron) => {
+          moveFleet: ({ G, playerID }, src, squadron) => {
             const dst = G.tiles.find( t => t.active === true );
-            const src = G.tiles.find( t => t.selected === true );
-
-            if(!src.tdata.fleet){
+            
+            if(!src || !src.tdata.fleet){
               console.log('no fleet');
               return INVALID_MOVE;
             }

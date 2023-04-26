@@ -528,12 +528,12 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
     return (
         <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute', margin: '5rem'}}>
               <CardTitle style={{borderBottom: '1px solid ' + getStratColor(sid, '.6'), color: 'black'}}><h3>{sid}</h3></CardTitle>
-              <CardBody style={{display: 'flex', color: 'black'}}>
+              <CardBody style={{display: 'flex', color: 'black', width: 'min-content'}}>
                     {step === 0 && <>
                         <div>
                             <CardImg src={'race/'+ G.races[ctx.currentPlayer].rid +'.png'} style={{width: '205px'}}/>
                         </div>
-                        <div style={{padding: '1rem'}}>
+                        <div style={{padding: '1rem', minWidth: '30rem'}}>
                             <div style={isMine? MINE_STYLE : {opacity: .5, padding: '1rem'}}>
                                 <h5>Primary:</h5>
                                 <p>{cardData.strategy[sid].primary}</p>
@@ -544,8 +544,8 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
                             </div>
                         </div>
                     </>}
-                    {step === 1 && <div style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
-                        <p style={{margin: 0}}>{isMine ? cardData.strategy[sid].primary : cardData.strategy[sid].secondary}</p>
+                    {step === 1 && <div style={{display: 'flex', flexDirection: 'column', width: 'min-content'}}>
+                        <p style={{margin: 0, minWidth: '40rem'}}>{isMine ? cardData.strategy[sid].primary : cardData.strategy[sid].secondary}</p>
                         {sid === 'LEADERSHIP' && <div style={{display: 'flex', width: '50rem', flexDirection: 'row'}}>
                             <div style={{width: '60%', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                 <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>
@@ -631,7 +631,7 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
                         </div>}
                     </div>}
                     {step === 2 && lastStep > 1 && <div style={{width: '100%', display: 'flex', flexFlow: 'column'}}>
-                        <p style={{margin: 0}}>{isMine ? cardData.strategy[sid].primary : cardData.strategy[sid].secondary}</p>
+                        <p style={{margin: 0, minWidth: '40rem'}}>{isMine ? cardData.strategy[sid].primary : cardData.strategy[sid].secondary}</p>
                         {sid === 'DIPLOMACY' && <div style={{width: '60%', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                             {<PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>}
                         </div>}
@@ -734,7 +734,7 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
                         </>}
                     </div>}
                     {step === 3 && lastStep > 2 && <div>
-                        <p style={{margin: 0}}>{isMine ? cardData.strategy[sid].primary : cardData.strategy[sid].secondary}</p>
+                        <p style={{margin: 0, minWidth: '40rem'}}>{isMine ? cardData.strategy[sid].primary : cardData.strategy[sid].secondary}</p>
                         {sid === 'POLITICS' && <div style={{display: 'flex', padding: '1rem', flexDirection: 'column', fontSize: '.8rem'}}>
                             {agendaCards.map((a, i) => 
                                 <div key={i} style={{border: 'solid 1px', position: 'relative', padding: '1rem', marginBottom: '1rem', borderRadius: '5px'}}>
@@ -763,7 +763,7 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
                             </div>}
                         </>}
                     </div>}
-                    {step > lastStep && <div style={{width: '100%', display: 'flex', flexFlow: 'column'}}>
+                    {step > lastStep && <div style={{width: '100%', display: 'flex', minWidth: '30rem', flexFlow: 'column'}}>
                         <h5>Awaiting other players:</h5>
                         {Object.keys(ctx.activePlayers).map((a,i) => {
                             return <h6 key={i}>{G.races[a].name}</h6>
@@ -874,7 +874,7 @@ export const ObjectivesList = ({G, playerID, onSelect, selected}) => {
 
     return <ListGroup style={{maxHeight: '30rem', overflowY: 'auto', border: 'none', width: '100%', paddingRight: '1rem'}}>
       {G.pubObjectives && G.pubObjectives.length > 0 &&
-        G.races[playerID].secretObjCards.concat(G.pubObjectives).map((o, i) => {
+        G.races[playerID].secretObjectives.concat(G.pubObjectives).map((o, i) => {
           const completed = o.players && o.players.length > 0 && o.players.indexOf(playerID) > -1;
           return <ListGroupItem className='hoverable'
                     style={{cursor: completed ? 'default':'pointer', 

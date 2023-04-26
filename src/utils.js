@@ -33,7 +33,7 @@ export const getPlayerUnits = (tiles, playerID)=> {
     });
     
     return units;
-  };
+};
   
 export const getPlayerPlanets = (tiles, playerID)=> {
     const arr = [];
@@ -87,9 +87,9 @@ export const checkSpend = (G, req, playerID) => {
     }
   
     return true;
-  }
+};
 
-  export const checkObjective = (G, playerID, oid) => {
+export const checkObjective = (G, playerID, oid) => {
 
     const req = G.pubObjectives[oid].req;
     const race = G.races[playerID];
@@ -252,4 +252,18 @@ export const checkSpend = (G, req, playerID) => {
     }
 
     return true;
+};
+
+export const getPlanetByName = (tiles, pname) => {
+  let planet;
+
+  tiles.find(t => {
+    if(t.tdata.planets){
+      planet = t.tdata.planets.find(p => p.name === pname);
+      return planet;
+    }
+    return false;
+  })
+
+  return planet;
 }

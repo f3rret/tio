@@ -77,6 +77,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
   const [stratUnfold, setStratUnfold] = useState(0);
   const [promisVisible, setPromisVisible] = useState(false);
+  const [actionsVisible, setActionsVisible] = useState(false);
   const [selectedTile, setSelectedTile] = useState(-1);
   const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
   const R_UNITS = useMemo(() => {
@@ -94,6 +95,19 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
       return upgrades;
     }
   }, [race]);
+
+  const VP = useMemo(() => {
+    let result = 0;
+
+    race.secretObjectives.concat(G.pubObjectives).forEach(o => {
+      if(o && o.players && o.players.length > 0){
+        if(o.players.indexOf(playerID) > -1) result += (o.vp ? o.vp : 1);
+      }
+    });
+
+    result += race.vp;
+    return result;
+  }, [race, G.pubObjectives, playerID]);
 
   const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
   const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
@@ -156,7 +170,7 @@ const completePubObj = (i) => {
 }
   const Objectives = () => (
     <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Objectives</h6></CardTitle>
+      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Objectives <span style={{float: 'right'}}>{'You have ' + VP + ' VP'}</span></h6></CardTitle>
       <ObjectivesList G={G} playerID={playerID} onSelect={completePubObj}/>
     </Card>
   );
@@ -197,7 +211,14 @@ const completePubObj = (i) => {
 
   const promissorySwitch = () => {
     setStratUnfold(0);
+    setActionsVisible(false);
     setPromisVisible(!promisVisible);
+  }
+
+  const actionsSwitch = () => {
+    setStratUnfold(0);
+    setPromisVisible(false);
+    setActionsVisible(!actionsVisible);
   }
 
   useEffect(()=> {
@@ -234,8 +255,9 @@ const completePubObj = (i) => {
 
   const tileClick = (e, index) => {
     e.preventDefault(); 
+    setSelectedTile(index);
 
-    if(ctx.phase === 'acts'){
+    /*if(ctx.phase === 'acts'){
       if(ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0){
         const isMine = ctx.currentPlayer === playerID;
       
@@ -246,7 +268,7 @@ const completePubObj = (i) => {
       else{
         moves.selectTile(index);
       }
-    }
+    }*/
   }
 
 
@@ -254,18 +276,18 @@ const completePubObj = (i) => {
     g.clear();
 
     G.tiles.forEach((element, index) => {
-      if(index === selectedTile){
-        g.beginFill('green', .15);
-        g.lineStyle(10,  'green');
-      }
-      else if(element.active === true){
+      if(element.active === true){
         g.beginFill('yellow', .15);
         g.lineStyle(10,  'yellow');
       }
-      else if(element.selected === true){
+      else if(index === selectedTile){
+        g.beginFill('green', .15);
+        g.lineStyle(10,  'green');
+      }
+      /*else if(element.selected === true){
         g.beginFill('lightblue', .15);
         g.lineStyle(10,  'lightblue');
-      }
+      }*/
       else{
         //g.lineStyle(3,  0x999999);
         g.lineStyle(5,  'black');
@@ -275,9 +297,23 @@ const completePubObj = (i) => {
       otherCorners.forEach(({ x, y }) => g.lineTo(x + stagew/2, y + stageh/2))
       g.lineTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2);
 
-      if(element.selected === true || element.active === true || index === selectedTile){
+      if(/*element.selected === true || */element.active === true || index === selectedTile){
         g.endFill();
       }
+
+      G.tiles.forEach((element, index) => {
+        if(element.tdata.tokens){
+          const [firstCorner, ...otherCorners] = element.corners;
+          g.beginFill('yellow');
+          g.lineStyle(5,  'black');
+          element.tdata.tokens.forEach((t, i) => {
+            g.drawCircle(firstCorner.x + stagew/2 - 20, firstCorner.y + stageh/2 + 20, 50);
+          });
+          g.endFill();
+        }
+      });
+
+
     });
   }, [G.tiles, stageh, stagew, selectedTile]);
 
@@ -378,8 +414,20 @@ const completePubObj = (i) => {
                       <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id}>{pr.effect}</UncontrolledTooltip> 
                     </ListGroupItem>)}
                   </ListGroup>}
-                  <ButtonGroup style={{alignSelf: 'flex-end'}}>
-                    <Button size='sm' className='hoverable' tag='img' onClick={()=>promissorySwitch()} style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem', margin: '.5rem'}} src='icons/promissory_white.png'/>
+
+                  {actionsVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                    {race.actionCards.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
+                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
+                        <b>{pr.id.toUpperCase()}</b>
+                      </Button>
+                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.description}</UncontrolledTooltip> 
+                    </ListGroupItem>)}
+                  </ListGroup>}
+                  <ButtonGroup style={{alignSelf: 'flex-end', height: '4rem', marginBottom: '1rem'}}>
+                    <Button disabled={race.actionCards.length === 0} size='sm' className='hoverable' tag='img' onClick={()=>actionsSwitch()} 
+                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/action_card_white.png'/>
+                    <Button size='sm' className='hoverable' tag='img' onClick={()=>promissorySwitch()} 
+                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem'}} src='icons/promissory_white.png'/>
                   </ButtonGroup>
                 </div>
               </CardColumns>
@@ -409,7 +457,7 @@ const completePubObj = (i) => {
 
                         <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
                           <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE} onClick={()=>{
-                              if(race.tokens.new){ moves.adjustToken('t') } else if(ctx.phase === 'acts'){moves.activateTile();} }}>
+                              if(race.tokens.new){ moves.adjustToken('t') } else if(ctx.phase === 'acts'){moves.activateTile(selectedTile)} }}>
                             <h6 style={{fontSize: 50}}>{race.tokens.t}</h6>
                             {race.tokens.new > 0 && <AddToken tag={'t'}/>}
                             <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>tactic</b>
