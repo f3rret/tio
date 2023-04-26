@@ -27,6 +27,8 @@ export const TIO = {
             tch.racial = true;
           }
         });
+        r.promissory.forEach(r => r.racial = true);
+        r.promissory.push(...cardData.promissory);
       });
 
       tiles.forEach( (t, i) => {

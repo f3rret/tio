@@ -1,8 +1,8 @@
 /* eslint eqeqeq: 0 */
 import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
-import { useMemo, useCallback, useState } from 'react';
-// eslint-disable-next-line
-import { Navbar, Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledCollapse, CardBody,
+import { useMemo, useCallback, useState, useEffect } from 'react';
+import { Navbar, Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle,  UncontrolledTooltip,/*UncontrolledAccordion, 
+  AccordionItem, AccordionBody, AccordionHeader,*/ CardBody,
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont } from 'reactstrap';
 import { PaymentDialog, StrategyDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList } from './payment';
 import { PixiViewport } from './viewport';
@@ -76,6 +76,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const [agentVisible, setAgentVisible] = useState('agent');
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
   const [stratUnfold, setStratUnfold] = useState(0);
+  const [promisVisible, setPromisVisible] = useState(false);
   const [selectedTile, setSelectedTile] = useState(-1);
   const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
   const R_UNITS = useMemo(() => {
@@ -102,7 +103,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
       <div style={{display: 'flex'}}>
         <Nav style={{marginRight: '2rem'}}>
           <NavItem onClick={()=>setObjVisible(!objVisible)} style={{cursor: 'pointer'}}>
-            <CardImg src='icons/secret_to_public.png'/>
+            <Button style={{background: 'none', border: 'none', padding: 0}} tag='img' src='icons/secret_to_public.png'/>
           </NavItem>
         </Nav>
         <Nav style={{marginRight: '2rem'}}>
@@ -193,6 +194,17 @@ const completePubObj = (i) => {
       </div>
     </Card>)
   };
+
+  const promissorySwitch = () => {
+    setStratUnfold(0);
+    setPromisVisible(!promisVisible);
+  }
+
+  useEffect(()=> {
+    if(stratUnfold > 0 && promisVisible){
+      setPromisVisible(false);
+    }
+  },[stratUnfold, promisVisible]);
 
   const StrategyCard = ({card, idx, style}) => {
     const i = idx + 1;
@@ -350,10 +362,26 @@ const completePubObj = (i) => {
             </Stage>
             
             <div style={{ display:'flex', flexDirection: 'row', justifyContent: 'flex-end', position:'fixed', right: 0, top: 0, height: '100%', width: '35%' }}>
-              <CardColumns style={{width: '20rem', position: 'relative'}}>
-                {race && race.strategy.length > 0 && 
-                  race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)
-                }
+              <CardColumns style={{width: '20rem', position: 'relative', display:'flex', flexDirection: 'column', justifyContent: 'space-between', paddingRight: '1rem'}}>
+                <div>
+                  {race && race.strategy.length > 0 && 
+                    race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)
+                  }
+                </div>
+                <div style={{display: 'flex', flexDirection: 'column'}}>
+                  {promisVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                    {race.promissory.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
+                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id}>
+                        <b>{pr.id.replaceAll('_', ' ')}</b>
+                        {pr.racial ? <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.4rem'}} src={'race/icons/' + race.rid + '.png'} />:''}
+                      </Button>
+                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id}>{pr.effect}</UncontrolledTooltip> 
+                    </ListGroupItem>)}
+                  </ListGroup>}
+                  <ButtonGroup style={{alignSelf: 'flex-end'}}>
+                    <Button size='sm' className='hoverable' tag='img' onClick={()=>promissorySwitch()} style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem', margin: '.5rem'}} src='icons/promissory_white.png'/>
+                  </ButtonGroup>
+                </div>
               </CardColumns>
               <div style={{ display: 'flex', flexDirection: 'column', width: '80%', backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
                 <CardColumns style={{ margin: '1rem', display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
