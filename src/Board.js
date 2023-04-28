@@ -42,7 +42,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
         if(t.tdata.fleet){
           Object.keys(t.tdata.fleet).forEach( k => {
             if(!units[k]) units[k] = 0;
-            units[k] += t.tdata.fleet[k];
+            units[k] += t.tdata.fleet[k].length;
           });
         }
       }
@@ -69,9 +69,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const [objVisible, setObjVisible] = useState(false);
   const [techVisible, setTechVisible] = useState(false);
   const [planetsVisible, setPlanetsVisible] = useState(false);
+  const [cargoTile, setCargoTile] = useState(undefined);
   const [tilesPng, setTilesPng] = useState(true);
   const [tilesTxt, setTilesTxt] = useState(false);
-  const [unitsVisible, setUnitsVisible] = useState(true);
+  const [unitsVisible, setUnitsVisible] = useState(false);
   const [abilVisible, setAbilVisible] = useState(0);
   const [agentVisible, setAgentVisible] = useState('agent');
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
@@ -271,6 +272,60 @@ const completePubObj = (i) => {
     }*/
   }
 
+  const Cargo = (props) => {
+    const tile = G.tiles[cargoTile];
+    const fleet = tile.tdata.fleet;
+    const planets = tile.tdata.planets;
+
+    const getUnitCap = (technology, unit) => {
+      let result=[];
+      for(var i=0; i<technology.capacity; i++){
+        result.push(<Button key={i} outline color='light' style={{margin: '0 .25rem', width: '3rem', height: '3rem', borderRadius: '5px'}}>
+
+        </Button>)
+      }
+      return result;
+    }
+
+    return <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Cargo</h6></CardTitle>
+      <ListGroup style={{background: 'none', border: 'none'}}>
+        {Object.keys(fleet).map((fk, i) => {
+          const technology = race.technologies.find( t => t.id === fk.toUpperCase());
+
+          let result = [];
+          var j=0;
+          
+          if(technology.capacity > 0){
+            for(j=0; j<fleet[fk].length; j++){
+              result.push(
+                <ListGroupItem key={i + ' ' + j} style={{background: 'none', border: 'none', display: 'flex', flexDirection: 'row'}}>
+                  <CardImg src={'units/'+fk.toUpperCase()+'.png'} style={{width: '4rem'}}/>
+                  <>
+                    {getUnitCap(technology, fleet[fk][j])}
+                  </>
+                </ListGroupItem>
+              );
+            }
+          }
+          else{
+            let imgs = [];
+            for(j=0; j<fleet[fk].length; j++){
+              imgs.push(<CardImg key={i + ' ' + j} src={'units/'+fk.toUpperCase()+'.png'} style={{width: '4rem'}}/>);
+            }
+            result.push(
+              <ListGroupItem key={i} style={{background: 'none', border: 'none', display: 'flex', flexDirection: 'row'}}>
+              {imgs}
+              </ListGroupItem>
+            );
+            
+          }
+
+          return result;
+        })}
+      </ListGroup>
+    </Card>
+  }
 
   const draw = useCallback((g) => {
     g.clear();
@@ -323,6 +378,7 @@ const completePubObj = (i) => {
             <MyNavbar />
             
             {ctx.phase !== 'strat' && !strategyStage && <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
+              {cargoTile && <Cargo />}
               {race && techVisible && <TechMap />}
               {objVisible && <Objectives />}
               {planetsVisible && <PlanetsList />}
@@ -375,52 +431,8 @@ const completePubObj = (i) => {
                     
                     return <Container key={index}>
                             {tilesPng && <Sprite interactive={true} pointerdown={(e)=>tileClick(e, index)} 
-                                        image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }} 
+                                        image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }}
                                         x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
-                                        {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) => 
-                                          <Sprite key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={{ x: 1, y: 1}} anchor={0} alpha={.9} image={'icons/ct.png'}>
-                                            <Sprite image={'race/icons/'+ t +'.png'} scale={.55} x={15} y={15} alpha={.85}></Sprite>
-                                          </Sprite>
-                                        )}
-                                        {element.tdata.fleet && Object.keys(element.tdata.fleet).map((f, i) => 
-                                          <Sprite key={i} x={element.w/4 - 30 + i*45} y={0} scale={{ x: .75, y: .75}} anchor={0} alpha={1} image={'icons/unit_bg.png'}>
-                                            <Text text={f} x={15} y={5} style={{fontSize: 10}}/>
-                                            <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={.85}/>
-                                            <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .75}} x={35} y={25} text={element.tdata.fleet[f] === 1 ? ' 1':element.tdata.fleet[f]}/>
-                                          </Sprite>
-                                        )}
-                                        {element.tdata.planets && element.tdata.planets.map((p, i) => {
-                                          const yOffset = p.units && Object.keys(p.units).length > 0 ? 80 : 30;
-                                         if(element.tdata.fleet || p.occupied){
-                                           return <Sprite key={i} scale={.75} x={element.w/2 - 80} y={element.w/2 + element.w/4 - 50 - i*yOffset} image={'icons/planet_bg.png'}>
-                                            <Container>
-                                              {p.specialty && <Sprite image={'icons/'+p.specialty+'.png'} x={0} y={0} scale={.5} alpha={.7}/>}
-                                              {p.legendary && <Sprite image={'icons/legendary_complete.png'} x={0} y={0} scale={.5} alpha={.7}/>}
-                                              <Text text={p.name} x={35} y={5} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}/>
-
-                                              <Container x={220} y={0}>
-                                                {p.trait && <Sprite image={'icons/'+p.trait+'.png'} x={-70} y={5} scale={.4} />}
-                                                <Sprite image={'icons/influence_bg.png'} x={-40} scale={.5}>
-                                                  <Text text={p.influence} x={20} y={12} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
-                                                </Sprite>
-                                                <Sprite image={'icons/resources_bg.png'} scale={.5}>
-                                                  <Text text={p.resources === 1 ? ' 1': p.resources} x={20} y={10} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
-                                                </Sprite>
-                                              </Container>
-                                            </Container>
-                                            <Container>
-                                            {p.units && Object.keys(p.units).map((u, i) => 
-                                              <Sprite key={i} x={0 + i*65} y={35} scale={{ x: 1, y: 1}} anchor={0} image={'icons/unit_bg.png'}>
-                                                <Text text={u} x={10} y={5} style={{fontSize: 10}}/>
-                                                <Sprite image={'units/' + u.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={.85}/>
-                                                <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .75}} x={35} y={25} text={p.units[u] === 1 ? ' 1':p.units[u]}/>
-                                              </Sprite>
-                                            )}
-                                            </Container>
-                                          </Sprite>
-                                          }
-                                        })
-                                        }
                                         </Sprite>}
                             {tilesTxt && <>
                               <Text style={{fontSize: 20, fill:'white'}} text={'(' + element.q + ',' + element.r + ')'} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
@@ -440,6 +452,61 @@ const completePubObj = (i) => {
                   })}
 
                 <Graphics draw={draw}/>
+
+                {G.tiles.map((element, index) => {
+                  const [firstCorner] = element.corners;
+                  return <Container key={index} x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
+                      {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) => 
+                            <Sprite key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={{ x: 1, y: 1}} anchor={0} alpha={.9} image={'icons/ct.png'}>
+                              <Sprite image={'race/icons/'+ t +'.png'} scale={.55} x={15} y={15} alpha={.85}></Sprite>
+                            </Sprite>
+                          )}
+                      {element.tdata.fleet && Object.keys(element.tdata.fleet).map((f, i) => 
+                          <Sprite interactive={true} pointerdown={(e)=>setCargoTile(index)} key={i} x={element.w/4 - 50 + i*65} y={0} scale={{ x: 1, y: 1}} anchor={0} alpha={1} image={'icons/unit_bg.png'}>
+                            <Text text={f} x={15} y={5} style={{fontSize: 10}}/>
+                            <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={.85}/>
+                            <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'rgb(74,111,144)', dropShadow: true, dropShadowDistance: 1}} x={35} y={25} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
+                          </Sprite>
+                        )}
+                      {element.tdata.planets && element.tdata.planets.map((p, i) => {
+                        const yOffset = p.units && Object.keys(p.units).length > 0 ? 80 : 30;
+                        if(element.tdata.fleet || p.occupied){
+                          return <Sprite key={i} scale={.75} x={element.w/2 - 80} y={element.w/2 + element.w/4 - 50 - i*yOffset} image={'icons/planet_bg.png'}>
+                          <Container>
+                            {p.specialty && <Sprite image={'icons/'+p.specialty+'.png'} x={0} y={0} scale={.5} alpha={.7}/>}
+                            {p.legendary && <Sprite image={'icons/legendary_complete.png'} x={0} y={0} scale={.5} alpha={.7}/>}
+                            <Text text={p.name} x={35} y={5} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}/>
+
+                            <Container x={220} y={0}>
+                              {p.trait && <Sprite image={'icons/'+p.trait+'.png'} x={-70} y={5} scale={.4} />}
+                              <Sprite image={'icons/influence_bg.png'} x={-40} scale={.5}>
+                                <Text text={p.influence} x={20} y={12} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
+                              </Sprite>
+                              <Sprite image={'icons/resources_bg.png'} scale={.5}>
+                                <Text text={p.resources === 1 ? ' 1': p.resources} x={20} y={10} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
+                              </Sprite>
+                            </Container>
+                          </Container>
+                          <Container>
+                          {p.units && Object.keys(p.units).map((u, i) => 
+                            <Sprite key={i} x={0 + i*65} y={35} scale={{ x: 1, y: 1}} anchor={0} image={'icons/unit_bg.png'}>
+                              <Text text={u} x={10} y={5} style={{fontSize: 10}}/>
+                              <Sprite image={'units/' + u.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={.85}/>
+                              <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'rgb(74,111,144)', dropShadow: true, dropShadowDistance: 1}} x={35} y={25} text={p.units[u] === 1 ? ' 1':p.units[u]}/>
+                            </Sprite>
+                          )}
+                          </Container>
+                        </Sprite>
+                        }
+                        else{
+                          return <></>
+                        }
+                      })
+                      }
+                  </Container>
+                })}
+
+
               </PixiViewport> 
             </Stage>
             

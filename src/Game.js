@@ -317,7 +317,9 @@ export const TIO = {
                                     ukeys.forEach(uk => {
                                       const ukl = uk.toLowerCase();
                                       if(!tile.tdata.fleet[ukl]) tile.tdata.fleet[ukl] = 0;
-                                      tile.tdata.fleet[ukl] += result.deploy[uk];
+                                      for(var l=0; l<result.deploy[uk]; l++){
+                                        tile.tdata.fleet[ukl].push({});
+                                      }
                                     });
                                     return true;
                                   }
@@ -431,7 +433,7 @@ export const TIO = {
               G.tiles[tid].selected = true;
             }
           },*/
-          uploadUnits: ({ G, playerID }, tile, planetId) => {
+          /*uploadUnits: ({ G, playerID }, tile, planetId) => {
 
             if( !tile ){
               console.log('no fleet');
@@ -562,7 +564,7 @@ export const TIO = {
               console.log('no transport');
             }
 
-          },
+          },*/
           activateTile: ({ G, playerID }, tIndex) => {
 
             const race = G.races[playerID];
@@ -593,7 +595,7 @@ export const TIO = {
             }
 
           },
-          moveFleet: ({ G, playerID }, src, squadron) => {
+          /*moveFleet: ({ G, playerID }, src, squadron) => {
             const dst = G.tiles.find( t => t.active === true );
             
             if(!src || !src.tdata.fleet){
@@ -676,8 +678,8 @@ export const TIO = {
               });
             }
 
-          },
-          produceUnits: ({ G, playerID }, units, planetId) => {
+          },*/
+          /*produceUnits: ({ G, playerID }, units, planetId) => {
 
             const tile = G.tiles.find( t => t.active === true);
             const pid = planetId || 0;
@@ -720,8 +722,8 @@ export const TIO = {
               }
             });
 
-          },
-          learnTechnology: ({ G, playerID }, techId) => {
+          },*/
+          /*learnTechnology: ({ G, playerID }, techId) => {
             const technology = techData.find( t => t.id === techId);
 
             if(!technology){
@@ -761,7 +763,7 @@ export const TIO = {
               const idx = G.races[playerID].technologies.findIndex(t => t.id + '2' === techId);
               if(idx > -1) G.races[playerID].technologies[idx] = {...technology, upgrade: false, alreadyUpgraded: true, id: G.races[playerID].technologies[idx].id};
             }
-          },
+          },*/
           pass: ({ G, playerID, events }) => {
             if(G.passedPlayers.indexOf(playerID) === -1){
               G.passedPlayers.push(playerID);
