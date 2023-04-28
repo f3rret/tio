@@ -70,7 +70,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const [techVisible, setTechVisible] = useState(false);
   const [planetsVisible, setPlanetsVisible] = useState(false);
   const [tilesPng, setTilesPng] = useState(true);
-  const [tilesTxt, setTilesTxt] = useState(true);
+  const [tilesTxt, setTilesTxt] = useState(false);
   const [unitsVisible, setUnitsVisible] = useState(true);
   const [abilVisible, setAbilVisible] = useState(0);
   const [agentVisible, setAgentVisible] = useState('agent');
@@ -278,11 +278,11 @@ const completePubObj = (i) => {
     G.tiles.forEach((element, index) => {
       if(element.active === true){
         g.beginFill('yellow', .15);
-        g.lineStyle(10,  'yellow');
+        g.lineStyle(0,  'yellow');
       }
       else if(index === selectedTile){
-        g.beginFill('green', .15);
-        g.lineStyle(10,  'green');
+        g.beginFill('lightblue', .25);
+        g.lineStyle(0,  'lightblue');
       }
       /*else if(element.selected === true){
         g.beginFill('lightblue', .15);
@@ -290,18 +290,19 @@ const completePubObj = (i) => {
       }*/
       else{
         //g.lineStyle(3,  0x999999);
-        g.lineStyle(5,  'black');
+        //g.lineStyle(5,  'black');
       }
-      const [firstCorner, ...otherCorners] = element.corners
-      g.moveTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2)
-      otherCorners.forEach(({ x, y }) => g.lineTo(x + stagew/2, y + stageh/2))
-      g.lineTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2);
 
-      if(/*element.selected === true || */element.active === true || index === selectedTile){
+      if(element.active === true || index === selectedTile){
+        const [firstCorner, ...otherCorners] = element.corners
+        g.moveTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2)
+        otherCorners.forEach(({ x, y }) => g.lineTo(x + stagew/2, y + stageh/2))
+        g.lineTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2);
+
         g.endFill();
       }
 
-      G.tiles.forEach((element, index) => {
+      /*G.tiles.forEach((element, index) => {
         if(element.tdata.tokens){
           const [firstCorner, ...otherCorners] = element.corners;
           g.beginFill('yellow');
@@ -311,7 +312,7 @@ const completePubObj = (i) => {
           });
           g.endFill();
         }
-      });
+      });*/
 
 
     });
@@ -375,7 +376,52 @@ const completePubObj = (i) => {
                     return <Container key={index}>
                             {tilesPng && <Sprite interactive={true} pointerdown={(e)=>tileClick(e, index)} 
                                         image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }} 
-                                        x={firstCorner.x + stagew/2 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2}/>}
+                                        x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
+                                        {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) => 
+                                          <Sprite key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={{ x: 1, y: 1}} anchor={0} alpha={.9} image={'icons/ct.png'}>
+                                            <Sprite image={'race/icons/'+ t +'.png'} scale={.55} x={15} y={15} alpha={.85}></Sprite>
+                                          </Sprite>
+                                        )}
+                                        {element.tdata.fleet && Object.keys(element.tdata.fleet).map((f, i) => 
+                                          <Sprite key={i} x={element.w/4 - 30 + i*45} y={0} scale={{ x: .75, y: .75}} anchor={0} alpha={1} image={'icons/unit_bg.png'}>
+                                            <Text text={f} x={15} y={5} style={{fontSize: 10}}/>
+                                            <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={.85}/>
+                                            <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .75}} x={35} y={25} text={element.tdata.fleet[f] === 1 ? ' 1':element.tdata.fleet[f]}/>
+                                          </Sprite>
+                                        )}
+                                        {element.tdata.planets && element.tdata.planets.map((p, i) => {
+                                          const yOffset = p.units && Object.keys(p.units).length > 0 ? 80 : 30;
+                                         if(element.tdata.fleet || p.occupied){
+                                           return <Sprite key={i} scale={.75} x={element.w/2 - 80} y={element.w/2 + element.w/4 - 50 - i*yOffset} image={'icons/planet_bg.png'}>
+                                            <Container>
+                                              {p.specialty && <Sprite image={'icons/'+p.specialty+'.png'} x={0} y={0} scale={.5} alpha={.7}/>}
+                                              {p.legendary && <Sprite image={'icons/legendary_complete.png'} x={0} y={0} scale={.5} alpha={.7}/>}
+                                              <Text text={p.name} x={35} y={5} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}/>
+
+                                              <Container x={220} y={0}>
+                                                {p.trait && <Sprite image={'icons/'+p.trait+'.png'} x={-70} y={5} scale={.4} />}
+                                                <Sprite image={'icons/influence_bg.png'} x={-40} scale={.5}>
+                                                  <Text text={p.influence} x={20} y={12} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
+                                                </Sprite>
+                                                <Sprite image={'icons/resources_bg.png'} scale={.5}>
+                                                  <Text text={p.resources === 1 ? ' 1': p.resources} x={20} y={10} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
+                                                </Sprite>
+                                              </Container>
+                                            </Container>
+                                            <Container>
+                                            {p.units && Object.keys(p.units).map((u, i) => 
+                                              <Sprite key={i} x={0 + i*65} y={35} scale={{ x: 1, y: 1}} anchor={0} image={'icons/unit_bg.png'}>
+                                                <Text text={u} x={10} y={5} style={{fontSize: 10}}/>
+                                                <Sprite image={'units/' + u.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={.85}/>
+                                                <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .75}} x={35} y={25} text={p.units[u] === 1 ? ' 1':p.units[u]}/>
+                                              </Sprite>
+                                            )}
+                                            </Container>
+                                          </Sprite>
+                                          }
+                                        })
+                                        }
+                                        </Sprite>}
                             {tilesTxt && <>
                               <Text style={{fontSize: 20, fill:'white'}} text={'(' + element.q + ',' + element.r + ')'} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
                               <Text style={{fontSize: 25, fill: fill}} text={ element.tid } x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2}/>
