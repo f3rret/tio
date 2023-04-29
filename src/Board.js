@@ -280,7 +280,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     if(advUnitView && idx === advUnitView.tile){
       let shipIdx = payloadCursor.i;
       if(shipIdx > G.tiles[idx].tdata.fleet[advUnitView.unit].length) shipIdx = 0;
-      moves.moveShip({...advUnitView, shipIdx});
+      moves.moveShip({...advUnitView, shipIdx}); // change advUnitView after move!
     }
 
   }, [G.tiles, advUnitView, payloadCursor, moves])
@@ -318,7 +318,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     const j = payloadCursor.j;
     const tile = G.tiles[advPlanetView.tile];
 
-    if(tile.tdata.occupied == playerID){
+    if(advUnitView && tile.tdata.occupied == playerID){
       if(advPlanetView && advPlanetView.tile === advUnitView.tile){
         const unit = G.tiles[advUnitView.tile].tdata.fleet[advUnitView.unit];
 
@@ -419,7 +419,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
 
     G.tiles.forEach((element, index) => {
       if(element.active === true){
-        g.beginFill('yellow', .15);
+        //g.beginFill('yellow', .15);
         g.lineStyle(3,  'yellow');
       }
       else if(index === selectedTile){
@@ -579,53 +579,62 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                           return row;
                         })}
                       </Container>}
+                      <Container sortableChildren={true}>
+                        {element.tdata.planets && element.tdata.planets.map((p, i) => {
+                          if(element.tdata.fleet || p.occupied){
 
-                      {element.tdata.planets && element.tdata.planets.map((p, i) => {
-                        const yOffset = p.units && Object.keys(p.units).length > 0 ? 80 : 30;
+                            return <Sprite zIndex={10-i} interactive={true} pointerdown={()=>setAdvPlanetView({tile: index, planet: i})} 
+                              key={i} scale={.75} x={element.w/2 - 80} y={element.w/2 + element.w/4 - 20 - i*60} image={'icons/planet_bg.png'}
+                              tint={advPlanetView && advPlanetView.tile === index && advPlanetView.planet === i ? '#c6d036':'0x333'}>
+                              
+                              {advPlanetView && advPlanetView.tile === index && advPlanetView.planet === i && 
+                              <Sprite pointerdown={()=>unloadUnit()} interactive={true} image={'icons/move_to.png'} angle={-90} x={-55} y={35} scale={.65} alpha={.85}/>} 
 
-                        if(element.tdata.fleet || p.occupied){
+                              <Container>
+                                {p.specialty && <Sprite image={'icons/'+p.specialty+'.png'} x={0} y={-5} scale={.5} alpha={.7}/>}
+                                {p.legendary && <Sprite image={'icons/legendary_complete.png'} x={0} y={0} scale={.5} alpha={.7}/>}
+                                <Text text={p.name} x={35} y={5} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>
 
-                          return <Sprite interactive={true} pointerdown={()=>setAdvPlanetView({tile: index, planet: i})} 
-                            key={i} scale={.75} x={element.w/2 - 80} y={element.w/2 + element.w/4 - 50 - i*yOffset} image={'icons/planet_bg.png'}>
-                            {advPlanetView && advPlanetView.tile === index && advPlanetView.planet === i && 
-                            <Sprite pointerdown={()=>unloadUnit()} interactive={true} image={'icons/unit_bg.png'} x={-35} y={0} scale={{ x: .5, y: .5}} alpha={.85}>
-                              <Text x={5} y={10} style={{fontSize: 50, fill: '#6c89a3', dropShadow: true}} text='▼'/>
-                            </Sprite>} 
+                                <Container x={220} y={0}>
+                                  {p.trait && <Sprite image={'icons/'+p.trait+'.png'} x={-70} y={5} scale={.4} />}
+                                  <Sprite image={'icons/influence_bg.png'} x={-40} y={-3} scale={.5}>
+                                    <Text text={p.influence} x={20} y={12} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
+                                  </Sprite>
+                                  <Sprite image={'icons/resources_bg.png'} scale={.5}  y={-3}>
+                                    <Text text={p.resources === 1 ? ' 1': p.resources} x={20} y={10} 
+                                    style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
+                                  </Sprite>
+                                </Container>
 
-                            <Container>
-                              {p.specialty && <Sprite image={'icons/'+p.specialty+'.png'} x={0} y={0} scale={.5} alpha={.7}/>}
-                              {p.legendary && <Sprite image={'icons/legendary_complete.png'} x={0} y={0} scale={.5} alpha={.7}/>}
-                              <Text text={p.name} x={35} y={5} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}/>
-
-                              <Container x={220} y={0}>
-                                {p.trait && <Sprite image={'icons/'+p.trait+'.png'} x={-70} y={5} scale={.4} />}
-                                <Sprite image={'icons/influence_bg.png'} x={-40} scale={.5}>
-                                  <Text text={p.influence} x={20} y={12} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
-                                </Sprite>
-                                <Sprite image={'icons/resources_bg.png'} scale={.5}>
-                                  <Text text={p.resources === 1 ? ' 1': p.resources} x={20} y={10} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
-                                </Sprite>
                               </Container>
-                            </Container>
 
-                            <Container>
-                            {p.units && Object.keys(p.units).map((u, ui) =>
-                              <Container key={ui} >
-                                {p.units[u] > 0 && <Sprite interactive={true} pointerdown={()=>loadUnit({tile: index, planet: i, unit: u})} x={0 + ui*65} y={35} scale={{ x: 1, y: 1}} anchor={0} image={'icons/unit_bg.png'}>
-                                <Text text={u.replace('dock', '...')} x={10} y={3} style={{fontSize: 12}}/>
-                                <Sprite image={'units/' + u.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={.85}/>
-                                <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'rgb(74,111,144)', dropShadow: true, dropShadowDistance: 1}} x={35} y={25} text={p.units[u] === 1 ? ' 1':p.units[u]}/>
-                                </Sprite>}
-                              </Container>
-                            )}
-                            </Container>
-                        </Sprite>
-                        }
-                        else{
-                          return <Container key={i}></Container>
-                        }
-                      })
+                              <Sprite image={'icons/planet_sub_bg.png'} alpha={.85} y={35} x={-78}>
+                                {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>
+                                  <Container key={ui} >
+                                    {p.units[u] > 0 && 
+                                    <Sprite interactive={true} pointerdown={()=>loadUnit({tile: index, planet: i, unit: u})} x={40 + ui*65} 
+                                      y={0} scale={.5} anchor={0} image={'icons/'+ u +'_token.png'}>
+                                      <Text style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={75} y={5} text={p.units[u] === 1 ? ' 1':p.units[u]}/>
+                                    </Sprite>
+                                    }
+                                  </Container>
+                                )}
+                                <Container x={200} y={0}>
+                                  {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) =>
+                                    <Sprite key={ui} x={40 + ui*45} y={-5} scale={.65} anchor={0} image={'icons/'+ u +'_token.png'}>
+                                   
+                                    </Sprite>
+                                  )}
+                                </Container>
+                              </Sprite>
+                          </Sprite>
+                          }
+                          else{
+                            return <Container key={i}></Container>
+                          }
+                        })
                       }
+                      </Container>
                   </Container>
                 })}
 
