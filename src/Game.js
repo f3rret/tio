@@ -433,138 +433,49 @@ export const TIO = {
               G.tiles[tid].selected = true;
             }
           },*/
-          /*uploadUnits: ({ G, playerID }, tile, planetId) => {
+          loadUnit: ({G, playerID}, {src, dst}) => {
+            
+            let from = G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
+            const to = G.tiles[src.tile].tdata.fleet[dst.unit];
+            const technology = G.races[playerID].technologies.find( t => t.id === dst.unit.toUpperCase());
 
-            if( !tile ){
-              console.log('no fleet');
-              return INVALID_MOVE;
-            }
-
-            const pid = planetId || 0;
-
-            if( tile.tdata.occupied != playerID ){
-              console.log('not fleet owner');
-              return INVALID_MOVE;
-            }
-
-            if(tile.tdata.fleet && tile.tdata.fleet.carrier > 0){
-              if(tile.tdata.planets && tile.tdata.planets[pid] && tile.tdata.planets[pid].units){
-                
-                if( tile.tdata.planets[pid].occupied != playerID ){
-                  console.log('not planet owner');
-                  return INVALID_MOVE;
-                }
-
-                const units = tile.tdata.planets[pid].units;
-                const fleet = tile.tdata.fleet;
-
-                Object.keys(units).forEach(u => {
-                  if( u === 'infantry' || u === 'mech' ){
-                    if(!fleet[u]) fleet[u] = 0;
-                    fleet[u] += units[u];
-                    delete units[u];
+            if(['infantry', 'fighter', 'mech'].indexOf(src.unit) > -1){
+              if(from && to && technology){
+                if(dst.i <= to.length){
+                  if(technology.capacity && dst.j <= technology.capacity){
+                    if(!to[dst.i].payload){
+                      to[dst.i].payload = new Array(technology.capacity);
+                    }
+                    if(!to[dst.i].payload[dst.j]){
+                      G.tiles[src.tile].tdata.planets[src.planet].units[src.unit]--;
+                      if(G.tiles[src.tile].tdata.planets[src.planet].units[src.unit] === 0) delete G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
+                      G.tiles[src.tile].tdata.fleet[dst.unit][dst.i].payload[dst.j] = src.unit;
+                    }
                   }
-                });
+                }
               }
-              else{
-                console.log('no units');
-              }
-            }
-            else{
-              console.log('no transport');
             }
 
           },
-          downloadUnits: ({ G, playerID }, tile, planetId) => {
-
-            if( !tile ){
-              console.log('no fleet');
-              return INVALID_MOVE;
-            }
-
-            const pid = planetId || 0;
-
-            if(tile.tdata.occupied != playerID){
-              console.log('not fleet owner');
-              return INVALID_MOVE;
-            }
-
-            if(tile.tdata.fleet && tile.tdata.fleet.carrier > 0){
-
-              if(tile.tdata.planets && tile.tdata.planets[pid]){
-                if(!tile.tdata.planets[pid].units){
-                  tile.tdata.planets[pid].units = {};
-                }
-
-                const fleet = tile.tdata.fleet;
-                const units = tile.tdata.planets[pid].units;
-
-                if( tile.tdata.planets[pid].occupied == playerID ){
-                  Object.keys(fleet).forEach(u => {
-                    if( u === 'infantry' || u === 'mech' ){
-
-                      if(!units[u]){
-                        units[u] = 0;
-                      }
-
-                      units[u] += fleet[u];
-                      delete fleet[u];
-                    }
-                  });
-                }
-                else{
-                  Object.keys(fleet).forEach(u => {
-                    if( u === 'infantry' || u === 'mech' ){
-                      if(!units[u]){
-                        units[u] = 0;
-                      }
-
-                      if(units[u] === fleet[u]){
-                        delete units[u];
-                        delete fleet[u];  
-                      }
-                      else if(units[u] < fleet[u]){
-                        fleet[u] -= units[u];
-                        delete units[u];
-                      }
-                      else {
-                        units[u] -= fleet[u];
-                        delete fleet[u];
-                      }
-                    }
-                  });
-
-                  if(units['infantry'] > 0 || units['mech'] > 0){
-                    console.log('retreat');
-                    return;
-                  }
-
-                  if(fleet['infantry'] > 0 || fleet['mech'] > 0){
-                    if(fleet['infantry']){
-                      units['infantry'] = fleet['infantry'];
-                      delete fleet['infantry'];
-                    }
-                    if(fleet['mech']){
-                      units['mech'] = fleet['mech'];
-                      delete fleet['mech'];
-                    }
-                    delete units['pds'];
-                    delete units['spacedock'];
-
-                    tile.tdata.planets[pid].occupied = playerID;
-                  }
-                }
+          unloadUnit: ({G, playerID}, {src, dst}) => {
+            
+            let to = G.tiles[dst.tile].tdata.planets[dst.planet];
+            const from = G.tiles[src.tile].tdata.fleet[src.unit];
+           
+            if(from && to){
+              if(!to.units){
+                to.units = {}
               }
-              else{
-                console.log('no planet');
+              if(!to.units[from[src.i].payload[src.j]]){
+                to.units[from[src.i].payload[src.j]]=0;
               }
 
-            }
-            else{
-              console.log('no transport');
+              G.tiles[dst.tile].tdata.planets[dst.planet].units[from[src.i].payload[src.j]]++;
+              G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload[src.j] = undefined;
             }
 
-          },*/
+          },
+          
           activateTile: ({ G, playerID }, tIndex) => {
 
             const race = G.races[playerID];

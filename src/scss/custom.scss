@@ -14,6 +14,7 @@ $modal-content-bg: rgba(74, 111, 144, 0.95);
 body{
     overflow: hidden;
     background-color: #141b24;
+    user-select: none;
 }
 h3, h4, h5, h6 {
     font-family: Handel Gothic;
