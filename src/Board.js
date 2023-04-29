@@ -160,18 +160,18 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     </Nav>
   </Navbar>);
 
+  const completePubObj = (i) => {
+    //e.preventDefault();
 
-const completePubObj = (i) => {
-  //e.preventDefault();
-
-  /*if(G.pubObjectives[i].type === 'SPEND'){
-    //setPayObj(i);
-    //moves.completePublicObjective(i, payment);
+    /*if(G.pubObjectives[i].type === 'SPEND'){
+      //setPayObj(i);
+      //moves.completePublicObjective(i, payment);
+    }
+    else{
+      moves.completePublicObjective(i);
+    }*/
   }
-  else{
-    moves.completePublicObjective(i);
-  }*/
-}
+
   const Objectives = () => (
     <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
       <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Objectives <span style={{float: 'right'}}>{'You have ' + VP + ' VP'}</span></h6></CardTitle>
@@ -275,6 +275,16 @@ const completePubObj = (i) => {
     }*/
   }
 
+  const moveToClick = useCallback((idx) => {
+
+    if(advUnitView && idx === advUnitView.tile){
+      let shipIdx = payloadCursor.i;
+      if(shipIdx > G.tiles[idx].tdata.fleet[advUnitView.unit].length) shipIdx = 0;
+      moves.moveShip({...advUnitView, shipIdx});
+    }
+
+  }, [G.tiles, advUnitView, payloadCursor, moves])
+
   const advUnitViewTechnology = useMemo(() => {
     if(advUnitView && advUnitView.unit){
       return race.technologies.find( t => t.id === advUnitView.unit.toUpperCase());
@@ -347,6 +357,8 @@ const completePubObj = (i) => {
 
   },[G.tiles, advUnitView, advUnitViewTechnology, moves, payloadCursor, movePayloadCursor, playerID])
 
+  const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
+
   /*const Cargo = (props) => {
     const tile = G.tiles[cargoTile];
     const fleet = tile.tdata.fleet;
@@ -408,7 +420,7 @@ const completePubObj = (i) => {
     G.tiles.forEach((element, index) => {
       if(element.active === true){
         g.beginFill('yellow', .15);
-        g.lineStyle(0,  'yellow');
+        g.lineStyle(3,  'yellow');
       }
       else if(index === selectedTile){
         g.beginFill('lightblue', .25);
@@ -420,7 +432,7 @@ const completePubObj = (i) => {
       }*/
       else{
         //g.lineStyle(3,  0x999999);
-        //g.lineStyle(5,  'black');
+        g.lineStyle(0,  'black');
       }
 
       if(element.active === true || index === selectedTile){
@@ -529,14 +541,19 @@ const completePubObj = (i) => {
                 <Graphics draw={draw}/>
 
                 {G.tiles.map((element, index) => {
+
                   const [firstCorner] = element.corners;
                   return <Container key={index} x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
                       {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) => 
                             <Sprite key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={{ x: 1, y: 1}} anchor={0} alpha={.9} image={'icons/ct.png'}>
                               <Sprite image={'race/icons/'+ t +'.png'} scale={.55} x={15} y={15} alpha={.85}></Sprite>
                             </Sprite>
-                          )}
-                      {element.tdata.fleet && Object.keys(element.tdata.fleet).map((f, i) => 
+                      )}
+                      {element.tdata.fleet && <Container>
+                        {activeTile && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 &&
+                        <Sprite interactive={true} pointerdown={()=>moveToClick(index)} alpha={advUnitView && advUnitView.tile === index ? 1: .5} 
+                          scale={.75} y={5} x={-10} image={'icons/move_to.png'} />}
+                        {Object.keys(element.tdata.fleet).map((f, i) => 
                           <Sprite tint={advUnitView && advUnitView.tile === index && advUnitView.unit === f ? '#6c89a3':'0xFFFFFF'} 
                             interactive={true} pointerdown={(e)=>setAdvUnitView({tile: index, unit: f})} key={i} 
                             x={element.w/4 - 50 + i*65} y={0} scale={{ x: 1, y: 1}} anchor={0} image={'icons/unit_bg.png'}>
@@ -544,7 +561,9 @@ const completePubObj = (i) => {
                             <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={.85}/>
                             <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'rgb(74,111,144)', dropShadow: true, dropShadowDistance: 1}} x={35} y={25} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
                           </Sprite>
-                      )}
+                        )}
+                        </Container>
+                      }
                       {advUnitView && advUnitView.tile === index && <Container x={30} y={70}>
                         {element.tdata.fleet[advUnitView.unit] && element.tdata.fleet[advUnitView.unit].map((ship, i) =>{
                           const cap = advUnitViewTechnology.capacity || 0;
@@ -569,9 +588,10 @@ const completePubObj = (i) => {
                           return <Sprite interactive={true} pointerdown={()=>setAdvPlanetView({tile: index, planet: i})} 
                             key={i} scale={.75} x={element.w/2 - 80} y={element.w/2 + element.w/4 - 50 - i*yOffset} image={'icons/planet_bg.png'}>
                             {advPlanetView && advPlanetView.tile === index && advPlanetView.planet === i && 
-                              <Sprite pointerdown={()=>unloadUnit()} interactive={true} image={'icons/unit_bg.png'} x={-35} y={0} scale={{ x: .5, y: .5}} alpha={.85}>
-                                <Text x={5} y={10} style={{fontSize: 50, fill: '#6c89a3', dropShadow: true}} text='▼'/>
-                              </Sprite>} 
+                            <Sprite pointerdown={()=>unloadUnit()} interactive={true} image={'icons/unit_bg.png'} x={-35} y={0} scale={{ x: .5, y: .5}} alpha={.85}>
+                              <Text x={5} y={10} style={{fontSize: 50, fill: '#6c89a3', dropShadow: true}} text='▼'/>
+                            </Sprite>} 
+
                             <Container>
                               {p.specialty && <Sprite image={'icons/'+p.specialty+'.png'} x={0} y={0} scale={.5} alpha={.7}/>}
                               {p.legendary && <Sprite image={'icons/legendary_complete.png'} x={0} y={0} scale={.5} alpha={.7}/>}
@@ -587,6 +607,7 @@ const completePubObj = (i) => {
                                 </Sprite>
                               </Container>
                             </Container>
+
                             <Container>
                             {p.units && Object.keys(p.units).map((u, ui) =>
                               <Container key={ui} >

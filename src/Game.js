@@ -424,15 +424,6 @@ export const TIO = {
 
             events.setActivePlayers({ all: 'strategyCard', minMoves: 1, maxMoves: 1 });
           },
-          /*selectTile: ({ G }, tid) => {
-            if(G.tiles[tid].selected === true){
-              G.tiles[tid].selected = false;
-            }
-            else{
-              G.tiles.forEach(t => t.selected = false);
-              G.tiles[tid].selected = true;
-            }
-          },*/
           loadUnit: ({G, playerID}, {src, dst}) => {
             
             let from = G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
@@ -475,7 +466,6 @@ export const TIO = {
             }
 
           },
-          
           activateTile: ({ G, playerID }, tIndex) => {
 
             const race = G.races[playerID];
@@ -503,6 +493,28 @@ export const TIO = {
             if(tile.active){
               race.tokens.t--;
               race.actions.push('TILE_ACTIVATE');
+            }
+
+          },
+          moveShip: ({ G, playerID }, args) => {
+
+            const dst = G.tiles.find( t => t.active === true );
+            const src = G.tiles[args.tile];
+            const unit = src.tdata.fleet[args.unit][args.shipIdx];
+
+            if(dst && src && unit){
+              if( dst.tdata.occupied != playerID ){
+                dst.tdata.occupied = playerID;
+              }
+
+              if(!dst.tdata.fleet) dst.tdata.fleet = {};
+              if(!dst.tdata.fleet[args.unit]) dst.tdata.fleet[args.unit] = [];
+              dst.tdata.fleet[args.unit].push(unit);
+
+              G.tiles[args.tile].tdata.fleet[args.unit].splice(args.shipIdx, 1);
+              if(G.tiles[args.tile].tdata.fleet[args.unit].length === 0){
+                delete G.tiles[args.tile].tdata.fleet[args.unit];
+              }
             }
 
           },
