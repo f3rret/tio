@@ -7,17 +7,18 @@ import { Navbar, Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, Car
 import { PaymentDialog, StrategyDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList } from './payment';
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
+import { checkObjective } from './utils';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const stagew = window.innerWidth;
   const stageh = window.innerHeight;
 
-  const [payObj, setPayObj] = useState(-1);
+  const [payObj, setPayObj] = useState(null);
   const togglePaymentDialog = (payment) => {
     if(payment && Object.keys(payment).length > 0){
-      moves.completePublicObjective(payObj, payment);
+      moves.completeObjective(payObj, payment);
     }
-    setPayObj(-1);
+    setPayObj(null);
   };
 
   const PLANETS = useMemo(()=> {
@@ -69,9 +70,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   const [objVisible, setObjVisible] = useState(false);
   const [techVisible, setTechVisible] = useState(false);
   const [planetsVisible, setPlanetsVisible] = useState(false);
-  //const [cargoTile, setCargoTile] = useState(undefined);
   const [advUnitView, setAdvUnitView] = useState(undefined);
-  const [advPlanetView, setAdvPlanetView] = useState(undefined);
   const [payloadCursor, setPayloadCursor] = useState({i:0, j:0});
   const [tilesPng, setTilesPng] = useState(true);
   const [tilesTxt, setTilesTxt] = useState(false);
@@ -160,22 +159,24 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     </Nav>
   </Navbar>);
 
-  const completePubObj = (i) => {
-    //e.preventDefault();
+  const completeObjective = (oid) => {
+    const objective = G.pubObjectives.find(o => o.id === oid);
+    if(!objective) return;
 
-    /*if(G.pubObjectives[i].type === 'SPEND'){
-      //setPayObj(i);
-      //moves.completePublicObjective(i, payment);
+    if(objective.type === 'SPEND'){
+      setPayObj(oid);
     }
     else{
-      moves.completePublicObjective(i);
-    }*/
+      if(checkObjective(G, playerID, oid)){
+        moves.completeObjective(oid);
+      }
+    }
   }
 
   const Objectives = () => (
     <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
       <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Objectives <span style={{float: 'right'}}>{'You have ' + VP + ' VP'}</span></h6></CardTitle>
-      <ObjectivesList G={G} playerID={playerID} onSelect={completePubObj}/>
+      <ObjectivesList G={G} playerID={playerID} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective:()=>{}}/>
     </Card>
   );
 
@@ -258,29 +259,27 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   }
 
   const tileClick = (e, index) => {
+
     e.preventDefault(); 
     setSelectedTile(index);
 
-    /*if(ctx.phase === 'acts'){
-      if(ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0){
-        const isMine = ctx.currentPlayer === playerID;
-      
-        if((isMine && G.strategy === 'DIPLOMACY') || G.strategy === 'CONSTRUCTION' || G.strategy === 'WARFARE'){
-          setSelectedTile(index);
-        }
-      }
-      else{
-        moves.selectTile(index);
-      }
-    }*/
   }
 
   const moveToClick = useCallback((idx) => {
 
     if(advUnitView && idx === advUnitView.tile){
       let shipIdx = payloadCursor.i;
-      if(shipIdx > G.tiles[idx].tdata.fleet[advUnitView.unit].length) shipIdx = 0;
-      moves.moveShip({...advUnitView, shipIdx}); // change advUnitView after move!
+      if(shipIdx > G.tiles[idx].tdata.fleet[advUnitView.unit].length){
+        shipIdx = 0;
+      }
+      
+      moves.moveShip({...advUnitView, shipIdx})
+      setPayloadCursor({i: 0, j: 0});
+
+      // change advUnitView after move!
+      if(G.tiles[idx].tdata.fleet[advUnitView.unit].length <= 1){
+        setAdvUnitView({})
+      }
     }
 
   }, [G.tiles, advUnitView, payloadCursor, moves])
@@ -313,24 +312,21 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     setPayloadCursor({i: nexti, j: nextj})
   }, [advUnitViewTechnology, G.tiles, advUnitView, payloadCursor]);
 
-  const unloadUnit = useCallback(() => {
+  const unloadUnit = useCallback((pid) => {
     const i = payloadCursor.i;
     const j = payloadCursor.j;
-    const tile = G.tiles[advPlanetView.tile];
+    const tile = G.tiles[advUnitView.tile];
 
     if(advUnitView && tile.tdata.occupied == playerID){
-      if(advPlanetView && advPlanetView.tile === advUnitView.tile){
-        const unit = G.tiles[advUnitView.tile].tdata.fleet[advUnitView.unit];
-
-        if(unit[i] && unit[i].payload && unit[i].payload[j]){
-          moves.unloadUnit({src: {...advUnitView, i, j}, dst: advPlanetView});
-        }
+      const unit = G.tiles[advUnitView.tile].tdata.fleet[advUnitView.unit];
+      if(unit[i] && unit[i].payload && unit[i].payload[j]){
+        moves.unloadUnit({src: {...advUnitView, i, j}, dst: {tile: advUnitView.tile, planet: pid}});
       }
 
       movePayloadCursor();
     }
 
-  }, [G.tiles, advPlanetView, advUnitView, moves, payloadCursor, movePayloadCursor, playerID]);
+  }, [G.tiles, advUnitView, moves, payloadCursor, movePayloadCursor, playerID]);
 
   const loadUnit = useCallback((args)=>{
 
@@ -358,61 +354,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   },[G.tiles, advUnitView, advUnitViewTechnology, moves, payloadCursor, movePayloadCursor, playerID])
 
   const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
-
-  /*const Cargo = (props) => {
-    const tile = G.tiles[cargoTile];
-    const fleet = tile.tdata.fleet;
-    const planets = tile.tdata.planets;
-
-    const getUnitCap = (technology, unit) => {
-      let result=[];
-      for(var i=0; i<technology.capacity; i++){
-        result.push(<Button key={i} outline color='light' style={{margin: '0 .25rem', width: '3rem', height: '3rem', borderRadius: '5px'}}>
-
-        </Button>)
-      }
-      return result;
-    }
-
-    return <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Cargo</h6></CardTitle>
-      <ListGroup style={{background: 'none', border: 'none'}}>
-        {Object.keys(fleet).map((fk, i) => {
-          const technology = race.technologies.find( t => t.id === fk.toUpperCase());
-
-          let result = [];
-          var j=0;
-          
-          if(technology.capacity > 0){
-            for(j=0; j<fleet[fk].length; j++){
-              result.push(
-                <ListGroupItem key={i + ' ' + j} style={{background: 'none', border: 'none', display: 'flex', flexDirection: 'row'}}>
-                  <CardImg src={'units/'+fk.toUpperCase()+'.png'} style={{width: '4rem'}}/>
-                  <>
-                    {getUnitCap(technology, fleet[fk][j])}
-                  </>
-                </ListGroupItem>
-              );
-            }
-          }
-          else{
-            let imgs = [];
-            for(j=0; j<fleet[fk].length; j++){
-              imgs.push(<CardImg key={i + ' ' + j} src={'units/'+fk.toUpperCase()+'.png'} style={{width: '4rem'}}/>);
-            }
-            result.push(
-              <ListGroupItem key={i} style={{background: 'none', border: 'none', display: 'flex', flexDirection: 'row'}}>
-              {imgs}
-              </ListGroupItem>
-            );
-            
-          }
-
-          return result;
-        })}
-      </ListGroup>
-    </Card>
-  }*/
 
   const draw = useCallback((g) => {
     g.clear();
@@ -460,7 +401,152 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     });
   }, [G.tiles, stageh, stagew, selectedTile]);
 
-  //{cargoTile && <Cargo />}
+
+  useEffect(()=>{
+    if(ctx.phase === 'stats' && !objVisible){
+      setObjVisible(true);
+    }
+  }, [ctx.phase, objVisible]);
+
+
+  const TileContent = ({element, index}) => {
+
+    const [firstCorner] = element.corners;
+    return <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
+        {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier_bg.png'}/>}
+        {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) => 
+              <Sprite key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={{ x: 1, y: 1}} anchor={0} alpha={.9} image={'icons/ct.png'}>
+                <Sprite image={'race/icons/'+ t +'.png'} scale={.55} x={15} y={15} alpha={.85}></Sprite>
+              </Sprite>
+        )}
+
+        {element.tdata.planets.map((p,i) => {  
+          return p.hitCenter && <Sprite image={'icons/empty.png'} scale={1} key={i} width={p.hitRadius * 2} height={p.hitRadius * 2} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}
+            interactive={true} pointerdown={(e)=>tileClick(e, index)}>
+              
+              <Container x={0} y={50}>
+                {advUnitView && advUnitView.tile === index && <Sprite pointerdown={()=>unloadUnit(i)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={.5} alpha={.85}/>}
+                {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) =>
+                  <Sprite key={ui} x={40 + ui*55} y={0} scale={.75} anchor={0} image={'icons/unit_bg.png'}>
+                    <Sprite image={'units/' + u.toUpperCase() + '.png'} x={-10} y={-10} scale={.5} alpha={.85}/>
+                    <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'rgb(74,111,144)', dropShadow: true, dropShadowDistance: 1}} 
+                    x={45} y={25} text={p.units[u]}/>
+                  </Sprite>
+                )}
+              </Container>
+
+              <Container x={50} y={100}>
+              {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>{
+                return <Sprite x={ui*55} key={ui} alpha={.85} scale={.5} interactive={true} pointerdown={()=>loadUnit({tile: index, planet: i, unit: u})} image={'icons/'+ u +'_token.png'}>
+                  <Text style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={70} y={5} text={p.units[u]}/>
+                </Sprite>}
+              )}
+              </Container>
+  
+            </Sprite>
+          }
+        )}
+
+        {element.tdata.fleet && <Container y={-50}>
+          {activeTile && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 &&
+          <Sprite interactive={true} pointerdown={()=>moveToClick(index)} alpha={advUnitView && advUnitView.tile === index ? 1: .5} 
+            scale={.75} y={5} x={-10} image={'icons/move_to.png'} />}
+
+          {Object.keys(element.tdata.fleet).map((f, i) => {
+            const isCurrentAdvUnit = advUnitView && advUnitView.tile === index && advUnitView.unit === f;
+            return <Sprite tint={isCurrentAdvUnit ? '#6c89a3':'0xFFFFFF'} 
+              interactive={true} key={i} x={element.w/4 - 50 + i*65} y={0} scale={{ x: 1, y: 1}} anchor={0}
+              pointerdown={()=>isCurrentAdvUnit ? setAdvUnitView({}):setAdvUnitView({tile: index, unit: f})}  image={'icons/unit_bg.png'}>
+                <Text text={f.replace('nought', '...')} x={10} y={5} style={{fontSize: 12}}/>
+                <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={.85}/>
+                <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'rgb(74,111,144)', dropShadow: true, dropShadowDistance: 1}} 
+                  x={35} y={25} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
+            </Sprite>
+          })}
+        </Container>}
+
+        {advUnitView && advUnitView.tile === index && <Container x={30} y={15}>
+          {element.tdata.fleet[advUnitView.unit] && element.tdata.fleet[advUnitView.unit].map((ship, i) =>{
+            const cap = advUnitViewTechnology.capacity || 0;
+            const row = [];
+
+            for(let j=0; j<cap; j++){
+              row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? '#6c89a3':'0xFFFFFF'} 
+                  pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*25} y={i*30} scale={{ x: .4, y: .4}} anchor={0} image={'icons/unit_bg.png'}>
+                    {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite image={'units/' + ship.payload[j].toUpperCase() + '.png'} 
+                    x={0} y={0} scale={{ x: .4, y: .4}} alpha={.85}/>}
+              </Sprite>);
+            }
+            return row;
+          })}
+        </Container>}
+
+        
+    </Container>
+  }
+
+/*
+<Container sortableChildren={true}>
+          {element.tdata.planets && element.tdata.planets.map((p, i) => {
+            if(element.tdata.fleet || p.occupied){
+
+              return <Sprite zIndex={10-i} interactive={true} pointerdown={()=>setAdvPlanetView({tile: index, planet: i})} 
+                key={i} scale={.75} x={element.w/2 - 80} y={element.w/2 + element.w/4 - 20 - i*60} image={'icons/planet_bg.png'}
+                tint={advPlanetView && advPlanetView.tile === index && advPlanetView.planet === i ? '#c6d036':'0x333'}>
+                
+                {advPlanetView && advPlanetView.tile === index && advPlanetView.planet === i && 
+                <Sprite pointerdown={()=>unloadUnit()} interactive={true} image={'icons/move_to.png'} angle={-90} x={-55} y={35} scale={.65} alpha={.85}/>} 
+
+                <Container>
+                  {p.specialty && <Sprite image={'icons/'+p.specialty+'.png'} x={0} y={-5} scale={.5} alpha={.7}/>}
+                  {p.legendary && <Sprite image={'icons/legendary_complete.png'} x={0} y={0} scale={.5} alpha={.7}/>}
+                  <Text text={p.name} x={35} y={5} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>
+
+                  <Container x={220} y={0}>
+                    {p.trait && <Sprite image={'icons/'+p.trait+'.png'} x={-70} y={5} scale={.4} />}
+                    <Sprite image={'icons/influence_bg.png'} x={-40} y={-3} scale={.5}>
+                      <Text text={p.influence} x={20} y={12} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
+                    </Sprite>
+                    <Sprite image={'icons/resources_bg.png'} scale={.5}  y={-3}>
+                      <Text text={p.resources === 1 ? ' 1': p.resources} x={20} y={10} 
+                      style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
+                    </Sprite>
+                  </Container>
+
+                </Container>
+
+                <Sprite image={'icons/planet_sub_bg.png'} alpha={.85} y={35} x={-78}>
+                  {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>
+                    <Container key={ui} >
+                      {p.units[u] > 0 && 
+                      <Sprite interactive={true} pointerdown={()=>loadUnit({tile: index, planet: i, unit: u})} x={40 + ui*65} 
+                        y={0} scale={.5} anchor={0} image={'icons/'+ u +'_token.png'}>
+                        <Text style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={75} y={5} text={p.units[u] === 1 ? ' 1':p.units[u]}/>
+                      </Sprite>
+                      }
+                    </Container>
+                  )}
+                  <Container x={200} y={0}>
+                    {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) =>
+                      <Sprite key={ui} x={40 + ui*45} y={-5} scale={.65} anchor={0} image={'icons/'+ u +'_token.png'}>
+                     
+                      </Sprite>
+                    )}
+                  </Container>
+                </Sprite>
+            </Sprite>
+            }
+            else{
+              return <Container key={i}></Container>
+            }
+          })
+        }
+        </Container>
+
+*/
+
+
+
 
   return (<>
             <MyNavbar />
@@ -539,105 +625,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                   })}
 
                 <Graphics draw={draw}/>
-
-                {G.tiles.map((element, index) => {
-
-                  const [firstCorner] = element.corners;
-                  return <Container key={index} x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
-                      {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) => 
-                            <Sprite key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={{ x: 1, y: 1}} anchor={0} alpha={.9} image={'icons/ct.png'}>
-                              <Sprite image={'race/icons/'+ t +'.png'} scale={.55} x={15} y={15} alpha={.85}></Sprite>
-                            </Sprite>
-                      )}
-                      {element.tdata.fleet && <Container>
-                        {activeTile && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 &&
-                        <Sprite interactive={true} pointerdown={()=>moveToClick(index)} alpha={advUnitView && advUnitView.tile === index ? 1: .5} 
-                          scale={.75} y={5} x={-10} image={'icons/move_to.png'} />}
-                        {Object.keys(element.tdata.fleet).map((f, i) => 
-                          <Sprite tint={advUnitView && advUnitView.tile === index && advUnitView.unit === f ? '#6c89a3':'0xFFFFFF'} 
-                            interactive={true} pointerdown={(e)=>setAdvUnitView({tile: index, unit: f})} key={i} 
-                            x={element.w/4 - 50 + i*65} y={0} scale={{ x: 1, y: 1}} anchor={0} image={'icons/unit_bg.png'}>
-                            <Text text={f.replace('nought', '...')} x={10} y={5} style={{fontSize: 12}}/>
-                            <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={.85}/>
-                            <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'rgb(74,111,144)', dropShadow: true, dropShadowDistance: 1}} x={35} y={25} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
-                          </Sprite>
-                        )}
-                        </Container>
-                      }
-                      {advUnitView && advUnitView.tile === index && <Container x={30} y={70}>
-                        {element.tdata.fleet[advUnitView.unit] && element.tdata.fleet[advUnitView.unit].map((ship, i) =>{
-                          const cap = advUnitViewTechnology.capacity || 0;
-                          const row = [];
-
-                          for(let j=0; j<cap; j++){
-                            row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? '#6c89a3':'0xFFFFFF'} 
-                                pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*30} y={i*30} scale={{ x: .4, y: .4}} anchor={0} image={'icons/unit_bg.png'}>
-                                  {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite image={'units/' + ship.payload[j].toUpperCase() + '.png'} 
-                                  x={0} y={0} scale={{ x: .4, y: .4}} alpha={.85}/>}
-                            </Sprite>);
-                          }
-                          return row;
-                        })}
-                      </Container>}
-                      <Container sortableChildren={true}>
-                        {element.tdata.planets && element.tdata.planets.map((p, i) => {
-                          if(element.tdata.fleet || p.occupied){
-
-                            return <Sprite zIndex={10-i} interactive={true} pointerdown={()=>setAdvPlanetView({tile: index, planet: i})} 
-                              key={i} scale={.75} x={element.w/2 - 80} y={element.w/2 + element.w/4 - 20 - i*60} image={'icons/planet_bg.png'}
-                              tint={advPlanetView && advPlanetView.tile === index && advPlanetView.planet === i ? '#c6d036':'0x333'}>
-                              
-                              {advPlanetView && advPlanetView.tile === index && advPlanetView.planet === i && 
-                              <Sprite pointerdown={()=>unloadUnit()} interactive={true} image={'icons/move_to.png'} angle={-90} x={-55} y={35} scale={.65} alpha={.85}/>} 
-
-                              <Container>
-                                {p.specialty && <Sprite image={'icons/'+p.specialty+'.png'} x={0} y={-5} scale={.5} alpha={.7}/>}
-                                {p.legendary && <Sprite image={'icons/legendary_complete.png'} x={0} y={0} scale={.5} alpha={.7}/>}
-                                <Text text={p.name} x={35} y={5} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>
-
-                                <Container x={220} y={0}>
-                                  {p.trait && <Sprite image={'icons/'+p.trait+'.png'} x={-70} y={5} scale={.4} />}
-                                  <Sprite image={'icons/influence_bg.png'} x={-40} y={-3} scale={.5}>
-                                    <Text text={p.influence} x={20} y={12} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
-                                  </Sprite>
-                                  <Sprite image={'icons/resources_bg.png'} scale={.5}  y={-3}>
-                                    <Text text={p.resources === 1 ? ' 1': p.resources} x={20} y={10} 
-                                    style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
-                                  </Sprite>
-                                </Container>
-
-                              </Container>
-
-                              <Sprite image={'icons/planet_sub_bg.png'} alpha={.85} y={35} x={-78}>
-                                {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>
-                                  <Container key={ui} >
-                                    {p.units[u] > 0 && 
-                                    <Sprite interactive={true} pointerdown={()=>loadUnit({tile: index, planet: i, unit: u})} x={40 + ui*65} 
-                                      y={0} scale={.5} anchor={0} image={'icons/'+ u +'_token.png'}>
-                                      <Text style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={75} y={5} text={p.units[u] === 1 ? ' 1':p.units[u]}/>
-                                    </Sprite>
-                                    }
-                                  </Container>
-                                )}
-                                <Container x={200} y={0}>
-                                  {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) =>
-                                    <Sprite key={ui} x={40 + ui*45} y={-5} scale={.65} anchor={0} image={'icons/'+ u +'_token.png'}>
-                                   
-                                    </Sprite>
-                                  )}
-                                </Container>
-                              </Sprite>
-                          </Sprite>
-                          }
-                          else{
-                            return <Container key={i}></Container>
-                          }
-                        })
-                      }
-                      </Container>
-                  </Container>
-                })}
-
+                {G.tiles.map((element, index) => <TileContent key={index} element={element} index={index} /> )}
+                
 
               </PixiViewport> 
             </Stage>
@@ -647,6 +636,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                 <div>
                   {race && race.strategy.length > 0 && 
                     race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)
+                  }
+                  {ctx.phase === 'acts' && isMyTurn && !activeTile && selectedTile > -1 && 
+                  <Button color='warning' onClick={()=>moves.activateTile(selectedTile)} style={{width: '100%', margin: '1rem 0'}}>
+                    <h6 style={{margin: '0.5rem 0'}}>Activate system</h6>
+                  </Button>
                   }
                 </div>
                 <div style={{display: 'flex', flexDirection: 'column'}}>
@@ -701,17 +695,19 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
                       <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)', display:'flex', justifyContent: 'space-between'}}><h6>Command tokens</h6>{race.tokens.new > 0 && <h6>{race.tokens.new} unused</h6>}</CardTitle>
 
                         <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
-                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE} onClick={()=>{
-                              if(race.tokens.new){ moves.adjustToken('t') } else if(ctx.phase === 'acts'){moves.activateTile(selectedTile)} }}>
+                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE} 
+                            onClick={()=>{if(race.tokens.new){ moves.adjustToken('t') }}}>
                             <h6 style={{fontSize: 50}}>{race.tokens.t}</h6>
                             {race.tokens.new > 0 && <AddToken tag={'t'}/>}
                             <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>tactic</b>
                           </ListGroupItem>
-                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} onClick={()=>{if(race.tokens.new){ moves.adjustToken('f') }}} tag='button' style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.f}</h6>
+                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} onClick={()=>{if(race.tokens.new){ moves.adjustToken('f') }}} tag='button' style={TOKENS_STYLE}>
+                            <h6 style={{fontSize: 50}}>{race.tokens.f}</h6>
                             {race.tokens.new > 0 && <AddToken tag={'f'}/>}
                             <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>fleet</b>
                           </ListGroupItem>
-                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} onClick={()=>{if(race.tokens.new){ moves.adjustToken('s') }}} tag='button' style={TOKENS_STYLE}><h6 style={{fontSize: 50}}>{race.tokens.s}</h6>
+                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} onClick={()=>{if(race.tokens.new){ moves.adjustToken('s') }}} tag='button' style={TOKENS_STYLE}>
+                            <h6 style={{fontSize: 50}}>{race.tokens.s}</h6>
                             {race.tokens.new > 0 && <AddToken tag={'s'}/>}
                             <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>strategic</b>
                             </ListGroupItem>
@@ -745,8 +741,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
               </div>
             </div>
 
-            {payObj !== -1 && <PaymentDialog objective={G.pubObjectives[payObj]} race={race} planets={PLANETS} 
-                            isOpen={payObj !== -1} toggle={(e, payment)=>togglePaymentDialog(payment)}/>}
+            {payObj !== null && <PaymentDialog oid={payObj} G={G} race={race} planets={PLANETS} 
+                            isOpen={payObj !== null} toggle={(payment)=>togglePaymentDialog(payment)}/>}
           </>)
 }
 

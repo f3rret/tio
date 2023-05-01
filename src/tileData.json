@@ -34,7 +34,9 @@
                     "influence": 2,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -49,7 +51,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -64,7 +68,9 @@
                     "influence": 4,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -79,7 +85,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -94,7 +102,9 @@
                     "influence": 2,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -109,7 +119,9 @@
                     "influence": 0,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -124,7 +136,9 @@
                     "influence": 4,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -139,7 +153,9 @@
                     "influence": 0,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -154,7 +170,9 @@
                     "influence": 0,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Druaa",
@@ -162,7 +180,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -177,7 +197,9 @@
                     "influence": 0,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Wren Terra",
@@ -185,7 +207,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -200,7 +224,9 @@
                     "influence": 0,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Ragh",
@@ -208,7 +234,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -223,7 +251,9 @@
                     "influence": 3,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Jol",
@@ -231,7 +261,9 @@
                     "influence": 2,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -246,7 +278,9 @@
                     "influence": 0,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Quinarra",
@@ -254,7 +288,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -269,7 +305,9 @@
                     "influence": 3,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Archon Tau",
@@ -277,7 +315,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -292,7 +332,9 @@
                     "influence": 3,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Shalloq",
@@ -300,7 +342,9 @@
                     "influence": 2,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -315,7 +359,9 @@
                     "influence": 0,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [95,85],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Hercant",
@@ -323,7 +369,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [230,140],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Kamdorn",
@@ -331,7 +379,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,230],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -352,7 +402,9 @@
                     "influence": 6,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [120]
                 }
             ]
         },
@@ -366,7 +418,9 @@
                     "influence": 2,
                     "trait": "industrial",
                     "specialty": "cybernetic",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -380,7 +434,9 @@
                     "influence": 2,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -394,7 +450,9 @@
                     "influence": 1,
                     "trait": "industrial",
                     "specialty": "propulsion",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -408,7 +466,9 @@
                     "influence": 1,
                     "trait": "industrial",
                     "specialty": "biotic",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -422,7 +482,9 @@
                     "influence": 2,
                     "trait": "industrial",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -436,7 +498,9 @@
                     "influence": 3,
                     "trait": "hazardous",
                     "specialty": "warfare",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -450,7 +514,9 @@
                     "influence": 1,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -464,7 +530,9 @@
                     "influence": 1,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -478,7 +546,9 @@
                     "influence": 1,
                     "trait": "industrial",
                     "specialty": "biotic",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140, 90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Starpoint",
@@ -486,7 +556,9 @@
                     "influence": 1,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -500,7 +572,9 @@
                     "influence": 0,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140, 90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Torkan",
@@ -508,7 +582,9 @@
                     "influence": 3,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240, 210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -522,7 +598,9 @@
                     "influence": 2,
                     "trait": "industrial",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140, 90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Rarron",
@@ -530,7 +608,9 @@
                     "influence": 3,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -544,7 +624,9 @@
                     "influence": 2,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Zohbat",
@@ -552,7 +634,9 @@
                     "influence": 1,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -566,7 +650,9 @@
                     "influence": 0,
                     "trait": "industrial",
                     "specialty": "cybernetic",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Sakulag",
@@ -574,7 +660,9 @@
                     "influence": 1,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -588,7 +676,9 @@
                     "influence": 2,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Xxehan",
@@ -596,7 +686,9 @@
                     "influence": 1,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -610,7 +702,9 @@
                     "influence": 2,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Resulon",
@@ -618,7 +712,9 @@
                     "influence": 0,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -632,7 +728,9 @@
                     "influence": 3,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Gral",
@@ -640,7 +738,9 @@
                     "influence": 1,
                     "trait": "industrial",
                     "specialty": "propulsion",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -654,7 +754,9 @@
                     "influence": 1,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Lirta IV",
@@ -662,7 +764,9 @@
                     "influence": 3,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -676,7 +780,9 @@
                     "influence": 1,
                     "trait": "industrial",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Lor",
@@ -684,7 +790,9 @@
                     "influence": 2,
                     "trait": "industrial",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -698,7 +806,9 @@
                     "influence": 2,
                     "trait": "industrial",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Meer",
@@ -706,7 +816,9 @@
                     "influence": 4,
                     "trait": "hazardous",
                     "specialty": "warfare",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -720,7 +832,9 @@
                     "influence": 0,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Fria",
@@ -728,7 +842,9 @@
                     "influence": 0,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -825,7 +941,9 @@
                     "resources": 4,
                     "influence": 2,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -840,7 +958,9 @@
                     "influence": 5,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -855,7 +975,9 @@
                     "influence": 4,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -870,7 +992,9 @@
                     "influence": 0,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -885,7 +1009,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [100]
                 }
             ]
         },
@@ -900,7 +1026,9 @@
                     "influence": 4,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,135],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -915,7 +1043,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Rokha",
@@ -923,7 +1053,9 @@
                     "influence": 2,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -938,7 +1070,9 @@
                     "influence": 0,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [85,145],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Avar",
@@ -946,7 +1080,9 @@
                     "influence": 1,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [230,235],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Ylir",
@@ -954,7 +1090,9 @@
                     "influence": 2,
                     "trait": null,
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [220,90],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -968,7 +1106,9 @@
                     "influence": 3,
                     "trait": "hazardous",
                     "specialty": "propulsion",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -982,7 +1122,9 @@
                     "influence": 1,
                     "trait": "industrial",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -996,7 +1138,9 @@
                     "influence": 0,
                     "trait": "industrial",
                     "specialty": "warfare",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1010,7 +1154,9 @@
                     "influence": 2,
                     "trait": "cultural",
                     "specialty": "cybernetic",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1024,7 +1170,9 @@
                     "influence": 2,
                     "trait": "cultural",
                     "specialty": "biotic",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [180,150],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1038,7 +1186,9 @@
                     "influence": 1,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [145,95],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1052,7 +1202,9 @@
                     "influence": 1,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": true
+                    "legendary": true,
+                    "hitCenter": [180,150],
+                    "hitRadius": [110]
                 }
             ]
         },
@@ -1066,7 +1218,9 @@
                     "influence": 0,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": true
+                    "legendary": true,
+                    "hitCenter": [180,150],
+                    "hitRadius": [110]
                 }
             ]
         },
@@ -1081,7 +1235,9 @@
                     "influence": 0,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [150,140],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1096,7 +1252,9 @@
                     "influence": 1,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [155,140],
+                    "hitRadius": [60]
                 }
             ]
         },
@@ -1110,7 +1268,9 @@
                     "influence": 3,
                     "trait": "industrial",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Jeol Ir",
@@ -1118,7 +1278,9 @@
                     "influence": 3,
                     "trait": "industrial",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1132,7 +1294,9 @@
                     "influence": 1,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Siig",
@@ -1140,7 +1304,9 @@
                     "influence": 2,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1154,7 +1320,9 @@
                     "influence": 2,
                     "trait": "industrial",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Alio Prima",
@@ -1162,7 +1330,9 @@
                     "influence": 1,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1176,7 +1346,9 @@
                     "influence": 2,
                     "trait": "industrial",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Velnor",
@@ -1184,7 +1356,9 @@
                     "influence": 1,
                     "trait": "industrial",
                     "specialty": "warfare",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1193,12 +1367,14 @@
             "wormhole": null,
             "planets": [
                 {
-                    "name": "Lisis",
+                    "name": "Cealdri",
                     "resources": 0,
                     "influence": 2,
                     "trait": "cultural",
                     "specialty": "cybernetic",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Xanhact",
@@ -1206,7 +1382,9 @@
                     "influence": 1,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1220,7 +1398,9 @@
                     "influence": 1,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [140,90],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Vega Minor",
@@ -1228,7 +1408,9 @@
                     "influence": 2,
                     "trait": "cultural",
                     "specialty": "propulsion",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [240,210],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1242,7 +1424,9 @@
                     "influence": 2,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [90,150],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Abaddon",
@@ -1250,7 +1434,9 @@
                     "influence": 0,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [230,150],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Ashtroth",
@@ -1258,7 +1444,9 @@
                     "influence": 0,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [230,250],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1272,7 +1460,9 @@
                     "influence": 1,
                     "trait": "hazardous",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [230,245],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Rigel II",
@@ -1280,7 +1470,9 @@
                     "influence": 2,
                     "trait": "industrial",
                     "specialty": null,
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [225,100],
+                    "hitRadius": [70]
                 },
                 {
                     "name": "Rigel III",
@@ -1288,7 +1480,9 @@
                     "influence": 1,
                     "trait": "industrial",
                     "specialty": "biotic",
-                    "legendary": false
+                    "legendary": false,
+                    "hitCenter": [95,140],
+                    "hitRadius": [70]
                 }
             ]
         },
@@ -1337,7 +1531,9 @@
                     "influence": 3,
                     "trait": "cultural",
                     "specialty": null,
-                    "legendary": true
+                    "legendary": true,
+                    "hitCenter": [210,140],
+                    "hitRadius": [60]
                 }
             ]
         },

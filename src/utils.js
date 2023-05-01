@@ -91,7 +91,13 @@ export const checkSpend = (G, req, playerID) => {
 
 export const checkObjective = (G, playerID, oid) => {
 
-    const req = G.pubObjectives[oid].req;
+    let objective = G.pubObjectives.find(o => o.id === oid);
+    if(!objective) objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
+    if(!objective) return;
+
+    const req = objective.req;
+    if(!req) return;
+
     const race = G.races[playerID];
     const planets = getPlayerPlanets(G.tiles, playerID);
     const units = getPlayerUnits(G.tiles, playerID);

@@ -48,6 +48,11 @@ export const TIO = {
             }
           });
         }
+        else{
+          if(!t.tdata.planets || !t.tdata.planets.length){
+            t.tdata.frontier = true;
+          }
+        }
       });
 
       return {
@@ -145,7 +150,7 @@ export const TIO = {
           maxMoves: 1*/
         },
         moves: {
-          completePublicObjective: ({G, playerID, events}, oid, payment) => {
+          completeObjective: ({G, playerID, events}, oid, payment) => {
             completeObjective({G, playerID, oid, payment});
             events.endTurn();
           }
@@ -158,6 +163,10 @@ export const TIO = {
           //return {...G, passedPlayers: []}
         },
         onEnd: ({ G }) => {
+          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
           G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
         }
       },
@@ -353,7 +362,7 @@ export const TIO = {
                         break;
                       case 'IMPERIAL':
                         if(ctx.currentPlayer === playerID){
-                          if(result.objId > -1){
+                          if(result.objId){
                             completeObjective({G, playerID, oid: result.objId, payment: result.payment});
                           }
                         }
@@ -720,13 +729,32 @@ const IsVictory = (G, ctx) => {
 
 const completeObjective = ({G, playerID, oid, payment}) => {
 
-  if(G.pubObjectives[oid] && G.pubObjectives[oid].players.indexOf(playerID) === -1){
+  const objective = G.pubObjectives.find(o => o.id === oid);
+  if(objective && objective.players.indexOf(playerID) === -1){
 
-    const req = G.pubObjectives[oid].req;
+    const req = objective.req;
     const race = G.races[playerID];
     
-    if(G.pubObjectives[oid].type === 'SPEND'){
+    if(objective.type === 'SPEND'){
       const rkeys = Object.keys(req);
+
+      const check = rkeys.every((k) => {
+        if(k === 'influence' || k === 'resources'){
+            return payment[k] && payment[k].planets.reduce((a,b) => b[k] + a, 0) + payment[k].tg >= req[k]
+        }
+        else if(k === 'tg'){
+            return G.races[playerID].tg >= req[k]
+        }
+        else if(k === 'token'){
+            return payment[k] && payment[k].t + payment[k].s >= req[k]
+        }
+        else return false;
+      });
+
+      if(!check){
+        console.log('not enough pay');
+        return;
+      }
 
       if(rkeys.indexOf('token') > -1){
           if(race.tokens && payment.tokens){
@@ -756,11 +784,11 @@ const completeObjective = ({G, playerID, oid, payment}) => {
           }
       }           
 
-      G.pubObjectives[oid].players.push(playerID);
+      objective.players.push(playerID);
     }
-    else if(G.pubObjectives[oid].type === 'HAVE'){
+    else if(objective.type === 'HAVE'){
       if(checkObjective(G, playerID, oid) === true){
-        G.pubObjectives[oid].players.push(playerID);
+        objective.players.push(playerID);
       }
     }
     else{

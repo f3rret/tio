@@ -1,6 +1,6 @@
 
 import { Card, CardImg,  CardTitle, CardBody, CardText, CardFooter, Button, Row, Col, UncontrolledCollapse, UncontrolledTooltip,
-    /*Modal, ModalHeader, ModalBody, ModalFooter,*/ ListGroup, ListGroupItem, Input } from 'reactstrap';
+    Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Input } from 'reactstrap';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { produce } from 'immer';
 import cardData from './cardData.json';
@@ -9,20 +9,39 @@ import { checkObjective } from './utils';
 
 export function PaymentDialog(args) {
     
-    /*return (
-        <Modal isOpen={args.isOpen} toggle={args.toggle}>
-        <ModalHeader toggle={args.toggle}>{args.objective.id}</ModalHeader>
+    let objective = args.G.pubObjectives.find(o => o.id === args.oid);
+    if(!objective) objective = args.race.secretObjectives.find(o => o.id === args.oid);
+    const [payment, setPayment] = useState({});
+
+    const acceptable = useMemo(()=>{
+        return Object.keys(objective.req).every((k) => {
+            if(k === 'influence' || k === 'resources'){
+                return payment[k] && payment[k].planets.reduce((a,b) => b[k] + a, 0) + payment[k].tg >= objective.req[k]
+            }
+            else if(k === 'tg'){
+                return args.race.tg >= objective.req[k]
+            }
+            else if(k === 'token'){
+                return payment[k] && payment[k].t + payment[k].s >= objective.req[k]
+            }
+            else return false;
+        })
+    }, [payment, args, objective])
+
+    return (
+        <Modal style={{maxWidth: '35rem'}} isOpen={args.isOpen} toggle={()=>args.toggle()}>
+        <ModalHeader toggle={()=>args.toggle()} style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>{args.oid}</ModalHeader>
         <ModalBody style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>
-            {args.objective.title}
-            <PaymentCard args={args}/>
+            {objective.title}
+            <PaymentCard {...args} onPayment={setPayment} objective={objective}/>
         </ModalBody>
-        <ModalFooter>
-            <Button color="light" disabled = {!acceptable} onClick={(e) => args.toggle(e, payment)}>
+        <ModalFooter style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>
+            <Button disabled={!acceptable} color='success' onClick={()=>args.toggle(payment)}>
                 Confirm
             </Button>
         </ModalFooter>
         </Modal>
-    );*/
+    );
 }
 
 export const getStratColor = (strat, op) => {
@@ -35,7 +54,7 @@ export const getStratColor = (strat, op) => {
     else if(strat === 'TECHNOLOGY') color = 'rgba(26, 40, 105, '+op+')';
     else if(strat === 'IMPERIAL') color = 'rgba(153, 33, 133, '+op+')';
     return color;
-  }
+}
 
 export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTile, onComplete, onDecline }) => {
 
@@ -516,12 +535,12 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
         }
     }
 
-    const selectObjective = (i)=> {
-        if(selectedRace === i){
-            setSelectedRace(-1);
+    const selectObjective = (oid)=> {
+        if(selectedRace === oid){
+            setSelectedRace(null);
         }
         else{
-            setSelectedRace(i)
+            setSelectedRace(oid)
         }
     }
     
@@ -781,7 +800,6 @@ export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UP
   
 }
 
-
 export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect}) => {
 
     const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
@@ -878,10 +896,10 @@ export const ObjectivesList = ({G, playerID, onSelect, selected}) => {
           const completed = o.players && o.players.length > 0 && o.players.indexOf(playerID) > -1;
           return <ListGroupItem className='hoverable'
                     style={{cursor: completed ? 'default':'pointer', 
-                      background: completed ? 'green': (selected === i ? 'rgba(255,193,7,.75)':'none'), 
-                      color: completed || selected === i ? 'black':'white', border: 'solid 1px transparent' }} 
-                      key={i} onClick={() => {if(!completed) onSelect(i)}}>
-                    <CardImg style={{display: 'inline-block', width: '2rem', margin: '0 1rem .5rem 0'}} 
+                      background: completed ? 'green': (selected === o.id ? 'rgba(255,193,7,.75)':'none'), 
+                      color: completed || selected === o.id ? 'black':'white', border: 'solid 1px transparent' }} 
+                      key={i} onClick={() => {if(!completed) onSelect(o.id)}}>
+                    <CardImg style={{display: 'inline-block', width: '2rem', margin: '0 1rem .5rem 0', opacity: checkObjective(G, playerID, o.id) ? '1': '.5'}} 
                         src={o.vp === 2 ? 'icons/public_2.png': o.vp === 1 ? 'icons/public_1.png':'icons/secret_regular.png'} />
                     <b>{o.id}</b>
                     <span style={{float: 'right'}}>
@@ -897,6 +915,7 @@ export const ObjectivesList = ({G, playerID, onSelect, selected}) => {
 }
 
 const PaymentCard = (args) => {
+
     const [payment, setPayment] = useState({ influence: { planets: [], tg: 0 }, resources: { planets: [], tg: 0 }, tg: 0, token: { s:0, t:0 } });
     const [paid, setPaid] = useState({}); //exhausted
     const tg = useMemo(() => args.race.tg - payment.influence.tg - payment.resources.tg, [payment, args]);
@@ -1004,40 +1023,6 @@ const PaymentCard = (args) => {
             })}
         </div>
     </>
-//{(k !== 'influence' && k !== 'resources') && <h5 style={{width: '4rem'}}></h5>}
-/*
-<Badge color={k ==='influence' ? 'info': ( k === 'resources' ? 'warning' : 'dark' )} 
-                                style={{cursor: (k ==='tg'?'pointer':'default'), fontSize: '1.25rem', marginBottom: '.5rem'}}
-                                onClick={(e)=> k ==='tg' && flushTg()}>
-                            {payment[k].planets && payment[k].planets.reduce((a,b) => b[k] + a, 0)}
-                            {!payment[k].planets && tg}
-                            {payment[k].tg > 0 && '+' + payment[k].tg}
-                            {' / '}{args.objective.req[k]}
-                        </Badge>
-                        {(k === 'influence' || k === 'resources') && 
-                        <Button disabled={tg < 1} onClick={()=>payTg(k)} size='sm' color='dark' style={{margin: '0 0 .5rem .5rem'}}>+</Button>}
-*/
-    /*<ListGroup style={{width: '50%', margin: '1rem'}}>
-            {args.planets.map((p, i) => {
-                    let bg = '';
-                    let disabled = false;
-
-                    if (paid[p.name] === 'resources'){ bg = 'beige'; disabled = true}
-                    else if (paid[p.name] === 'influence'){ bg ='aliceblue';  disabled = true}
-                    else if (p.exhausted){ bg = 'silver'; disabled = true}
-
-                    const style={backgroundColor: bg, display: 'flex', justifyContent: 'space-between', cursor: 'default'}
-
-                    return ( 
-                    <ListGroupItem key={i} onClick={(e) => cancelPlanet(p.name)} style={style}>
-                        <div>{p.name}</div>
-                        <div>
-                            <Button size='sm' style={{color: 'white'}} disabled={disabled} color='warning' onClick={(e)=>payPlanet(e, p, 'resources')}><b>{p.resources}</b></Button>
-                            <Button size='sm' style={{color: 'white'}} disabled={disabled} color='info' onClick={(e)=>payPlanet(e, p, 'influence')}><b>{p.influence}</b></Button>
-                        </div>
-                    </ListGroupItem>)}
-            )}
-        </ListGroup>*/
 }
 
 export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, infClick}) => {
