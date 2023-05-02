@@ -5,7 +5,7 @@ import { useState, useMemo, useCallback } from 'react';
 export const ChatBoard = ({races, sendChatMessage, chatMessages})=>{
 
     const [msg, setMsg] = useState('');
-    const [chatVisible, setChatVisible] = useState(true);
+    const [chatVisible, setChatVisible] = useState(false);
     const onKeyDown = useCallback((e)=> {
         if(e.keyCode === 13){ 
             sendChatMessage(e.target.value);
@@ -24,7 +24,7 @@ export const ChatBoard = ({races, sendChatMessage, chatMessages})=>{
         <Button size='sm' className='hoverable' tag='img' onClick={()=>{setChatVisible(!chatVisible)}} 
           style={{borderRadius: '5px', background:'none', borderColor: 'transparent', width: '3rem'}} src='icons/agenda_white.png'/>
       </ButtonGroup>
-      {chatVisible && <Card style={{backgroundColor: 'rgba(255,255,255,.3)', border: 'solid 1px rgba(255,255,255,.7)', width: '40rem', height: '20rem', borderRadius: '5px'}}>
+      {chatVisible && <Card style={{backgroundColor: 'rgba(0,0,0,.3)', border: 'solid 1px rgba(255,255,255,.7)', width: '40rem', height: '20rem', borderRadius: '5px'}}>
         <CardBody style={{overflowY: 'auto'}}>
             <div style={{fontSize: '.8rem'}}>{messages}</div>
         </CardBody>
@@ -32,5 +32,8 @@ export const ChatBoard = ({races, sendChatMessage, chatMessages})=>{
           <Input type='text' value={msg} onChange={onChange} style={{backgroundColor: 'rgba(255,255,255,.3)', borderRadius: '5px', borderColor: 'transparent'}} onKeyDown={onKeyDown}/>
         </CardFooter>
       </Card>}
+      {!chatVisible && messages && <div style={{width: '40rem', height: '2.5rem', background: 'none'}}>
+        {messages[0]}
+        </div>}
     </div>
   }

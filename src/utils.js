@@ -3,7 +3,7 @@ import tileData from './tileData.json';
 import techData from './techData.json';
 import { neighbors } from './Grid';
 
-export const NUM_PLAYERS = 2;
+export const NUM_PLAYERS = 1;
 
 export const getPlayerUnits = (tiles, playerID)=> {
     const units = [];
@@ -226,27 +226,31 @@ export const checkObjective = (G, playerID, oid) => {
     }
     else if(req.neighbor){
         let systems = G.tiles.filter( t => t.tdata.occupied === playerID || (t.tdata.planets && t.tdata.planets.some( p => p.occupied === playerID)) );
-        let neighbors = [];
+        let neigh = [];
 
         systems.forEach( s => neighbors([s.q, s.r]).forEach( n => {
-        if(n.tdata.occupied !== undefined && n.tdata.occupied !== playerID){
-            if(neighbors.indexOf(n.tdata.occupied) === -1) neighbors.push(n.tdata.occupied);
-        }
-        else if(n.tdata.planets){
-            n.tdata.planets.forEach( p => { if(p.occupied !== undefined && p.occupied !== playerID){ 
-            if(neighbors.indexOf(n.tdata.occupied) === -1) neighbors.push(p.occupied) 
-            } })
-        }
-        }));
+          const tile = G.tiles.find(t => t.tid === n.tileId);
+            if(tile){
+              if(tile.tdata.occupied !== undefined && tile.tdata.occupied !== playerID){
+                  if(neigh.indexOf(tile.tdata.occupied) === -1) neigh.push(tile.tdata.occupied);
+              }
+              else if(tile.tdata.planets){
+                tile.tdata.planets.forEach( p => { if(p.occupied !== undefined && p.occupied !== playerID){ 
+                  if(neigh.indexOf(tile.tdata.occupied) === -1) neigh.push(p.occupied) 
+                  } })
+              }
+            }
+          })
+        );
 
-        if(neighbors.length < req.neighbor){
+        if(neigh.length < req.neighbor){
         return;
         }
 
         let goals = 0;
 
         if(req.more === 'planet'){
-        neighbors.forEach( n => {
+          neigh.forEach( n => {
             const pl = getPlayerPlanets(G.tiles, n);
             if(pl.length < planets.length) goals++;
         });

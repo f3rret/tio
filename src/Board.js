@@ -348,8 +348,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         g.lineStyle(3,  'yellow');
       }
       else if(index === selectedTile){
-        g.beginFill('lightblue', .25);
-        g.lineStyle(0,  'lightblue');
+        //g.beginFill('lightblue', .25);
+        g.lineStyle(3,  'lightblue');
       }
       /*else if(element.selected === true){
         g.beginFill('lightblue', .15);
@@ -430,8 +430,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
         {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier_bg.png'}/>}
         {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) => 
-              <Sprite key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={{ x: 1, y: 1}} anchor={0} alpha={.9} image={'icons/ct.png'}>
-                <Sprite image={'race/icons/'+ t +'.png'} scale={.55} x={15} y={15} alpha={.85}></Sprite>
+              <Sprite alpha={1} key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={.3} image={'icons/ct.png'}>
+                <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={55} y={55} alpha={.85}></Sprite>
               </Sprite>
         )}
 
@@ -445,21 +445,26 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   </Sprite>}
                 
                 {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) =>
-                  <Sprite key={ui} x={40 + ui*55} y={0} scale={.75} anchor={0} image={'icons/unit_bg.png'}>
-                    <Sprite image={'units/' + u.toUpperCase() + '.png'} x={-10} y={-10} scale={.5} alpha={.85}/>
-                    <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'rgb(74,111,144)', dropShadow: true, dropShadowDistance: 1}} 
-                    x={45} y={25} text={p.units[u]}/>
+                  <Sprite key={ui} x={40 + ui*55} y={-10} scale={1} anchor={0} image={'icons/unit_ground_bg.png'}>
+                    <Sprite image={'units/' + u.toUpperCase() + '.png'} x={-5} y={-5} scale={.4} alpha={1}/>
+                    {p.units[u] > 1 && <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
+                    x={45} y={0} text={p.units[u]}/>}
                   </Sprite>
                 )}
               </Container>
 
               <Container x={50} y={100}>
               {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>{
-                return <Sprite x={ui*55} key={ui} alpha={.85} scale={.5} interactive={true} pointerdown={()=>loadUnit({tile: index, planet: i, unit: u})} image={'icons/'+ u +'_token.png'}>
-                  <Text style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={70} y={5} text={p.units[u]}/>
+                return <Sprite x={-30 + ui*55} key={ui} alpha={.85} scale={.65} interactive={true} pointerdown={()=>loadUnit({tile: index, planet: i, unit: u})} image={'icons/unit_inf_bg.png'}>
+                   <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-5} scale={.35} alpha={1}/>
+                  <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={60} y={5} text={p.units[u]}/>
                 </Sprite>}
               )}
               </Container>
+
+              {p.occupied !== undefined && (!p.units || Object.keys(p.units).length === 0) && <Sprite x={50} y={50} scale={.3} image={'icons/control_token.png'}>
+                <Sprite alpha={.85} x={50} y={20} image={'race/icons/'+G.races[p.occupied].rid+'.png'}/>
+              </Sprite>}
   
             </Sprite>
           }
@@ -475,12 +480,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
           {Object.keys(element.tdata.fleet).map((f, i) => {
             const isCurrentAdvUnit = advUnitView && advUnitView.tile === index && advUnitView.unit === f;
-            return <Sprite tint={isCurrentAdvUnit ? '#6c89a3':'0xFFFFFF'} 
+            return <Sprite tint={isCurrentAdvUnit ? '#f44336':'0xFFFFFF'} 
               interactive={true} key={i} x={element.w/4 - 50 + i*65} y={0} scale={{ x: 1, y: 1}} anchor={0}
               pointerdown={()=>isCurrentAdvUnit ? setAdvUnitView({}):setAdvUnitView({tile: index, unit: f})}  image={'icons/unit_bg.png'}>
-                <Text text={f.replace('nought', '...')} x={10} y={5} style={{fontSize: 12}}/>
-                <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={.85}/>
-                <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'rgb(74,111,144)', dropShadow: true, dropShadowDistance: 1}} 
+                <Text text={f.replace('nought', '...')} x={10} y={5} style={{fontSize: 12, fill: 'white'}}/>
+                <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={1}/>
+                <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
                   x={35} y={25} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
             </Sprite>
           })}
@@ -492,7 +497,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             const row = [];
 
             for(let j=0; j<cap; j++){
-              row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? '#6c89a3':'0xFFFFFF'} 
+              row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? '#f44336':'0xFFFFFF'} 
                   pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*25} y={-i*30} scale={{ x: .4, y: .4}} anchor={0} image={'icons/unit_bg.png'}>
                     {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite image={'units/' + ship.payload[j].toUpperCase() + '.png'} 
                     x={0} y={0} scale={{ x: .4, y: .4}} alpha={.85}/>}
@@ -501,7 +506,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             return row;
           })}
         </Container>}
-
+        {ctx.phase === 'acts' && isMyTurn && selectedTile === index && !activeTile &&
+          <Text text='► Activate system' x={element.w/4 - 20} y={element.w/2 + 70} interactive={true} pointerdown={()=>moves.activateTile(index)} 
+            style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}>
+          </Text>}
         
     </Container>
   }
@@ -513,15 +521,19 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [race.exploration, sendChatMessage]);
   
   const PREV_PLANETS = useRef([]);
+
   useEffect(()=>{
-    
     if(PLANETS && PLANETS.length){
       if(!PREV_PLANETS.current || !PREV_PLANETS.current.length){
         //PREV_PLANETS.current = PLANETS;
       }
       else{
-        if(PLANETS.length - PREV_PLANETS.current.length === 1 && PLANETS[PLANETS.length-1].exhausted){
-          sendChatMessage('has occupied planet: ' + PLANETS[PLANETS.length-1].name);
+        if(PLANETS.length - PREV_PLANETS.current.length === 1){
+          const newOne = PLANETS.find(p => {
+            const oldOne = PREV_PLANETS.current.find(pp => pp.name === p.name);
+            return !oldOne;
+          });
+          if(newOne) sendChatMessage('has occupied planet: ' + newOne.name);
         }
       }
       PREV_PLANETS.current = PLANETS;
@@ -618,11 +630,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   {race && race.strategy.length > 0 && 
                     race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)
                   }
-                  {ctx.phase === 'acts' && isMyTurn && !activeTile && selectedTile > -1 && 
-                  <Button color='warning' onClick={()=>moves.activateTile(selectedTile)} style={{width: '100%', margin: '1rem 0'}}>
-                    <h6 style={{margin: '0.5rem 0'}}>Activate system</h6>
-                  </Button>
-                  }
+                  
                 </div>
                 <div style={{display: 'flex', flexDirection: 'column'}}>
                   {promisVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
@@ -726,7 +734,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                             isOpen={payObj !== null} toggle={(payment)=>togglePaymentDialog(payment)}/>}
           </>)
 }
-
+/*
+{ctx.phase === 'acts' && isMyTurn && !activeTile && selectedTile > -1 && 
+                  <Button color='warning' onClick={()=>moves.activateTile(selectedTile)} style={{width: '100%', margin: '1rem 0'}}>
+                    <h6 style={{margin: '0.5rem 0'}}>Activate system</h6>
+                  </Button>
+                  }
+*/
 
 const SpeakerToken = () => {
   return <span style={{position: 'absolute', borderRadius:'10px', backgroundColor: 'rgba(33, 37, 41, 0.95)', left: '-1rem', 

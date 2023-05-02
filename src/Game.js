@@ -43,7 +43,16 @@ export const TIO = {
               }
               if(races[idx].startingUnits){
                 draft.fleet = races[idx].startingUnits.fleet;
-                draft.planets[0].units = races[idx].startingUnits.ground;
+                
+                if(draft.planets.length < 2){
+                  draft.planets[0].units = {...races[idx].startingUnits.ground};
+                }
+                else{
+                  draft.planets[0].units = {...races[idx].startingUnits.ground};
+                  delete draft.planets[0].units.pds;
+
+                  draft.planets[1].units = {pds: races[idx].startingUnits.ground.pds};
+                }
               }
             }
           });
@@ -109,7 +118,7 @@ export const TIO = {
           }
 
           G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-          //G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Lead from the Front'), players: []});
+          //G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Push Boundaries'), players: []});
 
           if(!G.actionsDeck.length){
             const deck = [];
