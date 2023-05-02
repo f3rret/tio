@@ -3,7 +3,7 @@ import tileData from './tileData.json';
 import techData from './techData.json';
 import { neighbors } from './Grid';
 
-export const NUM_PLAYERS = 1;
+export const NUM_PLAYERS = 2;
 
 export const getPlayerUnits = (tiles, playerID)=> {
     const units = [];

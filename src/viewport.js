@@ -33,7 +33,7 @@ const PixiViewportComponent = PixiComponent("Viewport", {
     .drag()
     .pinch()
     .wheel()
-    .decelerate();
+    //.decelerate();
 
     viewport.fit();
     viewport.moveCenter( WORLD_WIDTH / 2, WORLD_HEIGHT / 2);

@@ -1,6 +1,6 @@
 /* eslint eqeqeq: 0 */
 import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
-import { useMemo, useCallback, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { Navbar, Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle,  UncontrolledTooltip,/*UncontrolledAccordion, 
   AccordionItem, AccordionBody, AccordionHeader,*/ CardBody,
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont } from 'reactstrap';
@@ -8,8 +8,10 @@ import { PaymentDialog, StrategyDialog, getStratColor, PlanetsRows, UnitsList, g
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
 import { checkObjective } from './utils';
+import { lineTo } from './Grid';
+import { ChatBoard } from './chat';
 
-export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
+export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
   const stagew = window.innerWidth;
   const stageh = window.innerHeight;
 
@@ -265,24 +267,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
 
   }
 
-  const moveToClick = useCallback((idx) => {
-
-    if(advUnitView && idx === advUnitView.tile){
-      let shipIdx = payloadCursor.i;
-      if(shipIdx > G.tiles[idx].tdata.fleet[advUnitView.unit].length){
-        shipIdx = 0;
-      }
-      
-      moves.moveShip({...advUnitView, shipIdx})
-      setPayloadCursor({i: 0, j: 0});
-
-      // change advUnitView after move!
-      if(G.tiles[idx].tdata.fleet[advUnitView.unit].length <= 1){
-        setAdvUnitView({})
-      }
-    }
-
-  }, [G.tiles, advUnitView, payloadCursor, moves])
 
   const advUnitViewTechnology = useMemo(() => {
     if(advUnitView && advUnitView.unit){
@@ -402,6 +386,37 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
   }, [G.tiles, stageh, stagew, selectedTile]);
 
 
+  const getDistance = useCallback((firstTile, lastTile) => {
+    const line = lineTo({ start: [firstTile.q, firstTile.r], stop: [lastTile.q, lastTile.r] });
+    return line.toArray().length-1;
+  }, []);
+
+  const distanceInfo = useCallback((firstTile, lastTile)=>{
+    const move = advUnitViewTechnology ? advUnitViewTechnology.move : '?';
+    return move + '/' + getDistance(firstTile, lastTile);
+  }, [advUnitViewTechnology, getDistance]);
+
+  const moveToClick = useCallback((idx) => {
+
+    if(advUnitView && idx === advUnitView.tile){
+      if(advUnitViewTechnology && advUnitViewTechnology.move >= getDistance(G.tiles[idx] ,activeTile)){
+        let shipIdx = payloadCursor.i;
+        if(shipIdx > G.tiles[idx].tdata.fleet[advUnitView.unit].length){
+          shipIdx = 0;
+        }
+        
+        moves.moveShip({...advUnitView, shipIdx})
+        setPayloadCursor({i: 0, j: 0});
+
+        // change advUnitView after move!
+        if(G.tiles[idx].tdata.fleet[advUnitView.unit].length <= 1){
+          setAdvUnitView({})
+        }
+      }
+    }
+
+  }, [G.tiles, advUnitView, payloadCursor, moves, activeTile, advUnitViewTechnology, getDistance])
+
   useEffect(()=>{
     if(ctx.phase === 'stats' && !objVisible){
       setObjVisible(true);
@@ -425,7 +440,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
             interactive={true} pointerdown={(e)=>tileClick(e, index)}>
               
               <Container x={0} y={50}>
-                {advUnitView && advUnitView.tile === index && <Sprite pointerdown={()=>unloadUnit(i)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={.5} alpha={.85}/>}
+                {advUnitView && advUnitView.tile === index && 
+                  <Sprite pointerdown={()=>unloadUnit(i)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={.5} alpha={.85}>
+                  </Sprite>}
+                
                 {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) =>
                   <Sprite key={ui} x={40 + ui*55} y={0} scale={.75} anchor={0} image={'icons/unit_bg.png'}>
                     <Sprite image={'units/' + u.toUpperCase() + '.png'} x={-10} y={-10} scale={.5} alpha={.85}/>
@@ -447,10 +465,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
           }
         )}
 
-        {element.tdata.fleet && <Container y={-50}>
+        {element.tdata.fleet && <Container x={10} y={-30}>
           {activeTile && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 &&
-          <Sprite interactive={true} pointerdown={()=>moveToClick(index)} alpha={advUnitView && advUnitView.tile === index ? 1: .5} 
-            scale={.75} y={5} x={-10} image={'icons/move_to.png'} />}
+          <Sprite interactive={true} pointerdown={()=>moveToClick(index)} scale={.75} y={5} x={-10} image={'icons/move_to.png'}
+            alpha={advUnitView && advUnitView.tile === index ? (advUnitViewTechnology && advUnitViewTechnology.move >= getDistance(element, activeTile) ? 1:.5):.5} >
+              <Text text={'move'} x={-70} y={10} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} />
+              <Text text={distanceInfo(element, activeTile)} x={-70} y={30} style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
+          </Sprite>}
 
           {Object.keys(element.tdata.fleet).map((f, i) => {
             const isCurrentAdvUnit = advUnitView && advUnitView.tile === index && advUnitView.unit === f;
@@ -465,14 +486,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
           })}
         </Container>}
 
-        {advUnitView && advUnitView.tile === index && <Container x={30} y={15}>
+        {advUnitView && advUnitView.tile === index && <Container x={30} y={-55}>
           {element.tdata.fleet[advUnitView.unit] && element.tdata.fleet[advUnitView.unit].map((ship, i) =>{
             const cap = advUnitViewTechnology.capacity || 0;
             const row = [];
 
             for(let j=0; j<cap; j++){
               row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? '#6c89a3':'0xFFFFFF'} 
-                  pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*25} y={i*30} scale={{ x: .4, y: .4}} anchor={0} image={'icons/unit_bg.png'}>
+                  pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*25} y={-i*30} scale={{ x: .4, y: .4}} anchor={0} image={'icons/unit_bg.png'}>
                     {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite image={'units/' + ship.payload[j].toUpperCase() + '.png'} 
                     x={0} y={0} scale={{ x: .4, y: .4}} alpha={.85}/>}
               </Sprite>);
@@ -485,69 +506,28 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
     </Container>
   }
 
-/*
-<Container sortableChildren={true}>
-          {element.tdata.planets && element.tdata.planets.map((p, i) => {
-            if(element.tdata.fleet || p.occupied){
-
-              return <Sprite zIndex={10-i} interactive={true} pointerdown={()=>setAdvPlanetView({tile: index, planet: i})} 
-                key={i} scale={.75} x={element.w/2 - 80} y={element.w/2 + element.w/4 - 20 - i*60} image={'icons/planet_bg.png'}
-                tint={advPlanetView && advPlanetView.tile === index && advPlanetView.planet === i ? '#c6d036':'0x333'}>
-                
-                {advPlanetView && advPlanetView.tile === index && advPlanetView.planet === i && 
-                <Sprite pointerdown={()=>unloadUnit()} interactive={true} image={'icons/move_to.png'} angle={-90} x={-55} y={35} scale={.65} alpha={.85}/>} 
-
-                <Container>
-                  {p.specialty && <Sprite image={'icons/'+p.specialty+'.png'} x={0} y={-5} scale={.5} alpha={.7}/>}
-                  {p.legendary && <Sprite image={'icons/legendary_complete.png'} x={0} y={0} scale={.5} alpha={.7}/>}
-                  <Text text={p.name} x={35} y={5} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>
-
-                  <Container x={220} y={0}>
-                    {p.trait && <Sprite image={'icons/'+p.trait+'.png'} x={-70} y={5} scale={.4} />}
-                    <Sprite image={'icons/influence_bg.png'} x={-40} y={-3} scale={.5}>
-                      <Text text={p.influence} x={20} y={12} style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
-                    </Sprite>
-                    <Sprite image={'icons/resources_bg.png'} scale={.5}  y={-3}>
-                      <Text text={p.resources === 1 ? ' 1': p.resources} x={20} y={10} 
-                      style={{fontSize: 40, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowAlpha: .5}}></Text>
-                    </Sprite>
-                  </Container>
-
-                </Container>
-
-                <Sprite image={'icons/planet_sub_bg.png'} alpha={.85} y={35} x={-78}>
-                  {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>
-                    <Container key={ui} >
-                      {p.units[u] > 0 && 
-                      <Sprite interactive={true} pointerdown={()=>loadUnit({tile: index, planet: i, unit: u})} x={40 + ui*65} 
-                        y={0} scale={.5} anchor={0} image={'icons/'+ u +'_token.png'}>
-                        <Text style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={75} y={5} text={p.units[u] === 1 ? ' 1':p.units[u]}/>
-                      </Sprite>
-                      }
-                    </Container>
-                  )}
-                  <Container x={200} y={0}>
-                    {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) =>
-                      <Sprite key={ui} x={40 + ui*45} y={-5} scale={.65} anchor={0} image={'icons/'+ u +'_token.png'}>
-                     
-                      </Sprite>
-                    )}
-                  </Container>
-                </Sprite>
-            </Sprite>
-            }
-            else{
-              return <Container key={i}></Container>
-            }
-          })
+  useEffect(()=>{
+    if(race.exploration && race.exploration.length){
+      sendChatMessage('have new exploration: ' + race.exploration[race.exploration.length-1].id);
+    }
+  }, [race.exploration, sendChatMessage]);
+  
+  const PREV_PLANETS = useRef([]);
+  useEffect(()=>{
+    
+    if(PLANETS && PLANETS.length){
+      if(!PREV_PLANETS.current || !PREV_PLANETS.current.length){
+        //PREV_PLANETS.current = PLANETS;
+      }
+      else{
+        if(PLANETS.length - PREV_PLANETS.current.length === 1 && PLANETS[PLANETS.length-1].exhausted){
+          sendChatMessage('has occupied planet: ' + PLANETS[PLANETS.length-1].name);
         }
-        </Container>
-
-*/
-
-
-
-
+      }
+      PREV_PLANETS.current = PLANETS;
+    }
+  }, [PLANETS, sendChatMessage]);
+  
   return (<>
             <MyNavbar />
             
@@ -556,6 +536,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID }) {
               {objVisible && <Objectives />}
               {planetsVisible && <PlanetsList />}
               {race && unitsVisible && <UnitsCard />}
+              <ChatBoard races={G.races} sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
             </CardColumns>}
 
             {ctx.phase === 'strat' && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '50%', position: 'absolute', margin: '10rem'}}>

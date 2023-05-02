@@ -1,5 +1,5 @@
 import { Client } from 'boardgame.io/react';
-import { Local/*, SocketIO*/ } from 'boardgame.io/multiplayer';
+import { Local,/* SocketIO*/ } from 'boardgame.io/multiplayer';
 import { TIO } from './Game';
 import { TIOBoard } from './Board';
 import { NUM_PLAYERS } from './utils';

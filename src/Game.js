@@ -14,7 +14,7 @@ export const TIO = {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
-                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], secretObjectives:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2}}) );
+                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], secretObjectives:[], exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2}}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
       races.forEach( r => {
@@ -55,12 +55,15 @@ export const TIO = {
         }
       });
 
+      const explorationDecks = {cultural:[], hazardous:[], industrial:[], frontier:[]};
+
       return {
         speaker: races[0].rid, 
         tiles,
         pubObjectives: [],
         secretObjDeck: [],
         actionsDeck: [],
+        explorationDecks,
         agendaDeck: [],
         passedPlayers: [],
         races
@@ -124,6 +127,25 @@ export const TIO = {
             G.actionsDeck = random.Shuffle(deck);
           }
 
+         if(!G.explorationDecks['cultural'].length){
+            
+            Object.keys(cardData.exploration).forEach(k => {
+              const deck = [];
+              cardData.exploration[k].forEach(exp => {
+                if(exp.count){
+                  for(var i=0; i<exp.count; i++){
+                    deck.push(exp);
+                  }
+                }
+                else{
+                  deck.push(exp);
+                }
+              });
+              G.explorationDecks[k] = random.Shuffle(deck); 
+            });
+
+          }
+
           if(!G.agendaDeck.length){
             G.agendaDeck = random.Shuffle(cardData.agenda);
           }
@@ -163,10 +185,6 @@ export const TIO = {
           //return {...G, passedPlayers: []}
         },
         onEnd: ({ G }) => {
-          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
           G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
         }
       },
@@ -470,8 +488,16 @@ export const TIO = {
                 to.units[from[src.i].payload[src.j]]=0;
               }
 
-              G.tiles[dst.tile].tdata.planets[dst.planet].units[from[src.i].payload[src.j]]++;
+              to.units[from[src.i].payload[src.j]]++;
               G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload[src.j] = undefined;
+
+              if(!to.occupied && to.trait){
+                G.races[playerID].exploration.push(G.explorationDecks[to.trait].pop());
+              }
+              if(to.occupied != playerID){
+                to.occupied = playerID;
+                to.exhausted = true;
+              }
             }
 
           },

@@ -1132,8 +1132,8 @@
         "heroAbility": "Each other player you 1 action card from their hand. For each player, you may either take that card or force that player to discard 3 random action cards from their hand. Then, purge this card.",
         "heroAbilityType": "ACTION",
         "startingUnits": {
-            "fleet": {"carrier": [{},{}], "cruiser": [{}]},
-            "ground": {"infantry": 5, "spacedock": 1, "pds": 1, "fighter": 2}
+            "fleet": {"carrier": [{"payload":["infantry","infantry","infantry","fighter"]},{}], "cruiser": [{}]},
+            "ground": {"infantry": 2, "spacedock": 1, "pds": 1, "fighter": 1}
         },
         "knownTechs": ["NEURAL_MOTIVATOR"],
         "commCap": 3,
