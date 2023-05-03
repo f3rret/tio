@@ -10,10 +10,37 @@ import cardData from './cardData.json';
 import { checkObjective } from './utils';
 import { lineTo } from './Grid';
 import { ChatBoard } from './chat';
+import { produce } from 'immer';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
+
   const stagew = window.innerWidth;
   const stageh = window.innerHeight;
+  const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
+  const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
+
+
+  const race = useMemo(() => G.races[playerID], [G.races, playerID]);
+  const [objVisible, setObjVisible] = useState(false);
+  const [techVisible, setTechVisible] = useState(false);
+  const [planetsVisible, setPlanetsVisible] = useState(false);
+  const [advUnitView, setAdvUnitView] = useState(undefined);
+  const [payloadCursor, setPayloadCursor] = useState({i:0, j:0});
+  const [tilesPng, setTilesPng] = useState(true);
+  const [tilesTxt, setTilesTxt] = useState(false);
+  const [unitsVisible, setUnitsVisible] = useState(false);
+  const [abilVisible, setAbilVisible] = useState(0);
+  const [agentVisible, setAgentVisible] = useState('agent');
+  const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
+  const [stratUnfold, setStratUnfold] = useState(0);
+  const [promisVisible, setPromisVisible] = useState(false);
+  const [actionsVisible, setActionsVisible] = useState(false);
+  const [relicsVisible, setRelicsVisible] = useState(false);
+  const [selectedTile, setSelectedTile] = useState(-1);
+  const [midPanelInfo, setMidPanelInfo] = useState('tokens');
+  const [purgingFragments, setPurgingFragments] = useState({c: 0, h: 0, i: 0, u: 0});
+  const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
+
 
   const [payObj, setPayObj] = useState(null);
   const togglePaymentDialog = (payment) => {
@@ -67,24 +94,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return units;
   }, [G.tiles, playerID]);
 
-  
-  const race = useMemo(() => G.races[playerID], [G.races, playerID]);
-  const [objVisible, setObjVisible] = useState(false);
-  const [techVisible, setTechVisible] = useState(false);
-  const [planetsVisible, setPlanetsVisible] = useState(false);
-  const [advUnitView, setAdvUnitView] = useState(undefined);
-  const [payloadCursor, setPayloadCursor] = useState({i:0, j:0});
-  const [tilesPng, setTilesPng] = useState(true);
-  const [tilesTxt, setTilesTxt] = useState(false);
-  const [unitsVisible, setUnitsVisible] = useState(false);
-  const [abilVisible, setAbilVisible] = useState(0);
-  const [agentVisible, setAgentVisible] = useState('agent');
-  const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
-  const [stratUnfold, setStratUnfold] = useState(0);
-  const [promisVisible, setPromisVisible] = useState(false);
-  const [actionsVisible, setActionsVisible] = useState(false);
-  const [selectedTile, setSelectedTile] = useState(-1);
-  const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
   const R_UNITS = useMemo(() => {
     if(race){
       const all_units = race.technologies.filter(t => t.type === 'unit' && !t.upgrade);
@@ -114,9 +123,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return result;
   }, [race, G.pubObjectives, playerID]);
 
-  const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
-  const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
-
+  
   const MyNavbar = () => (
     <Navbar style={{ position: 'fixed', height: '3rem', width: '80%', zIndex: '1'}}>
       <div style={{display: 'flex'}}>
@@ -219,20 +226,23 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const promissorySwitch = () => {
     setStratUnfold(0);
     setActionsVisible(false);
+    setRelicsVisible(false);
     setPromisVisible(!promisVisible);
   }
 
   const actionsSwitch = () => {
     setStratUnfold(0);
     setPromisVisible(false);
+    setRelicsVisible(false);
     setActionsVisible(!actionsVisible);
   }
 
-  useEffect(()=> {
-    if(stratUnfold > 0 && promisVisible){
-      setPromisVisible(false);
-    }
-  },[stratUnfold, promisVisible]);
+  const relicsSwitch = () => {
+    setStratUnfold(0);
+    setPromisVisible(false);
+    setActionsVisible(false);
+    setRelicsVisible(!relicsVisible);
+  }
 
   const StrategyCard = ({card, idx, style}) => {
     const i = idx + 1;
@@ -266,7 +276,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     setSelectedTile(index);
 
   }
-
 
   const advUnitViewTechnology = useMemo(() => {
     if(advUnitView && advUnitView.unit){
@@ -369,19 +378,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         g.endFill();
       }
 
-      /*G.tiles.forEach((element, index) => {
-        if(element.tdata.tokens){
-          const [firstCorner, ...otherCorners] = element.corners;
-          g.beginFill('yellow');
-          g.lineStyle(5,  'black');
-          element.tdata.tokens.forEach((t, i) => {
-            g.drawCircle(firstCorner.x + stagew/2 - 20, firstCorner.y + stageh/2 + 20, 50);
-          });
-          g.endFill();
-        }
-      });*/
-
-
     });
   }, [G.tiles, stageh, stagew, selectedTile]);
 
@@ -417,13 +413,21 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   }, [G.tiles, advUnitView, payloadCursor, moves, activeTile, advUnitViewTechnology, getDistance])
 
-  useEffect(()=>{
-    if(ctx.phase === 'stats' && !objVisible){
-      setObjVisible(true);
-    }
-  }, [ctx.phase, objVisible]);
-
-
+  const purgeFragment = useCallback((tag) => {
+    setPurgingFragments(produce(purgingFragments, draft => {
+      if(draft.c + draft.i + draft.h + draft.u >= 3 ){
+        draft.c = 0; draft.i = 0; draft.h = 0; draft.u = 0;
+      }
+      else{
+        draft[tag]++;
+        if(race.fragments[tag] < draft[tag]){
+          draft[tag] = 0;
+        }
+      }
+      
+    }));
+  }, [purgingFragments, race.fragments])
+ 
   const TileContent = ({element, index}) => {
 
     const [firstCorner] = element.corners;
@@ -514,11 +518,31 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     </Container>
   }
 
+  useEffect(()=> {
+    if(stratUnfold > 0 && (promisVisible || actionsVisible || relicsVisible)){
+      setPromisVisible(false);
+      setActionsVisible(false);
+      setRelicsVisible(false);
+    }
+  },[stratUnfold, promisVisible, relicsVisible, actionsVisible]);
+
+  useEffect(()=>{
+    if(ctx.phase === 'stats' && !objVisible){
+      setObjVisible(true);
+    }
+  }, [ctx.phase, objVisible]);
+
   useEffect(()=>{
     if(race.exploration && race.exploration.length){
-      sendChatMessage('have new exploration: ' + race.exploration[race.exploration.length-1].id);
+      sendChatMessage('got new exploration: ' + race.exploration[race.exploration.length-1].id);
     }
   }, [race.exploration, sendChatMessage]);
+
+  useEffect(()=>{
+    if(race.relics && race.relics.length){
+      sendChatMessage('got new relic: ' + race.relics[race.relics.length-1].id);
+    }
+  }, [race.relics, sendChatMessage]);
   
   const PREV_PLANETS = useRef([]);
 
@@ -632,7 +656,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   }
                   
                 </div>
-                <div style={{display: 'flex', flexDirection: 'column'}}>
+                <div style={{display: 'flex', flexDirection: 'column', paddingBottom: '4rem'}}>
                   {promisVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {race.promissory.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                       <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id}>
@@ -651,11 +675,26 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.description}</UncontrolledTooltip> 
                     </ListGroupItem>)}
                   </ListGroup>}
-                  <ButtonGroup style={{alignSelf: 'flex-end', height: '4rem', marginBottom: '1rem'}}>
-                    <Button disabled={race.actionCards.length === 0} size='sm' className='hoverable' tag='img' onClick={()=>actionsSwitch()} 
+
+                  {relicsVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                    {race.relics.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
+                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
+                        <b>{pr.id.toUpperCase()}</b>
+                      </Button>
+                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.effect}</UncontrolledTooltip> 
+                    </ListGroupItem>)}
+                  </ListGroup>}
+
+                  <ButtonGroup style={{alignSelf: 'flex-end', height: '4rem', marginBottom: '1rem', position: 'absolute', bottom: 0}}>
+                    <Button id='relicsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>relicsSwitch()} 
+                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/relic_white.png'/>
+                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#relicsSwitch'}>Relics</UncontrolledTooltip>
+                    <Button id='actionsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>actionsSwitch()} 
                       style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/action_card_white.png'/>
-                    <Button size='sm' className='hoverable' tag='img' onClick={()=>promissorySwitch()} 
+                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#actionsSwitch'}>Actions</UncontrolledTooltip>
+                    <Button id='promissorySwitch' size='sm' className='hoverable' tag='img' onClick={()=>promissorySwitch()} 
                       style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem'}} src='icons/promissory_white.png'/>
+                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#promissorySwitch'}>Promissory</UncontrolledTooltip>
                   </ButtonGroup>
                 </div>
               </CardColumns>
@@ -677,12 +716,19 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       </div>
 
                       {race.abilities.map((a, i) => 
-                        <CardText key={i} style={{marginTop:'1rem', fontSize: '.8rem', display: abilVisible === i ? 'unset':'none'}}>{a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}</CardText>
+                        <CardText key={i} style={{margin:'1rem 0 0 0', minHeight: '3rem', fontSize: '.8rem', display: abilVisible === i ? 'unset':'none'}}>
+                          {a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}
+                        </CardText>
                       )}
                     </Card>}
                     {race && <Card style={CARD_STYLE}>
-                      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)', display:'flex', justifyContent: 'space-between'}}><h6>Command tokens</h6>{race.tokens.new > 0 && <h6>{race.tokens.new} unused</h6>}</CardTitle>
-
+                        <ButtonGroup style={{width: 'max-content'}}>
+                          <Button size='sm' onClick={()=>setMidPanelInfo('tokens')} color={midPanelInfo === 'tokens' ? 'light':'dark'} style={{marginRight: '.5rem'}}>TOKENS</Button>
+                          <Button size='sm' onClick={()=>setMidPanelInfo('fragments')} color={midPanelInfo === 'fragments' ? 'light':'dark'} style={{marginRight: '.5rem'}}>FRAGMENTS</Button>
+                        </ButtonGroup>
+                        
+                        {midPanelInfo === 'tokens' && <>
+                        {<h6 style={{textAlign: 'right'}}>{race.tokens.new || 0} unused</h6>}
                         <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
                           <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE} 
                             onClick={()=>{if(race.tokens.new){ moves.adjustToken('t') }}}>
@@ -700,8 +746,46 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                             {race.tokens.new > 0 && <AddToken tag={'s'}/>}
                             <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>strategic</b>
                             </ListGroupItem>
+                        </ListGroup></>}
+                        {midPanelInfo === 'fragments' && <>
+                        
+                        <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
+                          <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('c')} style={{...TOKENS_STYLE, width: '22%'}}>
+                            <img alt='fragment' src='icons/cultural_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                            <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.c - purgingFragments.c}</h6>
+                            <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>cultural</b>
+                          </ListGroupItem>
+                          <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('h')} style={{...TOKENS_STYLE, width: '22%'}}>
+                            <img alt='fragment' src='icons/hazardous_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                            <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.h - purgingFragments.h}</h6>
+                            <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>hazardous</b>
+                          </ListGroupItem>
+                          <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('i')} style={{...TOKENS_STYLE, width: '22%'}}>
+                            <img alt='fragment' src='icons/industrial_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                            <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.i - purgingFragments.i}</h6>
+                            <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>industrial</b>
+                          </ListGroupItem>
+                          <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('u')} style={{...TOKENS_STYLE, width: '22%'}}>
+                            <img alt='fragment' src='icons/unknown_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                            <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.u - purgingFragments.u}</h6>
+                            <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>unknown</b>
+                          </ListGroupItem>
                         </ListGroup>
-
+                        <div style={{alignSelf: 'flex-end', margin: '0 1rem'}}>
+                          <span style={{padding: '0 1rem'}}>
+                            {Object.keys(purgingFragments).map(k => {
+                              const result = [];
+                              for(var i=0; i<purgingFragments[k]; i++){
+                                const type = k === 'c' ? 'cultural': k === 'i' ? 'industrial': k === 'h' ? 'hazardous': 'unknown';
+                                result.push(<img key={k+i} alt='fragment' src={'icons/' + type + '_fragment.png'} style={{width: '1.5rem'}}/>);
+                              }
+                              return result;
+                            })}
+                          </span>
+                          <Button size='sm' disabled={purgingFragments.c + purgingFragments.i + purgingFragments.h + purgingFragments.u < 3} style={{maxWidth: 'fit-content'}}
+                           color='warning' onClick={()=>{moves.purgeFragments(purgingFragments); setPurgingFragments({c:0,i:0,h:0,u:0})}}>Purge</Button>
+                        </div>
+                        </>}
                       </Card>}
                       {race && <Card style={{...CARD_STYLE, display: 'flex', fontSize: '.8rem'}}>
                         <ButtonGroup>
@@ -734,13 +818,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                             isOpen={payObj !== null} toggle={(payment)=>togglePaymentDialog(payment)}/>}
           </>)
 }
-/*
-{ctx.phase === 'acts' && isMyTurn && !activeTile && selectedTile > -1 && 
-                  <Button color='warning' onClick={()=>moves.activateTile(selectedTile)} style={{width: '100%', margin: '1rem 0'}}>
-                    <h6 style={{margin: '0.5rem 0'}}>Activate system</h6>
-                  </Button>
-                  }
-*/
 
 const SpeakerToken = () => {
   return <span style={{position: 'absolute', borderRadius:'10px', backgroundColor: 'rgba(33, 37, 41, 0.95)', left: '-1rem', 
