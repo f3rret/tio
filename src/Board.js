@@ -4,7 +4,7 @@ import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { Navbar, Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle,  UncontrolledTooltip,/*UncontrolledAccordion, 
   AccordionItem, AccordionBody, AccordionHeader,*/ CardBody,
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont } from 'reactstrap';
-import { PaymentDialog, StrategyDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList } from './payment';
+import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList } from './dialogs';
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
 import { checkObjective } from './utils';
@@ -160,10 +160,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       <NavItem style={{marginRight: '1rem'}}>
         <Button color='light' outline={!tilesTxt} onClick={()=>setTilesTxt(!tilesTxt)}>Text</Button>
       </NavItem>
-    {ctx.phase === 'acts' && isMyTurn &&
+    {isMyTurn &&
       <NavItem style={{marginRight: '1rem'}}>
-        <Button disabled={ctx.numMoves == 0} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}><h5 style={{margin: '.5rem'}}>Undo</h5></Button>
-        <Button color='warning' onClick={()=>events.endTurn()}><h5 style={{margin: '.5rem'}}>End turn</h5></Button>
+        {ctx.phase === 'acts' && <>
+          <Button disabled={ctx.numMoves == 0} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}><h5 style={{margin: '.5rem'}}>Undo</h5></Button>
+          <Button color='warning' onClick={()=>events.endTurn()}><h5 style={{margin: '.5rem'}}>End turn</h5></Button>
+        </>}
+        {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && <Button color='dark' onClick={()=>moves.pass()}><h5 style={{margin: '.5rem'}}>Pass</h5></Button>}
       </NavItem>}
     </Nav>
   </Navbar>);
@@ -567,7 +570,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   return (<>
             <MyNavbar />
             
-            {ctx.phase !== 'strat' && !strategyStage && <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
+            {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
               {race && techVisible && <TechMap />}
               {objVisible && <Objectives />}
               {planetsVisible && <PlanetsList />}
@@ -607,7 +610,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </CardBody>
                   </Card>
               </CardBody>
-              </Card>}
+            </Card>}
+
+            {ctx.phase === 'agenda' && <AgendaDialog G={G} ctx={ctx} playerID={playerID} PLANETS={PLANETS} onConfirm={moves.vote}/>}
             
             {strategyStage && <StrategyDialog G={G} ctx={ctx} playerID={playerID} PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}

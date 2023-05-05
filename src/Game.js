@@ -77,6 +77,7 @@ export const TIO = {
         agendaDeck: [],
         relicsDeck: [],
         passedPlayers: [],
+        TURN_ORDER: races.map((r,i)=>i),
         races
       }
     },
@@ -86,7 +87,7 @@ export const TIO = {
         start: true,
         next: 'acts',
         turn: {
-          //order: TurnOrder.ONCE,
+          order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
           minMoves: 1,
           maxMoves: 1
         },
@@ -177,7 +178,7 @@ export const TIO = {
         }
       },
       stats: {
-        next: 'strat',
+        next: ({G}) => G.tiles[0].tdata.planets[0].occupied !== undefined ? 'strat':'agenda',
         turn: {
           order: TurnOrder.ONCE,
           /*minMoves: 1,
@@ -186,6 +187,9 @@ export const TIO = {
         moves: {
           completeObjective: ({G, playerID, events}, oid, payment) => {
             completeObjective({G, playerID, oid, payment});
+            events.endTurn();
+          },
+          pass: ({ G, playerID, events }) => {
             events.endTurn();
           }
         },
@@ -634,6 +638,68 @@ export const TIO = {
                    
         },
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers,
+      },
+      agenda: {
+        next: 'strat',
+        turn: {
+          order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
+          minMoves: 2,
+          maxMoves: 2,
+          onBegin: ({ G, ctx }) => {
+            G.tiles.forEach( t => t.active = false);
+            G.races[ctx.currentPlayer].actions = [];
+            G.vote1 = G.agendaDeck.pop();
+
+            G.races.forEach( r => {r.votesMax = 0; r.voteResults = []});
+            
+            G.tiles.forEach( t => {
+              if(t.tdata.planets && t.tdata.planets.length){
+                t.tdata.planets.forEach(p => {
+                  if(p.occupied !== undefined){
+                    G.races[p.occupied].votesMax += p.influence;
+                  }
+                })
+              }
+            })
+          },
+          onEnd: ({G}) => {
+            G.tiles.forEach( t => {
+              if(t.tdata.planets && t.tdata.planets.length){
+                t.tdata.planets.forEach(p => {
+                  if(p.exhausted){
+                    p.exhausted = false;
+                  }
+                })
+              }
+            })
+          }
+        },
+        moves: {
+          vote: ({G, ctx, playerID}, result) => {
+            let votes = 0;
+            const exhaustPlanet = (exhausted, revert) => {
+              if(exhausted && exhausted.length){
+                G.tiles.forEach(tile => {
+                  const planets = tile.tdata.planets;
+
+                  if(planets && planets.length){
+                    planets.forEach( p => {
+                      if(p.occupied == playerID){
+                        if(exhausted.indexOf(p.name) > -1){
+                          p.exhausted = !revert;
+                          votes += p.influence;
+                        }
+                      }
+                    });
+                  }
+                });
+              }
+            };
+
+            exhaustPlanet(Object.keys(result.ex));
+            G.races[playerID].voteResults.push({voteRadio: result.voteRadio, votes})
+          }
+        }
       }
     },
     
