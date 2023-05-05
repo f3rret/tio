@@ -181,7 +181,7 @@
         {"id": "Terraforming Initiative", "type": "LAW", "elect": "Hazardous Planet", "for": "The influence and resource values of this planet are each increased by 1."},  
         {"id": "The Crown of Emphidia", "type": "LAW", "elect": "Player", "for": "This card is worth 1VP. If a player gains control of a planet in this player's home system they gain this card."},  
         {"id": "The Crown of Thalnos", "type": "LAW", "elect": "Player", "for": "During each round this card's owner may reroll any number of his dice. Any units that reroll but do not produce a hit are destroyed."},  
-        {"id": "Unconventional Measures", "type": "DIRECTIVE", "for": "Each player that voted 'For' draws 2 action cards. Each player that voted 'For' discards all of their action cards."},  
+        {"id": "Unconventional Measures", "type": "DIRECTIVE", "for": "Each player that voted 'For' draws 2 action cards.", "against": "Each player that voted 'For' discards all of their action cards."},  
         {"id": "Wormhole Reconstruction", "type": "LAW", "for": "Systems that contain an alpha or beta wormhole are adjacent to each other.", "against": "Each player places a command token in each system with one of their ships and either an alpha or beta wormhole."},  
         {"id": "Wormhole Research", "type": "DIRECTIVE", "for": "Each player with a ship in a system with an alpha or beta wormhole destroys all his ships in those systems, then researches a technology.", "against": "Each player who voted 'Against' removes a command token from his command sheet."}
     ],

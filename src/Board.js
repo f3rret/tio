@@ -36,6 +36,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [promisVisible, setPromisVisible] = useState(false);
   const [actionsVisible, setActionsVisible] = useState(false);
   const [relicsVisible, setRelicsVisible] = useState(false);
+  const [lawsVisible, setLawsVisible] = useState(false);
   const [selectedTile, setSelectedTile] = useState(-1);
   const [midPanelInfo, setMidPanelInfo] = useState('tokens');
   const [purgingFragments, setPurgingFragments] = useState({c: 0, h: 0, i: 0, u: 0});
@@ -230,6 +231,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     setStratUnfold(0);
     setActionsVisible(false);
     setRelicsVisible(false);
+    setLawsVisible(false);
     setPromisVisible(!promisVisible);
   }
 
@@ -237,6 +239,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     setStratUnfold(0);
     setPromisVisible(false);
     setRelicsVisible(false);
+    setLawsVisible(false);
     setActionsVisible(!actionsVisible);
   }
 
@@ -244,7 +247,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     setStratUnfold(0);
     setPromisVisible(false);
     setActionsVisible(false);
+    setLawsVisible(false);
     setRelicsVisible(!relicsVisible);
+  }
+
+  const lawsSwitch = () => {
+    setStratUnfold(0);
+    setPromisVisible(false);
+    setActionsVisible(false);
+    setRelicsVisible(false);
+    setLawsVisible(!lawsVisible);
   }
 
   const StrategyCard = ({card, idx, style}) => {
@@ -690,7 +702,19 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </ListGroupItem>)}
                   </ListGroup>}
 
+                  {lawsVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                    {G.laws.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
+                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
+                        <b>{pr.id.toUpperCase()}</b>
+                      </Button>
+                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.for}</UncontrolledTooltip> 
+                    </ListGroupItem>)}
+                  </ListGroup>}
+
                   <ButtonGroup style={{alignSelf: 'flex-end', height: '4rem', marginBottom: '1rem', position: 'absolute', bottom: 0}}>
+                    <Button id='lawsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>lawsSwitch()} 
+                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/agenda_white.png'/>
+                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#lawsSwitch'}>Agenda</UncontrolledTooltip>
                     <Button id='relicsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>relicsSwitch()} 
                       style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/relic_white.png'/>
                     <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#relicsSwitch'}>Relics</UncontrolledTooltip>

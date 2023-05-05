@@ -77,6 +77,7 @@ export const TIO = {
         agendaDeck: [],
         relicsDeck: [],
         passedPlayers: [],
+        laws: [],
         TURN_ORDER: races.map((r,i)=>i),
         races
       }
@@ -373,10 +374,18 @@ export const TIO = {
                                     const ukeys = Object.keys(result.deploy);
                                     ukeys.forEach(uk => {
                                       const ukl = uk.toLowerCase();
-                                      if(!tile.tdata.fleet[ukl]) tile.tdata.fleet[ukl] = 0;
-                                      for(var l=0; l<result.deploy[uk]; l++){
-                                        tile.tdata.fleet[ukl].push({});
+
+                                      if(['carrier', 'cruiser', 'destroyer', 'dreadnought', 'flagship', 'warsun'].indexOf(ukl) > -1){
+                                        if(!tile.tdata.fleet[ukl]) tile.tdata.fleet[ukl] = [];
+                                        for(var l=0; l<result.deploy[uk]; l++){
+                                          tile.tdata.fleet[ukl].push({});
+                                        }
                                       }
+                                      else{
+                                        if(!p.units[ukl]) p.units[ukl] = 0;
+                                        p.units[ukl] += result.deploy[uk];                                        
+                                      }
+
                                     });
                                     return true;
                                   }
@@ -635,7 +644,7 @@ export const TIO = {
           G.tiles.forEach( t => t.tdata.tokens = []);
         },
         onBegin: ({ G, random }) => {
-                   
+          G.passedPlayers = []; 
         },
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers,
       },
@@ -645,35 +654,8 @@ export const TIO = {
           order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
           minMoves: 2,
           maxMoves: 2,
-          onBegin: ({ G, ctx }) => {
-            G.tiles.forEach( t => t.active = false);
-            G.races[ctx.currentPlayer].actions = [];
-            G.vote1 = G.agendaDeck.pop();
-
-            G.races.forEach( r => {r.votesMax = 0; r.voteResults = []});
-            
-            G.tiles.forEach( t => {
-              if(t.tdata.planets && t.tdata.planets.length){
-                t.tdata.planets.forEach(p => {
-                  if(p.occupied !== undefined){
-                    G.races[p.occupied].votesMax += p.influence;
-                  }
-                })
-              }
-            })
-          },
-          onEnd: ({G}) => {
-            G.tiles.forEach( t => {
-              if(t.tdata.planets && t.tdata.planets.length){
-                t.tdata.planets.forEach(p => {
-                  if(p.exhausted){
-                    p.exhausted = false;
-                  }
-                })
-              }
-            })
-          }
         },
+
         moves: {
           vote: ({G, ctx, playerID}, result) => {
             let votes = 0;
@@ -697,9 +679,82 @@ export const TIO = {
             };
 
             exhaustPlanet(Object.keys(result.ex));
-            G.races[playerID].voteResults.push({voteRadio: result.voteRadio, votes})
-          }
-        }
+            G.races[playerID].voteResults.push({vote: result.vote, count: votes});
+
+            const agendaNumber = G.vote2 ? 2:1;
+            if(G.races.every(r => r.voteResults.length === agendaNumber)){
+              const voteResolution = {};
+              G.races.forEach(r => {
+                if(!voteResolution[r.voteResults[agendaNumber - 1].vote]){
+                  voteResolution[r.voteResults[agendaNumber - 1].vote] = 0;
+                }
+                voteResolution[r.voteResults[agendaNumber - 1].vote] += (r.voteResults[agendaNumber - 1].votes || 0);
+              });
+
+              let decision;
+              Object.keys(voteResolution).forEach(k => {
+                if(!decision) decision = k;
+                if(voteResolution[decision] < voteResolution[k]) decision = k;
+              });
+
+              G['vote' + agendaNumber].decision = decision;
+              if(G['vote' + agendaNumber].type === 'LAW'){
+                G.laws.push(G['vote' + agendaNumber]);
+              }
+            }
+
+            if(G.vote2){
+              if(G.passedPlayers.indexOf(playerID) === -1){
+                G.passedPlayers.push(playerID);
+              }
+            }
+            else if(!G.vote2){
+              G.vote2 = G.agendaDeck.pop();
+            }
+
+            
+          },
+      
+        },
+
+        onBegin: ({ G, ctx }) => {
+          G.tiles.forEach( t => t.active = false);
+          G.races[ctx.currentPlayer].actions = [];
+          G.vote1 = G.agendaDeck.pop();
+          G.vote2 = undefined;
+
+          G.races.forEach( r => {r.votesMax = 0; r.voteResults = []});
+          
+          G.tiles.forEach( t => {
+            if(t.tdata.planets && t.tdata.planets.length){
+              t.tdata.planets.forEach(p => {
+                if(p.occupied !== undefined){
+                  G.races[p.occupied].votesMax += p.influence;
+                }
+              })
+            }
+          });
+
+          G.passedPlayers = [];
+        },
+
+        onEnd: ({G}) => {
+          G.vote1 = undefined;
+          G.vote2 = undefined;
+
+          G.tiles.forEach( t => {
+            if(t.tdata.planets && t.tdata.planets.length){
+              t.tdata.planets.forEach(p => {
+                if(p.exhausted){
+                  p.exhausted = false;
+                }
+              })
+            }
+          });
+
+          G.passedPlayers = [];
+        },
+        endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       }
     },
     

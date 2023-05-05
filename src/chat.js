@@ -21,8 +21,8 @@ export const ChatBoard = ({races, sendChatMessage, chatMessages})=>{
 
     return <div style={{position: 'fixed', bottom: 0, left: 0, display: 'flex', flexDirection: 'row', alignItems: 'flex-end', marginBottom: '1rem'}}>
       <ButtonGroup vertical style={{height: 'min-content', padding: '.5rem'}}>
-        <Button size='sm' className='hoverable' tag='img' onClick={()=>{setChatVisible(!chatVisible)}} 
-          style={{borderRadius: '5px', background:'none', borderColor: 'transparent', width: '3rem'}} src='icons/agenda_white.png'/>
+        <Button size='sm' className='hoverable bi-chat-left' onClick={()=>{setChatVisible(!chatVisible)}} 
+          style={{borderRadius: '5px', fontSize: '2rem', padding: '0 1rem', background:'none', borderColor: 'transparent'}}/>
       </ButtonGroup>
       {chatVisible && <Card style={{backgroundColor: 'rgba(0,0,0,.3)', border: 'solid 1px rgba(255,255,255,.7)', width: '40rem', height: '20rem', borderRadius: '5px'}}>
         <CardBody style={{overflowY: 'auto'}}>
