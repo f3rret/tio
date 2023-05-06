@@ -179,7 +179,7 @@ export const TIO = {
         }
       },
       stats: {
-        next: ({G}) => G.tiles[0].tdata.planets[0].occupied !== undefined ? 'strat':'agenda',
+        next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
         turn: {
           order: TurnOrder.ONCE,
           /*minMoves: 1,
@@ -638,6 +638,9 @@ export const TIO = {
               G.passedPlayers.push(playerID);
             }
             events.endTurn();
+          },
+          trade: ({G, playerID}, args) => {
+            console.log(args);
           }
         },
         onEnd: ({ G }) => {

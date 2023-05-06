@@ -2,8 +2,11 @@
 import tileData from './tileData.json';
 import techData from './techData.json';
 import { neighbors } from './Grid';
+import { createContext } from 'react';
 
-export const NUM_PLAYERS = 1;
+export const NUM_PLAYERS = 4;
+
+export const StateContext = createContext(null);
 
 export const getPlayerUnits = (tiles, playerID)=> {
     const units = [];

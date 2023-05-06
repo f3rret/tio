@@ -1,11 +1,11 @@
 
-import { Card, CardImg,  CardTitle, CardBody, CardText, CardFooter, Button, Row, Col, UncontrolledCollapse, UncontrolledTooltip,
-    Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Input, Label } from 'reactstrap';
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { Card, CardImg,  CardTitle, CardBody, CardText, CardFooter, Button, ButtonGroup, Row, Col, UncontrolledCollapse, UncontrolledTooltip,
+    Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Input, Label, Badge } from 'reactstrap';
+import { useState, useMemo, useCallback, useEffect, useRef, useContext } from 'react';
 import { produce } from 'immer';
 import cardData from './cardData.json';
 import techData from './techData.json';
-import { checkObjective } from './utils';
+import { checkObjective, StateContext } from './utils';
 
 export function PaymentDialog(args) {
     
@@ -1242,3 +1242,92 @@ export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
     });
   }
 
+export const TradePanel = ({ onTrade }) => {
+
+    const { G, playerID } = useContext(StateContext);
+    const races = useMemo(() => G.races.filter(r => r.rid !== G.races[playerID].rid), [G.races, playerID]);
+    const [race, setRace] = useState(races[0]);
+    const [tradeItem, setTradeItem] = useState(undefined);
+
+    const RacePanel = ({r, selectable}) => {
+        const [buttonSwitch, setButtonSwitch] = useState('promissory');
+
+        return (
+        <Row style={{margin: 0}}>
+            <Col xs={3} style={{padding: 0}}>
+                <CardImg src={'race/'+r.rid+'.png'} />
+            </Col>
+            <Col xs={9} style={{}}>
+                <Row style={{fontFamily: 'Handel Gothic', textAlign: 'center'}}>
+                    <Col xs={2}><Button onClick={()=>selectable && setTradeItem('commodity')} tag='img' outline color='dark' src='icons/commodity_1.png' style={{padding: 0, height: '2rem'}}/></Col>
+                    <Col xs={2}><Button onClick={()=>selectable && setTradeItem('tg')} tag='img' outline color='dark' src='icons/trade_good_1.png' style={{padding: 0, height: '2rem'}}/></Col>
+                    <Col xs={2}><Button onClick={()=>selectable && setTradeItem('fragment.c')} tag='img' outline color='dark' src='icons/cultural_fragment.png' style={{padding: 0, height: '2rem'}}/></Col>
+                    <Col xs={2}><Button onClick={()=>selectable && setTradeItem('fragment.h')} tag='img' outline color='dark' src='icons/hazardous_fragment.png' style={{padding: 0, height: '2rem'}}/></Col>
+                    <Col xs={2}><Button onClick={()=>selectable && setTradeItem('fragment.i')} tag='img' outline color='dark' src='icons/industrial_fragment.png' style={{padding: 0, height: '2rem'}}/></Col>
+                    <Col xs={2}><Button onClick={()=>selectable && setTradeItem('fragment.u')} tag='img' outline color='dark' src='icons/unknown_fragment.png' style={{padding: 0, height: '2rem'}}/></Col>
+                </Row>
+                <Row style={{fontFamily: 'Handel Gothic', textAlign: 'center', marginBottom: '1rem'}}>
+                    <Col xs={2}>{(r.commodity || 0) + '/' + r.commCap}</Col>
+                    <Col xs={2}>{(r.tg || 0)}</Col>
+                    <Col xs={2}>{(r.fragments.c || 0)}</Col>
+                    <Col xs={2}>{(r.fragments.h || 0)}</Col>
+                    <Col xs={2}>{(r.fragments.i || 0)}</Col>
+                    <Col xs={2}>{(r.fragments.u || 0)}</Col>
+                </Row>
+                <Row>
+                    <Col xs={2}><Button onClick={()=>setButtonSwitch('promissory')} size='sm' color='dark' tag='img' src='icons/promissory_white.png' 
+                        style={{width: '2.5rem', height: '2rem', paddingTop: '.35rem', paddingBottom: '.35rem'}}/></Col>
+                    <Col xs={2}><Button onClick={()=>setButtonSwitch('actions')} size='sm' color='dark' tag='img' src='icons/action_card_white.png' 
+                        style={{height: '2rem'}}/></Col>
+                    <Col xs={2} style={{paddingLeft: '.5rem'}}><Button onClick={()=>setButtonSwitch('relics')} size='sm' color='dark' tag='img' src='icons/relic_white.png' 
+                        style={{height: '2rem'}}/></Col>
+                </Row>
+                {buttonSwitch === 'relics' && <Row>
+                    <Col>{r.relics.map((k, i) => <span key={i}>
+                        <Badge onClick={()=>selectable && setTradeItem('relic.'+k.id)} color='dark' id={k.id+'_trade'} className='hoverable' style={{fontSize: '.6rem'}}>{k.id.replaceAll('_', ' ')}</Badge>
+                        <UncontrolledTooltip target={'#'+k.id}>{k.effect}</UncontrolledTooltip>
+                        </span>)}
+                    </Col>
+                </Row>}
+                {buttonSwitch === 'promissory' && <Row>
+                    <Col>{r.promissory.map((k,i) => <span key={i}>
+                        <Badge onClick={()=>selectable && setTradeItem('promissory.'+k.id)} color='dark' id={k.id+'_trade'} className='hoverable' style={{fontSize: '.6rem'}}>{k.id.replaceAll('_', ' ')}</Badge>
+                        <UncontrolledTooltip target={'#'+k.id+'_trade'}>{k.effect}</UncontrolledTooltip>
+                        </span>)}
+                    </Col>
+                </Row>}
+                {buttonSwitch === 'actions' && <Row>
+                    <Col>{r.actionCards.map((k, i) => <span key={i}>
+                        <Badge onClick={()=>selectable && setTradeItem('action.'+k.id)} color='dark' id={k.id+'_trade'} className='hoverable' style={{fontSize: '.6rem'}}>{k.id.replaceAll('_', ' ')}</Badge>
+                        <UncontrolledTooltip target={'#'+k.id}>{k.description}</UncontrolledTooltip>
+                        </span>)}
+                    </Col>
+                </Row>}
+            </Col>
+        </Row>)}
+
+    return <div style={{display: 'flex', flexDirection: 'row', alignItems: 'flex-start'}}>
+        <ButtonGroup vertical style={{width: '10%', paddingRight: '.5rem'}}>
+            {races.map((r, i) => <Button onClick={()=>setRace(r)} style={{padding: '.25rem',marginBottom: '.5rem', minHeight: '2.5rem'}} color='dark' key={i} tag='img' src={'/race/icons/' + r.rid + '.png'}/>)}
+        </ButtonGroup>
+        <div style={{width: '90%'}}>
+            <RacePanel r={G.races[playerID]} selectable={true} />
+            {races.length > 0 && <>
+                <Row style={{margin: '1rem'}}>
+                    <Col style={{textAlign: 'right', alignSelf: 'center'}}>
+                        {tradeItem && <b>{tradeItem === 'commodity' ? '1 commodity' : tradeItem === 'tg' ? '1 trade good' : 
+                        tradeItem === 'fragment.c' ? '1 cultural fragment' :
+                        tradeItem === 'fragment.h' ? '1 hazardous fragment' :
+                        tradeItem === 'fragment.i' ? '1 industrial fragment' :
+                        tradeItem === 'fragment.u' ? '1 unknown fragment' :
+                        tradeItem.substr(tradeItem.indexOf('.') + 1).replaceAll('_', ' ') }</b>}
+                    </Col>
+                    <Col xs={3} style={{textAlign: 'center'}}>
+                        <Button onClick={()=>onTrade({tradeItem, rid: race.rid})} disabled={!tradeItem} className='bi-arrow-down-circle' style={{fontSize: '1rem'}} size='sm' color='success'>{' Send'}</Button>
+                    </Col>
+                </Row>
+                <RacePanel r={race}/>
+            </>}
+        </div>
+    </div>
+}

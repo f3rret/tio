@@ -4,10 +4,10 @@ import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { Navbar, Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle,  UncontrolledTooltip,/*UncontrolledAccordion, 
   AccordionItem, AccordionBody, AccordionHeader,*/ CardBody,
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont } from 'reactstrap';
-import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList } from './dialogs';
+import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList, TradePanel } from './dialogs';
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
-import { checkObjective } from './utils';
+import { checkObjective, StateContext } from './utils';
 import { lineTo } from './Grid';
 import { ChatBoard } from './chat';
 import { produce } from 'immer';
@@ -19,10 +19,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
   const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
 
-
   const race = useMemo(() => G.races[playerID], [G.races, playerID]);
   const [objVisible, setObjVisible] = useState(false);
   const [techVisible, setTechVisible] = useState(false);
+  const [tradeVisible, setTradeVisible] = useState(false)
   const [planetsVisible, setPlanetsVisible] = useState(false);
   const [advUnitView, setAdvUnitView] = useState(undefined);
   const [payloadCursor, setPayloadCursor] = useState({i:0, j:0});
@@ -143,9 +143,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             <h5>Planets</h5>
           </NavItem>
         </Nav>
-        <Nav>
+        <Nav style={{marginRight: '2rem'}}>
           <NavItem onClick={()=>setUnitsVisible(!unitsVisible)} style={{cursor: 'pointer'}}>
             <h5>Units</h5>
+          </NavItem>
+        </Nav>
+        <Nav>
+          <NavItem onClick={()=>setTradeVisible(!tradeVisible)} style={{cursor: 'pointer'}}>
+            <h5>Trade</h5>
           </NavItem>
         </Nav>
     </div>
@@ -208,6 +213,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
       <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Units</h6></CardTitle>
       <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}/>
+    </Card>
+  );
+
+  const TradeCard = () => (
+    <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Trade</h6></CardTitle>
+      <TradePanel G={G} playerID={playerID} onTrade={moves.trade}/>
     </Card>
   );
 
@@ -579,16 +591,19 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }, [PLANETS, sendChatMessage]);
   
-  return (<>
+  return (
+          <StateContext.Provider value={{G, playerID}}>      
             <MyNavbar />
-            
-            {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
-              {race && techVisible && <TechMap />}
-              {objVisible && <Objectives />}
-              {planetsVisible && <PlanetsList />}
-              {race && unitsVisible && <UnitsCard />}
+            <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
+              {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <>
+                {race && techVisible && <TechMap />}
+                {objVisible && <Objectives />}
+                {planetsVisible && <PlanetsList />}
+                {race && unitsVisible && <UnitsCard />}
+              </>}
+              {race && tradeVisible && <TradeCard />}
               <ChatBoard races={G.races} sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
-            </CardColumns>}
+            </CardColumns>
 
             {ctx.phase === 'strat' && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '50%', position: 'absolute', margin: '10rem'}}>
               <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>Strategy pick</h3></CardTitle>
@@ -845,7 +860,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
             {payObj !== null && <PaymentDialog oid={payObj} G={G} race={race} planets={PLANETS} 
                             isOpen={payObj !== null} toggle={(payment)=>togglePaymentDialog(payment)}/>}
-          </>)
+         
+          </StateContext.Provider>)
 }
 
 const SpeakerToken = () => {
