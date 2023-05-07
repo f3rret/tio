@@ -191,54 +191,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }
 
-  const Objectives = () => (
-    <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Objectives <span style={{float: 'right'}}>{'You have ' + VP + ' VP'}</span></h6></CardTitle>
-      <ObjectivesList G={G} playerID={playerID} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective:()=>{}}/>
-    </Card>
-  );
-
-  const PlanetsList = () => (
-    <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Planets</h6></CardTitle>
-        <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
-          <Cont style={{border: 'none'}}>
-            {<PlanetsRows PLANETS={PLANETS} />}
-          </Cont>
-        </div>
-    </Card>
-  );
-
-  const UnitsCard = () => (
-    <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Units</h6></CardTitle>
-      <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}/>
-    </Card>
-  );
-
-  const TradeCard = () => (
-    <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Trade</h6></CardTitle>
-      <TradePanel G={G} playerID={playerID} onTrade={moves.trade}/>
-    </Card>
-  );
-
-  const TechMap = () => {
-
-    return (
-    <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '1rem', position: 'relative', width: '70rem'}}>
-      <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Technologies map</h6></CardTitle>
-      
-      <div style={{display: 'flex', justifyContent: 'space-between'}}>
-        {getTechType('propulsion', race)}
-        {getTechType('biotic', race)}
-        {getTechType('warfare', race)}
-        {getTechType('cybernetic', race)}
-        {getTechType('unit', race)}
-      </div>
-    </Card>)
-  };
-
   const promissorySwitch = () => {
     setStratUnfold(0);
     setActionsVisible(false);
@@ -596,13 +548,40 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             <MyNavbar />
             <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <>
-                {race && techVisible && <TechMap />}
-                {objVisible && <Objectives />}
-                {planetsVisible && <PlanetsList />}
-                {race && unitsVisible && <UnitsCard />}
+                {race && techVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '1rem', position: 'relative', width: '70rem'}}>
+                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Technologies map</h6></CardTitle>
+                  
+                  <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                    {getTechType('propulsion', race)}
+                    {getTechType('biotic', race)}
+                    {getTechType('warfare', race)}
+                    {getTechType('cybernetic', race)}
+                    {getTechType('unit', race)}
+                  </div>
+                </Card>}
+                {objVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Objectives <span style={{float: 'right'}}>{'You have ' + VP + ' VP'}</span></h6></CardTitle>
+                  <ObjectivesList onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective:()=>{}}/>
+                </Card>}
+                {planetsVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Planets</h6></CardTitle>
+                    <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
+                      <Cont style={{border: 'none'}}>
+                        {<PlanetsRows PLANETS={PLANETS} />}
+                      </Cont>
+                    </div>
+                </Card>}
+                {race && unitsVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Units</h6></CardTitle>
+                  <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}/>
+                </Card>}
               </>}
-              {race && tradeVisible && <TradeCard />}
-              <ChatBoard races={G.races} sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
+              {race && tradeVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Trade</h6></CardTitle>
+                <TradePanel onTrade={moves.trade}/>
+              </Card>}
+
+              <ChatBoard sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
             </CardColumns>
 
             {ctx.phase === 'strat' && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '50%', position: 'absolute', margin: '10rem'}}>
@@ -684,16 +663,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               <CardColumns style={{width: '20rem', position: 'relative', display:'flex', flexDirection: 'column', justifyContent: 'space-between', paddingRight: '1rem'}}>
                 <div>
                   {race && race.strategy.length > 0 && 
-                    race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)
-                  }
-                  
+                    race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
                 </div>
                 <div style={{display: 'flex', flexDirection: 'column', paddingBottom: '4rem'}}>
                   {promisVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {race.promissory.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                       <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id}>
-                        <b>{pr.id.replaceAll('_', ' ')}</b>
-                        {pr.racial ? <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.4rem'}} src={'race/icons/' + race.rid + '.png'} />:''}
+                        {pr.sold ? <img alt='to other player' style={{width: '1rem', position: 'absolute', left: '.5rem', top: '.4rem'}} src={'race/icons/' + pr.sold + '.png'} />:''}
+                        <b style={{textDecoration: pr.sold ? 'line-through':''}}>{pr.id.replaceAll('_', ' ')}</b>
+                        {pr.racial && !pr.owner ? <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.4rem'}} src={'race/icons/' + race.rid + '.png'} />:''}
+                        {pr.owner ? <img alt='from other player' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.4rem'}} src={'race/icons/' + pr.owner + '.png'} />:''}
                       </Button>
                       <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id}>{pr.effect}</UncontrolledTooltip> 
                     </ListGroupItem>)}
@@ -728,7 +707,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
                   <ButtonGroup style={{alignSelf: 'flex-end', height: '4rem', marginBottom: '1rem', position: 'absolute', bottom: 0}}>
                     <Button id='lawsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>lawsSwitch()} 
-                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/agenda_white.png'/>
+                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.6rem 1.2rem', width: '5rem'}} src='icons/agenda_white.png'/>
                     <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#lawsSwitch'}>Agenda</UncontrolledTooltip>
                     <Button id='relicsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>relicsSwitch()} 
                       style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/relic_white.png'/>
@@ -737,7 +716,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/action_card_white.png'/>
                     <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#actionsSwitch'}>Actions</UncontrolledTooltip>
                     <Button id='promissorySwitch' size='sm' className='hoverable' tag='img' onClick={()=>promissorySwitch()} 
-                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem'}} src='icons/promissory_white.png'/>
+                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.75rem'}} src='icons/promissory_white.png'/>
                     <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#promissorySwitch'}>Promissory</UncontrolledTooltip>
                   </ButtonGroup>
                 </div>

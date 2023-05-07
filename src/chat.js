@@ -1,9 +1,10 @@
 import { Card, CardBody, CardFooter, Input, ButtonGroup, Button } from 'reactstrap';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useContext } from 'react';
+import { StateContext } from './utils';
 
+export const ChatBoard = ({sendChatMessage, chatMessages})=>{
 
-export const ChatBoard = ({races, sendChatMessage, chatMessages})=>{
-
+    const { G } = useContext(StateContext);
     const [msg, setMsg] = useState('');
     const [chatVisible, setChatVisible] = useState(false);
     const onKeyDown = useCallback((e)=> {
@@ -16,8 +17,8 @@ export const ChatBoard = ({races, sendChatMessage, chatMessages})=>{
         setMsg(e.target.value)
     }, [])
     const messages = useMemo(()=>{
-        return [...chatMessages].slice(-20).reverse().map((m, i) => <p key={i} style={{margin: 0}}><b>{races[m.sender].name + ' '}</b>{m.payload}</p>)
-    }, [races,chatMessages]);
+        return [...chatMessages].slice(-20).reverse().map((m, i) => <p key={i} style={{margin: 0}}><b>{G.races[m.sender].name + ' '}</b>{m.payload}</p>)
+    }, [G.races,chatMessages]);
 
     return <div style={{position: 'fixed', bottom: 0, left: 0, display: 'flex', flexDirection: 'row', alignItems: 'flex-end', marginBottom: '1rem'}}>
       <ButtonGroup vertical style={{height: 'min-content', padding: '.5rem'}}>

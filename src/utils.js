@@ -4,7 +4,7 @@ import techData from './techData.json';
 import { neighbors } from './Grid';
 import { createContext } from 'react';
 
-export const NUM_PLAYERS = 4;
+export const NUM_PLAYERS = 3;
 
 export const StateContext = createContext(null);
 
