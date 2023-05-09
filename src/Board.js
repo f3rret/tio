@@ -10,6 +10,7 @@ import cardData from './cardData.json';
 import { checkObjective, StateContext } from './utils';
 import { lineTo } from './Grid';
 import { ChatBoard } from './chat';
+import { SpaceCombat } from './combat';
 import { produce } from 'immer';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
@@ -170,7 +171,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       <NavItem style={{marginRight: '1rem'}}>
         {ctx.phase === 'acts' && <>
           <Button disabled={ctx.numMoves == 0} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}><h5 style={{margin: '.5rem'}}>Undo</h5></Button>
-          <Button color='warning' onClick={()=>events.endTurn()}><h5 style={{margin: '.5rem'}}>End turn</h5></Button>
+          {!G.spaceCannons && <Button color='warning' onClick={()=>events.endTurn()}><h5 style={{margin: '.5rem'}}>End turn</h5></Button>}
+          {G.spaceCannons && <Button color='warning' onClick={()=>moves.spaceCombat()}><h5 style={{margin: '.5rem'}}>Space cannon</h5></Button>}
         </>}
         {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && <Button color='dark' onClick={()=>moves.pass()}><h5 style={{margin: '.5rem'}}>Pass</h5></Button>}
       </NavItem>}
@@ -244,6 +246,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const strategyStage = useMemo(()=> {
     return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && G.strategy !== undefined
   }, [G, ctx]);
+
+  const spaceCombat = useMemo(()=> {
+    return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && ctx.activePlayers[playerID] === 'spaceCannonAttack'
+  }, [ctx, playerID]);
 
   const AddToken = ({tag}) => {
     return (<div size='sm' style={{position: 'absolute', top: 0, right: 0, borderTopRightRadius: '4px', backgroundColor: 'rgba(242, 183, 7, 1)'}}><h5 style={{margin: '.25rem .5rem'}}>+</h5></div>);
@@ -544,7 +550,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [PLANETS, sendChatMessage]);
   
   return (
-          <StateContext.Provider value={{G, playerID}}>      
+          <StateContext.Provider value={{G, ctx, playerID}}>      
             <MyNavbar />
             <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <>
@@ -620,8 +626,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
             {ctx.phase === 'agenda' && <AgendaDialog G={G} ctx={ctx} playerID={playerID} PLANETS={PLANETS} onConfirm={moves.vote}/>}
             
-            {strategyStage && <StrategyDialog G={G} ctx={ctx} playerID={playerID} PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
+            {strategyStage && <StrategyDialog PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}
+            
+            {spaceCombat && <SpaceCombat />}
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport>

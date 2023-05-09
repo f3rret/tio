@@ -320,7 +320,7 @@
         "prereq": { },
         "cost": 2,
         "combat": 7,
-        "move": 2,
+        "move": 3, 
         "sustain": false,
         "bombardment": false,
         "barrage": false,

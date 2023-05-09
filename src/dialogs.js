@@ -147,8 +147,9 @@ export const AgendaDialog = ({ G, ctx, playerID, PLANETS, onConfirm }) => {
 
 }
 
-export const StrategyDialog = ({ G, ctx, playerID, PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTile, onComplete, onDecline }) => {
+export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTile, onComplete, onDecline }) => {
 
+    const {G, ctx, playerID} = useContext(StateContext);
     const sid = G.strategy;
     const isMine = ctx.currentPlayer === playerID;
     let lastStep = 1;

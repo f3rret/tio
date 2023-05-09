@@ -1,6 +1,6 @@
 /* eslint eqeqeq: 0 */
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
-import { HexGrid } from './Grid';
+import { HexGrid, neighbors } from './Grid';
 import tileData from './tileData.json';
 import raceData from './raceData.json';
 import techData from './techData.json';
@@ -453,19 +453,82 @@ export const TIO = {
                   }
                 }
               },
+              spaceCannonAttack: {
+                minMoves: 1,
+                maxMoves: 1,
+                moves: {
+                 fire: ({G, ctx}) => {
+
+                 } 
+                },
+              },
+              spaceCombat: {
+                moves: {
+                  antifighterBarrage: ({G, ctx}) => {
+
+                  }
+                }
+              }
             },
             onBegin: ({ G, ctx }) => {
               G.tiles.forEach( t => t.active = false);
               G.races[ctx.currentPlayer].actions = [];
             },
             onMove: ({ G, ctx }) => {
-              
+              //space cannon
+              if(!G.spaceCannons){
+                const activeTile = G.tiles.find(t => t.active === true);
+
+                if(activeTile && (activeTile.tdata.attacker || (activeTile.tdata.fleet && activeTile.tdata.occupied === ctx.currentPlayer))){
+                  let spaceCannons = {};
+                  //enemy's pds at same tile
+                  if(activeTile.tdata.planets){
+                    activeTile.tdata.planets.forEach(p =>{ 
+                      if(p.occupied !== undefined && p.occupied != ctx.currentPlayer && p.units && p.units.pds){
+                        spaceCannons[p.occupied] = 'spaceCannonAttack';
+                      }
+                    });
+                  }
+
+                  //cannon in adjacent systems
+                  const races = G.races.filter((r, i) => i != ctx.currentPlayer && r.technologies.find(t => t.id === 'PDS').spaceCannon.range > 1).map(r => r.rid);
+
+                  if(races.length > 0){
+                    const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
+                    neighs.forEach(n => {
+                      if(n.tdata.planets){
+                        n.tdata.planets.forEach(p =>{ 
+                          if(races.indexOf(p.occupied) > -1 && p.units && p.units.pds){
+                            spaceCannons[p.occupied] = 'spaceCannonAttack';
+                          }
+                        });
+                      }
+                    });
+                  }
+                
+                  if(spaceCannons && Object.keys(spaceCannons).length > 0){
+                    G.spaceCannons = spaceCannons;
+                  }
+                }
+                
+              }
+
             },
-            onEnd: ({G}) => {
+            onEnd: ({G, ctx, events}) => {
               G.strategy = undefined;
             }
         },
         moves: {
+          spaceCombat: ({G, playerID, events}) => {
+            if(G.spaceCannons && Object.keys(G.spaceCannons).length > 0){
+              const sc = {};
+              Object.keys(G.spaceCannons).forEach(pid => {
+                sc[pid] = {stage: 'spaceCannonAttack'}
+              });
+              G.spaceCannons = undefined;
+              events.setActivePlayers({value: sc, currentPlayer: {stage: 'spaceCannonAttack'}});
+            }
+          },
           purgeFragments: ({G, playerID}, purgingFragments) => {
             if(purgingFragments.c + purgingFragments.u !== 3 && purgingFragments.h + purgingFragments.u !== 3 && purgingFragments.i + purgingFragments.u !== 3){
               console.log('not enough fragments');
@@ -607,15 +670,28 @@ export const TIO = {
             const dst = G.tiles.find( t => t.active === true );
             const src = G.tiles[args.tile];
             const unit = src.tdata.fleet[args.unit][args.shipIdx];
+            let isAttack = false;
 
             if(dst && src && unit){
               if( dst.tdata.occupied != playerID ){
-                dst.tdata.occupied = playerID;
+                if(dst.tdata.fleet && Object.keys(dst.tdata.fleet).length > 0){
+                  isAttack = true;
+                }
+                else{
+                  dst.tdata.occupied = playerID;
+                }
               }
 
-              if(!dst.tdata.fleet) dst.tdata.fleet = {};
-              if(!dst.tdata.fleet[args.unit]) dst.tdata.fleet[args.unit] = [];
-              dst.tdata.fleet[args.unit].push(unit);
+              if(!isAttack){
+                if(!dst.tdata.fleet) dst.tdata.fleet = {};
+                if(!dst.tdata.fleet[args.unit]) dst.tdata.fleet[args.unit] = [];
+                dst.tdata.fleet[args.unit].push(unit);
+              }
+              else{
+                if(!dst.tdata.attacker) dst.tdata.attacker = {};
+                if(!dst.tdata.attacker[args.unit]) dst.tdata.attacker[args.unit] = [];
+                dst.tdata.attacker[args.unit].push(unit);
+              }
 
               G.tiles[args.tile].tdata.fleet[args.unit].splice(args.shipIdx, 1);
               if(G.tiles[args.tile].tdata.fleet[args.unit].length === 0){
