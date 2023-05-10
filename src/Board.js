@@ -248,7 +248,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [G, ctx]);
 
   const spaceCombat = useMemo(()=> {
-    return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && ctx.activePlayers[playerID] === 'spaceCannonAttack'
+    return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && (ctx.activePlayers[playerID] === 'spaceCannonAttack' || ctx.activePlayers[playerID] === 'spaceCannonAttack_step2')
   }, [ctx, playerID]);
 
   const AddToken = ({tag}) => {
@@ -550,7 +550,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [PLANETS, sendChatMessage]);
   
   return (
-          <StateContext.Provider value={{G, ctx, playerID}}>      
+          <StateContext.Provider value={{G, ctx, playerID, moves}}>      
             <MyNavbar />
             <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <>

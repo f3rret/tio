@@ -66,6 +66,10 @@ export const TIO = {
       });
 
       const explorationDecks = {cultural:[], hazardous:[], industrial:[], frontier:[]};
+      const dice= {};
+      for(let i=0; i<NUM_PLAYERS; i++){
+        dice[i] = {};
+      }
 
       return {
         speaker: races[0].rid, 
@@ -79,7 +83,8 @@ export const TIO = {
         passedPlayers: [],
         laws: [],
         TURN_ORDER: races.map((r,i)=>i),
-        races
+        races,
+        dice
       }
     },
 
@@ -454,11 +459,22 @@ export const TIO = {
                 }
               },
               spaceCannonAttack: {
-                minMoves: 1,
-                maxMoves: 1,
                 moves: {
-                 fire: ({G, ctx}) => {
-
+                 rollDice: ({G, ctx, playerID, random}, unit, count) => {
+                  const dice = random.D10(count || 1);
+                  G.dice = produce(G.dice, draft => {
+                    draft[playerID][unit] = dice;
+                  });
+                 },
+                 nextStep: ({events}) => {
+                  events.setStage('spaceCannonAttack_step2');
+                 } 
+                },
+              },
+              spaceCannonAttack_step2: {
+                moves: {
+                 nextStep: ({playerID, events}) => {
+                  events.setStage('spaceCannonAttack_step2');
                  } 
                 },
               },
@@ -476,7 +492,7 @@ export const TIO = {
             },
             onMove: ({ G, ctx }) => {
               //space cannon
-              if(!G.spaceCannons){
+              if(!G.spaceCannons && !ctx.activePlayers){
                 const activeTile = G.tiles.find(t => t.active === true);
 
                 if(activeTile && (activeTile.tdata.attacker || (activeTile.tdata.fleet && activeTile.tdata.occupied === ctx.currentPlayer))){
