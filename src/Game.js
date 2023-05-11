@@ -379,16 +379,19 @@ export const TIO = {
                                     const ukeys = Object.keys(result.deploy);
                                     ukeys.forEach(uk => {
                                       const ukl = uk.toLowerCase();
-
+                                      var l = 0;
                                       if(['carrier', 'cruiser', 'destroyer', 'dreadnought', 'flagship', 'warsun'].indexOf(ukl) > -1){
                                         if(!tile.tdata.fleet[ukl]) tile.tdata.fleet[ukl] = [];
-                                        for(var l=0; l<result.deploy[uk]; l++){
+                                        for(l=0; l<result.deploy[uk]; l++){
                                           tile.tdata.fleet[ukl].push({});
                                         }
                                       }
                                       else{
-                                        if(!p.units[ukl]) p.units[ukl] = 0;
-                                        p.units[ukl] += result.deploy[uk];                                        
+                                        if(!p.units[ukl]) p.units[ukl] = [];
+                                        for(l=0; l<result.deploy[uk]; l++){
+                                          p.units[ukl].push({});
+                                        }
+                                        //p.units[ukl] += result.deploy[uk];                                        
                                       }
 
                                     });
@@ -473,9 +476,59 @@ export const TIO = {
               },
               spaceCannonAttack_step2: {
                 moves: {
-                 nextStep: ({playerID, events}) => {
-                  events.setStage('spaceCannonAttack_step2');
+                 nextStep: ({G, playerID, ctx, events}, hits) => {
+                  let fleet;
+                  const activeTile = G.tiles.find(t => t.active === true);
+                   
+                  if((activeTile.tdata.occupied !== ctx.currentPlayer) && activeTile.tdata.attacker){
+                      fleet = activeTile.tdata.attacker;
+                  }
+                  else{
+                      fleet = activeTile.tdata.fleet;
+                  }
+
+                  if(playerID === ctx.currentPlayer){
+                    hits && Object.keys(hits).forEach(unit => {
+                      if(hits[unit].length){
+                        hits[unit].forEach((car, idx) => {
+                          if(car.hit === true){
+                            fleet[unit][idx].hit = true;
+                          }
+  
+                          if(car.payload && car.payload.length){
+                            car.payload.forEach(p => {
+                              if(p.hit === true){
+                                fleet[unit][idx].payload[p.pidx].hit = true;
+                              }
+                            })
+                          }
+                        });
+                      }  
+                    });
+                  }
+
+                  if(Object.keys(ctx.activePlayers).length === 1){
+                    Object.keys(fleet).forEach(f => {
+                      fleet[f].forEach((car, i) => {
+                        if(car.hit === true){
+                          delete fleet[f][i];
+                        }
+                        else if(car.payload && car.payload.length){
+                          car.payload.forEach((p, j) => {
+                            if(p.hit === true){
+                              delete fleet[f][i].payload[j];
+                            }
+                          });
+                          car.payload = car.payload.filter(p => p);
+                        }
+                      });
+                      fleet[f] = fleet[f].filter(car => car);
+                    });
+                  }
+                 
+                  events.endStage();
                  } 
+
                 },
               },
               spaceCombat: {
@@ -491,6 +544,7 @@ export const TIO = {
               G.races[ctx.currentPlayer].actions = [];
             },
             onMove: ({ G, ctx }) => {
+
               //space cannon
               if(!G.spaceCannons && !ctx.activePlayers){
                 const activeTile = G.tiles.find(t => t.active === true);
@@ -528,6 +582,9 @@ export const TIO = {
                 }
                 
               }
+              else if(G.spaceCannons && ctx.activePlayers && ctx.activePlayers[ctx.currentPlayer] === 'spaceCannonAttack'){
+                delete G['spaceCannons'];
+              }
 
             },
             onEnd: ({G, ctx, events}) => {
@@ -541,7 +598,7 @@ export const TIO = {
               Object.keys(G.spaceCannons).forEach(pid => {
                 sc[pid] = {stage: 'spaceCannonAttack'}
               });
-              G.spaceCannons = undefined;
+              
               events.setActivePlayers({value: sc, currentPlayer: {stage: 'spaceCannonAttack'}});
             }
           },
@@ -602,9 +659,9 @@ export const TIO = {
                       to[dst.i].payload = new Array(technology.capacity);
                     }
                     if(!to[dst.i].payload[dst.j]){
-                      G.tiles[src.tile].tdata.planets[src.planet].units[src.unit]--;
-                      if(G.tiles[src.tile].tdata.planets[src.planet].units[src.unit] === 0) delete G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
-                      G.tiles[src.tile].tdata.fleet[dst.unit][dst.i].payload[dst.j] = src.unit;
+                      const unit = {...G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].pop(), id: src.unit};
+                      if(G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].length === 0) delete G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
+                      G.tiles[src.tile].tdata.fleet[dst.unit][dst.i].payload[dst.j] = unit;
                     }
                   }
                 }
@@ -621,12 +678,13 @@ export const TIO = {
               if(!to.units){
                 to.units = {}
               }
-              if(!to.units[from[src.i].payload[src.j]]){
-                to.units[from[src.i].payload[src.j]]=0;
+              if(!to.units[from[src.i].payload[src.j].id]){
+                to.units[from[src.i].payload[src.j].id] = [];
               }
 
-              to.units[from[src.i].payload[src.j]]++;
-              G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload[src.j] = undefined;
+              const unit = G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload[src.j];
+              to.units[from[src.i].payload[src.j].id].push(unit);
+              delete G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload[src.j];
 
               if(!to.occupied && to.trait){
                 const explore = G.explorationDecks[to.trait].pop();
@@ -992,173 +1050,3 @@ const completeObjective = ({G, playerID, oid, payment}) => {
 
 }
 
-
-/*moveFleet: ({ G, playerID }, src, squadron) => {
-            const dst = G.tiles.find( t => t.active === true );
-            
-            if(!src || !src.tdata.fleet){
-              console.log('no fleet');
-              return INVALID_MOVE;
-            }
-
-            if(src.tdata.occupied != playerID){
-              console.log('not fleet owner');
-              return INVALID_MOVE;
-            }
-
-            if(!dst.tdata.occupied){
-              dst.tdata.occupied = playerID;
-            }
-            
-            if(!squadron){
-              squadron = src.tdata.fleet;
-              src.tdata.fleet = {};
-            }
-            else{
-              Object.keys(squadron).forEach( s => {
-                if(!src.tdata.fleet[s]){
-                  delete squadron[s];
-                  return;
-                }
-                else if(src.tdata.fleet[s] < squadron[s]){
-                  squadron[s] = src.tdata.fleet[s];
-                }
-
-                src.tdata.fleet[s] -= squadron[s];
-                if(src.tdata.fleet[s] < 1){
-                  delete src.tdata.fleet[s];
-                }
-              });
-            }
-
-            if(!src.tdata.fleet || !Object.keys(src.tdata.fleet).length){
-              src.tdata.occupied = undefined;
-            }
-
-            if(dst.tdata.occupied != playerID){
-              Object.keys(squadron).forEach( u => {
-                if(!dst.tdata.fleet[u]){
-                  dst.tdata.fleet[u] = 0;
-                }
-
-                if(squadron[u] === dst.tdata.fleet[u]){
-                  delete squadron[u];
-                  delete dst.tdata.fleet[u];
-                }
-                else if(squadron[u] < dst.tdata.fleet[u]){
-                  dst.tdata.fleet[u] -= squadron[u];
-                  delete squadron[u];
-                }
-                else{
-                  squadron[u] -= dst.tdata.fleet[u];
-                  delete dst.tdata.fleet[u];
-                }
-              });
-
-              if(dst.tdata.fleet && Object.keys(dst.tdata.fleet).length > 0){
-                return;
-              }
-              else{
-                dst.tdata.fleet = squadron;
-                dst.tdata.occupied = playerID;
-              }
-            }
-            else{
-              if(!dst.tdata.fleet){
-                dst.tdata.fleet = {};
-              }
-
-              Object.keys(squadron).forEach( u => {
-                if(!dst.tdata.fleet[u]){
-                  dst.tdata.fleet[u] = 0;
-                }
-                dst.tdata.fleet[u] += squadron[u];
-              });
-            }
-
-          },*/
-          /*produceUnits: ({ G, playerID }, units, planetId) => {
-
-            const tile = G.tiles.find( t => t.active === true);
-            const pid = planetId || 0;
-
-            if(!tile){
-              console.log('no active tile');
-              return INVALID_MOVE;
-            }
-
-            if(tile.tdata.occupied != playerID){
-              console.log('not owner');
-              return INVALID_MOVE;
-            }
-
-            if(!units){
-              console.log('no units');
-              return INVALID_MOVE;
-            }
-
-            if(!tile.tdata.planets[pid] || !tile.tdata.planets[pid].units || !tile.tdata.planets[pid].units.spacedock){
-              console.log('no production unit');
-              return INVALID_MOVE;
-            }
-
-            const fleet = ['carrier', 'fighter', 'cruiser', 'dreadnought', 'destroyer', 'warsun', 'flagship'];
-            const ground = ['infantry', 'mech', 'pds'];
-
-            Object.keys(units).forEach( u => {
-              if( fleet.indexOf(u) > -1 ){
-                if(!tile.tdata.fleet[u]){
-                  tile.tdata.fleet[u] = 0;
-                }
-                tile.tdata.fleet[u] += units[u];
-              }
-              else if( ground.indexOf(u) > -1 ){
-                if(!tile.tdata.planets[pid].units[u]){
-                  tile.tdata.planets[pid].units[u] = 0;
-                }
-                tile.tdata.planets[pid].units[u] += units[u];
-              }
-            });
-
-          },*/
-          /*learnTechnology: ({ G, playerID }, techId) => {
-            const technology = techData.find( t => t.id === techId);
-
-            if(!technology){
-              console.log('no such technology');
-              return INVALID_MOVE;
-            }
-
-            const knownTechs = G.races[playerID].knownTechs;
-
-            if(knownTechs.indexOf(techId) > -1){
-              console.log('already learned');
-              return INVALID_MOVE;
-            }
-
-            if(technology.prereq){
-              const available = { 'warfare': 0, 'biotic': 0, 'cybernetic': 0, 'propulsion': 0 };
-              knownTechs.forEach( t => {
-                const av = techData.find( a => a.id === t);
-                if(av){
-                  available[av.type]++;
-                }
-              });
-
-              const prereq = Object.keys(technology.prereq);
-              for(var i=0; i<prereq.length; i++){
-                const p = prereq[i];
-                if( technology.prereq[p] > available[p] ){
-                  console.log('require ' + p + ' ' + technology.prereq[p]);
-                  return INVALID_MOVE;
-                }
-              }
-            }
-
-            knownTechs.push(techId);
-            
-            if(technology.type === 'unit' && technology.upgrade === true){
-              const idx = G.races[playerID].technologies.findIndex(t => t.id + '2' === techId);
-              if(idx > -1) G.races[playerID].technologies[idx] = {...technology, upgrade: false, alreadyUpgraded: true, id: G.races[playerID].technologies[idx].id};
-            }
-          },*/
