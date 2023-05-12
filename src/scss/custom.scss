@@ -49,6 +49,41 @@ h3, h4, h5, h6 {
     box-shadow: rgba(0,0,0,.35) -1px 1px 3px 3px!important;
 }
 
+.sustain_ability{
+    position: relative;
+}
+
+.sustain_ability:before{
+    content: '\f536';
+    font-family: bootstrap-icons !important;
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: yellowgreen;
+}
+
+.hit_assignedtrue, .hit_assigned1, .hit_assigned2{
+    position: relative;
+}
+
+.hit_assigned1:after, .hit_assignedtrue:after{
+    content: '\f7f6';
+    font-family: bootstrap-icons !important;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    color: red;
+}
+
+.hit_assigned2:after{
+    content: '\f7f6\f7f6';
+    font-family: bootstrap-icons !important;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    color: red;
+}
+
 /*.modal-content{
     background-color: rgba(74, 111, 144, 0.75)!important
 }*/

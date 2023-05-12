@@ -85,7 +85,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             if(p.units){
               Object.keys(p.units).forEach( k => {
                 if(!units[k]) units[k] = 0;
-                units[k] += p.units[k];
+                units[k] += Array.isArray(p.units[k]) ? p.units[k].length:p.units[k];
               });
             }
           }

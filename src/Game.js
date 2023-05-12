@@ -469,8 +469,47 @@ export const TIO = {
                     draft[playerID][unit] = dice;
                   });
                  },
-                 nextStep: ({events}) => {
-                  events.setStage('spaceCannonAttack_step2');
+                 nextStep: ({G, events, ctx, playerID}) => {
+
+                  const getHits = () => {
+                    let result = 0;
+                    if(G.spaceCannons !== undefined){
+                      Object.keys(G.spaceCannons).forEach(pid => {
+                          if(G.dice[pid]){
+                              Object.keys(G.dice[pid]).forEach(unit => {
+                                  const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                                  if(technology && technology.spaceCannon){
+                                      result += G.dice[pid][unit].filter(die => die >= technology.spaceCannon.value).length;
+                                  }
+                              });
+                          }
+                      });
+                    }
+                    return result;
+                  }
+
+                  if(ctx.currentPlayer !== playerID){
+                    if(Object.keys(ctx.activePlayers).filter(s => ctx.activePlayers[s] === 'spaceCannonAttack').length === 2){ //me and active player
+                      //pass next step if no hits
+                      if(getHits() === 0){
+                        events.endStage();
+                        return;
+                      }
+                    }
+                   
+                    events.setStage('spaceCannonAttack_step2');
+                  }
+                  else{
+                    if(Object.keys(ctx.activePlayers).filter(s => ctx.activePlayers[s] === 'spaceCannonAttack').length === 1){
+                      if(getHits() === 0){
+                        delete G['spaceCannons'];
+                        events.setActivePlayers({});
+                      }
+                      else{
+                        events.setStage('spaceCannonAttack_step2');
+                      }
+                    }
+                  }
                  } 
                 },
               },
@@ -491,14 +530,14 @@ export const TIO = {
                     hits && Object.keys(hits).forEach(unit => {
                       if(hits[unit].length){
                         hits[unit].forEach((car, idx) => {
-                          if(car.hit === true){
-                            fleet[unit][idx].hit = true;
+                          if(car.hit){
+                            fleet[unit][idx].hit = car.hit;
                           }
   
                           if(car.payload && car.payload.length){
                             car.payload.forEach(p => {
-                              if(p.hit === true){
-                                fleet[unit][idx].payload[p.pidx].hit = true;
+                              if(p.hit){
+                                fleet[unit][idx].payload[p.pidx].hit = p.hit;
                               }
                             })
                           }
@@ -506,17 +545,28 @@ export const TIO = {
                       }  
                     });
                   }
+                  
+                  if(Object.keys(ctx.activePlayers).length === 1){ //make hits permanent
+                    const technologies = {};
+    
+                    [...Object.keys(fleet), 'fighter', 'mech'].forEach( k => {
+                        const technology = G.races[ctx.currentPlayer].technologies.find(t => t.id === k.toUpperCase());
+                        technologies[k] = technology;
+                    });
 
-                  if(Object.keys(ctx.activePlayers).length === 1){
                     Object.keys(fleet).forEach(f => {
                       fleet[f].forEach((car, i) => {
-                        if(car.hit === true){
-                          delete fleet[f][i];
+                        if(car.hit){
+                          if(car.hit > 1 || !technologies[f].sustain){
+                            delete fleet[f][i];
+                          }
                         }
                         else if(car.payload && car.payload.length){
                           car.payload.forEach((p, j) => {
-                            if(p.hit === true){
-                              delete fleet[f][i].payload[j];
+                            if(p.hit){
+                              if(p.hit > 1 || !technologies[p.id].sustain){
+                                delete fleet[f][i].payload[j];
+                              }
                             }
                           });
                           car.payload = car.payload.filter(p => p);
@@ -582,7 +632,7 @@ export const TIO = {
                 }
                 
               }
-              else if(G.spaceCannons && ctx.activePlayers && ctx.activePlayers[ctx.currentPlayer] === 'spaceCannonAttack'){
+              else if(G.spaceCannons && ctx.activePlayers && ctx.activePlayers[ctx.currentPlayer] === 'spaceCannonAttack_step2'){
                 delete G['spaceCannons'];
               }
 
