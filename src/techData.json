@@ -290,7 +290,7 @@
         "prereq": { },
         "cost": 4,
         "combat": 5,
-        "move": 3,
+        "move": 1,
         "capacity": 1,
         "sustain": true,
         "bombardment": { "count": 1, "value": 5 },
@@ -323,7 +323,7 @@
         "move": 3, 
         "sustain": false,
         "bombardment": false,
-        "barrage": false,
+        "barrage": { "count": 2, "value": 9 },
         "shot": 1
     },
     {

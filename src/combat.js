@@ -4,7 +4,7 @@ import { StateContext } from './utils';
 import { neighbors } from './Grid';
 import { produce } from 'immer';
 
-export const SpaceCombat = () => {
+export const SpaceCannonAttack = () => {
 
     const { G, ctx, playerID, moves } = useContext(StateContext);
     const activeTile = G.tiles.find(t => t.active === true);
@@ -102,8 +102,9 @@ export const SpaceCombat = () => {
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Space cannon: attack</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             {ctx.activePlayers[playerID] === 'spaceCannonAttack' && <>
-                <CombatantForces race={G.races[ctx.currentPlayer]} units={fleet} owner={ctx.currentPlayer}/>
-                {spaceCannons !== undefined && Object.keys(spaceCannons).map((k, i) => <CombatantForces key={i} race={G.races[k]} units={{PDS: spaceCannons[k]}} owner={k}/>)}
+                <CombatantForces race={G.races[ctx.currentPlayer]} units={fleet} owner={ctx.currentPlayer} combatAbility='spaceCannon'/>
+                {spaceCannons !== undefined && Object.keys(spaceCannons).map((k, i) => 
+                    <CombatantForces key={i} race={G.races[k]} combatAbility='spaceCannon' units={{PDS: spaceCannons[k]}} owner={k}/>)}
             </>}
             {ctx.activePlayers[playerID] === 'spaceCannonAttack_step2' && <>
                 <HitAssign race={G.races[ctx.currentPlayer]} units={fleet} owner={ctx.currentPlayer} hits={ahits} setHits={setAhits}/>
@@ -256,7 +257,7 @@ const HitAssign = (args) => {
 const CombatantForces = (args) => {
 
     const { G, moves, playerID } = useContext(StateContext);
-    const {race, units, owner} = args;
+    const {race, units, owner, combatAbility} = args;
 
     const technologies = useMemo(()=>{
         const result = {};
@@ -271,9 +272,9 @@ const CombatantForces = (args) => {
 
     const fireClick = useCallback((u) => {
         const count = Array.isArray(units[u]) ? units[u].length : units[u];
-        const shots = technologies[u].spaceCannon.count || 1;
+        const shots = technologies[u][combatAbility].count || 1;
         moves.rollDice(u, count*shots);        
-    }, [moves, technologies, units]);
+    }, [moves, technologies, units, combatAbility]);
 
 
     return (
@@ -283,35 +284,35 @@ const CombatantForces = (args) => {
                 <Row className='row-cols-auto'>
                     {Object.keys(units).map((u, i) => {
                         const ucount = (Array.isArray(units[u]) ? units[u].length : units[u]);
-                        return <Col className='col-md-auto' key={i} style={{marginLeft: '1rem', padding: 0, fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'}}>
+                        let style = {marginLeft: '1rem', padding: 0, fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'};
+                        if(technologies[u][combatAbility]){
+                            style = {...style, padding: '.5rem', background: 'rgba(255,255,255,.15)'}
+                        }
+
+                        return <Col className='col-md-auto' key={i} style={style}>
                             <span className={technologies[u].sustain ? 'sustain_ability':''}>
                                 <CardImg style={{width: '5rem'}} src={'units/' + u.toUpperCase() + '.png'} />
                                 {ucount > 1 && <span style={{fontSize: 30, position: 'absolute'}}>{ucount}</span>}
                                 {Array.isArray(units[u]) && <PayloadSummary ships={units[u]} technologies={technologies}/>}
                             </span>
                             <span style={{fontSize: 16, marginLeft: '1rem', minWidth: 'max-content'}}>
-                                {technologies[u].spaceCannon && <>
-                                    <p style={{margin: 0}}>{'combat: ' + technologies[u].spaceCannon.value}</p>
-                                    <p style={{margin: 0}}>{'shots: ' + technologies[u].spaceCannon.count}</p>
+                                {technologies[u][combatAbility] && <>
+                                    <p style={{margin: 0}}>{'combat: ' + technologies[u][combatAbility].value}</p>
+                                    <p style={{margin: 0}}>{'shots: ' + technologies[u][combatAbility].count}</p>
                                 </>}
+                                
+                                {!G.dice[owner][u] && technologies[u][combatAbility] && String(playerID) === String(owner) && 
+                                        <Button size='sm' onClick={()=>fireClick(u)} color='danger' style={{width: '5rem'}}>Fire</Button>}
+                                {G.dice[owner][u] && G.dice[owner][u].map((d, j) =>{
+                                    let color = 'light';
+                                    if(d >= technologies[u][combatAbility].value) color='success';
+                                    return <Button key={j} size='sm' color={color} 
+                                        style={{borderRadius: '5px', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', height: '1.25rem'}}>
+                                        {(''+d).substr(-1)}</Button>
+                                    })
+                                }
                             </span>
                         </Col>
-                    })}
-                </Row>
-                <Row>
-                    {Object.keys(units).map((u, i) => {
-                        return  <Col key={i} style={{fontSize: 15, margin: '0 1rem', fontFamily: 'Handel Gothic'}}>
-                                    {!G.dice[owner][u] && technologies[u].spaceCannon && playerID === owner && 
-                                        <Button size='sm' onClick={()=>fireClick(u)} color='danger' style={{width: '5rem'}}>Fire</Button>}
-                                    {G.dice[owner][u] && G.dice[owner][u].map((d, j) =>{
-                                        let color = 'light';
-                                        if(d >= technologies[u].spaceCannon.value) color='success';
-                                        return <Button key={j} size='sm' color={color} 
-                                            style={{borderRadius: '5px', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', height: '1.25rem'}}>
-                                            {(''+d).substr(-1)}</Button>
-                                        })
-                                    }
-                                </Col>
                     })}
                 </Row>
             </Container>
@@ -343,5 +344,74 @@ const PayloadSummary = (args) => {
                     </span>
         })}
     </div>)
+
+}
+
+
+export const AntiFighterBarrage = () => {
+
+    const { G, ctx, moves } = useContext(StateContext);
+    const activeTile = G.tiles.find(t => t.active === true);
+
+    const hits = useMemo(() => {
+        let result = {};
+
+        Object.keys(ctx.activePlayers).forEach(pid => {
+            let h = 0;
+            if(G.dice[pid]){
+                Object.keys(G.dice[pid]).forEach(unit => {
+                    const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                    if(technology && technology.barrage){
+                        h += G.dice[pid][unit].filter(die => die >= technology.barrage.value).length;
+                    }
+                });
+            }
+            result[pid] = h;
+        });
+        
+        return result;
+    }, [G.dice, G.races, ctx.activePlayers]);
+
+    const barrageAbilities = useCallback((race, units)=>{
+        const result = {};
+    
+        Object.keys(units).forEach( k => {
+            const technology = race.technologies.find(t => t.id === k.toUpperCase() && t.barrage);
+            if(technology) result[k] = technology;
+        });
+
+        return result;
+    },[]);
+
+    const everyoneRolls = useMemo(() => {
+
+        const attacker = barrageAbilities(G.races[ctx.currentPlayer], activeTile.tdata.attacker);
+        const defender = barrageAbilities(G.races[activeTile.tdata.occupied], activeTile.tdata.fleet);
+
+        return Object.keys(attacker).length === Object.keys(G.dice[ctx.currentPlayer]).length && 
+                Object.keys(defender).length === Object.keys(G.dice[activeTile.tdata.occupied]).length;
+
+    }, [G.dice, G.races, activeTile, barrageAbilities, ctx.currentPlayer]);
+
+    return (
+    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+        position: 'absolute', margin: '5rem', color: 'white'}}>
+        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Antifighter barrage</h3></CardTitle>
+        <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
+            <CombatantForces race={G.races[ctx.currentPlayer]} units={activeTile.tdata.attacker} owner={ctx.currentPlayer} combatAbility='barrage'/>
+            <CombatantForces race={G.races[activeTile.tdata.occupied]} units={activeTile.tdata.fleet} owner={activeTile.tdata.occupied} combatAbility='barrage'/>
+        </CardBody>
+        <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
+            <Button color='warning' disabled = {!everyoneRolls} onClick={moves.nextStep}>Next</Button>
+            <span style={{display: 'flex', justifyContent: 'space-around', fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
+                {Object.keys(hits).map((h, i) => {
+                    return <span key={i}>
+                        <img alt='race' src={'race/icons/' + G.races[h].rid + '.png'} style={{width: '2rem'}}/>
+                        {' does ' + hits[h] + ' hits '}
+                    </span>
+                })}
+            </span>
+        </CardFooter>
+    </Card>);
 
 }

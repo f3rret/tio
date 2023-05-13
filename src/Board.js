@@ -10,7 +10,7 @@ import cardData from './cardData.json';
 import { checkObjective, StateContext } from './utils';
 import { lineTo } from './Grid';
 import { ChatBoard } from './chat';
-import { SpaceCombat } from './combat';
+import { SpaceCannonAttack, AntiFighterBarrage } from './combat';
 import { produce } from 'immer';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
@@ -171,8 +171,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       <NavItem style={{marginRight: '1rem'}}>
         {ctx.phase === 'acts' && <>
           <Button disabled={ctx.numMoves == 0} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}><h5 style={{margin: '.5rem'}}>Undo</h5></Button>
-          {!G.spaceCannons && <Button color='warning' onClick={()=>events.endTurn()}><h5 style={{margin: '.5rem'}}>End turn</h5></Button>}
-          {G.spaceCannons && <Button color='warning' onClick={()=>moves.spaceCombat()}><h5 style={{margin: '.5rem'}}>Space cannon</h5></Button>}
+          {!G.spaceCannons && <>
+            {!(activeTile && activeTile.tdata.attacker) && <Button color='warning' onClick={()=>events.endTurn()}><h5 style={{margin: '.5rem'}}>End turn</h5></Button>}
+            {activeTile && activeTile.tdata.attacker && <Button color='warning' onClick={()=>moves.antiFighterBarrage()}><h5 style={{margin: '.5rem'}}>Space combat</h5></Button>}
+            </>
+          }
+          {G.spaceCannons && <Button color='warning' onClick={()=>moves.spaceCannonAttack()}><h5 style={{margin: '.5rem'}}>Space cannon</h5></Button>}
         </>}
         {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && <Button color='dark' onClick={()=>moves.pass()}><h5 style={{margin: '.5rem'}}>Pass</h5></Button>}
       </NavItem>}
@@ -247,8 +251,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && G.strategy !== undefined
   }, [G, ctx]);
 
-  const spaceCombat = useMemo(()=> {
+  const spaceCannonAttack = useMemo(()=> {
     return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && (ctx.activePlayers[playerID] === 'spaceCannonAttack' || ctx.activePlayers[playerID] === 'spaceCannonAttack_step2')
+  }, [ctx, playerID]);
+
+  const antiFighterBarrage = useMemo(()=> {
+    return ctx.activePlayers && Object.keys(ctx.activePlayers).length === 2 && ctx.activePlayers[playerID] === 'antiFighterBarrage'
   }, [ctx, playerID]);
 
   const AddToken = ({tag}) => {
@@ -459,6 +467,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           }
         )}
 
+        {element.tdata.attacker && <Sprite scale={.75} x={-element.w/2} y={0} image='icons/attacker.png' alpha={0.85}>
+          <Container x={35} y={35}>
+            <Sprite image={'race/icons/'+ G.races[ctx.currentPlayer].rid +'.png'} scale={1}></Sprite>
+            <Text x={70} y={10} style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white'}} text='Under attack' />
+          </Container>
+          <Container y={125} x={-10}>
+            <AttackerForce fleet={element.tdata.attacker} w={element.w}/>
+          </Container>
+        </Sprite>}
+
         {element.tdata.fleet && <Container x={10} y={-30}>
           {activeTile && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 &&
           <Sprite interactive={true} pointerdown={()=>moveToClick(index)} scale={.75} y={5} x={-10} image={'icons/move_to.png'}
@@ -629,7 +647,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             {strategyStage && <StrategyDialog PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}
             
-            {spaceCombat && <SpaceCombat />}
+            {spaceCannonAttack && <SpaceCannonAttack />}
+            {antiFighterBarrage && <AntiFighterBarrage />}
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport>
@@ -849,6 +868,36 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                             isOpen={payObj !== null} toggle={(payment)=>togglePaymentDialog(payment)}/>}
          
           </StateContext.Provider>)
+}
+
+const AttackerForce = (args) => {
+  const {w, fleet} = args;
+  const payload = {infantry: [], fighter: [], mech: []}
+
+  Object.keys(fleet).forEach(tag => {
+    fleet[tag].forEach(ship => {
+      ship.payload && ship.payload.forEach(p => {
+        payload[p.id].push({});
+      });
+    })
+  });
+
+  Object.keys(payload).forEach(k => {if(!payload[k].length) delete payload[k]});
+
+  return [...Object.keys(fleet), ...Object.keys(payload)].map((f, i) => {
+    const rowLength = 5;
+    const y = ( i<rowLength ? 0:70 );
+    const x = ( i<rowLength ? w/4 - 50 + i*65 : w/4 - 50 + (i-rowLength)*65);
+    let text = fleet[f] ? fleet[f].length : payload[f].length;
+    if(text === 1) text = ' 1';
+
+    return <Sprite key={i} x={x} y={y} anchor={0} image={fleet[f] ? 'icons/unit_bg.png':'icons/unit_inf_bg.png'}>
+        {fleet[f] && <Text text={f.replace('nought', '...')} x={10} y={5} style={{fontSize: 12, fill: 'white'}}/>}
+        <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={fleet[f] ? 10:0} scale={{x: .3, y: .3}} alpha={1}/>
+        <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
+          x={35} y={25} text={text}/>
+    </Sprite>
+  })
 }
 
 const SpeakerToken = () => {

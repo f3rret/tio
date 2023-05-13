@@ -581,12 +581,70 @@ export const TIO = {
 
                 },
               },
-              spaceCombat: {
+              antiFighterBarrage: {
                 moves: {
-                  antifighterBarrage: ({G, ctx}) => {
-
+                  rollDice: ({G, playerID, random}, unit, count) => {
+                    const dice = random.D10(count || 1);
+                    G.dice = produce(G.dice, draft => {
+                      draft[playerID][unit] = dice;
+                    });
+                  },
+                  nextStep: ({G, events, ctx}) => {
+                    let hits = {};
+                    Object.keys(ctx.activePlayers).forEach(pid => {
+                        let h = 0;
+                        if(G.dice[pid]){
+                            Object.keys(G.dice[pid]).forEach(unit => {
+                                const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                                if(technology && technology.barrage){
+                                    h += G.dice[pid][unit].filter(die => die >= technology.barrage.value).length;
+                                }
+                            });
+                        }
+                        hits[pid] = h;
+                    });
+                    
+                    const activeTile = G.tiles.find(t => t.active === true);
+                    const attackerHits = hits[ctx.currentPlayer];
+                    const defenderHits = hits[activeTile.tdata.occupied];
+  
+                    const makeHit = (fleet, count) => {
+                      let remain = count;
+  
+                      Object.keys(fleet).forEach(tag => {
+                        if(remain > 0){
+                          fleet[tag].forEach((car, c) => {
+                            if(remain > 0 && tag === 'fighter'){
+                              delete fleet[tag][c];
+                              remain--;
+                            }
+                            else if(car.payload && remain > 0){
+                              car.payload.forEach((p, i) => {
+                                if(p.id === 'fighter' && remain > 0){
+                                  delete car.payload[i];
+                                  remain--;
+                                }
+                              });
+                              car.payload = car.payload.filter(p => p);
+                            }
+                          });
+                          fleet[tag] = fleet[tag].filter(car => car);
+                        }
+                      });
+                    }
+  
+                    makeHit(activeTile.tdata.attacker, defenderHits);
+                    makeHit(activeTile.tdata.fleet, attackerHits);
+  
+                    if(Object.keys(activeTile.tdata.attacker).length && Object.keys(activeTile.tdata.fleet).length){
+                      const ap = {...ctx.activePlayers};
+                      Object.keys(ap).forEach(k => ap[k] = 'spaceCombat');
+                      events.setActivePlayers({value: ap});
+                    }
+  
                   }
-                }
+                },
+                
               }
             },
             onBegin: ({ G, ctx }) => {
@@ -642,14 +700,27 @@ export const TIO = {
             }
         },
         moves: {
-          spaceCombat: ({G, playerID, events}) => {
+          spaceCannonAttack: ({G, playerID, events}) => {
             if(G.spaceCannons && Object.keys(G.spaceCannons).length > 0){
               const sc = {};
               Object.keys(G.spaceCannons).forEach(pid => {
                 sc[pid] = {stage: 'spaceCannonAttack'}
+                G.dice[pid] = {};
               });
-              
+
+              G.dice[playerID] = {};
               events.setActivePlayers({value: sc, currentPlayer: {stage: 'spaceCannonAttack'}});
+            }
+          },
+          antiFighterBarrage: ({G, playerID, events}) => {
+            const activeTile = G.tiles.find(t => t.active === true);
+            if(activeTile && activeTile.tdata.attacker){
+              const def = {};
+              def[activeTile.tdata.occupied] = {stage: 'antiFighterBarrage'};
+              
+              G.dice[activeTile.tdata.occupied] = {};
+              G.dice[playerID] = {};
+              events.setActivePlayers({value: def, currentPlayer: {stage: 'antiFighterBarrage'}});
             }
           },
           purgeFragments: ({G, playerID}, purgingFragments) => {
