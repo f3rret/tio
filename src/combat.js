@@ -276,6 +276,13 @@ const CombatantForces = (args) => {
         moves.rollDice(u, count*shots);        
     }, [moves, technologies, units, combatAbility]);
 
+    const unitsInjury = useCallback((tag) => {
+
+        let result = 0;
+        units[tag].forEach(u => {if(u.hit)result += u.hit})
+        return result;
+
+    }, [units]);
 
     return (
         <div style={{display: 'flex', position: 'relative', flexDirection: 'row', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', border: 'solid 1px rgba(255,255,255,.25)'}}>
@@ -292,8 +299,12 @@ const CombatantForces = (args) => {
                             style = {...style, padding: '.5rem', background: 'rgba(255,255,255,.15)'}
                         }
 
+                        const className = technologies[u].sustain ? 'sustain_ability':'';
+                        const injury = unitsInjury(u);
+
                         return <Col className='col-md-auto' key={i} style={style}>
-                            <span className={technologies[u].sustain ? 'sustain_ability':''}>
+                            <span className={className}>
+                                {injury > 0 && <span className='hit_assigned1' style={{position: 'absolute', bottom: 0, color: 'red', width: '1.75rem', textAlign: 'right'}}>{injury}</span>}
                                 <CardImg style={{width: '5rem'}} src={'units/' + u.toUpperCase() + '.png'} />
                                 {ucount > 1 && <span style={{fontSize: 30, position: 'absolute'}}>{ucount}</span>}
                                 {Array.isArray(units[u]) && <PayloadSummary ships={units[u]} technologies={technologies}/>}
@@ -351,7 +362,6 @@ const PayloadSummary = (args) => {
     </div>)
 
 }
-
 
 export const AntiFighterBarrage = () => {
 
@@ -435,7 +445,6 @@ export const AntiFighterBarrage = () => {
 
 }
 
-
 export const SpaceCombat = () => {
 
     const { G, ctx, moves, playerID } = useContext(StateContext);
@@ -507,17 +516,6 @@ export const SpaceCombat = () => {
 
     }, [ahitsD]);
 
-    /*const barrageAbilities = useCallback((race, units)=>{
-        const result = {};
-    
-        Object.keys(units).forEach( k => {
-            const technology = race.technologies.find(t => t.id === k.toUpperCase() && t.barrage);
-            if(technology) result[k] = technology;
-        });
-
-        return result;
-    },[]);*/
-
     const everyoneRolls = useMemo(() => {
         
         return Object.keys(activeTile.tdata.attacker).length === Object.keys(G.dice[ctx.currentPlayer]).length && 
@@ -527,9 +525,11 @@ export const SpaceCombat = () => {
 
     const needAwait = useMemo(()=>{
         const myStage = ctx.activePlayers[playerID];
-        const players = Object.keys(ctx.activePlayers).filter(s => ctx.activePlayers[s] !== myStage);
+        if(myStage === 'spaceCombat_await') return true;
+
+        /*const players = Object.keys(ctx.activePlayers).filter(s => ctx.activePlayers[s] !== myStage);
         return myStage === 'spaceCombat' && players.length > 0 && 
-            (ctx.activePlayers[players[0]] !== 'spaceCombat' && ctx.activePlayers[players[0]] !== 'spaceCombat_step2')
+            (ctx.activePlayers[players[0]] !== 'spaceCombat' && ctx.activePlayers[players[0]] !== 'spaceCombat_step2')*/
     }, [playerID, ctx.activePlayers]);
 
     const enemyRetreat = useMemo(() => {
@@ -566,7 +566,7 @@ export const SpaceCombat = () => {
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Space combat</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
-            {ctx.activePlayers[playerID] === 'spaceCombat' && <>
+            {(ctx.activePlayers[playerID] === 'spaceCombat' || ctx.activePlayers[playerID] === 'spaceCombat_await') && <>
                 {!needAwait && <>
                     <CombatantForces race={G.races[ctx.currentPlayer]} units={activeTile.tdata.attacker} owner={ctx.currentPlayer} />
                     <CombatantForces race={G.races[activeTile.tdata.occupied]} units={activeTile.tdata.fleet} owner={activeTile.tdata.occupied}/>

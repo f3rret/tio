@@ -260,7 +260,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [ctx, playerID]);
 
   const spaceCombat = useMemo(() => {
-    return ctx.activePlayers && (ctx.activePlayers[playerID] === 'spaceCombat' || ctx.activePlayers[playerID] === 'spaceCombat_step2');
+    return ctx.activePlayers && ctx.activePlayers[playerID] && ctx.activePlayers[playerID].startsWith('spaceCombat');
   }, [ctx.activePlayers, playerID]);
 
   const AddToken = ({tag}) => {

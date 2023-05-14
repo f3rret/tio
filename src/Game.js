@@ -640,10 +640,10 @@ export const TIO = {
                       makeHit(activeTile.tdata.fleet, attackerHits);
                     }
 
-                    if(Object.keys(ctx.activePlayers).filter(k => ctx.activePlayers[k] === 'antiFighterBarrage').length === 1){
+                    /*if(Object.keys(ctx.activePlayers).filter(k => ctx.activePlayers[k] === 'antiFighterBarrage').length === 1){
                       G.dice[activeTile.tdata.occupied] = {};
                       G.dice[ctx.currentPlayer] = {};
-                    }
+                    }*/
 
                     if(Object.keys(activeTile.tdata.attacker).length && Object.keys(activeTile.tdata.fleet).length){
                       /*const ap = {...ctx.activePlayers};
@@ -692,7 +692,26 @@ export const TIO = {
                         }
                       }
 
-                      events.setStage('spaceCombat');
+                      let needAwait = true;
+                      Object.keys(ctx.activePlayers).forEach(pid => {
+                        if(ctx.activePlayers[pid] === 'spaceCombat_await') needAwait = false;
+                      });
+                      
+                      if(needAwait){
+                        events.setStage('spaceCombat_await');
+                      }
+                      else{
+                        const val = {};
+                        val[activeTile.tdata.occupied] = {stage: 'spaceCombat'};
+                        val[ctx.currentPlayer] = {stage: 'spaceCombat'};
+                        
+                        G.dice[activeTile.tdata.occupied] = {};
+                        G.dice[ctx.currentPlayer] = {};
+                        events.setActivePlayers({value: val});
+                      }
+                    }
+                    else{
+                      events.endStage();
                     }
 
   
@@ -709,10 +728,6 @@ export const TIO = {
                     });
                   },
                   nextStep: ({G, events, playerID}, retreat) => {
-                    
-                    if(retreat === true){
-                      G.races[playerID].retreat = true;
-                    }
                     
                     events.setStage('spaceCombat_step2');
                   }
@@ -778,9 +793,35 @@ export const TIO = {
                     });
                     fleet[f] = fleet[f].filter(car => car);
                   });
-                 
-                  events.setStage('spaceCombat');
+                  
+                  if(retreat === true){
+                    G.races[playerID].retreat = true;
+                  }
+
+                  let needAwait = true;
+                  Object.keys(ctx.activePlayers).forEach(pid => {
+                    if(ctx.activePlayers[pid] === 'spaceCombat_await') needAwait = false;
+                  });
+                  
+                  if(needAwait){
+                    events.setStage('spaceCombat_await');
+                  }
+                  else{
+                    const val = {};
+                    val[activeTile.tdata.occupied] = {stage: 'spaceCombat'};
+                    val[ctx.currentPlayer] = {stage: 'spaceCombat'};
+                    
+                    G.dice[activeTile.tdata.occupied] = {};
+                    G.dice[ctx.currentPlayer] = {};
+                    events.setActivePlayers({value: val});
+                  }
+
                  } 
+                }
+              },
+              spaceCombat_await:{
+                moves: {
+                  dummy: () => {}
                 }
               }
             },
