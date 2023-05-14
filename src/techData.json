@@ -323,7 +323,7 @@
         "move": 3, 
         "sustain": false,
         "bombardment": false,
-        "barrage": { "count": 2, "value": 9 },
+        "barrage": { "count": 3, "value": 6 },
         "shot": 1
     },
     {

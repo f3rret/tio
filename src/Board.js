@@ -10,7 +10,7 @@ import cardData from './cardData.json';
 import { checkObjective, StateContext } from './utils';
 import { lineTo } from './Grid';
 import { ChatBoard } from './chat';
-import { SpaceCannonAttack, AntiFighterBarrage } from './combat';
+import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat } from './combat';
 import { produce } from 'immer';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
@@ -252,12 +252,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [G, ctx]);
 
   const spaceCannonAttack = useMemo(()=> {
-    return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && (ctx.activePlayers[playerID] === 'spaceCannonAttack' || ctx.activePlayers[playerID] === 'spaceCannonAttack_step2')
+    return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && (ctx.activePlayers[playerID] === 'spaceCannonAttack' || ctx.activePlayers[playerID] === 'spaceCannonAttack_step2');
   }, [ctx, playerID]);
 
   const antiFighterBarrage = useMemo(()=> {
-    return ctx.activePlayers && Object.keys(ctx.activePlayers).length === 2 && ctx.activePlayers[playerID] === 'antiFighterBarrage'
+    return ctx.activePlayers && Object.keys(ctx.activePlayers).length === 2 && ctx.activePlayers[playerID] === 'antiFighterBarrage';
   }, [ctx, playerID]);
+
+  const spaceCombat = useMemo(() => {
+    return ctx.activePlayers && (ctx.activePlayers[playerID] === 'spaceCombat' || ctx.activePlayers[playerID] === 'spaceCombat_step2');
+  }, [ctx.activePlayers, playerID]);
 
   const AddToken = ({tag}) => {
     return (<div size='sm' style={{position: 'absolute', top: 0, right: 0, borderTopRightRadius: '4px', backgroundColor: 'rgba(242, 183, 7, 1)'}}><h5 style={{margin: '.25rem .5rem'}}>+</h5></div>);
@@ -649,6 +653,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             
             {spaceCannonAttack && <SpaceCannonAttack />}
             {antiFighterBarrage && <AntiFighterBarrage />}
+            {spaceCombat && <SpaceCombat />}
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport>
