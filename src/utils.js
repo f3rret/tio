@@ -280,3 +280,14 @@ export const getPlanetByName = (tiles, pname) => {
 
   return planet;
 }
+
+export const getUnitsTechnologies = (keys, race) => {
+  let result = {};
+
+  keys.forEach( k => {
+      const technology = race.technologies.find(t => t.id === k.toUpperCase());
+      result[k] = technology;
+  });
+
+  return result;
+}

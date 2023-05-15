@@ -110,7 +110,7 @@
         "heroAbility": "At the start of a space combat that you are participating in: You may purge this card; if you do, for each other player's ship that is destroyed during this combat, place 1 ship of that type from your reinforcements in the active system.",
         "startingUnits": {
             "fleet": {"carrier": [{}], "cruiser": [{},{}]},
-            "ground": {"infantry": [{},{},{},{}], "spacedock": 1, "pds": 1, "fighter": [{},{},{}]}
+            "ground": {"infantry": [{},{},{},{}], "spacedock": 1, "pds": [{}], "fighter": [{},{},{}]}
         },
         "knownTechs": ["SARWEEN_TOOLS", "PLASMA_SCORING"],
         "commCap": 2,
@@ -341,7 +341,7 @@
         "heroAbilityType": "ACTION",
         "startingUnits": {
             "fleet": {"carrier": [{}], "cruiser": [{}]},
-            "ground": {"infantry": [{},{},{},{}], "spacedock": 1, "pds": 1, "fighter": [{},{}]}
+            "ground": {"infantry": [{},{},{},{}], "spacedock": 1, "pds": [{}], "fighter": [{},{}]}
         },
         "knownTechs": ["MAGEN_DEFENSE_GRID"],
         "commCap": 3,
@@ -427,7 +427,7 @@
         "heroAbilityType": "ACTION",
         "startingUnits": {
             "fleet": {"dreadnought": [{}], "carrier": [{}]},
-            "ground": {"infantry": [{},{},{},{},{}], "spacedock": 1, "pds": 1, "fighter": [{},{},{}]}
+            "ground": {"infantry": [{},{},{},{},{}], "spacedock": 1, "pds": [{}], "fighter": [{},{},{}]}
         },
         "knownTechs": ["NEURAL_MOTIVATOR", "PLASMA_SCORING"],
         "commCap": 2,
@@ -520,7 +520,7 @@
         "heroAbilityType": "ACTION",
         "startingUnits": {
             "fleet": {"carrier": [{}], "cruiser": [{}]},
-            "ground": {"infantry": [{},{}], "spacedock": 1, "pds": 1, "fighter": [{},{}]}
+            "ground": {"infantry": [{},{}], "spacedock": 1, "pds": [{}], "fighter": [{},{}]}
         },
         "knownTechs": ["ANTIMASS_DEFLECTORS", "DARK_ENERGY_TAP", "SARWEEN_TOOLS", "SCANLINK_DRONE_NETWORK", "NEURAL_MOTIVATOR", "PSYCHOARCHAEOLOGY", "PLASMA_SCORING", "AI_DEVELOPMENT_ALGORITHM"],
         "startingTechsChoice": 1,
@@ -658,7 +658,7 @@
         "heroAbility": "At the end of the status phase: You may force each other player to give you 1 promissory note from their hand. If you do, purge this card.",
         "startingUnits": {
             "fleet": {"carrier": [{}], "cruiser": [{}], "destroyer": [{}]},
-            "ground": {"infantry": [{},{},{},{}], "spacedock": 1, "pds": 1, "fighter": [{},{},{}]}
+            "ground": {"infantry": [{},{},{},{}], "spacedock": 1, "pds": [{}], "fighter": [{},{},{}]}
         },
         "knownTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS"],
         "commCap": 3,
@@ -901,7 +901,7 @@
         "heroAbilityType": "ACTION",
         "startingUnits": {
             "fleet": {"dreadnought": [{}], "carrier": [{},{}]},
-            "ground": {"infantry": [{},{}], "spacedock": 1, "pds": 2, "fighter": [{}]}
+            "ground": {"infantry": [{},{}], "spacedock": 1, "pds": [{},{}], "fighter": [{}]}
         },
         "knownTechs": ["NEURAL_MOTIVATOR", "ANTIMASS_DEFLECTORS", "SARWEEN_TOOLS", "PLASMA_SCORING"],
         "commCap": 4,
@@ -970,7 +970,7 @@
         "heroAbility": "After you move ships into the active system: You may skip directly to the Commit Ground Forces step. If you do, after you commit ground forces to land on planets, purge this card and return each of your ships in the active system to your reinforcements.",
         "startingUnits": {
             "fleet": {"carrier": [{},{}], "cruiser": [{}]},
-            "ground": {"infantry": [{},{},{},{},{}], "spacedock": 1, "pds": 1}
+            "ground": {"infantry": [{},{},{},{},{}], "spacedock": 1, "pds": [{}]}
         },
         "knownTechs": [],
         "commCap": 3,
@@ -1062,7 +1062,7 @@
         "heroAbilityType": "ACTION",
         "startingUnits": {
             "fleet": {"carrier": [{}], "cruiser": [{},{}]},
-            "ground": {"infantry": [{},{},{},{}], "spacedock": 1, "pds": 1, "fighter": [{}, {}, {}]}
+            "ground": {"infantry": [{},{},{},{}], "spacedock": 1, "pds": [{}], "fighter": [{}, {}, {}]}
         },
         "knownTechs": ["GRAVITON_LASER_SYSTEM"],
         "commCap": 4,
@@ -1133,7 +1133,7 @@
         "heroAbilityType": "ACTION",
         "startingUnits": {
             "fleet": {"carrier": [{},{}], "cruiser": [{}]},
-            "ground": {"infantry": [{},{},{},{},{}], "spacedock": 1, "pds": 1, "fighter": [{},{}]}
+            "ground": {"infantry": [{},{},{},{},{}], "spacedock": 1, "pds": [{}], "fighter": [{},{}]}
         },
         "knownTechs": ["NEURAL_MOTIVATOR"],
         "commCap": 3,
@@ -1849,7 +1849,7 @@
         "heroAbilityType": "ACTION",
         "startingUnits": {
             "fleet": {"carrier": [{}], "destroyer": [{},{}]},
-            "ground": {"infantry": [{},{},{},{},{}], "spacedock": 1, "pds": 1, "fighter": [{}, {}]}
+            "ground": {"infantry": [{},{},{},{},{}], "spacedock": 1, "pds": [{}], "fighter": [{}, {}]}
         },
         "knownTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS", "PLASMA_SCORING"],
         "startingTechsChoice": 2,

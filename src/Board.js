@@ -941,7 +941,7 @@ const getUnitsString = (units) => {
         s += 'm' + units[k].length;
         break;
       case 'pds':
-        s += 'p' + units[k];
+        s += 'p' + units[k].length;
         break;
       case 'spacedock':
         s += 'd' + units[k];
