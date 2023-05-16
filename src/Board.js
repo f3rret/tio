@@ -10,7 +10,7 @@ import cardData from './cardData.json';
 import { checkObjective, StateContext } from './utils';
 import { lineTo } from './Grid';
 import { ChatBoard } from './chat';
-import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat } from './combat';
+import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat } from './combat';
 import { produce } from 'immer';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
@@ -263,6 +263,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return ctx.activePlayers && ctx.activePlayers[playerID] && ctx.activePlayers[playerID].startsWith('spaceCombat');
   }, [ctx.activePlayers, playerID]);
 
+  const combatRetreat = useMemo(() => {
+    return ctx.activePlayers && (ctx.activePlayers[playerID] === 'combatRetreat')
+  }, [ctx.activePlayers, playerID]);
+
   const AddToken = ({tag}) => {
     return (<div size='sm' style={{position: 'absolute', top: 0, right: 0, borderTopRightRadius: '4px', backgroundColor: 'rgba(242, 183, 7, 1)'}}><h5 style={{margin: '.25rem .5rem'}}>+</h5></div>);
   }
@@ -448,8 +452,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) =>
                   <Sprite key={ui} x={40 + ui*55} y={-10} scale={1} anchor={0} image={'icons/unit_ground_bg.png'}>
                     <Sprite image={'units/' + u.toUpperCase() + '.png'} x={-5} y={-5} scale={.4} alpha={1}/>
-                    {p.units[u] > 1 && <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
-                    x={45} y={0} text={p.units[u]}/>}
+                    {p.units[u].length > 1 && <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
+                    x={40} y={25} text={p.units[u].length}/>}
                   </Sprite>
                 )}
               </Container>
@@ -458,7 +462,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>{
                 return <Sprite x={-30 + ui*55} key={ui} alpha={.85} scale={.65} interactive={true} pointerdown={()=>loadUnit({tile: index, planet: i, unit: u})} image={'icons/unit_inf_bg.png'}>
                    <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-5} scale={.35} alpha={1}/>
-                  <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={60} y={5} text={p.units[u].length}/>
+                  <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={50} y={25} text={p.units[u].length}/>
                 </Sprite>}
               )}
               </Container>
@@ -654,6 +658,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             {spaceCannonAttack && <SpaceCannonAttack />}
             {antiFighterBarrage && <AntiFighterBarrage />}
             {spaceCombat && <SpaceCombat />}
+            {combatRetreat && <CombatRetreat selectedTile={selectedTile}/>}
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport>
@@ -944,7 +949,7 @@ const getUnitsString = (units) => {
         s += 'p' + units[k].length;
         break;
       case 'spacedock':
-        s += 'd' + units[k];
+        s += 'd' + units[k].length;
         break;
       default:
         s += '';

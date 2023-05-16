@@ -6,7 +6,7 @@ import raceData from './raceData.json';
 import techData from './techData.json';
 import cardData from './cardData.json';
 import { produce } from 'immer';
-import { NUM_PLAYERS, checkObjective, /*getPlanetByName*/ } from './utils';
+import { NUM_PLAYERS, checkObjective, getUnitsTechnologies/*getPlanetByName*/ } from './utils';
 
 export const TIO = {
     
@@ -308,8 +308,8 @@ export const TIO = {
                                 planets.some( p => {
                                   if(p.occupied == playerID && p.name === keys[0]){
                                     if(!p.units) p.units={}
-                                    if(!p.units[obj[keys[0]]]) p.units[obj[keys[0]]]=0;
-                                    p.units[obj[keys[0]]]++;
+                                    if(!p.units[obj[keys[0]]]) p.units[obj[keys[0]]]=[];
+                                    p.units[obj[keys[0]]].push({});
 
                                     if(ctx.currentPlayer != playerID){
                                       tile.tdata.tokens.push(G.races[playerID].rid);
@@ -547,12 +547,7 @@ export const TIO = {
                   }
                   
                   if(Object.keys(ctx.activePlayers).length === 1){ //make hits permanent
-                    const technologies = {};
-    
-                    [...Object.keys(fleet), 'fighter', 'mech'].forEach( k => {
-                        const technology = G.races[ctx.currentPlayer].technologies.find(t => t.id === k.toUpperCase());
-                        technologies[k] = technology;
-                    });
+                    const technologies = getUnitsTechnologies([...Object.keys(fleet), 'fighter', 'mech'], G.races[ctx.currentPlayer]);
 
                     Object.keys(fleet).forEach(f => {
                       fleet[f].forEach((car, i) => {
@@ -589,7 +584,7 @@ export const TIO = {
                       draft[playerID][unit] = dice;
                     });
                   },
-                  nextStep: ({G, events, ctx, playerID}, retreat) => {
+                  nextStep: ({G, events, ctx, playerID}) => {
                     let hits = {};
                     Object.keys(ctx.activePlayers).forEach(pid => {
                         let h = 0;
@@ -649,49 +644,7 @@ export const TIO = {
                       /*const ap = {...ctx.activePlayers};
                       Object.keys(ap).forEach(k => ap[k] = 'spaceCombat');
                       events.setActivePlayers({value: ap});*/
-                      if(retreat === true){
-                        G.races[playerID].retreat = true;
-
-                        if(String(activeTile.tdata.occupied) === String(playerID) && activeTile.tdata.planets){ //load fighters and mech if capacity
-                          const fleet = activeTile.tdata.fleet;
-                          
-                          Object.keys(fleet).forEach(tag => {
-
-                            const technology = G.races[playerID].technologies.find(t => t.id === tag.toUpperCase());
-                            if(technology && technology.capacity){
-                              fleet[tag].forEach((car, c) => {
-                                if(!car.payload) car.payload=[];
-                                
-                                for(var i=0; i<technology.capacity; i++){
-                                    if(car.payload.length < i) car.payload.push({});
-                                    const place = car.payload[i];
-
-                                    activeTile.tdata.planets.forEach(planet => {
-                                      if(String(planet.occupied) === String(playerID)){
-                                        if(!place || !place.id){
-                                          if(planet.units.fighter && planet.units.fighter.length){
-                                            car.payload.push({...planet.units.fighter[0], id: 'fighter'});
-                                            planet.units.fighter.splice(0,1);
-                                            if(planet.units.fighter.length === 0) delete planet.units['fighter'];
-                                          }
-                                          else if(planet.units.mech && planet.units.mech.length){
-                                            car.payload.push({...planet.units.mech[0], id: 'mech'});
-                                            planet.units.mech.splice(0,1);
-                                            if(planet.units.mech.length === 0) delete planet.units['mech']
-                                          } 
-                                        }
-                                      }
-                                    });
-
-                                    car.payload = car.payload.filter( p => p.id);
-                                }
-                                
-                              });
-                            }
-                          });
-                        }
-                      }
-
+                      
                       let needAwait = true;
                       Object.keys(ctx.activePlayers).forEach(pid => {
                         if(ctx.activePlayers[pid] === 'spaceCombat_await') needAwait = false;
@@ -714,7 +667,10 @@ export const TIO = {
                       events.endStage();
                     }
 
-  
+                  },
+                  retreat: ({G, playerID}) => {
+                    G.races[playerID].retreat = true;
+                    loadUnitsOnRetreat(G, playerID);
                   }
                 },
                 
@@ -727,20 +683,36 @@ export const TIO = {
                       draft[playerID][unit] = dice;
                     });
                   },
-                  nextStep: ({G, ctx, events}, hits) => {
+                  nextStep: ({G, playerID, events, ctx}, hits) => {
                     if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
                       Object.keys(hits).forEach(pid => G.dice[pid] = {});
-                      events.setStage('spaceCombat');  
+
+                      if(G.races[playerID].retreat !== true){
+                        const enemyRetreat = Object.keys(ctx.activePlayers).find(k => G.races[k].retreat === true);
+                        if(enemyRetreat !== undefined){
+                          events.setStage('spaceCombat_await'); //await while enemy retreating
+                        }
+                        else{
+                          events.setStage('spaceCombat');
+                        }
+                      }
+                      else{
+                        events.setStage('combatRetreat');
+                      }
                     }
                     else{
                       events.setStage('spaceCombat_step2');
                     }
+                  },
+                  retreat: ({G, playerID}) => {
+                    G.races[playerID].retreat = true;
+                    loadUnitsOnRetreat(G, playerID);
                   }
                 }
               },
               spaceCombat_step2: {
                 moves: {
-                 nextStep: ({G, playerID, ctx, events}, hits, retreat) => {
+                 nextStep: ({G, playerID, ctx, events}, hits) => {
                   let fleet;
                   const activeTile = G.tiles.find(t => t.active === true);
                    
@@ -751,13 +723,8 @@ export const TIO = {
                     fleet = activeTile.tdata.fleet;
                   }
                   
-                  const technologies = {};
+                  const technologies = getUnitsTechnologies([...Object.keys(fleet), 'fighter', 'mech'], G.races[playerID]);
   
-                  [...Object.keys(fleet), 'fighter', 'mech'].forEach( k => {
-                      const technology = G.races[playerID].technologies.find(t => t.id === k.toUpperCase());
-                      technologies[k] = technology;
-                  });
-
                   hits && Object.keys(hits).forEach(unit => { //hits assignment
                     if(hits[unit].length){
                       hits[unit].forEach((car, i) => {
@@ -802,26 +769,27 @@ export const TIO = {
                     events.setStage('spaceCombat_await'); //end space battle
                   }
                   else{
-                    if(retreat === true){
-                      G.races[playerID].retreat = true;
-                    }
-
-                    let needAwait = true; //wait before new round
-                    Object.keys(ctx.activePlayers).forEach(pid => {
-                      if(ctx.activePlayers[pid] === 'spaceCombat_await') needAwait = false;
-                    });
-                    
-                    if(needAwait){
-                      events.setStage('spaceCombat_await');
+                    if(G.races[playerID].retreat){ //if I retreat
+                      events.setStage('combatRetreat');
                     }
                     else{
-                      const val = {};
-                      val[activeTile.tdata.occupied] = {stage: 'spaceCombat'};
-                      val[ctx.currentPlayer] = {stage: 'spaceCombat'};
+                      let needAwait = true; //wait before new round or while enemy retreat
+                      Object.keys(ctx.activePlayers).forEach(pid => {
+                        if(ctx.activePlayers[pid] === 'spaceCombat_await') needAwait = false;
+                      });
                       
-                      G.dice[activeTile.tdata.occupied] = {};
-                      G.dice[ctx.currentPlayer] = {};
-                      events.setActivePlayers({value: val});
+                      if(needAwait){
+                        events.setStage('spaceCombat_await');
+                      }
+                      else{
+                        const val = {};
+                        val[activeTile.tdata.occupied] = {stage: 'spaceCombat'};
+                        val[ctx.currentPlayer] = {stage: 'spaceCombat'};
+                        
+                        G.dice[activeTile.tdata.occupied] = {};
+                        G.dice[ctx.currentPlayer] = {};
+                        events.setActivePlayers({value: val});
+                      }
                     }
                   }
 
@@ -845,6 +813,79 @@ export const TIO = {
                     }
                     
                     events.endStage();
+                  }
+                }
+              },
+              combatRetreat: {
+                moves: {
+                  nextStep: ({G, ctx, playerID, events}, selectedTile, escFleet, escGround) => {
+                    const returnToCombat = () => {
+                      G.dice[activeTile.tdata.occupied] = {};
+                      G.dice[ctx.currentPlayer] = {};
+                      G.races[playerID].retreat = undefined;
+
+                      const ap = {...ctx.activePlayers};
+                      Object.keys(ap).forEach(pid => ap[pid] = 'spaceCombat');
+                      events.setActivePlayers({value: ap});
+                    }
+
+                    const activeTile = G.tiles.find(t => t.active === true);
+
+                    if(selectedTile > -1 && Object.keys(escFleet).length){
+                      const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
+                      const possible = neighs.filter(n => {
+                          const tile = G.tiles.find(t => t.tid === n.tileId);
+//return true;
+                          if(tile && tile.tdata){
+                              if(tile.tdata.occupied !== undefined){
+                                  return String(tile.tdata.occupied) === String(playerID);
+                              }
+                              if(tile.tdata.planets){
+                                  for(var i=0; i<tile.tdata.planets.length; i++){
+                                      if(String(tile.tdata.planets[i].occupied) === String(playerID)) return true;
+                                  }
+                              }
+                          }
+                          return false;
+                      });
+
+                      const tile = possible.find(t => t.tileId === G.tiles[selectedTile].tid);
+
+                      if(tile){
+                        const forces = (playerID === ctx.currentPlayer ? activeTile.tdata.attacker : activeTile.tdata.fleet);
+
+                        if(!tile.fleet) tile.fleet = {};
+                        Object.keys(escFleet).forEach(tag => {
+                          if(!tile.fleet[tag]) tile.fleet[tag] = [];
+                          escFleet[tag].forEach(elem => {
+                            tile.fleet[tag].push(forces[tag][elem]);
+                            forces[tag][elem] = undefined;
+                          });
+                        });
+
+                        Object.keys(forces).forEach(tag => {
+                          forces[tag] = forces[tag].filter(e => e);
+                          if(!forces[tag].length) delete forces[tag];
+                        })
+
+                        Object.keys(escGround).forEach(tag => {
+                          escGround[tag].forEach(elem => {
+                            const planet = activeTile.tdata.planets.find(p => p.name === elem.pname);
+                            planet.units[tag][elem.idx] = undefined;
+                            planet.units[tag] = planet.units[tag].filter(e => e);
+                            if(!planet.units[tag]) delete planet.units[tag];
+                          });
+                        });
+                      }
+                      else{
+                        returnToCombat();
+                      }
+
+                    }
+                    else{
+                      returnToCombat();
+                    }
+
                   }
                 }
               }
@@ -1373,3 +1414,50 @@ const completeObjective = ({G, playerID, oid, payment}) => {
 
 }
 
+
+const loadUnitsOnRetreat = (G, playerID) => {
+  
+  const activeTile = G.tiles.find(t => t.active === true);
+
+  if(String(activeTile.tdata.occupied) === String(playerID) && activeTile.tdata.planets){ //load fighters and mech if capacity
+    const fleet = activeTile.tdata.fleet;
+    
+    Object.keys(fleet).forEach(tag => {
+
+      const technology = G.races[playerID].technologies.find(t => t.id === tag.toUpperCase());
+
+      if(technology && technology.capacity){
+        fleet[tag].forEach((car, c) => {
+          if(!car.payload) car.payload=[];
+          
+          for(var i=0; i<technology.capacity; i++){
+              if(car.payload.length < i) car.payload.push({});
+              const place = car.payload[i];
+
+              activeTile.tdata.planets.forEach(planet => {
+                if(String(planet.occupied) === String(playerID)){
+                  if(!place || !place.id){
+                    if(planet.units.fighter && planet.units.fighter.length){
+                      car.payload.push({...planet.units.fighter[0], id: 'fighter'});
+                      planet.units.fighter.splice(0,1);
+                      if(planet.units.fighter.length === 0) delete planet.units['fighter'];
+                    }
+                    else if(planet.units.mech && planet.units.mech.length){
+                      car.payload.push({...planet.units.mech[0], id: 'mech'});
+                      planet.units.mech.splice(0,1);
+                      if(planet.units.mech.length === 0) delete planet.units['mech']
+                    } 
+                  }
+                }
+              });
+
+              car.payload = car.payload.filter( p => p.id);
+          }
+          
+        });
+      }
+
+    });
+  }
+  
+}

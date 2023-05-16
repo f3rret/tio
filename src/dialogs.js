@@ -257,7 +257,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
             const planet = PLANETS.find(p => p.name === pnames[0]);
             
             if(planet){
-                let sd = planet.units['spacedock'] * R_UNITS['SPACEDOCK'].production;
+                let sd = planet.units['spacedock'].length * R_UNITS['SPACEDOCK'].production;
                 let max = planet.resources + sd;
                 return max;
             }
