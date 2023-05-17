@@ -322,7 +322,7 @@
         "combat": 7,
         "move": 3, 
         "sustain": false,
-        "bombardment": false,
+        "bombardment": { "count": 1, "value": 5 },
         "barrage": false,
         "shot": 1
     },

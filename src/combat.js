@@ -238,13 +238,16 @@ const HitAssign = (args) => {
                                 </div>
                                 <div style={{display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', maxWidth: '10rem'}}>
                                     {t.payload && t.payload.map((p, l) =>{
-                                        let clName = technologies[p.id] && technologies[p.id].sustain ? 'sustain_ability':'';
-                                        clName += ' hit_assigned' + haveHit(u, j, l);
+                                        if(p){
+                                            let clName = technologies[p.id] && technologies[p.id].sustain ? 'sustain_ability':'';
+                                            clName += ' hit_assigned' + haveHit(u, j, l);
 
-                                        return <Button outline onClick={() => hitAssign(u, j, l, p.id)} key={l} className={clName}
-                                            style={{width: '2rem', border: 'solid 1px rgba(255,255,255,.15)', margin: '.1rem', padding: 0}}>
-                                            <img alt='unit' src={'units/' + p.id.toUpperCase() + '.png'} style={{width: '100%'}}/>
-                                        </Button>
+                                            return <Button outline onClick={() => hitAssign(u, j, l, p.id)} key={l} className={clName}
+                                                style={{width: '2rem', border: 'solid 1px rgba(255,255,255,.15)', margin: '.1rem', padding: 0}}>
+                                                <img alt='unit' src={'units/' + p.id.toUpperCase() + '.png'} style={{width: '100%'}}/>
+                                            </Button>
+                                        }
+                                        return <></>
                                     })}
                                 </div>
                             </div>})}
@@ -270,7 +273,7 @@ const CombatantForces = (args) => {
             fleet[unit].forEach( car =>{
                 if(car.payload && car.payload.length){
                     car.payload.forEach(p => {
-                        if(payload[p.id]) payload[p.id].push(p);
+                        if(p && payload[p.id]) payload[p.id].push(p);
                     })
                 }
             })
@@ -556,7 +559,7 @@ export const SpaceCombat = () => {
 
                     if(car.payload){
                         car.payload.forEach(p => {
-                            if(p.id === 'fighter'){
+                            if(p && p.id === 'fighter'){
                                 result[pid] += 1;
                                 if(technologies[p.id] && technologies[p.id].sustain){
                                     result[pid] += 1;
@@ -660,7 +663,6 @@ export const SpaceCombat = () => {
     </Card>);
 
 }
-
 
 export const CombatRetreat = (args) => {
     const { G, moves, playerID, ctx } = useContext(StateContext);
@@ -869,3 +871,70 @@ export const CombatRetreat = (args) => {
         </Card>);
 }
 
+export const Bombardment = () => {
+
+    const { G, ctx, moves, playerID } = useContext(StateContext);
+    const activeTile = G.tiles.find(t => t.active === true);
+
+    const hits = useMemo(() => {
+        let result = {};
+
+        Object.keys(ctx.activePlayers).forEach(pid => {
+            let h = 0;
+            if(G.dice[pid]){
+                Object.keys(G.dice[pid]).forEach(unit => {
+                    const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                    if(technology && technology.barrage){
+                        h += G.dice[pid][unit].filter(die => die >= technology.barrage.value).length;
+                    }
+                });
+            }
+            result[pid] = h;
+        });
+        
+        return result;
+    }, [G.dice, G.races, ctx.activePlayers]);
+
+    const bombAbilities = useCallback((race, units)=>{
+        const result = {};
+    
+        Object.keys(units).forEach( k => {
+            const technology = race.technologies.find(t => t.id === k.toUpperCase() && t.bombardment);
+            if(technology) result[k] = technology;
+        });
+
+        return result;
+    },[]);
+
+    const everyoneRolls = useMemo(() => {
+        const attacker = bombAbilities(G.races[ctx.currentPlayer], activeTile.tdata.fleet);
+        return Object.keys(attacker).length === Object.keys(G.dice[ctx.currentPlayer]).length;
+
+    }, [G.dice, G.races, activeTile, bombAbilities, ctx.currentPlayer]);
+
+    const activePlanet = useMemo(() => {
+        return activeTile.tdata.planets.find(p => p.invasion);
+    }, [activeTile]);
+
+    return (
+    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+        position: 'absolute', margin: '5rem', color: 'white'}}>
+        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Bombardment</h3></CardTitle>
+        <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
+            <CombatantForces race={G.races[ctx.currentPlayer]} units={activeTile.tdata.fleet} owner={ctx.currentPlayer} combatAbility='bombardment'/>
+            <CombatantForces race={G.races[activePlanet.occupied]} units={activePlanet.units} owner={activePlanet.occupied}/>
+        </CardBody>
+        <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
+            <Button color='warning' disabled = {!everyoneRolls} onClick={moves.nextStep}>Next</Button>
+            <span style={{display: 'flex', justifyContent: 'space-around', fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
+                {Object.keys(hits).map((h, i) => {
+                    return <span key={i}>
+                        <img alt='race' src={'race/icons/' + G.races[h].rid + '.png'} style={{width: '2rem'}}/>
+                        {' does ' + hits[h] + ' hits '}
+                    </span>
+                })}
+            </span>
+        </CardFooter>
+    </Card>);
+
+}

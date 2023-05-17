@@ -810,7 +810,7 @@ export const TIO = {
                     else if(String(activeTile.tdata.occupied) === String(playerID)){
                       delete activeTile.tdata.attacker;
                     }
-                    
+                    G.races[playerID].retreat = undefined;
                     events.endStage();
                   }
                 }
@@ -915,6 +915,53 @@ export const TIO = {
 
                   }
                 }
+              },
+              bombardment: {
+                moves: {
+                  rollDice: ({G, playerID, random}, unit, count) => {
+                    const dice = random.D10(count || 1);
+                    G.dice = produce(G.dice, draft => {
+                      draft[playerID][unit] = dice;
+                    });
+                  },
+                  nextStep: ({events}, hits) => {
+
+                    if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
+                      events.setStage('invasion');
+                    }
+                    else{
+                      events.setStage('invasion_step2');
+                    }
+
+                  }
+                }
+              },
+              invasion : {
+                moves: {
+                  rollDice: ({G, playerID, random}, unit, count) => {
+                    const dice = random.D10(count || 1);
+                    G.dice = produce(G.dice, draft => {
+                      draft[playerID][unit] = dice;
+                    });
+                  },
+                  nextStep: ({events}, hits) => {
+
+                   
+                  }
+                }
+              },
+              invasion_step2 : {
+                moves: {
+                  rollDice: ({G, playerID, random}, unit, count) => {
+                    const dice = random.D10(count || 1);
+                    G.dice = produce(G.dice, draft => {
+                      draft[playerID][unit] = dice;
+                    });
+                  },
+                  nextStep: ({events}, hits) => {
+                   
+                  }
+                }
               }
             },
             onBegin: ({ G, ctx }) => {
@@ -970,6 +1017,20 @@ export const TIO = {
             }
         },
         moves: {
+          invasion: ({G, playerID, events}, planet) => {
+            const activeTile = G.tiles.find(t => t.active === true);
+            const activePlanet = activeTile.tdata.planets.find(p => p.name === planet.name);
+
+            activePlanet.invasion = {};
+
+            const def = {};
+            def[planet.occupied] = {stage: 'bombardment'};
+            
+            G.dice[planet.occupied] = {};
+            G.dice[playerID] = {};
+            
+            events.setActivePlayers({value: def, currentPlayer: {stage: 'bombardment'}});
+          },
           spaceCannonAttack: ({G, playerID, events}) => {
             if(G.spaceCannons && Object.keys(G.spaceCannons).length > 0){
               const sc = {};
@@ -1076,6 +1137,8 @@ export const TIO = {
               const unit = G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload[src.j];
               to.units[from[src.i].payload[src.j].id].push(unit);
               delete G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload[src.j];
+              G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload = 
+                G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload.filter(p => p);
 
               if(!to.occupied && to.trait){
                 const explore = G.explorationDecks[to.trait].pop();

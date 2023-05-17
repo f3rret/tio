@@ -10,7 +10,7 @@ import cardData from './cardData.json';
 import { checkObjective, StateContext } from './utils';
 import { lineTo } from './Grid';
 import { ChatBoard } from './chat';
-import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat } from './combat';
+import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment } from './combat';
 import { produce } from 'immer';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
@@ -267,6 +267,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return ctx.activePlayers && (ctx.activePlayers[playerID] === 'combatRetreat')
   }, [ctx.activePlayers, playerID]);
 
+  const bombardment = useMemo(() => {
+    return ctx.activePlayers && (ctx.activePlayers[playerID] === 'bombardment')
+  }, [ctx.activePlayers, playerID]);
+
   const AddToken = ({tag}) => {
     return (<div size='sm' style={{position: 'absolute', top: 0, right: 0, borderTopRightRadius: '4px', backgroundColor: 'rgba(242, 183, 7, 1)'}}><h5 style={{margin: '.25rem .5rem'}}>+</h5></div>);
   }
@@ -445,10 +449,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             interactive={true} pointerdown={(e)=>tileClick(e, index)}>
               
               <Container x={0} y={50}>
-                {advUnitView && advUnitView.tile === index && 
-                  <Sprite pointerdown={()=>unloadUnit(i)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={.5} alpha={.85}>
-                  </Sprite>}
-                
+                {advUnitView && advUnitView.tile === index && (p.occupied === undefined || String(element.tdata.occupied) === String(p.occupied)) &&
+                    <Sprite pointerdown={()=>unloadUnit(i)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={.5} alpha={.85}/>
+                  }
+                {activeTile && element.tdata.occupied == playerID && <>
+                  {p.occupied !== undefined && String(element.tdata.occupied) !== String(p.occupied) && 
+                    <Sprite tint={'red'} pointerdown={()=>moves.invasion(p)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={1} alpha={.85}/>}
+                </>}
                 {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) =>
                   <Sprite key={ui} x={40 + ui*55} y={-10} scale={1} anchor={0} image={'icons/unit_ground_bg.png'}>
                     <Sprite image={'units/' + u.toUpperCase() + '.png'} x={-5} y={-5} scale={.4} alpha={1}/>
@@ -658,6 +665,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             {spaceCannonAttack && <SpaceCannonAttack />}
             {antiFighterBarrage && <AntiFighterBarrage />}
             {spaceCombat && <SpaceCombat />}
+            {bombardment && <Bombardment />}
             {combatRetreat && <CombatRetreat selectedTile={selectedTile}/>}
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
