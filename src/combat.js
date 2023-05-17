@@ -869,29 +869,3 @@ export const CombatRetreat = (args) => {
         </Card>);
 }
 
-
-/*const PayloadSummary = (args) => {
-
-    let result = {};
-    const { ships, technologies } = args;
-
-    ships.forEach(ship => {
-        if(ship.payload){
-            ship.payload.forEach(p => {
-                if(!result[p.id]) result[p.id] = 0;
-                result[p.id]++;
-            });
-        }
-    });
-
-    return (<div style={{display: 'flex'}}>
-        {Object.keys(result).map((r, i) => {
-            return <span className={technologies[r].sustain ? 'sustain_ability':''} key={i} 
-                    style={{width: '3rem', position: 'relative', border: 'solid 1px rgba(255,255,255,.15)', lineHeight: '1rem'}}>
-                        <CardImg style={{}} src={'units/' + r.toUpperCase() + '.png'}/>
-                        {result[r] > 1 && <span style={{fontSize: 15, position: 'absolute', right: '.25rem'}}>{result[r]}</span>}
-                    </span>
-        })}
-    </div>)
-
-}*/

@@ -685,14 +685,13 @@ export const TIO = {
                   },
                   nextStep: ({G, playerID, events, ctx}, hits) => {
                     if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
-                      Object.keys(hits).forEach(pid => G.dice[pid] = {});
-
                       if(G.races[playerID].retreat !== true){
                         const enemyRetreat = Object.keys(ctx.activePlayers).find(k => G.races[k].retreat === true);
                         if(enemyRetreat !== undefined){
                           events.setStage('spaceCombat_await'); //await while enemy retreating
                         }
                         else{
+                          Object.keys(hits).forEach(pid => G.dice[pid] = {});
                           events.setStage('spaceCombat');
                         }
                       }
@@ -835,7 +834,7 @@ export const TIO = {
                       const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
                       const possible = neighs.filter(n => {
                           const tile = G.tiles.find(t => t.tid === n.tileId);
-//return true;
+
                           if(tile && tile.tdata){
                               if(tile.tdata.occupied !== undefined){
                                   return String(tile.tdata.occupied) === String(playerID);
@@ -849,16 +848,44 @@ export const TIO = {
                           return false;
                       });
 
-                      const tile = possible.find(t => t.tileId === G.tiles[selectedTile].tid);
+                      const hex = possible.find(t => t.tileId === G.tiles[selectedTile].tid);
 
-                      if(tile){
+                      if(hex){
+                        const tile = G.tiles.find(t => t.tid === hex.tileId);
                         const forces = (playerID === ctx.currentPlayer ? activeTile.tdata.attacker : activeTile.tdata.fleet);
 
-                        if(!tile.fleet) tile.fleet = {};
-                        Object.keys(escFleet).forEach(tag => {
-                          if(!tile.fleet[tag]) tile.fleet[tag] = [];
+                        if(escGround && Object.keys(escGround).length){ //load ground units
+                          let payload = [];
+
+                          Object.keys(escGround).forEach(tag => { //remove from src
+                            escGround[tag].forEach(elem => {
+                              const planet = activeTile.tdata.planets.find(p => p.name === elem.pname);
+                              payload.push({...planet.units[tag][elem.idx], id: tag});
+                              planet.units[tag][elem.idx] = undefined;
+                              planet.units[tag] = planet.units[tag].filter(e => e);
+                              if(!planet.units[tag].length) delete planet.units[tag];
+                            });
+                          });
+
+                          const technologies = getUnitsTechnologies(Object.keys(escFleet), G.races[playerID]); //load
+                          Object.keys(escFleet).forEach(tag => {
+                            escFleet[tag].forEach(elem => {
+                              if(technologies[tag] && technologies[tag].capacity){
+                                if(!forces[tag][elem].payload) forces[tag][elem].payload=[];
+                                while((forces[tag][elem].payload.length < technologies[tag].capacity) && payload.length){
+                                  forces[tag][elem].payload.push(payload.pop());
+                                }
+                              }
+                            });
+                          });
+                        }
+
+                        if(!tile.tdata.fleet) tile.tdata.fleet = {};
+                        
+                        Object.keys(escFleet).forEach(tag => { //move fleet to dst
+                          if(!tile.tdata.fleet[tag]) tile.tdata.fleet[tag] = [];
                           escFleet[tag].forEach(elem => {
-                            tile.fleet[tag].push(forces[tag][elem]);
+                            tile.tdata.fleet[tag].push({...forces[tag][elem]});
                             forces[tag][elem] = undefined;
                           });
                         });
@@ -868,14 +895,14 @@ export const TIO = {
                           if(!forces[tag].length) delete forces[tag];
                         })
 
-                        Object.keys(escGround).forEach(tag => {
-                          escGround[tag].forEach(elem => {
-                            const planet = activeTile.tdata.planets.find(p => p.name === elem.pname);
-                            planet.units[tag][elem.idx] = undefined;
-                            planet.units[tag] = planet.units[tag].filter(e => e);
-                            if(!planet.units[tag]) delete planet.units[tag];
-                          });
-                        });
+                        
+                        if(activeTile.tdata.attacker && Object.keys(activeTile.tdata.attacker).length &&
+                        activeTile.tdata.fleet && Object.keys(activeTile.tdata.fleet).length){
+                          returnToCombat(); //if both space forces
+                        }
+                        else{
+                          events.setStage('spaceCombat_await'); //else end combat
+                        }
                       }
                       else{
                         returnToCombat();
