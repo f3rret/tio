@@ -924,15 +924,16 @@ export const TIO = {
                       draft[playerID][unit] = dice;
                     });
                   },
-                  nextStep: ({events}, hits) => {
-
-                    if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
-                      events.setStage('invasion');
+                  nextStep: ({events, playerID, ctx}, hits) => {
+                    if(String(playerID) === String(ctx.currentPlayer)){
+                      events.setStage('invasion_await');
+                    }
+                    else if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
+                      events.setStage('invasion_await');
                     }
                     else{
                       events.setStage('invasion_step2');
                     }
-
                   }
                 }
               },
@@ -944,8 +945,15 @@ export const TIO = {
                       draft[playerID][unit] = dice;
                     });
                   },
-                  nextStep: ({events}, hits) => {
+                  nextStep: ({G, events}, hits) => {
 
+                    if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
+                      Object.keys(hits).forEach(pid => G.dice[pid] = {});
+                      events.setStage('invasion');
+                    }
+                    else{
+                      events.setStage('invasion_step2');
+                    }
                    
                   }
                 }
@@ -958,11 +966,154 @@ export const TIO = {
                       draft[playerID][unit] = dice;
                     });
                   },
-                  nextStep: ({events}, hits) => {
-                   
+                  nextStep: ({G, playerID, ctx, events}, hits) => {
+                    let fleet = {};
+                    const activeTile = G.tiles.find(t => t.active === true);
+                    const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+                    
+                    const defenderForces = () => {
+                        const result = {};
+                        Object.keys(activePlanet.units).forEach(k => {
+                            if(['infantry', 'mech', 'pds'].indexOf(k) > -1){
+                                result[k] = activePlanet.units[k];
+                            }
+                        });
+                        return result;
+                    }
+
+                    if(playerID === ctx.currentPlayer){
+                      fleet = activePlanet.invasion.troops;
+                    }
+                    else{
+                      fleet = activePlanet.units;
+                    }
+                    
+                    hits && Object.keys(hits).forEach(unit => { //hits assignment
+                      if(hits[unit].length){
+                        hits[unit].forEach((car, i) => {
+                          if(car.hit){
+                            if(!fleet[unit][car.idx].hit) fleet[unit][car.idx].hit = 0;
+                            fleet[unit][car.idx].hit += car.hit;
+                          }
+                        });
+                      }  
+                    });
+  
+                    Object.keys(fleet).forEach(f => { //remove destroyed units
+                      fleet[f].forEach((car, i) => {
+                        if((car.hit === 1 && f !== 'mech') || car.hit > 1){
+                          delete fleet[f][i];
+                        }
+                      });
+                      fleet[f] = fleet[f].filter(car => car);
+                      if(fleet[f].length === 0) delete fleet[f];
+                    });
+                    
+                    const defs = defenderForces();
+                    if(!(activePlanet.invasion.troops && Object.keys(activePlanet.invasion.troops).length) ||
+                      !(defs && Object.keys(defs).length)){
+                      events.setStage('invasion_await'); //end space battle
+                    }
+                    else{
+                      let needAwait = true; //wait before new round
+                      Object.keys(ctx.activePlayers).forEach(pid => {
+                        if(ctx.activePlayers[pid] === 'invasion_await') needAwait = false;
+                      });
+                      
+                      if(needAwait){
+                        events.setStage('invasion_await');
+                      }
+                      else{
+                        const val = {};
+                        val[activePlanet.occupied] = {stage: 'invasion'};
+                        val[ctx.currentPlayer] = {stage: 'invasion'};
+                        
+                        G.dice[activePlanet.occupied] = {};
+                        G.dice[ctx.currentPlayer] = {};
+                        events.setActivePlayers({value: val});
+                      }
+                      
+                    }
+  
+                  } 
+                }
+              },
+              invasion_await:{
+                moves: {
+                  endBattle: ({G, events, playerID, ctx}) => {
+                    const activeTile = G.tiles.find(t => t.active === true);
+                    const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+
+                    const defenderForces = () => {
+                      const result = {};
+                      Object.keys(activePlanet.units).forEach(k => {
+                          if(['infantry', 'mech'].indexOf(k) > -1){
+                              result[k] = activePlanet.units[k];
+                          }
+                      });
+                      return result;
+                  }
+
+                    if(!Object.keys(defenderForces()).length && Object.keys(activePlanet.invasion.troops).length){
+                      if(ctx.currentPlayer === playerID){
+                        activePlanet.units = {...activePlanet.invasion.troops};
+                        delete activePlanet.invasion;
+                        activePlanet.occupied = playerID;
+                      }
+                    }
+                    else if(String(activePlanet.occupied) === String(playerID)){
+                      delete activePlanet.invasion;
+                    }
+
+                    events.endStage();
+                  },
+
+                  landTroops: ({G, ctx, events}, troops) => {
+                    const activeTile = G.tiles.find(t => t.active === true);
+                    const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+
+                    if(!troops || troops.length === 0){ //cancel landing
+                      G.dice[activePlanet.occupied] = {};
+                      G.dice[ctx.currentPlayer] = {};
+                      
+                      activePlanet.invasion = undefined;
+                      events.setActivePlayers({});
+                    }
+                    else{
+                      if(!activePlanet.invasion.troops) activePlanet.invasion.troops = {};
+
+                      troops.forEach(t => {
+                        const split = t.split('.'); //car tag, car idx, payload idx
+                        const troop = activeTile.tdata.fleet[split[0]][split[1]].payload[split[2]];
+
+                        if(!activePlanet.invasion.troops[troop.id]) activePlanet.invasion.troops[troop.id]=[];
+                        activePlanet.invasion.troops[troop.id].push({...troop});
+                        delete activeTile.tdata.fleet[split[0]][split[1]].payload[split[2]];
+                      });
+
+                      //clean empty
+                      Object.keys(activeTile.tdata.fleet).forEach(k => {
+                        activeTile.tdata.fleet[k].forEach(car => {
+                          car.payload = car.payload.filter(p => p);
+                        });
+                      })
+
+                      if(ctx.activePlayers[activePlanet.occupied] === 'invasion_await'){
+                        const val = {};
+                        val[activePlanet.occupied] = {stage: 'invasion'};
+                        val[ctx.currentPlayer] = {stage: 'invasion'};
+                        
+                        G.dice[activePlanet.occupied] = {};
+                        G.dice[ctx.currentPlayer] = {};
+                        events.setActivePlayers({value: val});
+                      }
+                      else{
+                        events.setStage('invasion_await');
+                      }
+                    }
                   }
                 }
-              }
+              },
             },
             onBegin: ({ G, ctx }) => {
               G.tiles.forEach( t => t.active = false);

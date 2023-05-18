@@ -262,7 +262,7 @@ const HitAssign = (args) => {
 const CombatantForces = (args) => {
 
     const { G, moves, playerID } = useContext(StateContext);
-    const {race, units: fleet, owner, combatAbility} = args;
+    const {race, units: fleet, owner, combatAbility, isInvasion} = args;
 
     const units = useMemo(()=> {
         let payload = {
@@ -317,9 +317,11 @@ const CombatantForces = (args) => {
                     {Object.keys(units).map((u, i) => {
                         const ucount = (Array.isArray(units[u]) ? units[u].length : units[u]);
                         let style = {marginLeft: '1rem', padding: 0, fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'};
-                        const ability = ['infantry', 'mech'].indexOf(u) === -1 ?
-                                            combatAbility ? technologies[u][combatAbility] : {value: technologies[u].combat, count: technologies[u].shot || 1} : 
-                                            null;
+                        const deflt = {value: technologies[u].combat, count: technologies[u].shot || 1};
+                        const ability = isInvasion ? deflt:
+                                        ['infantry', 'mech'].indexOf(u) === -1 ? 
+                                            combatAbility ? technologies[u][combatAbility] : deflt 
+                                        : null;
                         
                         if(ability){
                             style = {...style, padding: '.5rem', background: 'rgba(255,255,255,.15)'}
@@ -873,27 +875,26 @@ export const CombatRetreat = (args) => {
 
 export const Bombardment = () => {
 
-    const { G, ctx, moves, playerID } = useContext(StateContext);
+    const { G, ctx, moves } = useContext(StateContext);
     const activeTile = G.tiles.find(t => t.active === true);
 
     const hits = useMemo(() => {
         let result = {};
 
-        Object.keys(ctx.activePlayers).forEach(pid => {
-            let h = 0;
-            if(G.dice[pid]){
-                Object.keys(G.dice[pid]).forEach(unit => {
-                    const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
-                    if(technology && technology.barrage){
-                        h += G.dice[pid][unit].filter(die => die >= technology.barrage.value).length;
-                    }
-                });
-            }
-            result[pid] = h;
-        });
+        const pid = ctx.currentPlayer;
+        result[pid] = 0;
+
+        if(G.dice[pid]){
+            Object.keys(G.dice[pid]).forEach(unit => {
+                const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                if(technology && technology.bombardment){
+                    result[pid] += G.dice[pid][unit].filter(die => die >= technology.bombardment.value).length;
+                }
+            });
+        }
         
         return result;
-    }, [G.dice, G.races, ctx.activePlayers]);
+    }, [G.dice, G.races, ctx.currentPlayer]);
 
     const bombAbilities = useCallback((race, units)=>{
         const result = {};
@@ -916,16 +917,26 @@ export const Bombardment = () => {
         return activeTile.tdata.planets.find(p => p.invasion);
     }, [activeTile]);
 
+    const defenderForces = useMemo(() => {
+        const result = {};
+        Object.keys(activePlanet.units).forEach(k => {
+            if(['infantry', 'mech', 'pds'].indexOf(k) > -1){
+                result[k] = activePlanet.units[k];
+            }
+        });
+        return result;
+    },[activePlanet]);
+
     return (
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Bombardment</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             <CombatantForces race={G.races[ctx.currentPlayer]} units={activeTile.tdata.fleet} owner={ctx.currentPlayer} combatAbility='bombardment'/>
-            <CombatantForces race={G.races[activePlanet.occupied]} units={activePlanet.units} owner={activePlanet.occupied}/>
+            <CombatantForces race={G.races[activePlanet.occupied]} units={defenderForces} owner={activePlanet.occupied}/>
         </CardBody>
         <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-            <Button color='warning' disabled = {!everyoneRolls} onClick={moves.nextStep}>Next</Button>
+            <Button color='warning' disabled = {!everyoneRolls} onClick={()=>moves.nextStep(hits)}>Next</Button>
             <span style={{display: 'flex', justifyContent: 'space-around', fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
                 {Object.keys(hits).map((h, i) => {
                     return <span key={i}>
@@ -935,6 +946,308 @@ export const Bombardment = () => {
                 })}
             </span>
         </CardFooter>
+    </Card>);
+
+}
+
+const LandingForces = (args) => {
+
+    const { playerID } = useContext(StateContext);
+    const {race, owner, units, troops, setTroops} = args;
+    
+    const technologies = useMemo(()=>{
+        return getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech'], race);
+    },[race, units]);
+
+    const haveHit = useCallback((tag, idx, pidx) => {
+        let result = 0;
+
+        if(pidx === undefined){
+            result = (units[tag][idx].hit || 0);
+        }
+        else{
+            if(units[tag][idx] && units[tag][idx].payload[pidx]){
+                result = (units[tag][idx].payload[pidx].hit || 0);
+            }
+        }
+
+        return result;
+    }, [units]);
+
+    const landTroop = useCallback((carTag, carIdx, idx) => {
+        setTroops(produce(troops, draft => {
+            const id = carTag + '.' + carIdx + '.' + idx;
+            const index = troops.indexOf(id);
+
+            if(index > -1){
+                draft.splice(index, 1);
+            }
+            else{
+                draft.push(id);
+            }
+        }))
+    }, [troops, setTroops]);
+
+    return (
+        <div style={{display: 'flex', position: 'relative', flexDirection: 'row', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+            border: String(playerID) === String(owner) ? 'solid 1px rgba(255,255,0,.5)':'solid 1px rgba(255,255,255,.25)'}}>
+            <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
+            {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: 'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
+            <div style={{display: 'flex', flexWrap: 'wrap'}}>
+                {Object.keys(units).filter(u => technologies[u] && technologies[u].capacity).map((u, i) => {
+                    return <div key={i} style={{marginLeft: '1rem', display: 'flex', flexWrap: 'wrap'}}>
+                        {units[u].map((t, j) =>{
+                            let className=technologies[u].sustain ? 'sustain_ability':'';
+                            className += ' hit_assigned' + haveHit(u, j);
+
+                            return <div key={j}>
+                                {t.payload && <div style={{margin: '0.25rem 1rem 0 0', display: 'flex', alignItems: 'flex-start'}}>
+                                    <div>
+                                        <Button style={{width: '5rem', padding: 0, backgroundColor: '', border: 'none'}} 
+                                            className={className} outline onClick={()=>{}}>
+                                            <img alt='unit' src={'units/' + u.toUpperCase() + '.png'} style={{width: '100%'}}/>
+                                        </Button>
+                                    </div>
+                                    <div style={{display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', maxWidth: '10rem'}}>
+                                        {t.payload.map((p, l) =>{
+                                            if(p){
+                                                let clName = technologies[p.id] && technologies[p.id].sustain ? 'sustain_ability':'';
+                                                clName += ' hit_assigned' + haveHit(u, j, l);
+
+                                                return <Button outline disabled={['infantry', 'mech'].indexOf(p.id) === -1} onClick={() => landTroop(u, j, l)} key={l} className={clName}
+                                                    style={{width: '2rem', border: 'solid 1px rgba(255,255,255,.15)', 
+                                                        background: troops.indexOf(u+'.'+j+'.'+l) > -1 ? 'rgba(255,255,255,.5)': '', margin: '.1rem', padding: 0}}>
+                                                    <img alt='unit' src={'units/' + p.id.toUpperCase() + '.png'} style={{width: '100%'}}/>
+                                                </Button>
+                                            }
+                                            return <></>
+                                        })}
+                                    </div>
+                                </div>}
+                            </div>
+                        })}
+                    </div>
+                })}
+            </div>
+        </div>
+    );
+
+}
+
+export const Invasion = () => {
+
+    const { G, ctx, moves, playerID } = useContext(StateContext);
+    const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
+    const activePlanet = useMemo(()=> activeTile.tdata.planets.find(p => p.invasion), [activeTile]);
+    const [ahitsA, setAhitsA] = useState({});
+    const [ahitsD, setAhitsD] = useState({});
+    const [troops, setTroops] = useState([]);
+
+    const defenderForces = useMemo(() => {
+        const result = {};
+        Object.keys(activePlanet.units).forEach(k => {
+            if(['infantry', 'mech', 'pds'].indexOf(k) > -1){
+                result[k] = activePlanet.units[k];
+            }
+        });
+        return result;
+    },[activePlanet]);
+
+    const hits = useMemo(() => {
+        let result = {};
+        const players = Object.keys(activePlanet.invasion).length > 0 ? Object.keys(ctx.activePlayers):[ctx.currentPlayer];
+
+        players.forEach(pid => {
+            let h = 0;
+            if(G.dice[pid]){
+                Object.keys(G.dice[pid]).forEach(unit => {
+                    const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                    
+                    if(technology && technology.combat){
+                        h += G.dice[pid][unit].filter(die => die >= technology.combat).length;
+                    }
+                });
+            }
+            result[pid] = h;
+        });
+
+        return result;
+    }, [G.dice, G.races, ctx.activePlayers, activePlanet, ctx.currentPlayer]);
+
+    const assignedA = useMemo(() => {
+        let result = 0;
+
+        if(ahitsA){
+            Object.keys(ahitsA).forEach(u => {
+                if(ahitsA[u] && ahitsA[u].length){
+                    ahitsA[u].forEach(ship => {
+                        if(ship.hit) result += ship.hit;
+                    });
+                }
+            });
+        }
+
+        return result;
+
+    }, [ahitsA]);
+
+    const assignedD = useMemo(() => {
+        let result = 0;
+
+        if(ahitsD){
+            Object.keys(ahitsD).forEach(u => {
+                if(ahitsD[u] && ahitsD[u].length){
+                    ahitsD[u].forEach(ship => {
+                        if(ship.hit) result += ship.hit;
+                    });
+                }
+            });
+        }
+
+        return result;
+
+    }, [ahitsD]);
+
+    const everyoneRolls = useMemo(() => {
+        if(!activePlanet.invasion.troops || !G.dice[ctx.currentPlayer] || !defenderForces || !G.dice[activePlanet.occupied]){
+            return true;
+        }
+
+        return Object.keys(activePlanet.invasion.troops).length <= Object.keys(G.dice[ctx.currentPlayer]).length && 
+                Object.keys(defenderForces).length <= Object.keys(G.dice[activePlanet.occupied]).length;
+
+    }, [G.dice, ctx.currentPlayer, activePlanet, defenderForces]);
+
+    const needAwait = useMemo(()=>{
+        const myStage = ctx.activePlayers[playerID];
+        if(myStage === 'invasion_await') return true;
+    }, [playerID, ctx.activePlayers]);
+
+    const landing = useMemo(() => {
+        if(String(playerID) === String(ctx.currentPlayer)){
+            if(ctx.activePlayers[playerID] === 'invasion_await' && !activePlanet.invasion.troops){
+                return true;
+            }
+        }
+    }, [ctx.currentPlayer, playerID, activePlanet, ctx.activePlayers]);
+
+    const maxHits = useMemo(() => {
+        let result = {};
+
+        Object.keys(ctx.activePlayers).forEach(pid => {
+            let fleet = (String(pid) === String(ctx.currentPlayer)) ? activePlanet.invasion.troops : defenderForces;
+            result[pid] = 0;
+            if(fleet){
+                const technologies = getUnitsTechnologies(Object.keys(fleet), G.races[pid]);
+
+                Object.keys(fleet).forEach(tag => {
+                    fleet[tag].forEach(car => {
+                        if(car){
+                            result[pid] += 1;
+                            if(technologies[tag] && technologies[tag].sustain){
+                                result[pid] += 1;
+                            }
+                            if(car.hit) result[pid] -= car.hit;
+                        }
+                    });
+                });
+            }
+        });
+
+        return result;
+    }, [G.races, activePlanet, ctx.activePlayers, ctx.currentPlayer, defenderForces]);
+
+    const allHitsAssigned = useMemo(() => {
+
+        if(playerID === ctx.currentPlayer){
+            return !hits[activePlanet.occupied] || (assignedA === Math.min(hits[activePlanet.occupied], maxHits[ctx.currentPlayer]));
+        }
+        else{
+            return !hits[ctx.currentPlayer] || (assignedD === Math.min(hits[ctx.currentPlayer], maxHits[activePlanet.occupied]));
+        }
+
+    }, [assignedA, assignedD, playerID, ctx.currentPlayer, hits, activePlanet, maxHits]);
+
+    const HitsInfo = () => {
+        return  <span style={{display: 'flex', justifyContent: 'space-around', fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
+                    {Object.keys(hits).map((h, i) => {
+                        return <span key={i}>
+                            <img alt='race' src={'race/icons/' + G.races[h].rid + '.png'} style={{width: '2rem'}}/>
+                            {' does ' + hits[h] + ' hits '}
+                        </span>
+                    })}
+                </span>
+    }
+
+    const winner = useMemo(() => {
+        if(!activePlanet.invasion.troops) return undefined;
+
+        const attacker = activePlanet.invasion.troops;
+        const defender = activePlanet.units;
+
+        if(!(attacker && Object.keys(attacker).length)){
+            return activePlanet.occupied;
+        } 
+        else if(!(defender && Object.keys(defender).length)){
+            return ctx.currentPlayer;
+        }
+
+        return undefined;
+    }, [activePlanet, ctx.currentPlayer]);
+
+
+    useEffect(()=>{
+        if(ahitsA && Object.keys(ahitsA).length > 0){
+            setAhitsA({});
+        }
+    // eslint-disable-next-line
+    }, [activePlanet.invasion]);
+
+    useEffect(()=>{
+        if(ahitsD && Object.keys(ahitsD).length > 0){
+            setAhitsD({});
+        }
+    // eslint-disable-next-line
+    }, [activePlanet.units]);
+
+    return (
+    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+        position: 'absolute', margin: '5rem', color: 'white'}}>
+        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{landing ? 'Landing':'Invasion'}</h3></CardTitle>
+        <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
+            {(ctx.activePlayers[playerID] === 'invasion' || ctx.activePlayers[playerID] === 'invasion_await') && <>
+                {!needAwait && <>
+                    <CombatantForces race={G.races[ctx.currentPlayer]} units={activePlanet.invasion.troops} owner={ctx.currentPlayer} isInvasion={true} />
+                    <CombatantForces race={G.races[activePlanet.occupied]} units={defenderForces} owner={activePlanet.occupied} isInvasion={true}/>
+                </>}
+                {landing && <>
+                    <LandingForces race={G.races[ctx.currentPlayer]} owner={ctx.currentPlayer} units={activeTile.tdata.fleet} troops={troops} setTroops={setTroops}/>
+                </>}
+                {!landing && needAwait && <>
+                    {winner === undefined && <h5 style={{margin: '5rem', textAlign: 'center'}}>Awaiting opponent...</h5>}
+                    {winner !== undefined && <>
+                        {String(winner) === String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'yellowgreen'}}>Enemy's forces was defeated!</h5>}
+                        {String(winner) !== String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'red'}}>Your forces was defeated.</h5>}
+                    </>}
+                </>}
+            </>}
+            {ctx.activePlayers[playerID] === 'invasion_step2' && <>
+                {Object.keys(activePlanet.invasion).length > 0 && <HitAssign race={G.races[ctx.currentPlayer]} units={activePlanet.invasion.troops} owner={ctx.currentPlayer} hits={ahitsA} setHits={setAhitsA}/>}
+                <HitAssign race={G.races[activePlanet.occupied]} units={defenderForces} owner={String(activePlanet.occupied)} hits={ahitsD} setHits={setAhitsD}/>
+            </>}
+        </CardBody>
+        {(!needAwait || landing || (needAwait && winner !== undefined)) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
+            {landing && <Button color='warning' onClick={() => moves.landTroops(troops)}>{troops.length > 0 ? 'Next':'Cancel'}</Button>}
+            {!landing && needAwait && winner !== undefined && <Button color='warning' onClick={() => moves.endBattle()}>Next</Button>}
+            {ctx.activePlayers[playerID] === 'invasion' && <>
+                <Button color='warning' disabled = {!everyoneRolls} onClick={() => moves.nextStep(hits)}>Next</Button>
+                <HitsInfo />
+            </>}
+            {ctx.activePlayers[playerID] === 'invasion_step2' && <>
+                <Button color='warning' disabled = {!allHitsAssigned} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD)}>Next</Button>
+                <HitsInfo />
+            </>}
+        </CardFooter>}
     </Card>);
 
 }

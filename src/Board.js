@@ -10,7 +10,7 @@ import cardData from './cardData.json';
 import { checkObjective, StateContext } from './utils';
 import { lineTo } from './Grid';
 import { ChatBoard } from './chat';
-import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment } from './combat';
+import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion } from './combat';
 import { produce } from 'immer';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
@@ -269,6 +269,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   const bombardment = useMemo(() => {
     return ctx.activePlayers && (ctx.activePlayers[playerID] === 'bombardment')
+  }, [ctx.activePlayers, playerID]);
+
+  const invasion = useMemo(() => {
+    return ctx.activePlayers && ctx.activePlayers[playerID] && ctx.activePlayers[playerID].startsWith('invasion');
   }, [ctx.activePlayers, playerID]);
 
   const AddToken = ({tag}) => {
@@ -665,8 +669,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             {spaceCannonAttack && <SpaceCannonAttack />}
             {antiFighterBarrage && <AntiFighterBarrage />}
             {spaceCombat && <SpaceCombat />}
-            {bombardment && <Bombardment />}
             {combatRetreat && <CombatRetreat selectedTile={selectedTile}/>}
+            {bombardment && <Bombardment />}
+            {invasion && <Invasion />}
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport>
