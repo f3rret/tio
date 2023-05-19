@@ -292,7 +292,7 @@ const CombatantForces = (args) => {
 
     const fireClick = useCallback((u) => {
         const count = Array.isArray(units[u]) ? units[u].length : units[u];
-        const shots = (combatAbility ? technologies[u][combatAbility].count : technologies[u].shot) || 1;
+        const shots = (combatAbility ? technologies[u][combatAbility].count : u === 'pds' ? technologies[u]['spaceCannon'].count: technologies[u].shot) || 1;
         moves.rollDice(u, count*shots);        
     }, [moves, technologies, units, combatAbility]);
 
@@ -318,10 +318,10 @@ const CombatantForces = (args) => {
                         const ucount = (Array.isArray(units[u]) ? units[u].length : units[u]);
                         let style = {marginLeft: '1rem', padding: 0, fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'};
                         const deflt = {value: technologies[u].combat, count: technologies[u].shot || 1};
-                        const ability = isInvasion ? deflt:
+                        const ability = isInvasion ? (u === 'pds' ? technologies[u]['spaceCannon']: deflt):
                                         ['infantry', 'mech'].indexOf(u) === -1 ? 
                                             combatAbility ? technologies[u][combatAbility] : deflt 
-                                        : null;
+                                            : null;
                         
                         if(ability){
                             style = {...style, padding: '.5rem', background: 'rgba(255,255,255,.15)'}
@@ -1038,38 +1038,53 @@ export const Invasion = () => {
 
     const { G, ctx, moves, playerID } = useContext(StateContext);
     const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
-    const activePlanet = useMemo(()=> activeTile.tdata.planets.find(p => p.invasion), [activeTile]);
+    const activePlanet = useMemo(()=> {
+        let ap = activeTile.tdata.planets.find(p => p.invasion);
+        if(!ap) ap = {units: {}}
+        return ap;
+    }, [activeTile]);
     const [ahitsA, setAhitsA] = useState({});
     const [ahitsD, setAhitsD] = useState({});
     const [troops, setTroops] = useState([]);
 
     const defenderForces = useMemo(() => {
         const result = {};
-        Object.keys(activePlanet.units).forEach(k => {
-            if(['infantry', 'mech', 'pds'].indexOf(k) > -1){
-                result[k] = activePlanet.units[k];
-            }
-        });
+        if(activePlanet){
+            const possible = (activePlanet.invasion && activePlanet.invasion.nopds) ? ['infantry', 'mech']:['infantry', 'mech', 'pds'];
+            Object.keys(activePlanet.units).forEach(k => {
+                if(possible.indexOf(k) > -1){
+                    result[k] = activePlanet.units[k];
+                }
+            });
+        }
         return result;
     },[activePlanet]);
 
     const hits = useMemo(() => {
         let result = {};
-        const players = Object.keys(activePlanet.invasion).length > 0 ? Object.keys(ctx.activePlayers):[ctx.currentPlayer];
 
-        players.forEach(pid => {
-            let h = 0;
-            if(G.dice[pid]){
-                Object.keys(G.dice[pid]).forEach(unit => {
-                    const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
-                    
-                    if(technology && technology.combat){
-                        h += G.dice[pid][unit].filter(die => die >= technology.combat).length;
-                    }
-                });
-            }
-            result[pid] = h;
-        });
+        if(activePlanet && activePlanet.invasion){
+            const players = Object.keys(activePlanet.invasion).length > 0 ? Object.keys(ctx.activePlayers):[ctx.currentPlayer];
+
+            players.forEach(pid => {
+                let h = 0;
+                if(G.dice[pid]){
+                    Object.keys(G.dice[pid]).forEach(unit => {
+                        const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                        
+                        if(unit === 'pds'){
+                            if(technology && technology.spaceCannon){
+                                h += G.dice[pid][unit].filter(die => die >= technology.spaceCannon.value).length;
+                            }
+                        }
+                        else if(technology && technology.combat){
+                            h += G.dice[pid][unit].filter(die => die >= technology.combat).length;
+                        }
+                    });
+                }
+                result[pid] = h;
+            });
+        }
 
         return result;
     }, [G.dice, G.races, ctx.activePlayers, activePlanet, ctx.currentPlayer]);
@@ -1109,12 +1124,14 @@ export const Invasion = () => {
     }, [ahitsD]);
 
     const everyoneRolls = useMemo(() => {
-        if(!activePlanet.invasion.troops || !G.dice[ctx.currentPlayer] || !defenderForces || !G.dice[activePlanet.occupied]){
-            return true;
-        }
+        if(activePlanet && activePlanet.invasion){
+            if(!activePlanet.invasion.troops || !G.dice[ctx.currentPlayer] || !defenderForces || !G.dice[activePlanet.occupied]){
+                return true;
+            }
 
-        return Object.keys(activePlanet.invasion.troops).length <= Object.keys(G.dice[ctx.currentPlayer]).length && 
-                Object.keys(defenderForces).length <= Object.keys(G.dice[activePlanet.occupied]).length;
+            return Object.keys(activePlanet.invasion.troops).length <= Object.keys(G.dice[ctx.currentPlayer]).length && 
+                    Object.keys(defenderForces).length <= Object.keys(G.dice[activePlanet.occupied]).length;
+        }
 
     }, [G.dice, ctx.currentPlayer, activePlanet, defenderForces]);
 
@@ -1124,9 +1141,11 @@ export const Invasion = () => {
     }, [playerID, ctx.activePlayers]);
 
     const landing = useMemo(() => {
-        if(String(playerID) === String(ctx.currentPlayer)){
-            if(ctx.activePlayers[playerID] === 'invasion_await' && !activePlanet.invasion.troops){
-                return true;
+        if(activePlanet && activePlanet.invasion){
+            if(String(playerID) === String(ctx.currentPlayer)){
+                if(ctx.activePlayers[playerID] === 'invasion_await' && !activePlanet.invasion.troops){
+                    return true;
+                }
             }
         }
     }, [ctx.currentPlayer, playerID, activePlanet, ctx.activePlayers]);
@@ -1134,38 +1153,41 @@ export const Invasion = () => {
     const maxHits = useMemo(() => {
         let result = {};
 
-        Object.keys(ctx.activePlayers).forEach(pid => {
-            let fleet = (String(pid) === String(ctx.currentPlayer)) ? activePlanet.invasion.troops : defenderForces;
-            result[pid] = 0;
-            if(fleet){
-                const technologies = getUnitsTechnologies(Object.keys(fleet), G.races[pid]);
+        if(activePlanet && activePlanet.invasion){
+            Object.keys(ctx.activePlayers).forEach(pid => {
+                let fleet = (String(pid) === String(ctx.currentPlayer)) ? activePlanet.invasion.troops : defenderForces;
+                result[pid] = 0;
+                if(fleet){
+                    const technologies = getUnitsTechnologies(Object.keys(fleet), G.races[pid]);
 
-                Object.keys(fleet).forEach(tag => {
-                    fleet[tag].forEach(car => {
-                        if(car){
-                            result[pid] += 1;
-                            if(technologies[tag] && technologies[tag].sustain){
+                    Object.keys(fleet).forEach(tag => {
+                        fleet[tag].forEach(car => {
+                            if(car){
                                 result[pid] += 1;
+                                if(technologies[tag] && technologies[tag].sustain){
+                                    result[pid] += 1;
+                                }
+                                if(car.hit) result[pid] -= car.hit;
                             }
-                            if(car.hit) result[pid] -= car.hit;
-                        }
+                        });
                     });
-                });
-            }
-        });
+                }
+            });
+        }
 
         return result;
     }, [G.races, activePlanet, ctx.activePlayers, ctx.currentPlayer, defenderForces]);
 
     const allHitsAssigned = useMemo(() => {
 
-        if(playerID === ctx.currentPlayer){
-            return !hits[activePlanet.occupied] || (assignedA === Math.min(hits[activePlanet.occupied], maxHits[ctx.currentPlayer]));
+        if(activePlanet && activePlanet.occupied !== undefined){
+            if(playerID === ctx.currentPlayer){
+                return !hits[activePlanet.occupied] || (assignedA === Math.min(hits[activePlanet.occupied], maxHits[ctx.currentPlayer]));
+            }
+            else{
+                return !hits[ctx.currentPlayer] || (assignedD === Math.min(hits[ctx.currentPlayer], maxHits[activePlanet.occupied]));
+            }
         }
-        else{
-            return !hits[ctx.currentPlayer] || (assignedD === Math.min(hits[ctx.currentPlayer], maxHits[activePlanet.occupied]));
-        }
-
     }, [assignedA, assignedD, playerID, ctx.currentPlayer, hits, activePlanet, maxHits]);
 
     const HitsInfo = () => {
@@ -1180,15 +1202,16 @@ export const Invasion = () => {
     }
 
     const winner = useMemo(() => {
+        if(!activePlanet.invasion) return -1; //not you
         if(!activePlanet.invasion.troops) return undefined;
 
         const attacker = activePlanet.invasion.troops;
-        const defender = activePlanet.units;
+        const defender = Object.keys(activePlanet.units).filter(k => ['infantry', 'mech'].indexOf(k) > -1);
 
         if(!(attacker && Object.keys(attacker).length)){
             return activePlanet.occupied;
         } 
-        else if(!(defender && Object.keys(defender).length)){
+        else if(!defender.length){
             return ctx.currentPlayer;
         }
 

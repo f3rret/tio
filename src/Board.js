@@ -467,6 +467,15 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     x={40} y={25} text={p.units[u].length}/>}
                   </Sprite>
                 )}
+                {p.invasion && <Sprite scale={.75} x={p.hitRadius * 2} y={-30} image='icons/invader.png' alpha={0.85}>
+                  <Container x={45} y={15}>
+                    <Sprite image={'race/icons/'+ G.races[ctx.currentPlayer].rid +'.png'} scale={1}></Sprite>
+                    <Text x={70} y={10} style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white'}} text='Under attack' />
+                  </Container>
+                  <Container y={75} x={100}>
+                    <InvasionForce fleet={p.invasion.troops} w={element.w/2}/>
+                  </Container>
+                </Sprite>}
               </Container>
 
               <Container x={50} y={100}>
@@ -921,6 +930,26 @@ const AttackerForce = (args) => {
           x={35} y={25} text={text}/>
     </Sprite>
   })
+}
+
+const InvasionForce = (args) => {
+  const {w, fleet} = args;
+
+  if(fleet){
+    return Object.keys(fleet).map((f, i) => {
+      const rowLength = 5;
+      const y = ( i<rowLength ? 0:70 );
+      const x = ( i<rowLength ? w/4 - 50 + i*65 : w/4 - 50 + (i-rowLength)*65);
+      let text = fleet[f].length;
+      if(text === 1) text = ' 1';
+
+      return <Sprite key={i} x={x} y={y} anchor={0} image='icons/unit_inf_bg.png'>
+                <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={0} scale={{x: .3, y: .3}} alpha={1}/>
+                <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
+                  x={45} y={25} text={text}/>
+            </Sprite>
+    })
+  }
 }
 
 const SpeakerToken = () => {

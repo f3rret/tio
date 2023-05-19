@@ -945,14 +945,33 @@ export const TIO = {
                       draft[playerID][unit] = dice;
                     });
                   },
-                  nextStep: ({G, events}, hits) => {
+                  nextStep: ({G, events, playerID, ctx}, hits) => {
 
-                    if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
-                      Object.keys(hits).forEach(pid => G.dice[pid] = {});
-                      events.setStage('invasion');
+                    const activeTile = G.tiles.find(t => t.active === true);
+                    const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+                    const uk = Object.keys(activePlanet.units);
+
+                    if(uk.indexOf('infantry') === -1 && uk.indexOf('mech') === -1){
+                      if(ctx.currentPlayer === playerID){
+                        if(hits && hits[activePlanet.occupied]){
+                          events.setStage('invasion_step2');
+                        }
+                        else{
+                          events.setStage('invasion_await');
+                        }
+                      }
+                      else{
+                        events.setStage('invasion_await');
+                      }
                     }
                     else{
-                      events.setStage('invasion_step2');
+                      if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
+                        Object.keys(hits).forEach(pid => G.dice[pid] = {});
+                        events.setStage('invasion');
+                      }
+                      else{
+                        events.setStage('invasion_step2');
+                      }
                     }
                    
                   }
@@ -970,11 +989,12 @@ export const TIO = {
                     let fleet = {};
                     const activeTile = G.tiles.find(t => t.active === true);
                     const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+                    if(!activePlanet.invasion.nopds) activePlanet.invasion.nopds = true;
                     
                     const defenderForces = () => {
                         const result = {};
                         Object.keys(activePlanet.units).forEach(k => {
-                            if(['infantry', 'mech', 'pds'].indexOf(k) > -1){
+                            if(['infantry', 'mech'].indexOf(k) > -1){
                                 result[k] = activePlanet.units[k];
                             }
                         });
@@ -1044,25 +1064,27 @@ export const TIO = {
                     const activeTile = G.tiles.find(t => t.active === true);
                     const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
 
-                    const defenderForces = () => {
-                      const result = {};
-                      Object.keys(activePlanet.units).forEach(k => {
-                          if(['infantry', 'mech'].indexOf(k) > -1){
-                              result[k] = activePlanet.units[k];
-                          }
-                      });
-                      return result;
-                  }
-
-                    if(!Object.keys(defenderForces()).length && Object.keys(activePlanet.invasion.troops).length){
-                      if(ctx.currentPlayer === playerID){
-                        activePlanet.units = {...activePlanet.invasion.troops};
-                        delete activePlanet.invasion;
-                        activePlanet.occupied = playerID;
+                    if(activePlanet){
+                      const defenderForces = () => {
+                        const result = {};
+                        Object.keys(activePlanet.units).forEach(k => {
+                            if(['infantry', 'mech'].indexOf(k) > -1){
+                                result[k] = activePlanet.units[k];
+                            }
+                        });
+                        return result;
                       }
-                    }
-                    else if(String(activePlanet.occupied) === String(playerID)){
-                      delete activePlanet.invasion;
+
+                      if(!Object.keys(defenderForces()).length && Object.keys(activePlanet.invasion.troops).length){
+                        if(ctx.currentPlayer === playerID){
+                          activePlanet.units = {...activePlanet.invasion.troops};
+                          delete activePlanet.invasion;
+                          activePlanet.occupied = playerID;
+                        }
+                      }
+                      else if(String(activePlanet.occupied) === String(playerID)){
+                        delete activePlanet.invasion;
+                      }
                     }
 
                     events.endStage();
@@ -1094,7 +1116,7 @@ export const TIO = {
                       //clean empty
                       Object.keys(activeTile.tdata.fleet).forEach(k => {
                         activeTile.tdata.fleet[k].forEach(car => {
-                          car.payload = car.payload.filter(p => p);
+                          if(car.payload) car.payload = car.payload.filter(p => p);
                         });
                       })
 
@@ -1171,16 +1193,22 @@ export const TIO = {
           invasion: ({G, playerID, events}, planet) => {
             const activeTile = G.tiles.find(t => t.active === true);
             const activePlanet = activeTile.tdata.planets.find(p => p.name === planet.name);
+            const defUnits = Object.keys(activePlanet.units);
+            
+            let stage = 'bombardment';
+            if(defUnits.indexOf('infantry') === -1 && defUnits.indexOf('mech') === -1){ //if only pds
+              stage = 'invasion_await';
+            }
 
             activePlanet.invasion = {};
 
             const def = {};
-            def[planet.occupied] = {stage: 'bombardment'};
+            def[planet.occupied] = {stage};
             
             G.dice[planet.occupied] = {};
             G.dice[playerID] = {};
             
-            events.setActivePlayers({value: def, currentPlayer: {stage: 'bombardment'}});
+            events.setActivePlayers({value: def, currentPlayer: {stage}});
           },
           spaceCannonAttack: ({G, playerID, events}) => {
             if(G.spaceCannons && Object.keys(G.spaceCannons).length > 0){
