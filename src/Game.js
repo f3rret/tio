@@ -1190,6 +1190,52 @@ export const TIO = {
             }
         },
         moves: {
+          producing: ({G, playerID}, pname, deploy, exhausted, tg) => {
+
+            if(!pname || !deploy) return;
+
+            if(exhausted && exhausted.length){
+              G.tiles.forEach(tile => {
+                const planets = tile.tdata.planets;
+
+                if(planets && planets.length){
+                  planets.forEach( p => {
+                    if(String(p.occupied) === String(playerID)){
+                      if(exhausted.indexOf(p.name) > -1){
+                        p.exhausted = true;
+                      }
+                    }
+                  });
+                }
+              });
+            }
+
+            if(tg){
+              G.races[playerID].tg -= tg;
+            }
+            
+            const activeTile = G.tiles.find(t => t.active === true);
+            const planet = activeTile.tdata.planets.find(p => p.name === pname);
+            const ukeys = Object.keys(deploy);
+
+            ukeys.forEach(uk => {
+              const ukl = uk.toLowerCase();
+              var l = 0;
+              if(['carrier', 'cruiser', 'destroyer', 'dreadnought', 'flagship', 'warsun'].indexOf(ukl) > -1){
+                if(!activeTile.tdata.fleet[ukl]) activeTile.tdata.fleet[ukl] = [];
+                for(l=0; l<deploy[uk]; l++){
+                  activeTile.tdata.fleet[ukl].push({});
+                }
+              }
+              else{
+                if(!planet.units[ukl]) planet.units[ukl] = [];
+                for(l=0; l<deploy[uk]; l++){
+                  planet.units[ukl].push({});
+                }                                    
+              }
+            });
+                 
+          },
           invasion: ({G, playerID, events}, planet) => {
             const activeTile = G.tiles.find(t => t.active === true);
             const activePlanet = activeTile.tdata.planets.find(p => p.name === planet.name);
@@ -1257,11 +1303,6 @@ export const TIO = {
             G.races[playerID].tokens[tag]++;
           },
           useStrategy: ({ G, events, playerID}, idx) => {
-            /*if(G.races[playerID].actions.length > 0){
-              console.log('too many actions');
-              return INVALID_MOVE;
-            }*/
-
             if(idx === undefined) idx=0;
             const strategy = G.races[playerID].strategy[idx];
 

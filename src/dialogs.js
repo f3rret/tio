@@ -209,7 +209,6 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
           break;
     }
 
-
     useEffect(()=>{
         if(sid === 'LEADERSHIP'){
             let influence = 0;
@@ -1230,7 +1229,7 @@ export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
     </div>
   )};
 
-  const RaceList = ({races, selected, speaker, onClick}) => {
+const RaceList = ({races, selected, speaker, onClick}) => {
     if(!onClick) onClick = ()=>{};
 
     return races.map((r,i) => {
@@ -1343,4 +1342,126 @@ const RacePanel = ({rid, onSelect}) => {
             </Row>}
         </Col>
     </Row>)
+}
+
+export const ProducingPanel = (args) => {
+
+    const { pname, onCancel, PLANETS, R_UNITS, R_UPGRADES, UNITS } = args;
+    const { G, playerID, moves } = useContext(StateContext);
+    const [currentUnit, setCurrentUnit] = useState('FLAGSHIP');
+    const [ex2, setEx2] = useState({});
+    const [tg, setTg] = useState(0);
+    const [result, setResult] = useState(0);
+    const [deploy, setDeploy] = useState({});
+
+    const planetRowClick = useCallback((planetName) => {
+        if(!PLANETS.find(p => p.name === planetName).exhausted){
+            setEx2(produce(ex2, draft => {
+                if(draft[planetName]){
+                    delete draft[planetName];
+                }
+                else{
+                    draft[planetName] = true;
+                }
+            }));
+        }
+    }, [ex2, PLANETS]);
+
+    const deployUnit = (inc, uname) => {
+        let unitsCount = 0;
+        const keys = Object.keys(deploy);
+        keys.forEach(k => unitsCount += deploy[k]);
+        if(unitsCount < maxDeployUnits || inc < 0){
+            setDeploy(produce(deploy, draft => {
+                if(inc > 0){
+                    if(!deploy[currentUnit]) draft[currentUnit] = 0;
+                    draft[currentUnit]++;
+                }
+                else{
+                    draft[uname]--;
+                    if(draft[uname] === 0) delete draft[uname];
+                }
+            }));
+        }
+    }
+
+    const maxDeployUnits = useMemo(() => {
+        const planet = PLANETS.find(p => p.name === pname);
+        
+        if(planet){
+            let sd = planet.units['spacedock'].length * R_UNITS['SPACEDOCK'].production;
+            let max = planet.resources + sd;
+            return max;
+        }
+
+        return 0;
+    }, [PLANETS, R_UNITS, pname]);
+
+    const deployPrice = useMemo(() => {
+
+        let sum = 0;
+        const keys = Object.keys(deploy);
+        if(keys.length){
+            keys.forEach(k =>{
+                sum += deploy[k] * R_UNITS[k].cost;
+            });
+        }
+        return sum;
+
+    }, [deploy, R_UNITS]);
+
+    const tgClick = useCallback(() => {
+    
+        const max = G.races[playerID].tg;
+        if(tg < max){
+            setTg(tg+1);
+        }
+
+    }, [tg, G.races, playerID]);
+
+    useEffect(()=>{
+        let resources = 0;
+        Object.keys(ex2).forEach(e =>{
+            const planet = PLANETS.find(p => p.name === e)
+            if(ex2[e]){
+                resources += planet.resources;
+            }
+        });
+        setResult(resources + tg);
+    },[ex2, PLANETS, tg]);
+
+    return <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', width: '70rem'}}>
+                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Producing</h6></CardTitle>
+                <div style={{display: 'flex', flexDirection: 'row', flexWrap:'wrap', justifyContent:'space-between', width: '100%', margin: '1rem'}}>
+                    <div style={{width:'30rem', overflowY: 'auto', height: '22rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                        <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex2}/>
+                    </div>
+                    <div style={{width: '35rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)', color: 'white', padding: '0 1rem 0 0'}}>
+                        <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} onSelect={(u)=>setCurrentUnit(u)}/>
+                        <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+                            <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' disabled={['PDS', 'SPACEDOCK'].indexOf(currentUnit) > -1}><b>Deploy</b></Button>
+                        </div>
+                    </div>
+                    <div style={{width:'29rem', margin: '1rem'}}>
+                        <h5 style={{fontSize: '50px', display: 'flex', justifyContent: 'flex-end'}}>{'+'}{tg}{' '}<Button tag='img' onClick={tgClick} src='/icons/trade_good_1.png' color='warning' 
+                            style={{marginLeft: '1rem', width: '4rem', padding: '.5rem', borderTopLeftRadius: '5px', borderBottomLeftRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} />
+                            <Button disabled={tg < 1} color='warning' style={{width: '1.5rem', borderLeft: 'none', color:'orange', backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: 0}} onClick={()=>setTg(tg-1)}>▼</Button></h5>
+                        <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{'You mean to spend ' + result + ' resources'}</h6>
+                        <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{deployPrice + ' needed'}</h6>
+                    </div>
+                    <div style={{width: '33rem', margin: '1rem'}}>
+                        <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{'Max units count: ' + maxDeployUnits}</h6>
+                        {deploy && Object.keys(deploy).map((k, i) => {
+                            return (<p style={{margin: 0}} key={i}>
+                            <Button size='sm' color='warning' style={{padding: '0 .25rem', fontSize: '.75rem'}} onClick={()=>deployUnit(-1, k)}>▼</Button>
+                            <b>{' '}{k}{' : '}{deploy[k]}</b></p>)
+                        })}
+                    </div>
+                </div>
+                <CardFooter style={{background: 'none', borderTop: '1px solid rgba(74, 111, 144, 0.42)', display: 'flex', justifyContent: 'space-between'}}>
+                    <Button color='danger' onClick={onCancel}>Cancel</Button>
+                    <Button color='success' disabled={deployPrice > result} onClick={() => {moves.producing(pname, deploy, Object.keys(ex2), tg); onCancel()}}>Finish</Button>
+                </CardFooter>
+            </Card>
+
 }
