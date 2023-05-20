@@ -59,7 +59,7 @@ export const TIO = {
           });
         }
         else{
-          if(!t.tdata.planets || !t.tdata.planets.length){
+          if(t.tdata.type !== 'hyperlane' && (!t.tdata.planets || !t.tdata.planets.length)){
             t.tdata.frontier = true;
           }
         }

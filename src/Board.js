@@ -8,7 +8,7 @@ import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
 import { checkObjective, StateContext } from './utils';
-import { lineTo } from './Grid';
+import { lineTo, pathFromCoordinates } from './Grid';
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion } from './combat';
 import { produce } from 'immer';
@@ -43,6 +43,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [selectedTile, setSelectedTile] = useState(-1);
   const [midPanelInfo, setMidPanelInfo] = useState('tokens');
   const [purgingFragments, setPurgingFragments] = useState({c: 0, h: 0, i: 0, u: 0});
+  const [moveSteps, setMoveSteps] = useState([]);
   const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
 
 
@@ -395,20 +396,54 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [G.tiles, stageh, stagew, selectedTile]);
 
 
-  const getDistance = useCallback((firstTile, lastTile) => {
+  /*const getDistance = useCallback((firstTile, lastTile) => {
     const line = lineTo({ start: [firstTile.q, firstTile.r], stop: [lastTile.q, lastTile.r] });
     return line.toArray().length-1;
-  }, []);
+  }, []);*/
+  const getMovePath = useMemo(() => {
+    if(activeTile && advUnitView && advUnitView.tile){
+      let line;
+
+      if(moveSteps && moveSteps.length){
+        let ar = [advUnitView.tile, ...moveSteps].map(t => ({q: G.tiles[t].q, r: G.tiles[t].r}));
+        ar = [...ar, {q: activeTile.q, r: activeTile.r}];
+        line = pathFromCoordinates(ar).toArray();
+        
+        let first = line[0];
+        let result = [];
+        
+        for(var i=1; i<line.length; i++){
+          result.push(first);
+
+          const segment = lineTo({start: [first.q, first.r], stop: [line[i].q, line[i].r]}).toArray();
+          if(segment.length > 1){
+            result = [...result, ...segment.splice(1, segment.length-2)];
+          }
+          
+          first = line[i];
+        }
+        result.push(line[line.length-1]);
+        return result.map(t => String(t.tileId));
+      }
+      else{
+        line = lineTo({ start: [G.tiles[advUnitView.tile].q, G.tiles[advUnitView.tile].r], stop: [activeTile.q, activeTile.r] }).toArray();
+        return line.map(t => String(t.tileId));
+      }
+    }
+    else{
+      return [];
+    }
+  }, [activeTile, advUnitView, moveSteps, G.tiles]);
 
   const distanceInfo = useCallback((firstTile, lastTile)=>{
     const move = advUnitViewTechnology ? advUnitViewTechnology.move : '?';
-    return move + '/' + getDistance(firstTile, lastTile);
-  }, [advUnitViewTechnology, getDistance]);
+    return move + '/' + (getMovePath.length-1);
+  }, [advUnitViewTechnology, getMovePath]);
 
   const moveToClick = useCallback((idx) => {
 
     if(advUnitView && idx === advUnitView.tile){
-      if(advUnitViewTechnology && advUnitViewTechnology.move >= getDistance(G.tiles[idx] ,activeTile)){
+      if(advUnitViewTechnology && advUnitViewTechnology.move >= (getMovePath.length-1)){
         let shipIdx = payloadCursor.i;
         if(shipIdx > G.tiles[idx].tdata.fleet[advUnitView.unit].length){
           shipIdx = 0;
@@ -424,7 +459,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
     }
 
-  }, [G.tiles, advUnitView, payloadCursor, moves, activeTile, advUnitViewTechnology, getDistance])
+  }, [G.tiles, advUnitView, payloadCursor, moves, advUnitViewTechnology, getMovePath])
 
   const purgeFragment = useCallback((tag) => {
     setPurgingFragments(produce(purgingFragments, draft => {
@@ -441,16 +476,51 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }));
   }, [purgingFragments, race.fragments])
  
+  const modifyMoveStep = useCallback((index) => {
+
+    if(G.tiles[index].tid === activeTile.tid) return;
+
+    setMoveSteps(produce(moveSteps, draft =>{
+      const idx = moveSteps.indexOf(index);
+
+      if(idx === -1){
+        draft.push(index);
+      }
+      else{
+        draft.splice(idx, 1);
+      }
+      
+    }));
+    /*
+     const firstTile = G.tiles[advUnitView.tile];
+    const lastTile = activeTile;
+    const line = lineTo({ start: [firstTile.q, firstTile.r], stop: [lastTile.q, lastTile.r] });*/
+  }, [moveSteps, G.tiles, activeTile]);
+
   const TileContent = ({element, index}) => {
 
+    const pathIdx = getMovePath.indexOf(String(element.tid));
     const [firstCorner] = element.corners;
     return <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
         {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier_bg.png'}/>}
-        {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) => 
-              <Sprite alpha={1} key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={.3} image={'icons/ct.png'}>
-                <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={55} y={55} alpha={.85}></Sprite>
-              </Sprite>
+        {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
+            
+            return <Sprite alpha={1} key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={.3} image={'icons/ct.png'}>
+                    <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={55} y={55} alpha={.85}></Sprite>
+                  </Sprite>}
         )}
+
+        {activeTile && advUnitView && pathIdx > 0 && 
+          <Sprite interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} image={'icons/move_step.png'}>
+            <Text text={pathIdx} x={pathIdx === 1 ? 30:22} y={3} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
+          </Sprite>
+        }
+
+        {activeTile && advUnitView && pathIdx === -1 && selectedTile === index &&
+          <Sprite interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} alpha={.5} image={'icons/move_step.png'}>
+            <Text text={'+'} x={17} y={0} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
+          </Sprite>
+        }
 
         {element.tdata.planets.map((p,i) => {  
           return p.hitCenter && <Sprite image={'icons/empty.png'} scale={1} key={i} width={p.hitRadius * 2} height={p.hitRadius * 2} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}
@@ -515,7 +585,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         {element.tdata.fleet && <Container x={10} y={-30}>
           {activeTile && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 &&
           <Sprite interactive={true} pointerdown={()=>moveToClick(index)} scale={.75} y={5} x={-10} image={'icons/move_to.png'}
-            alpha={advUnitView && advUnitView.tile === index ? (advUnitViewTechnology && advUnitViewTechnology.move >= getDistance(element, activeTile) ? 1:.5):.5} >
+            alpha={advUnitView && advUnitView.tile === index ? (advUnitViewTechnology && advUnitViewTechnology.move >= getMovePath.length-1 ? 1:.5):.5} >
               <Text text={'move'} x={-70} y={10} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} />
               <Text text={distanceInfo(element, activeTile)} x={-70} y={30} style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
           </Sprite>}
@@ -555,6 +625,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         
     </Container>
   }
+
+  useEffect(()=>{
+    if(!activeTile || !advUnitView || !advUnitView.tile){
+      setMoveSteps([]);
+    }
+  }, [advUnitView, activeTile]);
 
   useEffect(()=> {
     if(stratUnfold > 0 && (promisVisible || actionsVisible || relicsVisible)){
@@ -695,7 +771,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 
                 {G.tiles.map((element, index) => {
                     const [firstCorner] = element.corners;
-                    const fill = element.tdata.type;
+                    const fill = element.tdata.type !== 'hyperlane' ? element.tdata.type: 'gray';
                     
                     return <Container key={index}>
                             {tilesPng && <Sprite interactive={true} pointerdown={(e)=>tileClick(e, index)} 
