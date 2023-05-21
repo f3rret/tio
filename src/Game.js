@@ -1445,6 +1445,10 @@ export const TIO = {
               if(G.tiles[args.tile].tdata.fleet[args.unit].length === 0){
                 delete G.tiles[args.tile].tdata.fleet[args.unit];
               }
+
+              if(!G.tiles[args.tile].tdata.fleet || !Object.keys(G.tiles[args.tile].tdata.fleet).length){
+                G.tiles[args.tile].tdata.occupied = undefined;
+              }
             }
 
             if(dst.tdata.frontier && G.races[playerID].knownTechs.indexOf('DARK_ENERGY_TAP') > -1){

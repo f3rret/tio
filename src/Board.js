@@ -405,8 +405,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       let line;
 
       if(moveSteps && moveSteps.length){
-        let ar = [advUnitView.tile, ...moveSteps].map(t => ({q: G.tiles[t].q, r: G.tiles[t].r}));
-        ar = [...ar, {q: activeTile.q, r: activeTile.r}];
+        let ar = [advUnitView.tile, ...moveSteps].map(t => ({q: G.tiles[t].q, r: G.tiles[t].r, wormhole: G.tiles[t].tdata.wormhole}));
+        ar = [...ar, {q: activeTile.q, r: activeTile.r, wormhole: activeTile.tdata.wormhole}];
         line = pathFromCoordinates(ar).toArray();
         
         let first = line[0];
@@ -415,15 +415,20 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         for(var i=1; i<line.length; i++){
           result.push(first);
 
-          const segment = lineTo({start: [first.q, first.r], stop: [line[i].q, line[i].r]}).toArray();
-          if(segment.length > 1){
-            result = [...result, ...segment.splice(1, segment.length-2)];
+          if(!ar[i-1].wormhole || ar[i-1].wormhole !== ar[i].wormhole){
+            const segment = lineTo({start: [first.q, first.r], stop: [line[i].q, line[i].r]}).toArray();
+            if(segment.length > 1){
+              result = [...result, ...segment.splice(1, segment.length-2)];
+            }
           }
           
           first = line[i];
         }
         result.push(line[line.length-1]);
         return result.map(t => String(t.tileId));
+      }
+      else if(activeTile.tdata.wormhole && activeTile.tdata.wormhole === G.tiles[advUnitView.tile].tdata.wormhole){
+        return [activeTile.tid, G.tiles[advUnitView.tile].tid];
       }
       else{
         line = lineTo({ start: [G.tiles[advUnitView.tile].q, G.tiles[advUnitView.tile].r], stop: [activeTile.q, activeTile.r] }).toArray();
@@ -435,6 +440,39 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }, [activeTile, advUnitView, moveSteps, G.tiles]);
 
+  const canMoveThatPath = useMemo(() => {
+    if(!advUnitViewTechnology) return false;
+
+    if(advUnitViewTechnology && advUnitViewTechnology.move >= getMovePath.length-1){
+      if(getMovePath && getMovePath.length){
+        return !getMovePath.some(tid => {
+          //console.log(tid);
+          const tile = G.tiles.find(t => String(t.tid) === String(tid));
+          if(tile.tdata.type === 'red'){
+            if(tile.tdata.anomaly === 'asteroid-field'){
+              return true;
+            }
+            else if(tile.tdata.anomaly === 'nebula'){
+              return true;
+            }
+            else if(tile.tdata.anomaly === 'supernova'){
+              return true;
+            }
+            else if(tile.tdata.anomaly === 'gravity-rift'){
+              return true;
+            }
+          }
+          else if(tile.tdata.occupied && String(tile.tdata.occupied) !== String(playerID)){
+            return true;
+          }
+          return false;
+        });
+
+      }
+    }
+    return false;
+  },[G.tiles, getMovePath, advUnitViewTechnology, playerID]);
+
   const distanceInfo = useCallback((firstTile, lastTile)=>{
     const move = advUnitViewTechnology ? advUnitViewTechnology.move : '?';
     return move + '/' + (getMovePath.length-1);
@@ -443,7 +481,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const moveToClick = useCallback((idx) => {
 
     if(advUnitView && idx === advUnitView.tile){
-      if(advUnitViewTechnology && advUnitViewTechnology.move >= (getMovePath.length-1)){
+      if(canMoveThatPath){
+
         let shipIdx = payloadCursor.i;
         if(shipIdx > G.tiles[idx].tdata.fleet[advUnitView.unit].length){
           shipIdx = 0;
@@ -459,7 +498,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
     }
 
-  }, [G.tiles, advUnitView, payloadCursor, moves, advUnitViewTechnology, getMovePath])
+  }, [G.tiles, advUnitView, payloadCursor, moves, canMoveThatPath])
 
   const purgeFragment = useCallback((tag) => {
     setPurgingFragments(produce(purgingFragments, draft => {
@@ -501,6 +540,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
     const pathIdx = getMovePath.indexOf(String(element.tid));
     const [firstCorner] = element.corners;
+    let moveTint = element.tdata.type === 'blue' ? 'lightblue' :  element.tdata.type !== 'hyperlane' ? element.tdata.type: '';
+    if(element.tdata.occupied && String(element.tdata.occupied)!==String(playerID)) moveTint = 'purple';
+
     return <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
         {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier_bg.png'}/>}
         {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
@@ -511,7 +553,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         )}
 
         {activeTile && advUnitView && pathIdx > 0 && 
-          <Sprite interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} image={'icons/move_step.png'}>
+          <Sprite tint={moveTint} interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} image={'icons/move_step.png'}>
             <Text text={pathIdx} x={pathIdx === 1 ? 30:22} y={3} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
           </Sprite>
         }
@@ -585,7 +627,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         {element.tdata.fleet && <Container x={10} y={-30}>
           {activeTile && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 &&
           <Sprite interactive={true} pointerdown={()=>moveToClick(index)} scale={.75} y={5} x={-10} image={'icons/move_to.png'}
-            alpha={advUnitView && advUnitView.tile === index ? (advUnitViewTechnology && advUnitViewTechnology.move >= getMovePath.length-1 ? 1:.5):.5} >
+            alpha={advUnitView && advUnitView.tile === index ? (canMoveThatPath ? 1:.5):.5} >
               <Text text={'move'} x={-70} y={10} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} />
               <Text text={distanceInfo(element, activeTile)} x={-70} y={30} style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
           </Sprite>}
@@ -627,10 +669,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }
 
   useEffect(()=>{
-    if(!activeTile || !advUnitView || !advUnitView.tile){
+    //if(!activeTile || !advUnitView || !advUnitView.tile){
       setMoveSteps([]);
-    }
-  }, [advUnitView, activeTile]);
+    //}
+  }, [advUnitView && advUnitView.tile, activeTile]);
 
   useEffect(()=> {
     if(stratUnfold > 0 && (promisVisible || actionsVisible || relicsVisible)){
