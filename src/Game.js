@@ -6,7 +6,7 @@ import raceData from './raceData.json';
 import techData from './techData.json';
 import cardData from './cardData.json';
 import { produce } from 'immer';
-import { NUM_PLAYERS, checkObjective, getUnitsTechnologies/*getPlanetByName*/ } from './utils';
+import { NUM_PLAYERS, checkObjective, getUnitsTechnologies, haveTechnology } from './utils';
 
 export const TIO = {
     
@@ -14,7 +14,7 @@ export const TIO = {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
-                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], secretObjectives:[], 
+                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [],
                     exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
@@ -203,6 +203,7 @@ export const TIO = {
           G.passedPlayers = [];
           G.races.forEach(r => {
             r.actionCards.push(G.actionsDeck.pop());
+            r.exhaustedCards = [];
           });
           //return {...G, passedPlayers: []}
         },
@@ -474,12 +475,13 @@ export const TIO = {
                   const getHits = () => {
                     let result = 0;
                     if(G.spaceCannons !== undefined){
+                      const adj = haveTechnology(G.races[ctx.currentPlayer], 'ANTIMASS_DEFLECTORS') ? -1:0;
                       Object.keys(G.spaceCannons).forEach(pid => {
                           if(G.dice[pid]){
                               Object.keys(G.dice[pid]).forEach(unit => {
                                   const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                                   if(technology && technology.spaceCannon){
-                                      result += G.dice[pid][unit].filter(die => die >= technology.spaceCannon.value).length;
+                                      result += G.dice[pid][unit].filter(die => die+adj >= technology.spaceCannon.value).length;
                                   }
                               });
                           }
@@ -568,7 +570,17 @@ export const TIO = {
                         }
                       });
                       fleet[f] = fleet[f].filter(car => car);
+                      if(!fleet[f].length) delete fleet[f];
                     });
+
+                    if(!Object.keys(fleet).length){
+                      if((activeTile.tdata.occupied !== ctx.currentPlayer) && activeTile.tdata.attacker){
+                        delete activeTile.tdata.attacker;
+                      }
+                      else{
+                        delete activeTile.tdata.fleet;
+                      }
+                    }
                   }
                  
                   events.endStage();
@@ -838,6 +850,9 @@ export const TIO = {
                           if(tile && tile.tdata){
                               if(tile.tdata.occupied !== undefined){
                                   return String(tile.tdata.occupied) === String(playerID);
+                              }
+                              else if(haveTechnology(G.races[playerID], 'DARK_ENERGY_TAP')){
+                                return true;
                               }
                               if(tile.tdata.planets){
                                   for(var i=0; i<tile.tdata.planets.length; i++){
@@ -1190,7 +1205,7 @@ export const TIO = {
             }
         },
         moves: {
-          producing: ({G, playerID}, pname, deploy, exhausted, tg) => {
+          producing: ({G, playerID}, pname, deploy, exhausted, tg, exhaustedCards) => {
 
             if(!pname || !deploy) return;
 
@@ -1214,7 +1229,14 @@ export const TIO = {
               G.races[playerID].tg -= tg;
             }
             
-            const activeTile = G.tiles.find(t => t.active === true);
+            let activeTile;
+            if(exhaustedCards && exhaustedCards.indexOf('SLING_RELAY') > -1){
+              activeTile = G.tiles.find(t => t.tdata.planets && t.tdata.planets.find(p => p.name === pname));
+            }
+            else{
+              activeTile = G.tiles.find(t => t.active === true);
+            }
+            
             const planet = activeTile.tdata.planets.find(p => p.name === pname);
             const ukeys = Object.keys(deploy);
 
@@ -1234,7 +1256,10 @@ export const TIO = {
                 }                                    
               }
             });
-                 
+               
+            if(exhaustedCards && exhaustedCards.indexOf('SLING_RELAY') > -1){
+              G.races[playerID].exhaustedCards.push('SLING_RELAY');
+            }
           },
           invasion: ({G, playerID, events}, planet) => {
             const activeTile = G.tiles.find(t => t.active === true);
@@ -1412,6 +1437,11 @@ export const TIO = {
               tile.tdata.frontier = false;
             }
 
+            let idx = race.exhaustedCards.indexOf('GRAVITY_DRIVE');
+            if(idx > -1){
+              race.exhaustedCards.splice(idx, 1);
+            }
+
           },
           moveShip: ({ G, playerID }, args) => {
 
@@ -1458,6 +1488,12 @@ export const TIO = {
                 }
               G.races[playerID].exploration.push(explore);
               dst.tdata.frontier = false;
+            }
+
+            if(args.exhaustedCards){
+              if(args.exhaustedCards.indexOf('GRAVITY_DRIVE')>-1){
+                G.races[playerID].exhaustedCards.push('GRAVITY_DRIVE');
+              }
             }
 
           },

@@ -1153,7 +1153,7 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
     })
   }
 
-export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
+export const getTechType = (typ, race, tooltipMode, onSelect, selected, onAction) => {
 
     const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
     const B_STYLE = {backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}
@@ -1176,7 +1176,7 @@ export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
       
       <ListGroup>
         {techs.map((t, i) => 
-          <ListGroupItem onClick={()=>ItemOnClick(t)} key={i} style={{background: 'none', padding: '.25rem', color: 'white', borderBottom: 'solid 1px rgba(255,255,255,.15)'}}>
+          <ListGroupItem onClick={()=>ItemOnClick(t)} key={i} style={{opacity: race.exhaustedCards.indexOf(t.id)>-1 ? .35:1, background: 'none', padding: '.25rem', color: 'white', borderBottom: 'solid 1px rgba(255,255,255,.15)'}} >
             <Button size='sm' color={race.knownTechs.indexOf(t.id) > -1 ? 'success': (selected.indexOf(t.id) > -1 ? 'warning':'dark')} id={t.id} style={{width: '100%', fontSize: '.7rem', textAlign: 'left'}}>
               {t.id.replaceAll('_', ' ').replaceAll('2', ' II')}
               {t.racial && <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.6rem'}} src={'race/icons/'+ race.rid +'.png'}/>}
@@ -1203,6 +1203,7 @@ export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
                 })}
               </div>}
               {t.type !== 'unit' && t.description}
+              
               {t.type === 'unit' && <div style={{fontSize: tooltipMode ? '.9rem':'.7rem', width: '100%'}}>
                 <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center', marginBottom: '.5rem'}}>
                 {t.cost && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.cost}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>cost</b></ListGroupItem>}
@@ -1228,7 +1229,7 @@ export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
       </ListGroup>
     </div>
   )};
-
+//{race.knownTechs.indexOf(t.id) > -1 && t.action === true && race.exhaustedCards.indexOf(t.id) === -1 && <Button size='sm' color='warning' onClick={()=>onAction(t.id)}>Action</Button>}
 const RaceList = ({races, selected, speaker, onClick}) => {
     if(!onClick) onClick = ()=>{};
 
@@ -1347,7 +1348,7 @@ const RacePanel = ({rid, onSelect}) => {
 export const ProducingPanel = (args) => {
 
     const { pname, onCancel, PLANETS, R_UNITS, R_UPGRADES, UNITS } = args;
-    const { G, playerID, moves } = useContext(StateContext);
+    const { G, playerID, moves, exhaustedCards, exhaustTechCard } = useContext(StateContext);
     const [currentUnit, setCurrentUnit] = useState('FLAGSHIP');
     const [ex2, setEx2] = useState({});
     const [tg, setTg] = useState(0);
@@ -1386,6 +1387,9 @@ export const ProducingPanel = (args) => {
     }
 
     const maxDeployUnits = useMemo(() => {
+        if(exhaustedCards.indexOf('SLING_RELAY')>-1){
+            return 1;
+        }
         const planet = PLANETS.find(p => p.name === pname);
         
         if(planet){
@@ -1395,7 +1399,7 @@ export const ProducingPanel = (args) => {
         }
 
         return 0;
-    }, [PLANETS, R_UNITS, pname]);
+    }, [PLANETS, R_UNITS, pname, exhaustedCards]);
 
     const deployPrice = useMemo(() => {
 
@@ -1419,6 +1423,12 @@ export const ProducingPanel = (args) => {
 
     }, [tg, G.races, playerID]);
 
+    const bannedUnits = useMemo(() => {
+        const banned = ['PDS', 'SPACEDOCK'];
+        if(exhaustedCards.indexOf('SLING_RELAY')>-1) banned.push('INFANTRY', 'MECH', 'FIGHTER')
+        return banned;
+    }, [exhaustedCards]);
+
     useEffect(()=>{
         let resources = 0;
         Object.keys(ex2).forEach(e =>{
@@ -1430,6 +1440,14 @@ export const ProducingPanel = (args) => {
         setResult(resources + tg);
     },[ex2, PLANETS, tg]);
 
+    const onCancelClick = () => {
+        if(exhaustedCards.indexOf('SLING_RELAY')>-1){
+            exhaustTechCard('SLING_RELAY');
+            onCancel();
+        }
+        else onCancel();
+    }
+
     return <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', width: '70rem'}}>
                 <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Producing</h6></CardTitle>
                 <div style={{display: 'flex', flexDirection: 'row', flexWrap:'wrap', justifyContent:'space-between', width: '100%', margin: '1rem'}}>
@@ -1439,7 +1457,7 @@ export const ProducingPanel = (args) => {
                     <div style={{width: '35rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)', color: 'white', padding: '0 1rem 0 0'}}>
                         <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} onSelect={(u)=>setCurrentUnit(u)}/>
                         <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                            <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' disabled={['PDS', 'SPACEDOCK'].indexOf(currentUnit) > -1}><b>Deploy</b></Button>
+                            <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' disabled={bannedUnits.indexOf(currentUnit) > -1}><b>Deploy</b></Button>
                         </div>
                     </div>
                     <div style={{width:'29rem', margin: '1rem'}}>
@@ -1459,8 +1477,8 @@ export const ProducingPanel = (args) => {
                     </div>
                 </div>
                 <CardFooter style={{background: 'none', borderTop: '1px solid rgba(74, 111, 144, 0.42)', display: 'flex', justifyContent: 'space-between'}}>
-                    <Button color='danger' onClick={onCancel}>Cancel</Button>
-                    <Button color='success' disabled={deployPrice > result} onClick={() => {moves.producing(pname, deploy, Object.keys(ex2), tg); onCancel()}}>Finish</Button>
+                    <Button color='danger' onClick={onCancelClick}>Cancel</Button>
+                    <Button color='success' disabled={deployPrice > result} onClick={() => {moves.producing(pname, deploy, Object.keys(ex2), tg, exhaustedCards); onCancelClick()}}>Finish</Button>
                 </CardFooter>
             </Card>
 

@@ -291,3 +291,22 @@ export const getUnitsTechnologies = (keys, race) => {
 
   return result;
 }
+
+export const haveTechnology = (race, techId) => {
+
+  return race.knownTechs.indexOf(techId) > -1;
+
+}
+
+export const enemyHaveTechnology = (races, players, myId, techId) => {
+
+  const enemyId = Object.keys(players).find(k => String(k) !== String(myId));
+  
+  if(enemyId){
+    return races[enemyId].knownTechs.indexOf(techId) > -1;  
+  }
+  else{
+    return false;
+  }
+
+}

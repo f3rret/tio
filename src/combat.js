@@ -1,6 +1,6 @@
 import { Card, CardBody, CardTitle, CardFooter, CardText, CardImg, Button, ButtonGroup, Container, Row, Col } from 'reactstrap'; 
 import { useContext, useMemo, useCallback, useState, useEffect } from 'react';
-import { StateContext, getUnitsTechnologies } from './utils';
+import { StateContext, getUnitsTechnologies, haveTechnology } from './utils';
 import { neighbors } from './Grid';
 import { produce } from 'immer';
 
@@ -55,19 +55,20 @@ export const SpaceCannonAttack = () => {
         let result = 0;
 
         if(spaceCannons !== undefined){
+            const adj = haveTechnology(G.races[ctx.currentPlayer], 'ANTIMASS_DEFLECTORS') ? -1:0;
             Object.keys(spaceCannons).forEach(pid => {
                 if(G.dice[pid]){
                     Object.keys(G.dice[pid]).forEach(unit => {
                         const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                         if(technology && technology.spaceCannon){
-                            result += G.dice[pid][unit].filter(die => die >= technology.spaceCannon.value).length;
+                            result += G.dice[pid][unit].filter(die => die+adj >= technology.spaceCannon.value).length;
                         }
                     });
                 }
             });
         }
         return result;
-    }, [G.dice, G.races, spaceCannons]);
+    }, [G.dice, G.races, spaceCannons, ctx.currentPlayer]);
 
     const assigned = useMemo(() => {
         let result = 0;
@@ -90,6 +91,43 @@ export const SpaceCannonAttack = () => {
         return result;
 
     }, [ahits]);
+
+    const maxHits = useMemo(() => {
+        let result = 0;
+        let fleet = activeTile.tdata.attacker || activeTile.tdata.fleet;
+        const technologies = getUnitsTechnologies([...Object.keys(fleet), 'fighter'], G.races[ctx.currentPlayer]);
+
+        Object.keys(fleet).forEach(tag => {
+            fleet[tag].forEach(car => {
+                result += 1;
+                if(technologies[tag] && technologies[tag].sustain){
+                    result += 1;
+                }
+                if(car.hit) result -= car.hit;
+
+                if(car.payload){
+                    car.payload.forEach(p => {
+                        if(p && p.id === 'fighter'){
+                            result += 1;
+                            if(technologies[p.id] && technologies[p.id].sustain){
+                                result += 1;
+                            }
+                            if(p.hit) result -= p.hit;
+                        }
+                    })
+                }
+            });
+        });
+
+
+        return result;
+    }, [G.races, activeTile.tdata, ctx.currentPlayer]);
+
+    const allHitsAssigned = useMemo(() => {
+
+        return !hits || (assigned === Math.min(hits, maxHits));
+
+    }, [assigned, hits, maxHits]);
 
     const isLastOnStage = useMemo(()=>{
         const myStage = ctx.activePlayers[playerID];
@@ -117,7 +155,7 @@ export const SpaceCannonAttack = () => {
                 <span style={{fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>{hits + ' hits '}</span>
             </>}
             {ctx.activePlayers[playerID] === 'spaceCannonAttack_step2' && <>
-                <Button color='warning' disabled= {playerID === ctx.currentPlayer && assigned!==hits}  onClick={()=>moves.nextStep(ahits)}>Next</Button>
+                <Button color='warning' disabled= {playerID === ctx.currentPlayer && !allHitsAssigned}  onClick={()=>moves.nextStep(ahits)}>Next</Button>
                 <span style={{fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
                     {playerID === ctx.currentPlayer ? assigned + ' / ' + hits + ' hits assigned ': hits + ' hits '}
                 </span>
@@ -261,7 +299,7 @@ const HitAssign = (args) => {
 
 const CombatantForces = (args) => {
 
-    const { G, moves, playerID } = useContext(StateContext);
+    const { G, moves, playerID, ctx } = useContext(StateContext);
     const {race, units: fleet, owner, combatAbility, isInvasion} = args;
 
     const units = useMemo(()=> {
@@ -329,6 +367,13 @@ const CombatantForces = (args) => {
 
                         const className = technologies[u].sustain ? 'sustain_ability':'';
                         const injury = unitsInjury(u);
+                        let adj = 0;
+                        if(combatAbility === 'spaceCannon' || u === 'pds'){
+                            const enemyId = ctx.currentPlayer; //pds shots only for this player
+                            if(haveTechnology(G.races[enemyId], 'ANTIMASS_DEFLECTORS')){
+                                adj = -1;
+                            }
+                        }
 
                         return <Col className='col-md-auto' key={i} style={style}>
                             <span className={className} style={{position: 'relative'}}>
@@ -338,7 +383,11 @@ const CombatantForces = (args) => {
                             </span>
                             <span style={{fontSize: 16, marginLeft: '1rem', minWidth: 'max-content'}}>
                                 {ability && <>
-                                    <p style={{margin: 0}}>{'combat: ' + ability.value}</p>
+                                    <p style={{margin: 0}}>{'combat: ' + ability.value} 
+                                        {adj !==0 ? <span style={{color: adj<0 ? 'red':'green'}}>
+                                            {' (' + (ability.value - adj) + ')'}
+                                        </span> : ''}
+                                    </p>
                                     <p style={{margin: 0}}>{'shots: ' + ability.count}</p>
                                 </>}
                                 
@@ -346,11 +395,11 @@ const CombatantForces = (args) => {
                                         <Button size='sm' onClick={()=>fireClick(u)} color='danger' style={{width: '5rem'}}>Fire</Button>}
                                 {G.dice[owner][u] && <ButtonGroup style={{flexWrap: 'wrap', maxWidth: '6rem'}}>
                                     {G.dice[owner][u].map((d, j) =>{
-                                    let color = 'light';
-                                    if(d >= ability.value) color='success';
-                                    return <Button key={j} size='sm' color={color} 
-                                        style={{borderRadius: '5px', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', maxWidth:'1.25rem', height: '1.25rem'}}>
-                                        {(''+d).substr(-1)}</Button>
+                                        let color = 'light';
+                                        if(d+adj >= ability.value) color='success';
+                                        return <Button key={j} size='sm' color={color} 
+                                            style={{borderRadius: '5px', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', maxWidth:'1.25rem', height: '1.25rem'}}>
+                                            {(''+d).substr(-1)}</Button>
                                     })}
                                     </ButtonGroup>
                                 }
@@ -685,16 +734,21 @@ export const CombatRetreat = (args) => {
                 if(tile.tdata.occupied !== undefined){
                     return String(tile.tdata.occupied) === String(playerID);
                 }
+                else if(haveTechnology(G.races[playerID], 'DARK_ENERGY_TAP')){
+                    return true;
+                }
                 if(tile.tdata.planets){
                     for(var i=0; i<tile.tdata.planets.length; i++){
-                        if(String(tile.tdata.planets[i].occupied) === String(playerID)) return true;
+                        if(String(tile.tdata.planets[i].occupied) === String(playerID)){
+                            return true
+                        }
                     }
                 }
             }
 
             return false;
         });
-    }, [activeTile, playerID, G.tiles]);
+    }, [activeTile, playerID, G.tiles, G.races]);
 
     const acceptableTile = useMemo(() => {
         return possibleTiles && selectedTile > -1 && possibleTiles.find(t => t.tileId === G.tiles[selectedTile].tid);
@@ -1074,7 +1128,8 @@ export const Invasion = () => {
                         
                         if(unit === 'pds'){
                             if(technology && technology.spaceCannon){
-                                h += G.dice[pid][unit].filter(die => die >= technology.spaceCannon.value).length;
+                                const adj = haveTechnology(G.races[playerID], 'ANTIMASS_DEFLECTORS') ? -1:0;
+                                h += G.dice[pid][unit].filter(die => die+adj >= technology.spaceCannon.value).length;
                             }
                         }
                         else if(technology && technology.combat){
@@ -1087,7 +1142,7 @@ export const Invasion = () => {
         }
 
         return result;
-    }, [G.dice, G.races, ctx.activePlayers, activePlanet, ctx.currentPlayer]);
+    }, [G.dice, G.races, ctx.activePlayers, activePlanet, ctx.currentPlayer, playerID]);
 
     const assignedA = useMemo(() => {
         let result = 0;

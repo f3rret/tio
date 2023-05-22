@@ -7,11 +7,12 @@ import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText,
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList, TradePanel, ProducingPanel } from './dialogs';
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
-import { checkObjective, StateContext } from './utils';
+import { checkObjective, StateContext, haveTechnology } from './utils';
 import { lineTo, pathFromCoordinates } from './Grid';
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion } from './combat';
 import { produce } from 'immer';
+import techData from './techData.json';
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
 
@@ -22,6 +23,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   const race = useMemo(() => G.races[playerID], [G.races, playerID]);
 
+  const [exhaustedCards, setExhaustedCards] = useState([]);
   const [producing, setProducing] = useState(null);
   const [objVisible, setObjVisible] = useState(false);
   const [techVisible, setTechVisible] = useState(false);
@@ -253,8 +255,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }
 
   const strategyStage = useMemo(()=> {
-    return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && G.strategy !== undefined
-  }, [G, ctx]);
+    return G.strategy !== undefined && ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && ctx.activePlayers[playerID] === 'strategyCard'
+  }, [G, ctx, playerID]);
 
   const spaceCannonAttack = useMemo(()=> {
     return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && (ctx.activePlayers[playerID] === 'spaceCannonAttack' || ctx.activePlayers[playerID] === 'spaceCannonAttack_step2');
@@ -443,13 +445,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const canMoveThatPath = useMemo(() => {
     if(!advUnitViewTechnology) return false;
 
-    if(advUnitViewTechnology && advUnitViewTechnology.move >= getMovePath.length-1){
+    let adj = 0;
+    if(exhaustedCards.indexOf('GRAVITY_DRIVE')>-1) adj++;
+
+    if(advUnitViewTechnology && (advUnitViewTechnology.move+adj) >= getMovePath.length-1){
       if(getMovePath && getMovePath.length){
         return !getMovePath.some(tid => {
           //console.log(tid);
           const tile = G.tiles.find(t => String(t.tid) === String(tid));
           if(tile.tdata.type === 'red'){
-            if(tile.tdata.anomaly === 'asteroid-field'){
+            if(tile.tdata.anomaly === 'asteroid-field' && !haveTechnology(G.races[playerID], 'ANTIMASS_DEFLECTORS')){
               return true;
             }
             else if(tile.tdata.anomaly === 'nebula'){
@@ -462,7 +467,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               return true;
             }
           }
-          else if(tile.tdata.occupied && String(tile.tdata.occupied) !== String(playerID)){
+          else if(tile.tdata.occupied && String(tile.tdata.occupied) !== String(playerID) && String(activeTile.tid) !== String(tid)){
             return true;
           }
           return false;
@@ -471,24 +476,30 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
     }
     return false;
-  },[G.tiles, getMovePath, advUnitViewTechnology, playerID]);
+  },[G.tiles, G.races, getMovePath, advUnitViewTechnology, playerID, activeTile, exhaustedCards]);
 
-  const distanceInfo = useCallback((firstTile, lastTile)=>{
-    const move = advUnitViewTechnology ? advUnitViewTechnology.move : '?';
-    return move + '/' + (getMovePath.length-1);
-  }, [advUnitViewTechnology, getMovePath]);
+  const distanceInfo = useCallback(()=>{
+    if(advUnitViewTechnology && advUnitViewTechnology.move && getMovePath.length){
+      let adj = 0;
+
+      if(exhaustedCards.indexOf('GRAVITY_DRIVE')>-1) adj++;
+      return (advUnitViewTechnology.move + adj) + '/' + (getMovePath.length-1);
+    }
+    else{
+      return '';
+    }
+  }, [advUnitViewTechnology, getMovePath, exhaustedCards]);
 
   const moveToClick = useCallback((idx) => {
 
     if(advUnitView && idx === advUnitView.tile){
       if(canMoveThatPath){
-
         let shipIdx = payloadCursor.i;
         if(shipIdx > G.tiles[idx].tdata.fleet[advUnitView.unit].length){
           shipIdx = 0;
         }
         
-        moves.moveShip({...advUnitView, shipIdx})
+        moves.moveShip({...advUnitView, shipIdx, exhaustedCards})
         setPayloadCursor({i: 0, j: 0});
 
         // change advUnitView after move!
@@ -498,7 +509,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
     }
 
-  }, [G.tiles, advUnitView, payloadCursor, moves, canMoveThatPath])
+  }, [G.tiles, advUnitView, payloadCursor, moves, canMoveThatPath, exhaustedCards])
 
   const purgeFragment = useCallback((tag) => {
     setPurgingFragments(produce(purgingFragments, draft => {
@@ -516,7 +527,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [purgingFragments, race.fragments])
  
   const modifyMoveStep = useCallback((index) => {
-
     if(G.tiles[index].tid === activeTile.tid) return;
 
     setMoveSteps(produce(moveSteps, draft =>{
@@ -530,11 +540,44 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
       
     }));
-    /*
-     const firstTile = G.tiles[advUnitView.tile];
-    const lastTile = activeTile;
-    const line = lineTo({ start: [firstTile.q, firstTile.r], stop: [lastTile.q, lastTile.r] });*/
+
   }, [moveSteps, G.tiles, activeTile]);
+
+  const exhaustTechCard = useCallback((techId) => {
+    if(G.races[playerID].exhaustedCards.indexOf(techId)>-1){
+      return false;
+    }
+
+    setExhaustedCards(produce(exhaustedCards, draft => {
+      const idx = draft.indexOf(techId)
+      if( idx > -1){
+        draft.splice(idx, 1);
+      }
+      else{
+        draft.push(techId);
+      }
+    }));
+
+    if(techId === 'SLING_RELAY'){
+      if(!producing){
+        setProducing(G.tiles[selectedTile].tdata.planets.find(p => p.units.spacedock && String(p.occupied) === String(playerID)).name);
+      }
+      else{
+        setProducing(null);
+      }
+    }
+    else{
+      
+    }
+  }, [exhaustedCards, setExhaustedCards, G.races, producing, G.tiles, selectedTile, playerID]);
+
+  /*
+  {haveTechnology(G.races[playerID], 'GRAVITY_DRIVE') && 
+              <Text interactive={true} pointerdown={()=>exhaustTechCard('GRAVITY_DRIVE')} x={-100} y={70} alpha={race.exhaustedCards && race.exhaustedCards.indexOf('GRAVITY_DRIVE')>-1 ? .5:1} style={{fontSize: 20, fill:'white'}} text='GRAVITY DRIVE'>
+                {exhaustedCards.indexOf('GRAVITY_DRIVE') === -1 && <Sprite scale={.35} x={-30} image='icons/propulsion.png'/>}
+                {exhaustedCards.indexOf('GRAVITY_DRIVE') > -1 && <Text text='► ' x={-30} style={{fontSize: 20, fill:'white'}}/>}
+              </Text>}
+  */
 
   const TileContent = ({element, index}) => {
 
@@ -542,6 +585,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     const [firstCorner] = element.corners;
     let moveTint = element.tdata.type === 'blue' ? 'lightblue' :  element.tdata.type !== 'hyperlane' ? element.tdata.type: '';
     if(element.tdata.occupied && String(element.tdata.occupied)!==String(playerID)) moveTint = 'purple';
+    if(moveTint === 'red' && canMoveThatPath) moveTint = 'lightblue';
 
     return <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
         {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier_bg.png'}/>}
@@ -551,19 +595,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={55} y={55} alpha={.85}></Sprite>
                   </Sprite>}
         )}
-
-        {activeTile && advUnitView && pathIdx > 0 && 
-          <Sprite tint={moveTint} interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} image={'icons/move_step.png'}>
-            <Text text={pathIdx} x={pathIdx === 1 ? 30:22} y={3} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
-          </Sprite>
-        }
-
-        {activeTile && advUnitView && pathIdx === -1 && selectedTile === index &&
-          <Sprite interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} alpha={.5} image={'icons/move_step.png'}>
-            <Text text={'+'} x={17} y={0} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
-          </Sprite>
-        }
-
+        
         {element.tdata.planets.map((p,i) => {  
           return p.hitCenter && <Sprite image={'icons/empty.png'} scale={1} key={i} width={p.hitRadius * 2} height={p.hitRadius * 2} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}
             interactive={true} pointerdown={(e)=>tileClick(e, index)}>
@@ -626,11 +658,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
         {element.tdata.fleet && <Container x={10} y={-30}>
           {activeTile && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 &&
-          <Sprite interactive={true} pointerdown={()=>moveToClick(index)} scale={.75} y={5} x={-10} image={'icons/move_to.png'}
-            alpha={advUnitView && advUnitView.tile === index ? (canMoveThatPath ? 1:.5):.5} >
-              <Text text={'move'} x={-70} y={10} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} />
-              <Text text={distanceInfo(element, activeTile)} x={-70} y={30} style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
-          </Sprite>}
+          <Container y={5} x={-10}>
+            <Sprite interactive={true} pointerdown={()=>moveToClick(index)} scale={.75} image={'icons/move_to.png'}
+              alpha={advUnitView && advUnitView.tile === index ? (canMoveThatPath ? 1:.5):.5} >
+                <Text text={distanceInfo(element, activeTile)} x={-100} y={10} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
+            </Sprite>
+            
+          </Container>}
 
           {Object.keys(element.tdata.fleet).map((f, i) => {
             const isCurrentAdvUnit = advUnitView && advUnitView.tile === index && advUnitView.unit === f;
@@ -660,6 +694,20 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             return row;
           })}
         </Container>}
+
+        {activeTile && advUnitView && pathIdx > 0 && 
+          <Sprite tint={moveTint} interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} image={'icons/move_step.png'}>
+            <Text text={pathIdx} x={pathIdx === 1 ? 30:22} y={3} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
+          </Sprite>
+        }
+
+        {activeTile && advUnitView && pathIdx === -1 && selectedTile === index &&
+          <Sprite interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} alpha={.5} image={'icons/move_step.png'}>
+            <Text text={'+'} x={17} y={0} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
+          </Sprite>
+        }
+
+
         {ctx.phase === 'acts' && isMyTurn && selectedTile === index && !activeTile &&
           <Text text='► Activate system' x={element.w/4 - 20} y={element.w/2 + 70} interactive={true} pointerdown={()=>moves.activateTile(index)} 
             style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}>
@@ -668,11 +716,29 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     </Container>
   }
 
+  const advUnitSwitch = useMemo(()=> {
+    if(advUnitView){
+      return advUnitView.tile;
+    }
+  }, [advUnitView]);
+
+  const activeTileSwitch = useMemo(() => {
+    if(activeTile){
+      return activeTile.tid;
+    }
+  }, [activeTile]);
+
   useEffect(()=>{
     //if(!activeTile || !advUnitView || !advUnitView.tile){
       setMoveSteps([]);
     //}
-  }, [advUnitView && advUnitView.tile, activeTile]);
+  }, [advUnitSwitch, activeTileSwitch]);
+
+  useEffect(()=>{
+    if(race.exhaustedCards.length){
+      setExhaustedCards([]);
+    }
+  },[race.exhaustedCards]);
 
   useEffect(()=> {
     if(stratUnfold > 0 && (promisVisible || actionsVisible || relicsVisible)){
@@ -720,8 +786,46 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }, [PLANETS, sendChatMessage]);
   
+  const TechAction = (args) => { 
+    let disabled = race.exhaustedCards.indexOf(args.techId) > -1;
+
+    if(!disabled && args.techId === 'GRAVITY_DRIVE'){
+      if(!activeTile) disabled = true;
+    }
+    if(!disabled && args.techId === 'SLING_RELAY'){
+      if(selectedTile < 0){
+        disabled = true;
+      }
+      else{
+        const tdata = G.tiles[selectedTile].tdata;
+        if(tdata.occupied && String(tdata.occupied) !== String(playerID)){
+          disabled = true;
+        }
+        else if(!tdata.planets || !tdata.planets.find(p => String(p.occupied) === String(playerID) && p.units && p.units.spacedock)){
+          disabled = true;
+        }
+
+      }
+      
+    }
+    
+
+    return  <>
+              <Button size='sm' style={{marginRight: '.5rem'}} disabled={disabled} id={'context_'+args.techId}
+                  color={exhaustedCards.indexOf(args.techId) > -1 || disabled ? 'secondary':'warning'} onClick={()=>exhaustTechCard(args.techId)}>
+                <img alt='propulsion' src='icons/propulsion.png' style={{width: '1rem', marginRight: '.5rem'}}/>
+                {args.techId.replaceAll('_', ' ')}
+              </Button>
+              <UncontrolledTooltip placement='bottom' target={'#context_'+args.techId}>
+                {techData.find(t => t.id === args.techId).description}
+              </UncontrolledTooltip>
+            </>
+  }
+
+  
+
   return (
-          <StateContext.Provider value={{G, ctx, playerID, moves}}>      
+          <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard}}>      
             <MyNavbar />
             <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <>
@@ -729,7 +833,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Technologies map</h6></CardTitle>
                   
                   <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                    {getTechType('propulsion', race)}
+                    {getTechType('propulsion', race/*,null,null,null,exhaustTechCard*/)}
                     {getTechType('biotic', race)}
                     {getTechType('warfare', race)}
                     {getTechType('cybernetic', race)}
@@ -757,7 +861,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Trade</h6></CardTitle>
                 <TradePanel onTrade={moves.trade}/>
               </Card>}
-              {producing && <ProducingPanel onCancel={()=>setProducing(null)} pname={producing} PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}/>}
+              {producing && <ProducingPanel onCancel={()=>setProducing(null)} pname={producing} 
+                PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
 
               <ChatBoard sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
             </CardColumns>
@@ -932,6 +1037,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       <ButtonGroup style={{width: 'max-content'}}>
                         <Button size='sm' onClick={()=>setMidPanelInfo('tokens')} color={midPanelInfo === 'tokens' ? 'light':'dark'} style={{marginRight: '.5rem'}}>TOKENS</Button>
                         <Button size='sm' onClick={()=>setMidPanelInfo('fragments')} color={midPanelInfo === 'fragments' ? 'light':'dark'} style={{marginRight: '.5rem'}}>FRAGMENTS</Button>
+                        <Button size='sm' onClick={()=>setMidPanelInfo('context')} color={midPanelInfo === 'context' ? 'light':'dark'} style={{marginRight: '.5rem'}}>CONTEXT</Button>
                       </ButtonGroup>
                       
                       {midPanelInfo === 'tokens' && <>
@@ -993,6 +1099,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           color='warning' onClick={()=>{moves.purgeFragments(purgingFragments); setPurgingFragments({c:0,i:0,h:0,u:0})}}>Purge</Button>
                       </div>
                       </>}
+                      {midPanelInfo === 'context' && <div style={{border: 'none', display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', padding: '1rem', minHeight: '9rem'}}>
+                          {haveTechnology(race, 'GRAVITY_DRIVE') && <TechAction techId='GRAVITY_DRIVE'/>}
+                          {haveTechnology(race, 'SLING_RELAY') && <TechAction techId='SLING_RELAY'/>}
+                      </div>}
                     </Card>}
                     {race && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)', display: 'flex', fontSize: '.8rem'}}>
                       <ButtonGroup>
