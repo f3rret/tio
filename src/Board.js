@@ -39,11 +39,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [agentVisible, setAgentVisible] = useState('agent');
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
   const [stratUnfold, setStratUnfold] = useState(0);
-  const [promisVisible, setPromisVisible] = useState(false);
-  const [actionsVisible, setActionsVisible] = useState(false);
-  const [relicsVisible, setRelicsVisible] = useState(false);
-  const [contextVisible, setContextVisible] = useState(false);
-  const [lawsVisible, setLawsVisible] = useState(false);
+  const [rightBottomVisible, setRightBottomVisible] = useState(null);
   const [selectedTile, setSelectedTile] = useState(-1);
   const [midPanelInfo, setMidPanelInfo] = useState('tokens');
   const [purgingFragments, setPurgingFragments] = useState({c: 0, h: 0, i: 0, u: 0});
@@ -206,41 +202,55 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }
 
-  const promissorySwitch = () => {
+  const promissorySwitch = useCallback(() => {
     setStratUnfold(0);
-    setActionsVisible(false);
-    setRelicsVisible(false);
-    setLawsVisible(false);
-    setPromisVisible(!promisVisible);
-  }
+    if(rightBottomVisible === 'promissory'){
+      setRightBottomVisible(null);
+    }
+    else{
+      setRightBottomVisible('promissory');
+    }
+  },[rightBottomVisible]);
 
   const contextSwitch = useCallback(() => {
-    setContextVisible(!contextVisible);
-  }, [contextVisible])
-
-  const actionsSwitch = () => {
     setStratUnfold(0);
-    setPromisVisible(false);
-    setRelicsVisible(false);
-    setLawsVisible(false);
-    setActionsVisible(!actionsVisible);
-  }
+    if(rightBottomVisible === 'context'){
+      setRightBottomVisible(null);
+    }
+    else{
+      setRightBottomVisible('context');
+    }
+  }, [rightBottomVisible]);
 
-  const relicsSwitch = () => {
+  const actionsSwitch = useCallback(() => {
     setStratUnfold(0);
-    setPromisVisible(false);
-    setActionsVisible(false);
-    setLawsVisible(false);
-    setRelicsVisible(!relicsVisible);
-  }
+    if(rightBottomVisible === 'actions'){
+      setRightBottomVisible(null);
+    }
+    else{
+      setRightBottomVisible('actions');
+    }
+  }, [rightBottomVisible]);
 
-  const lawsSwitch = () => {
+  const relicsSwitch = useCallback(() => {
     setStratUnfold(0);
-    setPromisVisible(false);
-    setActionsVisible(false);
-    setRelicsVisible(false);
-    setLawsVisible(!lawsVisible);
-  }
+    if(rightBottomVisible === 'relics'){
+      setRightBottomVisible(null);
+    }
+    else{
+      setRightBottomVisible('relics');
+    }
+  }, [rightBottomVisible]);
+
+  const lawsSwitch = useCallback(() => {
+    setStratUnfold(0);
+    if(rightBottomVisible === 'agenda'){
+      setRightBottomVisible(null);
+    }
+    else{
+      setRightBottomVisible('agenda');
+    }
+  }, [rightBottomVisible]);
 
   const StrategyCard = ({card, idx, style}) => {
     const i = idx + 1;
@@ -404,16 +414,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [G.tiles, stageh, stagew, selectedTile]);
 
 
-  /*const getDistance = useCallback((firstTile, lastTile) => {
-    const line = lineTo({ start: [firstTile.q, firstTile.r], stop: [lastTile.q, lastTile.r] });
-    return line.toArray().length-1;
-  }, []);*/
-  
-
   const getMovePath = useMemo(() => {
 
-   
     if(activeTile && advUnitView && advUnitView.tile){
+      if(String(activeTile.tid) === String(G.tiles[advUnitView.tile].tid)) return [];
       let line;
 
       if(moveSteps && moveSteps.length){
@@ -519,7 +523,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             }
           }
           else if(tile.tdata.occupied && String(tile.tdata.occupied) !== String(playerID) && String(activeTile.tid) !== String(p)){
-            return true;
+            return !haveTechnology(race, 'LIGHTWAVE_DEFLECTOR');
           }
           return false;
         });
@@ -527,7 +531,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
     }
     return false;
-  },[G.tiles, G.races, getMovePath, getPureMovePath, advUnitViewTechnology, playerID, activeTile, exhaustedCards]);
+  },[G.tiles, G.races, race, getMovePath, getPureMovePath, advUnitViewTechnology, playerID, activeTile, exhaustedCards]);
 
   const distanceInfo = useCallback(()=>{
     if(advUnitViewTechnology && advUnitViewTechnology.move && getPureMovePath.length){
@@ -629,6 +633,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 {exhaustedCards.indexOf('GRAVITY_DRIVE') > -1 && <Text text='► ' x={-30} style={{fontSize: 20, fill:'white'}}/>}
               </Text>}
   */
+
+  const maxActs =  useMemo(() => haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1, [race]);
 
   const TileContent = ({element, index}) => {
 
@@ -746,6 +752,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           })}
         </Container>}
 
+        {ctx.phase === 'acts' && isMyTurn && selectedTile === index && race.actions.length < maxActs &&  element.tdata.type !== 'hyperlane' &&
+          <Text text='► Activate system' x={element.w/4 - 20} y={element.w/2 + 70} interactive={true} pointerdown={()=>moves.activateTile(index)} 
+            style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}>
+          </Text>}
+        
         {activeTile && advUnitView && pathIdx > 0 && 
           <Sprite tint={moveTint} interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} image={'icons/move_step.png'}>
             <Text text={pathIdx} x={pathIdx === 1 ? 30:22} y={3} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
@@ -763,11 +774,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           </Sprite>
         }
 
-        {ctx.phase === 'acts' && isMyTurn && selectedTile === index && !activeTile &&  element.tdata.type !== 'hyperlane' &&
-          <Text text='► Activate system' x={element.w/4 - 20} y={element.w/2 + 70} interactive={true} pointerdown={()=>moves.activateTile(index)} 
-            style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}>
-          </Text>}
-        
     </Container>
   }
 
@@ -796,12 +802,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   },[race.exhaustedCards]);
 
   useEffect(()=> {
-    if(stratUnfold > 0 && (promisVisible || actionsVisible || relicsVisible)){
-      setPromisVisible(false);
-      setActionsVisible(false);
-      setRelicsVisible(false);
+    if(stratUnfold > 0 && rightBottomVisible){
+      setRightBottomVisible(null)
     }
-  },[stratUnfold, promisVisible, relicsVisible, actionsVisible]);
+  },[stratUnfold, rightBottomVisible]);
 
   useEffect(()=>{
     if(ctx.phase === 'stats' && !objVisible){
@@ -1010,11 +1014,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
                 </div>
                 <div style={{display: 'flex', flexDirection: 'column', position: 'fixed', bottom: '4rem', width: '13rem'}}>
-                  {contextVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                  {rightBottomVisible === 'context' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {haveTechnology(race, 'GRAVITY_DRIVE') && <TechAction techId='GRAVITY_DRIVE'/>}
                     {haveTechnology(race, 'SLING_RELAY') && <TechAction techId='SLING_RELAY'/>}
                   </ListGroup>}
-                  {promisVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                  {rightBottomVisible === 'promissory' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {race.promissory.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                       <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id}>
                         {pr.sold ? <img alt='to other player' style={{width: '1rem', position: 'absolute', left: '.5rem', top: '.4rem'}} src={'race/icons/' + pr.sold + '.png'} />:''}
@@ -1026,7 +1030,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </ListGroupItem>)}
                   </ListGroup>}
 
-                  {actionsVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                  {rightBottomVisible === 'actions' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {race.actionCards.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                       <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
                         <b>{pr.id.toUpperCase()}</b>
@@ -1035,7 +1039,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </ListGroupItem>)}
                   </ListGroup>}
 
-                  {relicsVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                  {rightBottomVisible === 'relics' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {race.relics.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                       <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
                         <b>{pr.id.toUpperCase()}</b>
@@ -1044,7 +1048,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </ListGroupItem>)}
                   </ListGroup>}
 
-                  {lawsVisible && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                  {rightBottomVisible === 'agenda' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {G.laws.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                       <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
                         <b>{pr.id.toUpperCase()}</b>
@@ -1068,7 +1072,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#promissorySwitch'}>Promissory</UncontrolledTooltip>
                     <Button id='contextSwitch' size='sm' className='hoverable' tag='img' onClick={()=>contextSwitch()} 
                       style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.6rem 1.5rem', width: '5rem'}} src='icons/codex_white.png'/>
-                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#promissorySwitch'}>Context</UncontrolledTooltip>
+                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#contextSwitch'}>Context</UncontrolledTooltip>
                   </ButtonGroup>
               </CardColumns>
 

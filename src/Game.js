@@ -1209,6 +1209,14 @@ export const TIO = {
 
             if(!pname || !deploy) return;
 
+            if(exhaustedCards && exhaustedCards.indexOf('SLING_RELAY') > -1){
+              const maxActs = G.races[playerID].knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
+              if(G.races[playerID].actions.length > maxActs){
+                console.log('too many actions');
+                return INVALID_MOVE;
+              }
+            }
+
             if(exhausted && exhausted.length){
               G.tiles.forEach(tile => {
                 const planets = tile.tdata.planets;
@@ -1259,6 +1267,7 @@ export const TIO = {
                
             if(exhaustedCards && exhaustedCards.indexOf('SLING_RELAY') > -1){
               G.races[playerID].exhaustedCards.push('SLING_RELAY');
+              G.races[playerID].actions.push('PRODUCING');
             }
           },
           invasion: ({G, playerID, events}, planet) => {
@@ -1305,6 +1314,12 @@ export const TIO = {
             }
           },
           purgeFragments: ({G, playerID}, purgingFragments) => {
+            const maxActs = G.races[playerID].knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
+            if(G.races[playerID].actions.length > maxActs){
+              console.log('too many actions');
+              return INVALID_MOVE;
+            }
+
             if(purgingFragments.c + purgingFragments.u !== 3 && purgingFragments.h + purgingFragments.u !== 3 && purgingFragments.i + purgingFragments.u !== 3){
               console.log('not enough fragments');
               return INVALID_MOVE;
@@ -1322,6 +1337,7 @@ export const TIO = {
               G.races[playerID].fragments[k] -= purgingFragments[k];
             });
             G.races[playerID].relics.push(G.relicsDeck.pop());
+            G.races[playerID].actions.push('FRAGMENTS_PURGE');
           },
           adjustToken: ({ G, playerID}, tag) => {
             G.races[playerID].tokens.new--;
@@ -1330,6 +1346,12 @@ export const TIO = {
           useStrategy: ({ G, events, playerID}, idx) => {
             if(idx === undefined) idx=0;
             const strategy = G.races[playerID].strategy[idx];
+
+            const maxActs = G.races[playerID].knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
+            if(G.races[playerID].actions.length > maxActs){
+              console.log('too many actions');
+              return INVALID_MOVE;
+            }
 
             if(!strategy || strategy.exhausted){
               console.log('strategy card exhausted');
@@ -1407,10 +1429,13 @@ export const TIO = {
               return INVALID_MOVE;
             }
 
-            /*if(race.actions.length > 0){
+            const maxActs = race.knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
+            if(race.actions.length > maxActs){
               console.log('too many actions');
               return INVALID_MOVE;
-            }*/
+            }
+            const prevActive = G.tiles.find(t => t.active === true);
+            if(prevActive) prevActive.active = undefined;
 
             const tile = G.tiles[tIndex];
 
