@@ -5,7 +5,7 @@ import { useState, useMemo, useCallback, useEffect, useRef, useContext } from 'r
 import { produce } from 'immer';
 import cardData from './cardData.json';
 import techData from './techData.json';
-import { checkObjective, StateContext } from './utils';
+import { checkObjective, StateContext, haveTechnology } from './utils';
 
 export function PaymentDialog(args) {
     
@@ -161,6 +161,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
     const [currentUnit, setCurrentUnit] = useState('FLAGSHIP');
     const [deploy, setDeploy] = useState({});
     const [ex, setEx] = useState({}); //exhausted
+    const [adjSpec, setAdjSpec] = useState([]);
     const [ex2, setEx2] = useState({});
     const [result, setResult] = useState(0);
     const [tg, setTg] = useState(0);
@@ -232,7 +233,10 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
         }
         else if(sid === 'TECHNOLOGY'){
             let resources = 0;
-            Object.keys(ex).forEach(e =>{
+            let keys = Object.keys(ex);
+            if(!haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY')) keys = keys.filter(e => adjSpec.indexOf(e) === -1);
+
+            keys.forEach(e =>{
                 const planet = PLANETS.find(p => p.name === e)
                 if(!planet){
                     setEx(produce(ex, draft => {
@@ -248,7 +252,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
             if(isMine) r++;
             setResult(r);
         }
-    }, [ex, ex2, tg, isMine, sid, PLANETS, step]);
+    }, [ex, ex2, tg, isMine, sid, PLANETS, step, adjSpec, G.races, playerID]);
 
     const maxDeployUnits = useMemo(() => {
         if(sid === 'WARFARE' && !isMine){
@@ -277,6 +281,23 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
         }
         return 0;
     }, [deploy, sid, isMine, R_UNITS]);
+
+    const planetRowClickSpecialty = useCallback((pname) =>{
+
+        if(!haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY') && !PLANETS.find(p => p.name === pname).exhausted){
+            setEx(produce(ex, draft => {
+                if(draft[pname]){
+                    delete draft[pname];
+                    setAdjSpec(adjSpec.filter(a => a !== pname));
+                }
+                else{
+                    draft[pname] = true;
+                    setAdjSpec([...adjSpec, pname]);
+                }
+            }));
+        }
+
+    }, [PLANETS, adjSpec, ex, G.races, playerID]);
 
     const planetRowClick = useCallback((pname) => {
         if(sid === 'LEADERSHIP' || sid === 'TECHNOLOGY'){
@@ -412,6 +433,11 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
         });
 
         const learning = {biotic: 0, warfare: 0, propulsion: 0, cybernetic: 0, unit: 0};
+
+        adjSpec.forEach(pname => {
+            const planet = PLANETS.find(p => p.name === pname);
+            if(planet && planet.specialty) learning[planet.specialty]++;
+        });
         
         keys.forEach((k, i)=>{
             const prekeys = Object.keys(ex2[k].prereq);
@@ -440,7 +466,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
         });
 
         return <>{result}</>;
-    }, [ex2, G.races, playerID]);
+    }, [ex2, G.races, playerID, PLANETS, adjSpec]);
 
     const cantNext = useMemo(() => {
         let stopThere = false;
@@ -635,6 +661,21 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
         }
     }
     
+    useEffect(()=>{
+        if(step === 1 && sid === 'TECHNOLOGY'){
+            if(haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY')){
+                const specs = [];
+                PLANETS.forEach(p => {
+                    if(p.specialty){
+                        specs.push(p.name);
+                    }
+                });
+                setAdjSpec(specs);
+            }
+        }
+    // eslint-disable-next-line
+    }, [step]);
+
     return (
         <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute', margin: '5rem'}}>
               <CardTitle style={{borderBottom: '1px solid ' + getStratColor(sid, '.6'), color: 'black'}}><h3>{sid}</h3></CardTitle>
@@ -722,8 +763,8 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
                             </div>}
                         </div>}
                         {sid === 'TECHNOLOGY' && <div style={{width: '50rem', display: 'flex', flexDirection: 'row'}}>
-                            <div style={{width: '60%', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                                <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>
+                            <div style={{width: '60%', overflowY: 'auto', minHeight: '14rem', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                                <PlanetsRows PLANETS={PLANETS} resClick={(e,p)=>planetRowClick(p.name)} specClick={(e,p) => planetRowClickSpecialty(p.name)} exhausted={ex}/>
                             </div>
                             <div style={{width: '40%', padding: '2rem'}}>
                                 <h5 style={{fontSize: '50px', display: 'flex', justifyContent: 'flex-end'}}>{'+'}{tg}{' '}<Button tag='img' onClick={tgClick} src='/icons/trade_good_1.png' color='warning' 
@@ -733,6 +774,10 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
                                 <div style={{display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap'}}>
                                     <h5 style={{textAlign: 'end'}}>{'You can learn '}</h5>
                                     <h5 style={{textAlign: 'end'}}>{result + (result === 1 ? ' technology':' technologies')}</h5>
+                                    {adjSpec.length > 0 && <h6>and ignore {adjSpec.map((pname, pi) =>{
+                                        const p = PLANETS.find(p => p.name === pname);
+                                        return <img alt='specialty' key={pi} style={{width: '1rem'}} src={'icons/' + p.specialty + '.png'}/>
+                                    })} requirements</h6>}
                                 </div>
                             </div>
                         </div>}
@@ -1117,12 +1162,16 @@ const PaymentCard = (args) => {
     </>
 }
 
-export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, infClick}) => {
+export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, infClick, specClick}) => {
 
     if(!onClick) onClick = ()=>{};
     if(!resClick) resClick = ()=>{};
     if(!infClick) infClick = ()=>{};
+    if(!specClick) specClick = ()=>{};
     if(!exhausted) exhausted = {};
+
+    const { G, playerID, moves } = useContext(StateContext);
+    const psArch = haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY');
 
     return PLANETS.map((p,i) => {
       let trait;
@@ -1139,16 +1188,20 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
       }
       
       return (<Row className='hoverable' onClick={()=>onClick(p.name)} key={i} 
-                    style={{cursor: 'default', fontSize: '1.25rem', marginTop: '.25rem', lineHeight: '2.2rem', height: '2.5rem', background: exhausted[p.name] ? 'green':'',
+                    style={{cursor: 'default', paddingRight: '1rem', fontSize: '1.25rem', marginTop: '.25rem', lineHeight: '2.2rem', height: '2.5rem', background: exhausted[p.name] ? 'green':'',
                     opacity: opac, color: 'white'}}>
-                <Col xs='6'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem'}} src={'icons/legendary_complete.png'}/>:'' } {p.name}</Col>
-                <Col xs='1' style={{padding: 0}}>{specialty}</Col>
+                <Col xs='7'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem'}} src={'icons/legendary_complete.png'}/>:'' } {p.name}</Col>
+                <Col xs='1' onClick={(e)=>specClick(e, p)} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
                 <Col xs='1' style={{padding: 0}}>{trait}</Col>
                 {variant !== 'small' && <>
                 <Col xs='1' onClick={(e)=>resClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
-                <Col xs='1'/>
                 <Col xs='1' onClick={(e)=>infClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b>{p.influence}</b></Col>
-                <Col xs='1'/></>}
+                
+                {(!psArch || p.exhausted) && <Col />}
+                {psArch && !p.exhausted && <Col className='bi bi-box-arrow-in-right' style={{padding: 0, cursor: 'pointer', position: 'relative'}}> 
+                    <img style={{width: '1.5rem', position: 'absolute', top: '.25rem', left: '1rem'}} onClick={(e)=>{e.stopPropagation(); moves.exhaustForTg(p.name)}} src='icons/trade_good_1.png' alt='tg'/> 
+                </Col>}
+                </>}
               </Row>)
     })
   }

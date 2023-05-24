@@ -6,7 +6,7 @@ import raceData from './raceData.json';
 import techData from './techData.json';
 import cardData from './cardData.json';
 import { produce } from 'immer';
-import { NUM_PLAYERS, checkObjective, getUnitsTechnologies, haveTechnology } from './utils';
+import { NUM_PLAYERS, checkObjective, getUnitsTechnologies, haveTechnology, getPlanetByName } from './utils';
 
 export const TIO = {
     
@@ -186,16 +186,26 @@ export const TIO = {
       stats: {
         next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
         turn: {
-          order: TurnOrder.ONCE,
+          order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),//TurnOrder.ONCE,
           /*minMoves: 1,
           maxMoves: 1*/
         },
         moves: {
           completeObjective: ({G, playerID, events}, oid, payment) => {
             completeObjective({G, playerID, oid, payment});
+            G.passedPlayers.push(playerID);
             events.endTurn();
           },
+          dropActionCard: ({G, playerID}, cardId) => {
+            const idx = G.races[playerID].actionCards.findIndex(a => a.id === cardId);
+
+            if(idx > -1){
+              delete G.races[playerID].actionCards[idx];
+              G.races[playerID].actionCards = G.races[playerID].actionCards.filter(a => a);
+            }
+          },
           pass: ({ G, playerID, events }) => {
+            G.passedPlayers.push(playerID);
             events.endTurn();
           }
         },
@@ -203,6 +213,9 @@ export const TIO = {
           G.passedPlayers = [];
           G.races.forEach(r => {
             r.actionCards.push(G.actionsDeck.pop());
+            if(haveTechnology(r, 'NEURAL_MOTIVATOR')){
+              r.actionCards.push(G.actionsDeck.pop());
+            }
             r.exhaustedCards = [];
           });
           //return {...G, passedPlayers: []}
@@ -223,7 +236,9 @@ export const TIO = {
               })
             }
           });
-        }
+          G.passedPlayers = [];
+        },
+        endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       },
       acts: {
         //start: true,
@@ -234,11 +249,8 @@ export const TIO = {
             order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
             stages: {
               strategyCard: {
-                minMoves: 1,
-                maxMoves: 1,
                 moves: {
                   joinStrategy: ({ G, ctx, playerID, events }, {exhausted, tg, result}) => {
-
                     const exhaustPlanet = (revert) => {
                       if(exhausted && exhausted.length){
                         G.tiles.forEach(tile => {
@@ -453,11 +465,23 @@ export const TIO = {
                       G.actionsDeck = G.actionsDeck.filter(a => a.issued !== true);
                       G.secretObjDeck = G.secretObjDeck.filter(a => a.issued !== true);
                     }
+
+                    events.endStage();
                   },
-                  passStrategy: ({ G, ctx }) => {
+                  passStrategy: ({ G, ctx, events }) => {
                     if(Object.keys(ctx.activePlayers).length === 1){
                       G.actionsDeck = G.actionsDeck.filter(a => a.issued !== true);
                       G.secretObjDeck = G.secretObjDeck.filter(a => a.issued !== true);
+                    }
+                    events.endStage();
+                  },
+                  exhaustForTg: ({G, playerID}, pname) => {
+                    if(pname){
+                      const planet = getPlanetByName(G.tiles, pname);
+                      if(!planet.exhausted){
+                        planet.exhausted = true;
+                        G.races[playerID].tg += 1;
+                      }
                     }
                   }
                 }
@@ -1205,6 +1229,16 @@ export const TIO = {
             }
         },
         moves: {
+          exhaustForTg: ({G, playerID}, pname) => {
+            if(pname){
+              const planet = getPlanetByName(G.tiles, pname);
+              if(!planet.exhausted){
+                planet.exhausted = true;
+                G.races[playerID].tg += 1;
+              }
+            }
+
+          },
           producing: ({G, playerID}, pname, deploy, exhausted, tg, exhaustedCards) => {
 
             if(!pname || !deploy) return;
@@ -1362,7 +1396,7 @@ export const TIO = {
             G.strategy = strategy.id;
             G.races[playerID].actions.push('STRATEGY_CARD');
 
-            events.setActivePlayers({ all: 'strategyCard', minMoves: 1, maxMoves: 1 });
+            events.setActivePlayers({ all: 'strategyCard', minMoves: 1 });
           },
           loadUnit: ({G, playerID}, {src, dst}) => {
             
@@ -1587,11 +1621,12 @@ export const TIO = {
         },
         onEnd: ({ G }) => {
           G.tiles.forEach( t => t.tdata.tokens = []);
+          G.passedPlayers = [];
         },
         onBegin: ({ G, random }) => {
           G.passedPlayers = []; 
         },
-        endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers,
+        endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       },
       agenda: {
         next: 'strat',

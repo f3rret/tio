@@ -202,6 +202,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }
 
+  const mustAction = useMemo(() => {
+    return ctx.phase === 'stats' && race.actionCards.length > 7
+  }, [ctx.phase, race.actionCards])
+
   const promissorySwitch = useCallback(() => {
     setStratUnfold(0);
     if(rightBottomVisible === 'promissory'){
@@ -271,8 +275,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }
 
   const strategyStage = useMemo(()=> {
-    return G.strategy !== undefined && ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && ctx.activePlayers[playerID] === 'strategyCard'
-  }, [G, ctx, playerID]);
+    return G.strategy !== undefined && ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && Object.values(ctx.activePlayers)[0] === 'strategyCard'
+  }, [G, ctx]);
 
   const spaceCannonAttack = useMemo(()=> {
     return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && (ctx.activePlayers[playerID] === 'spaceCannonAttack' || ctx.activePlayers[playerID] === 'spaceCannonAttack_step2');
@@ -808,10 +812,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   },[stratUnfold, rightBottomVisible]);
 
   useEffect(()=>{
-    if(ctx.phase === 'stats' && !objVisible){
+    if(ctx.phase === 'stats' && !objVisible && !mustAction){
       setObjVisible(true);
     }
-  }, [ctx.phase, objVisible]);
+  }, [ctx.phase, objVisible, mustAction]);
 
   useEffect(()=>{
     if(race.exploration && race.exploration.length){
@@ -971,6 +975,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             {bombardment && <Bombardment />}
             {invasion && <Invasion />}
 
+            {mustAction && 
+            <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '30%', position: 'absolute', margin: '20rem'}}>
+              <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>You must drop action card</h3></CardTitle>
+              <CardBody style={{display: 'flex', color: 'black'}}>
+                You can't have more than 7 action cards.
+              </CardBody>
+            </Card>}
+
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport>
                 
@@ -1030,10 +1042,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </ListGroupItem>)}
                   </ListGroup>}
 
-                  {rightBottomVisible === 'actions' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                  {(rightBottomVisible === 'actions' || race.actionCards.length > 7) && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {race.actionCards.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                       <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
                         <b>{pr.id.toUpperCase()}</b>
+                        {mustAction && race.actionCards.length > 7 && <b onClick={()=>moves.dropActionCard(pr.id)} className='bi bi-backspace-fill' style={{color: 'red', float: 'right'}}/>}
                       </Button>
                       <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.description}</UncontrolledTooltip> 
                     </ListGroupItem>)}
