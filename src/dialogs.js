@@ -111,7 +111,7 @@ export const AgendaDialog = ({ G, ctx, playerID, PLANETS, onConfirm }) => {
                         <span onClick={()=>setVoteRadio('pass')}><Input type='radio' name='vote' checked={voteRadio === 'pass' ? 'checked':''} value='pass' onChange={()=>setVoteRadio('pass')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>Pass</Label></span>
                     </h6>}
                     {a.elect && <>
-                        <Input type='select' innerRef={voteSelect} onChange={(e)=>console.log(e)} style={{margin: '1rem 0', color: 'black'}}>
+                        <Input type='select' innerRef={voteSelect} onChange={()=>{}} style={{margin: '1rem 0', color: 'black'}}>
                             {a.elect === 'Player' && G.races.map((r,i) => <option key={i} value={r.name}>{r.name}</option>)}
                             {a.elect === 'Law' && G.laws.map((l,i) => <option key={i} value={l.id}>{l.id}</option>)}
                             {a.elect === 'Scored Secret Objective' && G.races.map((r,i) => r.secretObjectives.map(s => s.players && s.players.length > 0 && <option key={s} value={s.id}>{s.id}</option>))}

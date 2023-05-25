@@ -6,7 +6,7 @@ import raceData from './raceData.json';
 import techData from './techData.json';
 import cardData from './cardData.json';
 import { produce } from 'immer';
-import { NUM_PLAYERS, checkObjective, getUnitsTechnologies, haveTechnology, getPlanetByName } from './utils';
+import { NUM_PLAYERS, checkObjective, getUnitsTechnologies, haveTechnology, enemyHaveTechnology, getPlanetByName } from './utils';
 
 export const TIO = {
     
@@ -15,7 +15,7 @@ export const TIO = {
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
                   .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [],
-                    exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []}) );
+                    exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
       races.forEach( r => {
@@ -224,7 +224,8 @@ export const TIO = {
           G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
           G.races.forEach( r => { 
             r.strategy = []; 
-            r.initiative = undefined 
+            r.initiative = undefined;
+            r.tokens.new += haveTechnology(r, 'HYPER_METABOLISM') ? 3:2; 
           });
 
           G.tiles.forEach( t => {
@@ -963,12 +964,26 @@ export const TIO = {
                       draft[playerID][unit] = dice;
                     });
                   },
-                  nextStep: ({events, playerID, ctx}, hits) => {
+                  nextStep: ({G, events, playerID, ctx}, hits) => {
                     if(String(playerID) === String(ctx.currentPlayer)){
                       events.setStage('invasion_await');
                     }
-                    else if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
-                      events.setStage('invasion_await');
+                    else if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){ //defenser give no hits
+                      const activeTile = G.tiles.find(t => t.active === true);
+                      const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+
+                      if(ctx.activePlayers[ctx.currentPlayer] === 'invasion_await' && activePlanet.invasion.troops){
+                        const val = {};
+                        val[activePlanet.occupied] = {stage: 'invasion'};
+                        val[ctx.currentPlayer] = {stage: 'invasion'};
+                        
+                        G.dice[activePlanet.occupied] = {};
+                        G.dice[ctx.currentPlayer] = {};
+                        events.setActivePlayers({value: val});
+                      }
+                      else{
+                        events.setStage('invasion_await');
+                      }
                     }
                     else{
                       events.setStage('invasion_step2');
@@ -1024,7 +1039,7 @@ export const TIO = {
                       draft[playerID][unit] = dice;
                     });
                   },
-                  nextStep: ({G, playerID, ctx, events}, hits) => {
+                  nextStep: ({G, playerID, ctx, events}, hits, prevStages) => {
                     let fleet = {};
                     const activeTile = G.tiles.find(t => t.active === true);
                     const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
@@ -1040,11 +1055,19 @@ export const TIO = {
                         return result;
                     }
 
+                    let bacterialWeapon = false;
+
                     if(playerID === ctx.currentPlayer){
                       fleet = activePlanet.invasion.troops;
                     }
                     else{
                       fleet = activePlanet.units;
+
+                      if(prevStages.length && prevStages[0] === 'bombardment'){
+                        if(enemyHaveTechnology(G.races, ctx.activePlayers, playerID, 'X89_BACTERIAL_WEAPON')){
+                          bacterialWeapon = true;
+                        }
+                      }
                     }
                     
                     hits && Object.keys(hits).forEach(unit => { //hits assignment
@@ -1067,11 +1090,15 @@ export const TIO = {
                       fleet[f] = fleet[f].filter(car => car);
                       if(fleet[f].length === 0) delete fleet[f];
                     });
+
+                    if(bacterialWeapon && hits['infantry'] && hits['infantry'].length){
+                      delete fleet['infantry'];
+                    }
                     
                     const defs = defenderForces();
                     if(!(activePlanet.invasion.troops && Object.keys(activePlanet.invasion.troops).length) ||
                       !(defs && Object.keys(defs).length)){
-                      events.setStage('invasion_await'); //end space battle
+                      events.setStage('invasion_await'); //end ground battle
                     }
                     else{
                       let needAwait = true; //wait before new round
@@ -1119,10 +1146,18 @@ export const TIO = {
                           activePlanet.units = {...activePlanet.invasion.troops};
                           delete activePlanet.invasion;
                           activePlanet.occupied = playerID;
+                          if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
+                            if(!activePlanet.units['infantry']) activePlanet.units['infantry']=[];
+                            activePlanet.units['infantry'].push({id: 'infantry'});
+                          }
                         }
                       }
                       else if(String(activePlanet.occupied) === String(playerID)){
                         delete activePlanet.invasion;
+                        if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
+                          if(!activePlanet.units['infantry']) activePlanet.units['infantry']=[];
+                          activePlanet.units['infantry'].push({id: 'infantry'});
+                        }
                       }
                     }
 
@@ -1159,7 +1194,8 @@ export const TIO = {
                         });
                       })
 
-                      if(ctx.activePlayers[activePlanet.occupied] === 'invasion_await'){
+                      //if defenser await and have units
+                      if(ctx.activePlayers[activePlanet.occupied] === 'invasion_await' && activePlanet.units && Object.keys(activePlanet.units).length){
                         const val = {};
                         val[activePlanet.occupied] = {stage: 'invasion'};
                         val[ctx.currentPlayer] = {stage: 'invasion'};
@@ -1229,6 +1265,24 @@ export const TIO = {
             }
         },
         moves: {
+          readyTechnology: ({G, playerID}, techId, exhaustedCards) => {
+            const idx = G.races[playerID].exhaustedCards.indexOf(techId);
+            if(idx > -1){
+              G.races[playerID].exhaustedCards.splice(idx, 1);
+            }
+            if(exhaustedCards && exhaustedCards.indexOf('BIO_STIMS') > -1){
+              G.races[playerID].exhaustedCards.push('BIO_STIMS');
+            }
+          },
+          readyPlanet: ({G, playerID}, pname, exhaustedCards) => {
+            const planet = getPlanetByName(G.tiles, pname);
+            if(planet && planet.exhausted){
+              planet.exhausted = undefined;
+            }
+            if(exhaustedCards && exhaustedCards.indexOf('BIO_STIMS') > -1){
+              G.races[playerID].exhaustedCards.push('BIO_STIMS');
+            }
+          },
           exhaustForTg: ({G, playerID}, pname) => {
             if(pname){
               const planet = getPlanetByName(G.tiles, pname);

@@ -1090,7 +1090,7 @@ const LandingForces = (args) => {
 
 export const Invasion = () => {
 
-    const { G, ctx, moves, playerID } = useContext(StateContext);
+    const { G, ctx, moves, playerID, prevStages } = useContext(StateContext);
     const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
     const activePlanet = useMemo(()=> {
         let ap = activeTile.tdata.planets.find(p => p.invasion);
@@ -1264,14 +1264,18 @@ export const Invasion = () => {
         const defender = Object.keys(activePlanet.units).filter(k => ['infantry', 'mech'].indexOf(k) > -1);
 
         if(!(attacker && Object.keys(attacker).length)){
-            return activePlanet.occupied;
+            if(!Object.keys(ctx.activePlayers).find(k => ctx.activePlayers[k] !== 'invasion_await')){
+                return activePlanet.occupied;
+            }
         } 
         else if(!defender.length){
-            return ctx.currentPlayer;
+            if(!Object.keys(ctx.activePlayers).find(k => ctx.activePlayers[k] !== 'invasion_await')){
+                return ctx.currentPlayer;
+            }
         }
 
         return undefined;
-    }, [activePlanet, ctx.currentPlayer]);
+    }, [activePlanet, ctx.currentPlayer, ctx.activePlayers]);
 
 
     useEffect(()=>{
@@ -1322,7 +1326,9 @@ export const Invasion = () => {
                 <HitsInfo />
             </>}
             {ctx.activePlayers[playerID] === 'invasion_step2' && <>
-                <Button color='warning' disabled = {!allHitsAssigned} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD)}>Next</Button>
+                <Button color='warning' disabled = {!allHitsAssigned} 
+                onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD, prevStages[playerID])}>
+                    Next</Button>
                 <HitsInfo />
             </>}
         </CardFooter>}

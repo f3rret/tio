@@ -40,12 +40,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
   const [stratUnfold, setStratUnfold] = useState(0);
   const [rightBottomVisible, setRightBottomVisible] = useState(null);
+  const [rightBottomSubVisible, setRightBottomSubVisible] = useState(null);
   const [selectedTile, setSelectedTile] = useState(-1);
   const [midPanelInfo, setMidPanelInfo] = useState('tokens');
   const [purgingFragments, setPurgingFragments] = useState({c: 0, h: 0, i: 0, u: 0});
   const [moveSteps, setMoveSteps] = useState([]);
   const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
-
+  const prevStages = useRef(null);
 
   const [payObj, setPayObj] = useState(null);
   const togglePaymentDialog = (payment) => {
@@ -849,11 +850,40 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }, [PLANETS, sendChatMessage]);
   
+  useEffect(() => {
+    if(ctx.activePlayers && Object.keys(ctx.activePlayers).length){
+      if(!prevStages.current){
+        prevStages.current = {...ctx.activePlayers};
+        Object.keys(prevStages.current).forEach(k => {
+          prevStages.current[k] = [prevStages.current[k]];
+        });
+      }
+      else{
+        Object.keys(ctx.activePlayers).forEach(ap => {
+          if(!prevStages.current[ap] || !prevStages.current[ap].length){
+            prevStages.current[ap]=[ctx.activePlayers[ap]];
+          }
+          else if(prevStages.current[ap][prevStages.current[ap].length-1] !== ctx.activePlayers[ap]){
+            prevStages.current[ap].push(ctx.activePlayers[ap]);
+          }
+        });
+      }
+    }
+    else{
+      prevStages.current = null;
+    }
+  }, [ctx.activePlayers, prevStages])
+
   const TechAction = (args) => { 
     let disabled = race.exhaustedCards.indexOf(args.techId) > -1;
+    let technology = techData.find(t => t.id === args.techId);
+    let icon = technology ? technology.type:'propulsion';
 
     if(!disabled && args.techId === 'GRAVITY_DRIVE'){
       if(!activeTile) disabled = true;
+    }
+    if(!disabled && args.techId === 'BIO_STIMS'){
+      if(race.actions.length === 0) disabled = true;
     }
     if(!disabled && args.techId === 'SLING_RELAY'){
       if(selectedTile < 0){
@@ -869,13 +899,22 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         }
 
       }
-      
+    }
+
+    const onClick = ()=>{
+      if(args.techId === 'BIO_STIMS'){
+        exhaustTechCard(args.techId);
+        setRightBottomSubVisible(exhaustedCards.indexOf(args.techId) === -1 ? 'context':null);
+      }
+      else{
+        exhaustTechCard(args.techId);
+      }
     }
 
     return  <ListGroupItem style={{background: 'none', padding: 0}}>
               <Button size='sm' style={{width: '100%'}} disabled={disabled} id={'context_'+args.techId}
-                  color={exhaustedCards.indexOf(args.techId) > -1 || disabled ? 'secondary':'warning'} onClick={()=>exhaustTechCard(args.techId)}>
-                <img alt='propulsion' src='icons/propulsion.png' style={{width: '1rem', marginRight: '.5rem'}}/>
+                  color={exhaustedCards.indexOf(args.techId) > -1 || disabled ? 'secondary':'warning'} onClick={onClick}>
+                <img alt='propulsion' src={'icons/'+icon+'.png'} style={{width: '1rem', marginRight: '.5rem'}}/>
                 {args.techId.replaceAll('_', ' ')}
               </Button>
               <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#context_'+args.techId}>
@@ -887,7 +926,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   
 
   return (
-          <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard}}>      
+          <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current}}>      
             <MyNavbar />
             <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <>
@@ -970,7 +1009,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             
             {spaceCannonAttack && <SpaceCannonAttack />}
             {antiFighterBarrage && <AntiFighterBarrage />}
-            {spaceCombat && <SpaceCombat />}
+            {spaceCombat && <SpaceCombat prevStages={prevStages}/>}
             {combatRetreat && <CombatRetreat selectedTile={selectedTile}/>}
             {bombardment && <Bombardment />}
             {invasion && <Invasion />}
@@ -1026,10 +1065,29 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
                 </div>
                 <div style={{display: 'flex', flexDirection: 'column', position: 'fixed', bottom: '4rem', width: '13rem'}}>
-                  {rightBottomVisible === 'context' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
-                    {haveTechnology(race, 'GRAVITY_DRIVE') && <TechAction techId='GRAVITY_DRIVE'/>}
-                    {haveTechnology(race, 'SLING_RELAY') && <TechAction techId='SLING_RELAY'/>}
-                  </ListGroup>}
+                  {rightBottomVisible === 'context' && <>
+                    <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                      {haveTechnology(race, 'GRAVITY_DRIVE') && <TechAction techId='GRAVITY_DRIVE'/>}
+                      {haveTechnology(race, 'SLING_RELAY') && <TechAction techId='SLING_RELAY'/>}
+                      {haveTechnology(race, 'BIO_STIMS') && <TechAction techId='BIO_STIMS'/>}
+                    </ListGroup>
+                    {rightBottomSubVisible === 'context' && <ListGroup style={{background: 'none', bottom: '2.5rem', position: 'absolute', right: '14rem', width: '13rem'}}>
+                      <b>Ready one of:</b>
+                      {PLANETS.map((p, i) => {
+                        if(p.specialty && p.exhausted){
+                          return <Button key={i} onClick={() => {moves.readyPlanet(p.name, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} size='sm' color='warning'>
+                            {p.name}
+                          </Button>
+                        }
+                        return <div key={i}></div>
+                      })}
+                      {race.exhaustedCards.map((c, i)=>{
+                        return <Button key={i} onClick={() => {moves.readyTechnology(c, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} size='sm' color='warning'>
+                          {c.replaceAll('_', ' ')}
+                        </Button>
+                      })}
+                    </ListGroup>}
+                  </>}
                   {rightBottomVisible === 'promissory' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {race.promissory.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                       <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id}>
