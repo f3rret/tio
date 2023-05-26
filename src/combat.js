@@ -1,4 +1,5 @@
-import { Card, CardBody, CardTitle, CardFooter, CardText, CardImg, Button, ButtonGroup, Container, Row, Col } from 'reactstrap'; 
+import { Card, CardBody, CardTitle, CardFooter, CardText, CardImg, Button, ButtonGroup, Container, Row, Col,
+UncontrolledDropdown, DropdownMenu, DropdownItem, DropdownToggle } from 'reactstrap'; 
 import { useContext, useMemo, useCallback, useState, useEffect } from 'react';
 import { StateContext, getUnitsTechnologies, haveTechnology } from './utils';
 import { neighbors } from './Grid';
@@ -301,6 +302,7 @@ const CombatantForces = (args) => {
 
     const { G, moves, playerID, ctx } = useContext(StateContext);
     const {race, units: fleet, owner, combatAbility, isInvasion} = args;
+    const [plasmaScoringUsed, setPlasmaScoringUsed] = useState(false);
 
     const units = useMemo(()=> {
         let payload = {
@@ -328,10 +330,12 @@ const CombatantForces = (args) => {
         return getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech', 'infantry'], race);
     },[race, units]);
 
-    const fireClick = useCallback((u) => {
+    const fireClick = useCallback((u, withTech) => {
         const count = Array.isArray(units[u]) ? units[u].length : units[u];
-        const shots = (combatAbility ? technologies[u][combatAbility].count : u === 'pds' ? technologies[u]['spaceCannon'].count: technologies[u].shot) || 1;
-        moves.rollDice(u, count*shots);        
+        let shots = (combatAbility ? technologies[u][combatAbility].count : u === 'pds' ? technologies[u]['spaceCannon'].count: technologies[u].shot) || 1;
+        if(withTech === 'PLASMA_SCORING') shots++; 
+        moves.rollDice(u, count*shots);
+        setPlasmaScoringUsed(true);        
     }, [moves, technologies, units, combatAbility]);
 
     const unitsInjury = useCallback((tag) => {
@@ -344,6 +348,9 @@ const CombatantForces = (args) => {
 
     }, [units]);
 
+    const dropdown = useMemo(() =>{
+        return (combatAbility === 'bombardment' || combatAbility === 'spaceCannon') && (haveTechnology(race, 'PLASMA_SCORING') && !plasmaScoringUsed)
+    }, [race, plasmaScoringUsed, combatAbility]);
 
     return (
         <div style={{display: 'flex', position: 'relative', flexDirection: 'row', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
@@ -374,12 +381,12 @@ const CombatantForces = (args) => {
                                 adj = -1;
                             }
                         }
-
+                        
                         return <Col className='col-md-auto' key={i} style={style}>
                             <span className={className} style={{position: 'relative'}}>
                                 {injury > 0 && <span className='hit_assigned1' style={{position: 'absolute', bottom: 0, color: 'red', width: '1.75rem', textAlign: 'right'}}>{injury}</span>}
                                 <CardImg style={{width: '5rem'}} src={'units/' + u.toUpperCase() + '.png'} />
-                                {ucount > 1 && <span style={{fontSize: 30, position: 'absolute', right: 0, bottom: 0}}>{ucount}</span>}
+                                {ucount > 1 && <span style={{fontSize: 30, position: 'absolute', right: 0, bottom: 0, textShadow: '-2px 2px 3px black'}}>{ucount}</span>}
                             </span>
                             <span style={{fontSize: 16, marginLeft: '1rem', minWidth: 'max-content'}}>
                                 {ability && <>
@@ -391,8 +398,16 @@ const CombatantForces = (args) => {
                                     <p style={{margin: 0}}>{'shots: ' + ability.count}</p>
                                 </>}
                                 
-                                {!G.dice[owner][u] && ability && String(playerID) === String(owner) && 
-                                        <Button size='sm' onClick={()=>fireClick(u)} color='danger' style={{width: '5rem'}}>Fire</Button>}
+                                {!G.dice[owner][u] && ability && String(playerID) === String(owner) &&
+                                        <UncontrolledDropdown group> 
+                                            <Button size='sm' onClick={()=>fireClick(u)} color='danger' style={{width: '5rem'}}>Fire</Button>
+                                            {dropdown && <><DropdownToggle caret color='danger' style={{padding: '0.25rem 0.5rem 0 0.25rem'}}/>
+                                            <DropdownMenu>
+                                                <DropdownItem onClick={()=>fireClick(u, 'PLASMA_SCORING')}>
+                                                    <img alt='warfare' src='icons/warfare.png' style={{width: '1rem', marginRight: '.5rem'}}/>Plasma scoring
+                                                </DropdownItem>
+                                            </DropdownMenu></>}
+                                        </UncontrolledDropdown>}
                                 {G.dice[owner][u] && <ButtonGroup style={{flexWrap: 'wrap', maxWidth: '6rem'}}>
                                     {G.dice[owner][u].map((d, j) =>{
                                         let color = 'light';
@@ -1114,8 +1129,25 @@ export const Invasion = () => {
         return result;
     },[activePlanet]);
 
+    const magen = useMemo(() => {
+        if(activePlanet && activePlanet.invasion && !activePlanet.invasion.magenUsed){
+            if(String(playerID) !== String(ctx.currentPlayer)){
+                if((activePlanet.units.pds && activePlanet.units.pds.length) || (activePlanet.units.spacedock && activePlanet.units.spacedock.length)){
+                    if(ctx.activePlayers[playerID] === 'invasion_await' && activePlanet.invasion.troops){
+                        return true;
+                    }
+                }
+            }
+        }
+    }, [activePlanet, ctx.activePlayers, playerID, ctx.currentPlayer]);
+
     const hits = useMemo(() => {
         let result = {};
+
+        if(magen){
+            result[activePlanet.occupied] = 1;
+            return result;
+        }
 
         if(activePlanet && activePlanet.invasion){
             const players = Object.keys(activePlanet.invasion).length > 0 ? Object.keys(ctx.activePlayers):[ctx.currentPlayer];
@@ -1142,7 +1174,7 @@ export const Invasion = () => {
         }
 
         return result;
-    }, [G.dice, G.races, ctx.activePlayers, activePlanet, ctx.currentPlayer, playerID]);
+    }, [G.dice, G.races, ctx.activePlayers, activePlanet, ctx.currentPlayer, playerID, magen]);
 
     const assignedA = useMemo(() => {
         let result = 0;
@@ -1295,7 +1327,7 @@ export const Invasion = () => {
     return (
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
-        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{landing ? 'Landing':'Invasion'}</h3></CardTitle>
+        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{landing ? 'Landing': magen ? 'Magen defence grid' : 'Invasion'}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             {(ctx.activePlayers[playerID] === 'invasion' || ctx.activePlayers[playerID] === 'invasion_await') && <>
                 {!needAwait && <>
@@ -1305,7 +1337,10 @@ export const Invasion = () => {
                 {landing && <>
                     <LandingForces race={G.races[ctx.currentPlayer]} owner={ctx.currentPlayer} units={activeTile.tdata.fleet} troops={troops} setTroops={setTroops}/>
                 </>}
-                {!landing && needAwait && <>
+                {magen && <>
+                    <HitAssign race={G.races[ctx.currentPlayer]} units={activePlanet.invasion.troops} owner={String(activePlanet.occupied)} hits={ahitsA} setHits={setAhitsA}/>
+                </>}
+                {!landing && !magen && needAwait && <>
                     {winner === undefined && <h5 style={{margin: '5rem', textAlign: 'center'}}>Awaiting opponent...</h5>}
                     {winner !== undefined && <>
                         {String(winner) === String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'yellowgreen'}}>Enemy's forces was defeated!</h5>}
@@ -1318,9 +1353,10 @@ export const Invasion = () => {
                 <HitAssign race={G.races[activePlanet.occupied]} units={defenderForces} owner={String(activePlanet.occupied)} hits={ahitsD} setHits={setAhitsD}/>
             </>}
         </CardBody>
-        {(!needAwait || landing || (needAwait && winner !== undefined)) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
+        {(!needAwait || magen || landing || (needAwait && winner !== undefined)) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
             {landing && <Button color='warning' onClick={() => moves.landTroops(troops)}>{troops.length > 0 ? 'Next':'Cancel'}</Button>}
-            {!landing && needAwait && winner !== undefined && <Button color='warning' onClick={() => moves.endBattle()}>Next</Button>}
+            {!landing && !magen && needAwait && winner !== undefined && <Button color='warning' onClick={() => moves.endBattle()}>Next</Button>}
+            {magen && <Button color='warning' onClick={() => moves.magenDefense(ahitsA)}>Next</Button>}
             {ctx.activePlayers[playerID] === 'invasion' && <>
                 <Button color='warning' disabled = {!everyoneRolls} onClick={() => moves.nextStep(hits)}>Next</Button>
                 <HitsInfo />

@@ -149,7 +149,7 @@ export const AgendaDialog = ({ G, ctx, playerID, PLANETS, onConfirm }) => {
 
 export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTile, onComplete, onDecline }) => {
 
-    const {G, ctx, playerID} = useContext(StateContext);
+    const {G, ctx, playerID, exhaustedCards} = useContext(StateContext);
     const sid = G.strategy;
     const isMine = ctx.currentPlayer === playerID;
     let lastStep = 1;
@@ -277,10 +277,18 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
                     sum += deploy[k] * R_UNITS[k].cost;
                 });
             }
+
+            if(exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM')>-1){
+                const upgrades = G.races[playerID].technologies.filter(t => t.alreadyUpgraded === true);
+    
+                if(upgrades && upgrades.length){
+                    sum -= upgrades.length;
+                }
+            }
             return sum;
         }
         return 0;
-    }, [deploy, sid, isMine, R_UNITS]);
+    }, [deploy, sid, isMine, R_UNITS, G.races, playerID, exhaustedCards]);
 
     const planetRowClickSpecialty = useCallback((pname) =>{
 
@@ -420,7 +428,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
         return result;
     }
 
-    const UnmeetReqs = useCallback(() => {
+    const UnmeetReqs = useCallback(({separate}) => {
         const keys = Object.keys(ex2);
         let result=[];
 
@@ -438,7 +446,10 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
             const planet = PLANETS.find(p => p.name === pname);
             if(planet && planet.specialty) learning[planet.specialty]++;
         });
-        
+
+        let upgradesUnmeet = []; //if need separate info
+        let techsUnmeet = [];
+
         keys.forEach((k, i)=>{
             const prekeys = Object.keys(ex2[k].prereq);
             if(prekeys && prekeys.length){
@@ -449,8 +460,20 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
                     learned += learning[p];
                     
                     if(learned < ex2[k].prereq[p]){
-                        for(var j=0; j<ex2[k].prereq[p]; j++){
-                            pre.push(<img alt={p} key={ii+' '+j} src={'icons/'+ p +'.png'} style={{width: '1rem'}}/>);
+                        if(separate){
+                            if(ex2[k].type === 'unit'){
+                                for(var j=0; j<ex2[k].prereq[p] - learned; j++){
+                                    upgradesUnmeet.push(p)
+                                }
+                            }
+                            else{
+                                for(var h=0; h<ex2[k].prereq[p] - learned; h++){
+                                    techsUnmeet.push(p)
+                                }
+                            }
+                        }
+                        for(var n=0; n<ex2[k].prereq[p]; n++){
+                            pre.push(<img alt={p} key={ii+' '+n} src={'icons/'+ p +'.png'} style={{width: '1rem'}}/>);
                         }
                     }
                     else{
@@ -465,7 +488,12 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
             }
         });
 
-        return <>{result}</>;
+        if(separate){
+            return {upgrades: upgradesUnmeet, other: techsUnmeet};
+        }
+        else{
+            return <>{result}</>
+        }
     }, [ex2, G.races, playerID, PLANETS, adjSpec]);
 
     const cantNext = useMemo(() => {
@@ -506,7 +534,13 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
         }
         else if(sid === 'TECHNOLOGY'){
             if(step === 2){
-                stopThere = UnmeetReqs().props.children.length > 0;
+                const reqs = UnmeetReqs({separate: true});
+                if(exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1){
+                    stopThere = reqs.upgrades.length > 1 || reqs.other.length > 0;
+                }
+                else{
+                    stopThere = reqs.upgrades.length > 0 || reqs.other.length > 0;
+                }       
             }
         }
         else if(sid === 'IMPERIAL'){
@@ -535,7 +569,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
     
         return stopThere;
 
-    }, [selectedTile, selectedRace, G, step, isMine, sid, playerID, ex, ex2, ct, deployPrice, deploy, result, UnmeetReqs]);
+    }, [selectedTile, selectedRace, G, step, isMine, sid, playerID, ex, ex2, ct, deployPrice, deploy, result, UnmeetReqs, exhaustedCards]);
 
     const placeAgendaTopOrBottom = useCallback((idx) => {
        setAgendaCards(produce(agendaCards, draft => {
@@ -590,7 +624,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
             if(isMine) r = {objId: selectedRace, payment: deploy}
         }        
 
-        onComplete({exhausted: Object.keys(sid === 'WARFARE' ? ex2 : ex), tg, result: r});
+        onComplete({exhausted: Object.keys(sid === 'WARFARE' ? ex2 : ex), tg, result: r, exhaustedCards});
         setStep(step+1) 
     }
 
@@ -1463,9 +1497,18 @@ export const ProducingPanel = (args) => {
                 sum += deploy[k] * R_UNITS[k].cost;
             });
         }
+
+        if(exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM')>-1){
+            const upgrades = G.races[playerID].technologies.filter(t => t.alreadyUpgraded === true);
+
+            if(upgrades && upgrades.length){
+                sum -= upgrades.length;
+            }
+        }
+
         return sum;
 
-    }, [deploy, R_UNITS]);
+    }, [deploy, R_UNITS, exhaustedCards, G.races, playerID]);
 
     const tgClick = useCallback(() => {
     

@@ -251,7 +251,7 @@ export const TIO = {
             stages: {
               strategyCard: {
                 moves: {
-                  joinStrategy: ({ G, ctx, playerID, events }, {exhausted, tg, result}) => {
+                  joinStrategy: ({ G, ctx, playerID, events }, {exhausted, tg, result, exhaustedCards}) => {
                     const exhaustPlanet = (revert) => {
                       if(exhausted && exhausted.length){
                         G.tiles.forEach(tile => {
@@ -380,6 +380,10 @@ export const TIO = {
                           if(result.base && result.deploy){
                             exhaustPlanet();
 
+                            if(exhaustedCards && exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1){
+                              G.races[playerID].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
+                            }
+
                             if(tg){
                               G.races[playerID].tg -= tg;
                             }
@@ -436,6 +440,10 @@ export const TIO = {
                               if(idx > -1) G.races[playerID].technologies[idx] = {...result[k], upgrade: false, alreadyUpgraded: true, id: G.races[playerID].technologies[idx].id};
                             }
                           });
+
+                          if(exhaustedCards && exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1){
+                            G.races[playerID].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
+                          }
                           
                         }
                         break;
@@ -1164,7 +1172,7 @@ export const TIO = {
                     events.endStage();
                   },
 
-                  landTroops: ({G, ctx, events}, troops) => {
+                  landTroops: ({G, ctx, events, playerID}, troops) => {
                     const activeTile = G.tiles.find(t => t.active === true);
                     const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
 
@@ -1196,18 +1204,76 @@ export const TIO = {
 
                       //if defenser await and have units
                       if(ctx.activePlayers[activePlanet.occupied] === 'invasion_await' && activePlanet.units && Object.keys(activePlanet.units).length){
-                        const val = {};
-                        val[activePlanet.occupied] = {stage: 'invasion'};
-                        val[ctx.currentPlayer] = {stage: 'invasion'};
-                        
-                        G.dice[activePlanet.occupied] = {};
-                        G.dice[ctx.currentPlayer] = {};
-                        events.setActivePlayers({value: val});
+                        if(enemyHaveTechnology(G.races, ctx.activePlayers, playerID, 'MAGEN_DEFENSE_GRID') && 
+                          ((activePlanet.units.pds && activePlanet.units.pds.length) || 
+                          (activePlanet.units.spacedock && activePlanet.units.spacedock.length))){
+                          events.setStage('invasion_await');
+                        }
+                        else{
+                          const val = {};
+                          val[activePlanet.occupied] = {stage: 'invasion'};
+                          val[ctx.currentPlayer] = {stage: 'invasion'};
+                          
+                          G.dice[activePlanet.occupied] = {};
+                          G.dice[ctx.currentPlayer] = {};
+                          events.setActivePlayers({value: val});
+                        }
                       }
                       else{
                         events.setStage('invasion_await');
                       }
                     }
+                  },
+
+                  magenDefense: ({G, ctx, events}, hits) => {
+                    
+                    const activeTile = G.tiles.find(t => t.active === true);
+                    const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+                    if(!activePlanet.invasion.magenUsed) activePlanet.invasion.magenUsed = true;
+                    let fleet = activePlanet.invasion.troops;
+
+                    hits && Object.keys(hits).forEach(unit => { //hits assignment
+                      if(hits[unit].length){
+                        hits[unit].forEach((car, i) => {
+                          if(car.hit){
+                            if(!fleet[unit][car.idx].hit) fleet[unit][car.idx].hit = 0;
+                            fleet[unit][car.idx].hit += car.hit;
+                          }
+                        });
+                      }  
+                    });
+  
+                    Object.keys(fleet).forEach(f => { //remove destroyed units
+                      fleet[f].forEach((car, i) => {
+                        if((car.hit === 1 && f !== 'mech') || car.hit > 1){
+                          delete fleet[f][i];
+                        }
+                      });
+                      fleet[f] = fleet[f].filter(car => car);
+                      if(fleet[f].length === 0) delete fleet[f];
+                    });
+
+                    const defs = {};
+                    Object.keys(activePlanet.units).forEach(k => {
+                        if(['infantry', 'mech'].indexOf(k) > -1){
+                            defs[k] = activePlanet.units[k];
+                        }
+                    });
+                    
+                    if(!(activePlanet.invasion.troops && Object.keys(activePlanet.invasion.troops).length) ||
+                      !(defs && Object.keys(defs).length)){
+                      events.setStage('invasion_await'); //end ground battle
+                    }
+                    else{
+                      const val = {};
+                      val[activePlanet.occupied] = {stage: 'invasion'};
+                      val[ctx.currentPlayer] = {stage: 'invasion'};
+                      
+                      G.dice[activePlanet.occupied] = {};
+                      G.dice[ctx.currentPlayer] = {};
+                      events.setActivePlayers({value: val});
+                    }
+
                   }
                 }
               },
@@ -1356,6 +1422,10 @@ export const TIO = {
             if(exhaustedCards && exhaustedCards.indexOf('SLING_RELAY') > -1){
               G.races[playerID].exhaustedCards.push('SLING_RELAY');
               G.races[playerID].actions.push('PRODUCING');
+            }
+
+            if(exhaustedCards && exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1){
+              G.races[playerID].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
             }
           },
           invasion: ({G, playerID, events}, planet) => {

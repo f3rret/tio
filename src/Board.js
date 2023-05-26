@@ -879,6 +879,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     let technology = techData.find(t => t.id === args.techId);
     let icon = technology ? technology.type:'propulsion';
 
+    if(!disabled && args.techId === 'AI_DEVELOPMENT_ALGORITHM'){
+      if(!(ctx.activePlayers && ctx.activePlayers[playerID]) === 'strategyCard' && G.strategy === 'TECHNOLOGY') disabled = true;
+    }
     if(!disabled && args.techId === 'GRAVITY_DRIVE'){
       if(!activeTile) disabled = true;
     }
@@ -1070,6 +1073,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       {haveTechnology(race, 'GRAVITY_DRIVE') && <TechAction techId='GRAVITY_DRIVE'/>}
                       {haveTechnology(race, 'SLING_RELAY') && <TechAction techId='SLING_RELAY'/>}
                       {haveTechnology(race, 'BIO_STIMS') && <TechAction techId='BIO_STIMS'/>}
+                      {haveTechnology(race, 'AI_DEVELOPMENT_ALGORITHM') && <TechAction techId='AI_DEVELOPMENT_ALGORITHM'/>}
                     </ListGroup>
                     {rightBottomSubVisible === 'context' && <ListGroup style={{background: 'none', bottom: '2.5rem', position: 'absolute', right: '14rem', width: '13rem'}}>
                       <b>Ready one of:</b>
