@@ -169,7 +169,7 @@ export const SpaceCannonAttack = () => {
 const HitAssign = (args) => {
 
     const { playerID } = useContext(StateContext);
-    const {race, units, hits, setHits, owner} = args;
+    const {race, units, hits, setHits, owner, allowRepair} = args;
     
     const technologies = useMemo(()=>{
         return getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech'], race);
@@ -223,7 +223,6 @@ const HitAssign = (args) => {
     }, [hits, playerID, technologies, owner, setHits, units]);
 
     const haveHit = useCallback((tag, idx, pidx) => {
-
         let result = 0;
 
         if(pidx === undefined){
@@ -256,6 +255,61 @@ const HitAssign = (args) => {
 
     }, [hits, playerID, owner, units]);
 
+    const canRepair = useCallback((tag, idx, pidx) => {
+        if(String(playerID) !== String(owner) || !allowRepair) return 0;
+        const repairedTag = Object.keys(hits).find(k=>k && k.startsWith('-'));
+        if(hits && repairedTag){
+            if(repairedTag === ('-' + tag)){
+                if(hits[repairedTag].length && hits[repairedTag][0].idx === idx && hits[repairedTag][0].pidx === pidx){
+                    return 2;
+                }
+            }
+            return 0;
+        }
+        let result = 0;
+
+        if(pidx === undefined){
+            result = units[tag][idx].hit ? 1:0;
+        }
+        else{
+            if(units[tag][idx] && units[tag][idx].payload[pidx]){
+                result = units[tag][idx].payload[pidx].hit ? 1:0;
+            }
+        }
+
+        if(result && hits[tag]){
+            const ship = hits[tag].find(ship => ship.idx === idx);
+            if(ship){
+                if(pidx === undefined){
+                    result = ship.hit ? 0:result;
+                }
+                else{
+                    if(ship.payload){
+                        const p = ship.payload.find(p => p.pidx === pidx);
+                        if(p) result = p.hit ? 0:result;
+                    }
+                }
+            }
+        }
+
+        return result;
+    }, [units, hits, playerID, owner, allowRepair]);
+
+    const duranium = useMemo(() => {
+        return haveTechnology(race, 'DURANIUM_ARMOR')
+    }, [race]);
+
+    useEffect(()=>{
+        if(!allowRepair && hits){
+            const repairedTag = Object.keys(hits).find(k=>k && k.startsWith('-'));
+            if(repairedTag){
+                setHits(produce(hits, draft => {
+                    delete draft[repairedTag];
+                }))
+            }
+        }
+    }, [allowRepair, hits, setHits]);
+
     return (
         <div style={{display: 'flex', position: 'relative', flexDirection: 'row', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             border: String(playerID) === String(owner) ? 'solid 1px rgba(255,255,0,.5)':'solid 1px rgba(255,255,255,.25)'}}>
@@ -265,26 +319,39 @@ const HitAssign = (args) => {
                 {Object.keys(units).map((u, i) => {
                     return <div key={i} style={{marginLeft: '1rem', display: 'flex', flexWrap: 'wrap'}}>
                         {units[u].map((t, j) =>{
+                            const hh = haveHit(u, j);
+                            const canRep = canRepair(u, j);
+
                             let className=technologies[u].sustain ? 'sustain_ability':'';
-                            className += ' hit_assigned' + haveHit(u, j);
+                            className += ' hit_assigned' + hh;
 
                             return <div key={j} style={{margin: '0.25rem 1rem 0 0', display: 'flex', alignItems: 'flex-start'}}>
-                                <div>
-                                    <Button style={{width: '5rem', padding: 0, backgroundColor: '', border: 'none'}} 
+                                <div style={{display: 'flex', flexDirection: 'column'}}>
+                                    <Button disabled={canRep > 1} style={{width: '5rem', padding: 0, backgroundColor: '', border: 'none'}} 
                                         className={className} outline onClick={() => hitAssign(u, j)}>
                                         <img alt='unit' src={'units/' + u.toUpperCase() + '.png'} style={{width: '100%'}}/>
                                     </Button>
+                                    {duranium && technologies[u].sustain && hh > 0 &&
+                                    <Button disabled={canRep !== 1} size='sm' color={canRep > 1 ? 'success':'light'} onClick={()=> hitAssign('-'+u, j)} style={{padding: 0}}>repair</Button> }
                                 </div>
                                 <div style={{display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', maxWidth: '10rem'}}>
                                     {t.payload && t.payload.map((p, l) =>{
                                         if(p){
-                                            let clName = technologies[p.id] && technologies[p.id].sustain ? 'sustain_ability':'';
-                                            clName += ' hit_assigned' + haveHit(u, j, l);
+                                            const hh2 = haveHit(u, j, l);
+                                            const canRep2 = canRepair(u, j, l)
 
-                                            return <Button outline onClick={() => hitAssign(u, j, l, p.id)} key={l} className={clName}
+                                            let clName = technologies[p.id] && technologies[p.id].sustain ? 'sustain_ability':'';
+                                            clName += ' hit_assigned' + hh2;
+
+                                            return <div key={l} style={{display: 'flex', flexDirection: 'column'}}>
+                                            <Button outline disabled={canRep2 > 1} onClick={() => hitAssign(u, j, l, p.id)} className={clName}
                                                 style={{width: '2rem', border: 'solid 1px rgba(255,255,255,.15)', margin: '.1rem', padding: 0}}>
                                                 <img alt='unit' src={'units/' + p.id.toUpperCase() + '.png'} style={{width: '100%'}}/>
                                             </Button>
+                                            {duranium && technologies[p.id].sustain && hh2 > 0 && 
+                                            <Button disabled={canRep2 !== 1} size='sm' color={canRep2 > 1 ? 'success':'light'} onClick={() => hitAssign('-'+u, j, l, p.id)} 
+                                                style={{padding: 0, fontSize: '70%'}}>repair</Button> }
+                                            </div>
                                         }
                                         return <></>
                                     })}
@@ -363,10 +430,11 @@ const CombatantForces = (args) => {
                         const ucount = (Array.isArray(units[u]) ? units[u].length : units[u]);
                         let style = {marginLeft: '1rem', padding: 0, fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'};
                         const deflt = {value: technologies[u].combat, count: technologies[u].shot || 1};
-                        const ability = isInvasion ? (u === 'pds' ? technologies[u]['spaceCannon']: deflt):
+                        let ability = isInvasion ? (u === 'pds' ? technologies[u]['spaceCannon']: deflt):
                                         ['infantry', 'mech'].indexOf(u) === -1 ? 
                                             combatAbility ? technologies[u][combatAbility] : deflt 
                                             : null;
+                        if(combatAbility === 'bombardment' && u === 'pds') ability = null;
                         
                         if(ability){
                             style = {...style, padding: '.5rem', background: 'rgba(255,255,255,.15)'}
@@ -542,7 +610,7 @@ export const SpaceCombat = () => {
 
         if(ahitsA){
             Object.keys(ahitsA).forEach(u => {
-                if(ahitsA[u] && ahitsA[u].length){
+                if(ahitsA[u] && ahitsA[u].length && !u.startsWith('-')){
                     ahitsA[u].forEach(ship => {
                         if(ship.hit) result += ship.hit;
                         if(ship.payload && ship.payload.length){
@@ -564,7 +632,7 @@ export const SpaceCombat = () => {
 
         if(ahitsD){
             Object.keys(ahitsD).forEach(u => {
-                if(ahitsD[u] && ahitsD[u].length){
+                if(ahitsD[u] && ahitsD[u].length && !u.startsWith('-')){
                     ahitsD[u].forEach(ship => {
                         if(ship.hit) result += ship.hit;
                         if(ship.payload && ship.payload.length){
@@ -710,8 +778,8 @@ export const SpaceCombat = () => {
                 </>}
             </>}
             {ctx.activePlayers[playerID] === 'spaceCombat_step2' && <>
-                <HitAssign race={G.races[ctx.currentPlayer]} units={activeTile.tdata.attacker} owner={ctx.currentPlayer} hits={ahitsA} setHits={setAhitsA}/>
-                <HitAssign race={G.races[activeTile.tdata.occupied]} units={activeTile.tdata.fleet} owner={String(activeTile.tdata.occupied)} hits={ahitsD} setHits={setAhitsD}/>
+                <HitAssign race={G.races[ctx.currentPlayer]} units={activeTile.tdata.attacker} owner={ctx.currentPlayer} hits={ahitsA} setHits={setAhitsA} allowRepair={allHitsAssigned}/>
+                <HitAssign race={G.races[activeTile.tdata.occupied]} units={activeTile.tdata.fleet} owner={String(activeTile.tdata.occupied)} hits={ahitsD} setHits={setAhitsD} allowRepair={allHitsAssigned}/>
             </>}
         </CardBody>
         {(!needAwait || winner !== undefined) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
@@ -1002,7 +1070,7 @@ export const Bombardment = () => {
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Bombardment</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             <CombatantForces race={G.races[ctx.currentPlayer]} units={activeTile.tdata.fleet} owner={ctx.currentPlayer} combatAbility='bombardment'/>
-            <CombatantForces race={G.races[activePlanet.occupied]} units={defenderForces} owner={activePlanet.occupied}/>
+            <CombatantForces race={G.races[activePlanet.occupied]} units={defenderForces} owner={activePlanet.occupied} combatAbility='bombardment'/>
         </CardBody>
         <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
             <Button color='warning' disabled = {!everyoneRolls} onClick={()=>moves.nextStep(hits)}>Next</Button>
@@ -1181,7 +1249,7 @@ export const Invasion = () => {
 
         if(ahitsA){
             Object.keys(ahitsA).forEach(u => {
-                if(ahitsA[u] && ahitsA[u].length){
+                if(ahitsA[u] && ahitsA[u].length && !u.startsWith('-')){
                     ahitsA[u].forEach(ship => {
                         if(ship.hit) result += ship.hit;
                     });
@@ -1198,7 +1266,7 @@ export const Invasion = () => {
 
         if(ahitsD){
             Object.keys(ahitsD).forEach(u => {
-                if(ahitsD[u] && ahitsD[u].length){
+                if(ahitsD[u] && ahitsD[u].length && !u.startsWith('-')){
                     ahitsD[u].forEach(ship => {
                         if(ship.hit) result += ship.hit;
                     });
@@ -1237,12 +1305,18 @@ export const Invasion = () => {
         }
     }, [ctx.currentPlayer, playerID, activePlanet, ctx.activePlayers]);
 
+    const withNoPds = (units) => {
+        const u = {...units};
+        if(u.pds) delete u['pds'];
+        return u;
+    }
+
     const maxHits = useMemo(() => {
         let result = {};
 
         if(activePlanet && activePlanet.invasion){
             Object.keys(ctx.activePlayers).forEach(pid => {
-                let fleet = (String(pid) === String(ctx.currentPlayer)) ? activePlanet.invasion.troops : defenderForces;
+                let fleet = (String(pid) === String(ctx.currentPlayer)) ? activePlanet.invasion.troops : withNoPds(defenderForces);
                 result[pid] = 0;
                 if(fleet){
                     const technologies = getUnitsTechnologies(Object.keys(fleet), G.races[pid]);
@@ -1324,6 +1398,7 @@ export const Invasion = () => {
     // eslint-disable-next-line
     }, [activePlanet.units]);
 
+    
     return (
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
@@ -1349,8 +1424,8 @@ export const Invasion = () => {
                 </>}
             </>}
             {ctx.activePlayers[playerID] === 'invasion_step2' && <>
-                {Object.keys(activePlanet.invasion).length > 0 && <HitAssign race={G.races[ctx.currentPlayer]} units={activePlanet.invasion.troops} owner={ctx.currentPlayer} hits={ahitsA} setHits={setAhitsA}/>}
-                <HitAssign race={G.races[activePlanet.occupied]} units={defenderForces} owner={String(activePlanet.occupied)} hits={ahitsD} setHits={setAhitsD}/>
+                {Object.keys(activePlanet.invasion).length > 0 && <HitAssign race={G.races[ctx.currentPlayer]} units={activePlanet.invasion.troops} owner={ctx.currentPlayer} hits={ahitsA} setHits={setAhitsA} allowRepair={allHitsAssigned}/>}
+                <HitAssign race={G.races[activePlanet.occupied]} units={withNoPds(defenderForces)} owner={String(activePlanet.occupied)} hits={ahitsD} setHits={setAhitsD} allowRepair={allHitsAssigned}/>
             </>}
         </CardBody>
         {(!needAwait || magen || landing || (needAwait && winner !== undefined)) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
@@ -1358,7 +1433,7 @@ export const Invasion = () => {
             {!landing && !magen && needAwait && winner !== undefined && <Button color='warning' onClick={() => moves.endBattle()}>Next</Button>}
             {magen && <Button color='warning' onClick={() => moves.magenDefense(ahitsA)}>Next</Button>}
             {ctx.activePlayers[playerID] === 'invasion' && <>
-                <Button color='warning' disabled = {!everyoneRolls} onClick={() => moves.nextStep(hits)}>Next</Button>
+                <Button color='warning' disabled = {!everyoneRolls} onClick={() => moves.nextStep(hits, true)}>Next</Button>
                 <HitsInfo />
             </>}
             {ctx.activePlayers[playerID] === 'invasion_step2' && <>

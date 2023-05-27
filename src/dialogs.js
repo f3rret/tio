@@ -758,7 +758,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
                                 {selectedTile > -1 && <CardImg style={{width: '75%'}} src={'tiles/ST_'+G.tiles[selectedTile].tid+'.png'} />}
                             </div>
                             <div style={{width: '40%'}}>
-                                {selectedTile > -1 && G.tiles[selectedTile].tdata.tokens.indexOf(G.races[playerID].rid) === -1 && <div style={{ overflowY: 'auto', height: '50%', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                                {selectedTile > -1 && <div style={{ overflowY: 'auto', height: '50%', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                     <PlanetsRows PLANETS={PLANETS.filter(p => p.tid === G.tiles[selectedTile].tid)} onClick={planetRowClick} exhausted={ex} variant='small'/>
                                 </div>}
                                 {Object.keys(ex).length > 0 && <div style={{padding: '1rem 0 0 0', height: '50%', display: 'flex', justifyContent: 'space-between'}}>

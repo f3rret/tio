@@ -174,7 +174,7 @@
     {
         "id": "SELF_ASSEMBLY_ROUTINES",
         "type": "warfare",
-        "description": "After 1 or more of your units use Productions [exhaust]: place 1 mech on a planet in that system. After 1 of your mechs is destroyed, gain 1 TG.",
+        "description": "After 1 or more of your units use Production, you may exhaust this card to place 1 mech from your reinforcements on a planet you control in that system. After 1 of your mechs is destroyed, gain 1 trade good.",
         "prereq": { "warfare": 1 },
         "action": false,
         "exhaust": true
@@ -182,7 +182,7 @@
     {
         "id": "DURANIUM_ARMOR",
         "type": "warfare",
-        "description": "Each combat round, after hits assigned, repair 1 unit that didn’t use Sustain Damage this round.",
+        "description": "During each combat round, after you assign hits to your units, repair 1 of your damaged units that did not use Sustain Damage during this combat round.",
         "prereq": { "warfare": 2 },
         "action": false,
         "exhaust": false
@@ -190,7 +190,7 @@
     {
         "id": "ASSAULT_CANNON",
         "type": "warfare",
-        "description": "During the start of space combat, if you have 3 non-fighter ships, opponent must destroy 1 non-fighter) ship",
+        "description": "At the start of a space combat in a system that contains 3 or more of your non-fighter ships, your opponent must destroy 1 of their non-fighter ships.",
         "prereq": { "warfare": 3 },
         "action": false,
         "exhaust": false

@@ -226,7 +226,7 @@ h3, h4, h5, h6 {
     }
 }
 .star-field .layer:nth-child(1) {
-    animation: sf-fly-by-1 13s linear infinite;
+    animation: sf-fly-by-1 52s linear infinite;
 }
 /*.star-field .layer:nth-child(2) {
     opacity: 0;
@@ -234,8 +234,8 @@ h3, h4, h5, h6 {
 }*/
 .star-field .layer:nth-child(2) {
     opacity: 0;
-    animation: sf-fly-by-2 13s linear infinite;
-    animation-delay: 6s;
+    animation: sf-fly-by-2 52s linear infinite;
+    animation-delay: 26s;
 }
 /*.star-field .layer:nth-child(4) {
     opacity: 0;

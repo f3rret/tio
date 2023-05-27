@@ -347,16 +347,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     const j = payloadCursor.j;
     const tile = G.tiles[advUnitView.tile];
 
-    if(advUnitView && tile.tdata.occupied == playerID){
+    if(advUnitView && String(tile.tdata.occupied) === String(playerID)){
       const unit = G.tiles[advUnitView.tile].tdata.fleet[advUnitView.unit];
       if(unit[i] && unit[i].payload && unit[i].payload[j]){
         moves.unloadUnit({src: {...advUnitView, i, j}, dst: {tile: advUnitView.tile, planet: pid}});
       }
 
-      movePayloadCursor();
+      //movePayloadCursor();
     }
 
-  }, [G.tiles, advUnitView, moves, payloadCursor, movePayloadCursor, playerID]);
+  }, [G.tiles, advUnitView, moves, payloadCursor, playerID]);
 
   const loadUnit = useCallback((args)=>{
 
@@ -676,10 +676,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     {p.units[u].length > 1 && <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
                     x={40} y={25} text={p.units[u].length}/>}
                     {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
-                      <Text text='► Producing' x={0} y={-10} interactive={true} pointerdown={()=>setProducing(p.name)} 
+                      <Text text='► Production' x={0} y={-10} interactive={true} pointerdown={()=>setProducing(p.name)} 
                           style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>}
                   </Sprite>
                 )}
+                
                 {p.invasion && <Sprite scale={.75} x={p.hitRadius * 2} y={-30} image='icons/invader.png' alpha={0.85}>
                   <Container x={45} y={15}>
                     <Sprite image={'race/icons/'+ G.races[ctx.currentPlayer].rid +'.png'} scale={1}></Sprite>
@@ -698,6 +699,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={50} y={25} text={p.units[u].length}/>
                 </Sprite>}
               )}
+              {element.tdata.producing_done === true && exhaustedCards.indexOf('SELF_ASSEMBLY_ROUTINES') > -1 &&
+                <Text interactive={true} pointerdown={()=>moves.fromReinforcements(p.name, {mech: 1}, exhaustedCards)} y={40} x={-30} style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'red', dropShadow: true, dropShadowDistance: 1}} 
+                text={'► Place 1 mech'}/>
+              }
               </Container>
 
               {p.occupied !== undefined && (!p.units || Object.keys(p.units).length === 0) && <Sprite x={50} y={50} scale={.3} image={'icons/control_token.png'}>
@@ -742,7 +747,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         </Container>}
 
         {advUnitView && advUnitView.tile === index && <Container x={30} y={-55}>
-          {element.tdata.fleet[advUnitView.unit] && element.tdata.fleet[advUnitView.unit].map((ship, i) =>{
+          {element.tdata.fleet && element.tdata.fleet[advUnitView.unit] && element.tdata.fleet[advUnitView.unit].map((ship, i) =>{
             const cap = advUnitViewTechnology.capacity || 0;
             const row = [];
 
@@ -879,6 +884,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     let technology = techData.find(t => t.id === args.techId);
     let icon = technology ? technology.type:'propulsion';
 
+    if(!disabled && args.techId === 'SELF_ASSEMBLY_ROUTINES'){
+      if(!G.tiles.find(t => t.tdata.producing_done === true)) disabled = true;
+    }
     if(!disabled && args.techId === 'AI_DEVELOPMENT_ALGORITHM'){
       if(!(ctx.activePlayers && ctx.activePlayers[playerID]) === 'strategyCard' && G.strategy === 'TECHNOLOGY') disabled = true;
     }
@@ -1074,6 +1082,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       {haveTechnology(race, 'SLING_RELAY') && <TechAction techId='SLING_RELAY'/>}
                       {haveTechnology(race, 'BIO_STIMS') && <TechAction techId='BIO_STIMS'/>}
                       {haveTechnology(race, 'AI_DEVELOPMENT_ALGORITHM') && <TechAction techId='AI_DEVELOPMENT_ALGORITHM'/>}
+                      {haveTechnology(race, 'SELF_ASSEMBLY_ROUTINES') && <TechAction techId='SELF_ASSEMBLY_ROUTINES'/>}
                     </ListGroup>
                     {rightBottomSubVisible === 'context' && <ListGroup style={{background: 'none', bottom: '2.5rem', position: 'absolute', right: '14rem', width: '13rem'}}>
                       <b>Ready one of:</b>

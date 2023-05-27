@@ -394,6 +394,7 @@ export const TIO = {
                               if(planets && planets.length){
                                 const found = planets.some( p => {
                                   if(p.occupied == playerID && p.name === result.base){
+                                    tile.tdata.producing_done = true;
                                     const ukeys = Object.keys(result.deploy);
                                     ukeys.forEach(uk => {
                                       const ukl = uk.toLowerCase();
@@ -417,6 +418,7 @@ export const TIO = {
                                   }
                                   return false;
                                 });
+
                                 return found.length > 0;
                               }
                               return false;
@@ -553,6 +555,7 @@ export const TIO = {
                  nextStep: ({G, playerID, ctx, events}, hits) => {
                   let fleet;
                   const activeTile = G.tiles.find(t => t.active === true);
+                  if(!activeTile.tdata.spaceCannons_done) activeTile.tdata.spaceCannons_done = true;
                    
                   if((activeTile.tdata.occupied !== ctx.currentPlayer) && activeTile.tdata.attacker){
                       fleet = activeTile.tdata.attacker;
@@ -596,6 +599,9 @@ export const TIO = {
                             if(p.hit){
                               if(p.hit > 1 || !technologies[p.id].sustain){
                                 delete fleet[f][i].payload[j];
+                                if(p.id === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
+                                  G.races[playerID].tg += 1;
+                                }
                               }
                             }
                           });
@@ -614,6 +620,8 @@ export const TIO = {
                         delete activeTile.tdata.fleet;
                       }
                     }
+
+                    delete G['spaceCannons'];
                   }
                  
                   events.endStage();
@@ -773,16 +781,26 @@ export const TIO = {
                     if(hits[unit].length){
                       hits[unit].forEach((car, i) => {
                         if(car.hit){
-                          if(!fleet[unit][car.idx].hit) fleet[unit][car.idx].hit = 0;
-                          fleet[unit][car.idx].hit += car.hit;
+                          if(!unit.startsWith('-')){
+                            if(!fleet[unit][car.idx].hit) fleet[unit][car.idx].hit = 0;
+                            fleet[unit][car.idx].hit += car.hit;
+                          }
+                          else{ //repair
+                            fleet[unit.replace('-', '')][car.idx].hit = 0;
+                          }
                         }
 
                         if(car.payload && car.payload.length){
                           car.payload.forEach((p, j) => {
                             if(p.hit){
-                              const pl = fleet[unit][car.idx].payload[p.pidx];
-                              if(!pl.hit) pl.hit = 0;
-                              pl.hit += p.hit;
+                              if(!unit.startsWith('-')){
+                                const pl = fleet[unit][car.idx].payload[p.pidx];
+                                if(!pl.hit) pl.hit = 0;
+                                pl.hit += p.hit;
+                              }
+                              else{ //repair
+                                fleet[unit][car.idx].payload[p.pidx].hit = 0;
+                              }
                             }
                           })
                         }
@@ -799,6 +817,9 @@ export const TIO = {
                         car.payload.forEach((p, idx) => {
                           if(p.hit > 1 || (p.hit === 1 && !technologies[p.id].sustain)){
                             delete fleet[f][i].payload[idx];
+                            if(p.id === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
+                              G.races[playerID].tg += 1;
+                            }
                           }
                         });
                         car.payload = car.payload.filter(p => p);
@@ -976,18 +997,23 @@ export const TIO = {
                     if(String(playerID) === String(ctx.currentPlayer)){
                       events.setStage('invasion_await');
                     }
-                    else if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){ //defenser give no hits
+                    else if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){ //defenser takes no hits
                       const activeTile = G.tiles.find(t => t.active === true);
                       const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
 
                       if(ctx.activePlayers[ctx.currentPlayer] === 'invasion_await' && activePlanet.invasion.troops){
-                        const val = {};
-                        val[activePlanet.occupied] = {stage: 'invasion'};
-                        val[ctx.currentPlayer] = {stage: 'invasion'};
-                        
-                        G.dice[activePlanet.occupied] = {};
-                        G.dice[ctx.currentPlayer] = {};
-                        events.setActivePlayers({value: val});
+                        if(haveTechnology(G.races[playerID], 'MAGEN_DEFENSE_GRID')){
+                          events.setStage('invasion_await');
+                        }
+                        else{
+                          const val = {};
+                          val[activePlanet.occupied] = {stage: 'invasion'};
+                          val[ctx.currentPlayer] = {stage: 'invasion'};
+                          
+                          G.dice[activePlanet.occupied] = {};
+                          G.dice[ctx.currentPlayer] = {};
+                          events.setActivePlayers({value: val});
+                        }
                       }
                       else{
                         events.setStage('invasion_await');
@@ -1007,10 +1033,11 @@ export const TIO = {
                       draft[playerID][unit] = dice;
                     });
                   },
-                  nextStep: ({G, events, playerID, ctx}, hits) => {
+                  nextStep: ({G, events, playerID, ctx}, hits, setNoPds) => {
 
                     const activeTile = G.tiles.find(t => t.active === true);
                     const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+                    if(setNoPds && String(playerID) === String(activePlanet.occupied)) activePlanet.invasion.nopds = true;
                     const uk = Object.keys(activePlanet.units);
 
                     if(uk.indexOf('infantry') === -1 && uk.indexOf('mech') === -1){
@@ -1051,8 +1078,7 @@ export const TIO = {
                     let fleet = {};
                     const activeTile = G.tiles.find(t => t.active === true);
                     const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
-                    if(!activePlanet.invasion.nopds) activePlanet.invasion.nopds = true;
-                    
+                   
                     const defenderForces = () => {
                         const result = {};
                         Object.keys(activePlanet.units).forEach(k => {
@@ -1071,7 +1097,7 @@ export const TIO = {
                     else{
                       fleet = activePlanet.units;
 
-                      if(prevStages.length && prevStages[0] === 'bombardment'){
+                      if(prevStages.length === 2 && prevStages[0] === 'bombardment'){
                         if(enemyHaveTechnology(G.races, ctx.activePlayers, playerID, 'X89_BACTERIAL_WEAPON')){
                           bacterialWeapon = true;
                         }
@@ -1093,6 +1119,9 @@ export const TIO = {
                       fleet[f].forEach((car, i) => {
                         if((car.hit === 1 && f !== 'mech') || car.hit > 1){
                           delete fleet[f][i];
+                          if(f === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
+                            G.races[playerID].tg += 1;
+                          }
                         }
                       });
                       fleet[f] = fleet[f].filter(car => car);
@@ -1279,7 +1308,7 @@ export const TIO = {
               },
             },
             onBegin: ({ G, ctx }) => {
-              G.tiles.forEach( t => t.active = false);
+              G.tiles.filter(t => t.active === true).forEach( t => { t.active = false });
               G.races[ctx.currentPlayer].actions = [];
             },
             onMove: ({ G, ctx }) => {
@@ -1289,34 +1318,36 @@ export const TIO = {
                 const activeTile = G.tiles.find(t => t.active === true);
 
                 if(activeTile && (activeTile.tdata.attacker || (activeTile.tdata.fleet && activeTile.tdata.occupied === ctx.currentPlayer))){
-                  let spaceCannons = {};
-                  //enemy's pds at same tile
-                  if(activeTile.tdata.planets){
-                    activeTile.tdata.planets.forEach(p =>{ 
-                      if(p.occupied !== undefined && p.occupied != ctx.currentPlayer && p.units && p.units.pds){
-                        spaceCannons[p.occupied] = 'spaceCannonAttack';
-                      }
-                    });
-                  }
+                  if(!activeTile.tdata.spaceCannons_done){
+                    let spaceCannons = {};
+                    //enemy's pds at same tile
+                    if(activeTile.tdata.planets){
+                      activeTile.tdata.planets.forEach(p =>{ 
+                        if(p.occupied !== undefined && p.occupied != ctx.currentPlayer && p.units && p.units.pds){
+                          spaceCannons[p.occupied] = 'spaceCannonAttack';
+                        }
+                      });
+                    }
 
-                  //cannon in adjacent systems
-                  const races = G.races.filter((r, i) => i != ctx.currentPlayer && r.technologies.find(t => t.id === 'PDS').spaceCannon.range > 1).map(r => r.rid);
+                    //cannon in adjacent systems
+                    const races = G.races.filter((r, i) => i != ctx.currentPlayer && r.technologies.find(t => t.id === 'PDS').spaceCannon.range > 1).map(r => r.rid);
 
-                  if(races.length > 0){
-                    const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
-                    neighs.forEach(n => {
-                      if(n.tdata.planets){
-                        n.tdata.planets.forEach(p =>{ 
-                          if(races.indexOf(p.occupied) > -1 && p.units && p.units.pds){
-                            spaceCannons[p.occupied] = 'spaceCannonAttack';
-                          }
-                        });
-                      }
-                    });
-                  }
-                
-                  if(spaceCannons && Object.keys(spaceCannons).length > 0){
-                    G.spaceCannons = spaceCannons;
+                    if(races.length > 0){
+                      const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
+                      neighs.forEach(n => {
+                        if(n.tdata.planets){
+                          n.tdata.planets.forEach(p =>{ 
+                            if(races.indexOf(p.occupied) > -1 && p.units && p.units.pds){
+                              spaceCannons[p.occupied] = 'spaceCannonAttack';
+                            }
+                          });
+                        }
+                      });
+                    }
+                  
+                    if(spaceCannons && Object.keys(spaceCannons).length > 0){
+                      G.spaceCannons = spaceCannons;
+                    }
                   }
                 }
                 
@@ -1328,9 +1359,38 @@ export const TIO = {
             },
             onEnd: ({G, ctx, events}) => {
               G.strategy = undefined;
+              const myProds = G.tiles.filter(t =>{ 
+                if(t.tdata.producing_done === true){
+                  if(String(t.tdata.occupied) === String(ctx.currentPlayer)){
+                    return true;
+                  }
+                  else{
+                    if(t.tdata.planets && t.tdata.planets.find(p => String(p.occupied) === String(ctx.currentPlayer))){
+                      return true;
+                    }
+                  }
+                }
+                return false;
+              });
+              myProds.forEach(t => t.tdata.producing_done = undefined);
             }
         },
         moves: {
+          fromReinforcements: ({G, playerID}, pname, units, exhaustedCards) => {
+            const planet = getPlanetByName(G.tiles, pname);
+            if(!planet.units) planet.units = {};
+
+            Object.keys(units).forEach(u => {
+              if(!planet.units[u]) planet.units[u] = [];
+              for(var i=0; i<units[u]; i++){
+                planet.units[u].push({});
+              }
+            });
+
+            if(exhaustedCards && exhaustedCards.indexOf('SELF_ASSEMBLY_ROUTINES')>-1){
+              G.races[playerID].exhaustedCards.push('SELF_ASSEMBLY_ROUTINES');
+            }
+          },
           readyTechnology: ({G, playerID}, techId, exhaustedCards) => {
             const idx = G.races[playerID].exhaustedCards.indexOf(techId);
             if(idx > -1){
@@ -1427,6 +1487,8 @@ export const TIO = {
             if(exhaustedCards && exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1){
               G.races[playerID].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
             }
+
+            activeTile.tdata.producing_done = true;
           },
           invasion: ({G, playerID, events}, planet) => {
             const activeTile = G.tiles.find(t => t.active === true);
@@ -1458,6 +1520,8 @@ export const TIO = {
 
               G.dice[playerID] = {};
               events.setActivePlayers({value: sc, currentPlayer: {stage: 'spaceCannonAttack'}});
+              const activeTile = G.tiles.find(t => t.active === true);
+              if(activeTile) activeTile.tdata.spaceCannons_done = true; 
             }
           },
           antiFighterBarrage: ({G, playerID, events}) => {
@@ -1629,6 +1693,8 @@ export const TIO = {
           moveShip: ({ G, playerID }, args) => {
 
             const dst = G.tiles.find( t => t.active === true );
+            if(dst.tdata.spaceCannons_done === true) dst.tdata.spaceCannons_done = false;
+
             const src = G.tiles[args.tile];
             const unit = src.tdata.fleet[args.unit][args.shipIdx];
             let isAttack = false;
@@ -1947,7 +2013,6 @@ const completeObjective = ({G, playerID, oid, payment}) => {
   }
 
 }
-
 
 const loadUnitsOnRetreat = (G, playerID) => {
   
