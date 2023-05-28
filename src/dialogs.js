@@ -285,6 +285,11 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
                     sum -= upgrades.length;
                 }
             }
+
+            if(haveTechnology(G.races[playerID], 'SARWEEN_TOOLS')){
+                sum -= 1;
+            }
+
             return sum;
         }
         return 0;
@@ -1504,6 +1509,10 @@ export const ProducingPanel = (args) => {
             if(upgrades && upgrades.length){
                 sum -= upgrades.length;
             }
+        }
+
+        if(haveTechnology(G.races[playerID], 'SARWEEN_TOOLS')){
+            sum -= 1;
         }
 
         return sum;

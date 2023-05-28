@@ -877,7 +877,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     else{
       prevStages.current = null;
     }
-  }, [ctx.activePlayers, prevStages])
+
+  }, [ctx.activePlayers, prevStages]);
 
   const TechAction = (args) => { 
     let disabled = race.exhaustedCards.indexOf(args.techId) > -1;

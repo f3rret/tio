@@ -764,7 +764,7 @@ export const TIO = {
               },
               spaceCombat_step2: {
                 moves: {
-                 nextStep: ({G, playerID, ctx, events}, hits) => {
+                 nextStep: ({G, playerID, ctx, events}, hits, assaultCannon) => {
                   let fleet;
                   const activeTile = G.tiles.find(t => t.active === true);
                    
@@ -845,6 +845,15 @@ export const TIO = {
                       
                       if(needAwait){
                         events.setStage('spaceCombat_await');
+                      }
+                      else if(assaultCannon){
+                        const val = {};
+                        val[activeTile.tdata.occupied] = {stage: 'antiFighterBarrage'};
+                        val[ctx.currentPlayer] = {stage: 'antiFighterBarrage'};
+                        
+                        G.dice[activeTile.tdata.occupied] = {};
+                        G.dice[ctx.currentPlayer] = {};
+                        events.setActivePlayers({value: val});
                       }
                       else{
                         const val = {};
@@ -1528,11 +1537,33 @@ export const TIO = {
             const activeTile = G.tiles.find(t => t.active === true);
             if(activeTile && activeTile.tdata.attacker){
               const def = {};
+              
+              const assaultReq = (my, enemy) => {
+                let myFleet = 0;
+                Object.keys(my).filter(k => k!=='fighter').forEach(k => myFleet += my[k].length);
+
+                let enemyFleet = 0;
+                Object.keys(enemy).filter(k => k!=='fighter').forEach(k => enemyFleet += enemy[k].length);
+
+                return (myFleet >= 3) && (enemyFleet > 0);
+              }
+
               def[activeTile.tdata.occupied] = {stage: 'antiFighterBarrage'};
+              def[playerID] = {stage: 'antiFighterBarrage'};
+
+              if(haveTechnology(G.races[playerID], 'ASSAULT_CANNON') && assaultReq(activeTile.tdata.attacker, activeTile.tdata.fleet)){
+                def[activeTile.tdata.occupied] = {stage: 'spaceCombat_step2'};
+                def[playerID] = {stage: 'spaceCombat_await'};
+              }
+
+              if(haveTechnology(G.races[activeTile.tdata.occupied], 'ASSAULT_CANNON') && assaultReq(activeTile.tdata.fleet, activeTile.tdata.attacker)){
+                if(def[activeTile.tdata.occupied].stage !== 'spaceCombat_step2') def[activeTile.tdata.occupied] = {stage: 'spaceCombat_await'};
+                def[playerID] = {stage: 'spaceCombat_step2'};
+              }
               
               G.dice[activeTile.tdata.occupied] = {};
               G.dice[playerID] = {};
-              events.setActivePlayers({value: def, currentPlayer: {stage: 'antiFighterBarrage'}});
+              events.setActivePlayers({value: def});
             }
           },
           purgeFragments: ({G, playerID}, purgingFragments) => {

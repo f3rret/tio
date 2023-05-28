@@ -580,13 +580,23 @@ export const AntiFighterBarrage = () => {
 
 export const SpaceCombat = () => {
 
-    const { G, ctx, moves, playerID } = useContext(StateContext);
+    const { G, ctx, moves, playerID, prevStages } = useContext(StateContext);
     const activeTile = G.tiles.find(t => t.active === true);
     const [ahitsA, setAhitsA] = useState({});
     const [ahitsD, setAhitsD] = useState({});
 
+    const assaultCannon = useMemo(() => {
+        return !prevStages || (prevStages[playerID] && prevStages[playerID].length === 1 && prevStages[playerID][0] === 'spaceCombat_step2'); //before anti-fighter barrage 
+    }, [prevStages, playerID]);
+
     const hits = useMemo(() => {
         let result = {};
+
+        if(assaultCannon){
+            const enemy = Object.keys(ctx.activePlayers).find(k => String(k)!==String(playerID));
+            result[enemy] = 1;
+            return result;
+        }
 
         Object.keys(ctx.activePlayers).forEach(pid => {
             let h = 0;
@@ -603,7 +613,7 @@ export const SpaceCombat = () => {
         });
 
         return result;
-    }, [G.dice, G.races, ctx.activePlayers]);
+    }, [G.dice, G.races, ctx.activePlayers, assaultCannon, playerID]);
 
     const assignedA = useMemo(() => {
         let result = 0;
@@ -711,14 +721,18 @@ export const SpaceCombat = () => {
 
     const allHitsAssigned = useMemo(() => {
 
-        if(playerID === ctx.currentPlayer){
+        if(assaultCannon){
+            return assignedA === 1;
+        }
+
+        else if(playerID === ctx.currentPlayer){
             return !hits[activeTile.tdata.occupied] || (assignedA === Math.min(hits[activeTile.tdata.occupied], maxHits[ctx.currentPlayer]));
         }
         else{
             return !hits[ctx.currentPlayer] || (assignedD === Math.min(hits[ctx.currentPlayer], maxHits[activeTile.tdata.occupied]));
         }
 
-    }, [assignedA, assignedD, playerID, ctx.currentPlayer, hits, activeTile, maxHits]);
+    }, [assignedA, assignedD, playerID, ctx.currentPlayer, hits, activeTile, maxHits, assaultCannon]);
 
     const HitsInfo = () => {
         return  <span style={{display: 'flex', justifyContent: 'space-around', fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
@@ -762,7 +776,7 @@ export const SpaceCombat = () => {
     return (
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
-        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Space combat</h3></CardTitle>
+        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{assaultCannon ? 'Assault cannon': 'Space combat'}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             {(ctx.activePlayers[playerID] === 'spaceCombat' || ctx.activePlayers[playerID] === 'spaceCombat_await') && <>
                 {!needAwait && <>
@@ -778,8 +792,14 @@ export const SpaceCombat = () => {
                 </>}
             </>}
             {ctx.activePlayers[playerID] === 'spaceCombat_step2' && <>
-                <HitAssign race={G.races[ctx.currentPlayer]} units={activeTile.tdata.attacker} owner={ctx.currentPlayer} hits={ahitsA} setHits={setAhitsA} allowRepair={allHitsAssigned}/>
-                <HitAssign race={G.races[activeTile.tdata.occupied]} units={activeTile.tdata.fleet} owner={String(activeTile.tdata.occupied)} hits={ahitsD} setHits={setAhitsD} allowRepair={allHitsAssigned}/>
+                {!assaultCannon && <>
+                    <HitAssign race={G.races[ctx.currentPlayer]} units={activeTile.tdata.attacker} owner={ctx.currentPlayer} hits={ahitsA} setHits={setAhitsA} allowRepair={allHitsAssigned}/>
+                    <HitAssign race={G.races[activeTile.tdata.occupied]} units={activeTile.tdata.fleet} owner={String(activeTile.tdata.occupied)} hits={ahitsD} setHits={setAhitsD} allowRepair={allHitsAssigned}/>
+                </>}
+                {assaultCannon && 
+                    <HitAssign race={G.races[playerID]} units={String(playerID) === String(activeTile.tdata.occupied) ? activeTile.tdata.fleet : activeTile.tdata.attacker} 
+                    owner={playerID} hits={ahitsA} setHits={setAhitsA}/>
+                }
             </>}
         </CardBody>
         {(!needAwait || winner !== undefined) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
@@ -790,7 +810,8 @@ export const SpaceCombat = () => {
                 <Button color='danger' disabled = {everyoneRolls || (anyoneRetreat !== undefined)} onClick={()=>moves.retreat()}>Retreat</Button>
             </>}
             {ctx.activePlayers[playerID] === 'spaceCombat_step2' && <>
-                <Button color='warning' disabled = {!allHitsAssigned} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD)}>Next</Button>
+                {!assaultCannon && <Button color='warning' disabled = {!allHitsAssigned} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD)}>Next</Button>}
+                {assaultCannon && <Button color='warning' disabled = {!allHitsAssigned} onClick={() => moves.nextStep(ahitsA, true)}>Next</Button>}
                 <HitsInfo />
             </>}
         </CardFooter>}
