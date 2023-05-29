@@ -109,7 +109,7 @@
     {
         "id": "SCANLINK_DRONE_NETWORK",
         "type": "cybernetic",
-        "description": "When you activate a system, you may explore 1 planet in that system if it contains 1 or more of your units",
+        "description": "When you activate a system, you may explore 1 planet in that system if it contains 1 or more of your units.",
         "prereq": { },
         "action": false,
         "exhaust": false
@@ -117,7 +117,7 @@
     {
         "id": "GRAVITON_LASER_SYSTEM",
         "type": "cybernetic",
-        "description": "When 1 or more units uses Space Cannon, hits produced must be assigned to non fighter ships if able",
+        "description": "You may exhaust this card before 1 or more of your units use Space Cannon; hits produced by those units must be assigned to non-fighter ships if able.",
         "prereq": { "cybernetic": 1 },
         "action": false,
         "exhaust": true
@@ -125,7 +125,7 @@
     {
         "id": "PREDICTIVE_INTELLIGENCE",
         "type": "cybernetic",
-        "description": "At the end of your turn [exhaust] redistribute your command tokens. Cast 3 additional votes; if the outcome you voted for is not resolved: [exhaust]",
+        "description": "At the end of your turn, you may exhaust this card to redistribute your command tokens. When you cast votes during the agenda phase, you may cast 3 additional votes. If you do, and the outcome you voted for is not resolved, exhaust this card.",
         "prereq": { "cybernetic": 1 },
         "action": false,
         "exhaust": true
@@ -133,7 +133,7 @@
     {
         "id": "TRANSIT_DIODES",
         "type": "cybernetic",
-        "description": "Remove up to 4 of your ground forces from the board and place them on 1 or more planets you control.",
+        "description": "You may exhaust this card at the start of your turn during the action phase; remove up to 4 of your ground forces from the game board and place them on 1 or more planets you control.",
         "prereq": { "cybernetic": 2 },
         "action": false,
         "exhaust": true
@@ -141,7 +141,7 @@
     {
         "id": "INTEGRATED_ECONOMY",
         "type": "cybernetic",
-        "description": "After winning a planet, produce any number of units on that planet (combined cost up to planet’s resource value).",
+        "description": "After you gain control of a planet, you may produce any number of units on that planet that have a combined cost equal or less than that planet’s resource value.",
         "prereq": { "cybernetic": 3 },
         "action": false,
         "exhaust": false
@@ -406,7 +406,7 @@
         "type": "unit",
         "description": "",
         "prereq": { },
-        "spaceCannon": { "value": 6, "range": 1, "count": 1 },
+        "spaceCannon": { "value": 1, "range": 1, "count": 1 },
         "planetaryShield": true
     },
     {

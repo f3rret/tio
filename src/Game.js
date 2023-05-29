@@ -14,7 +14,7 @@ export const TIO = {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
-                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [],
+                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
                     exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
@@ -184,7 +184,7 @@ export const TIO = {
         }
       },
       stats: {
-        next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
+        next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? /*'strat':*/'agenda':'agenda',
         turn: {
           order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),//TurnOrder.ONCE,
           /*minMoves: 1,
@@ -499,11 +499,14 @@ export const TIO = {
               },
               spaceCannonAttack: {
                 moves: {
-                 rollDice: ({G, ctx, playerID, random}, unit, count) => {
+                 rollDice: ({G, playerID, random}, unit, count, withTech) => {
                   const dice = random.D10(count || 1);
                   G.dice = produce(G.dice, draft => {
-                    draft[playerID][unit] = dice;
+                    draft[playerID][unit] = {dice, withTech};
                   });
+                  if(withTech === 'GRAVITON_LASER_SYSTEM'){
+                    G.races[playerID].exhaustedCards.push('GRAVITON_LASER_SYSTEM');
+                  }
                  },
                  nextStep: ({G, events, ctx, playerID}) => {
 
@@ -516,7 +519,7 @@ export const TIO = {
                               Object.keys(G.dice[pid]).forEach(unit => {
                                   const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                                   if(technology && technology.spaceCannon){
-                                      result += G.dice[pid][unit].filter(die => die+adj >= technology.spaceCannon.value).length;
+                                      result += G.dice[pid][unit].dice.filter(d => d + adj >= technology.spaceCannon.value).length;
                                   }
                               });
                           }
@@ -634,7 +637,7 @@ export const TIO = {
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
-                      draft[playerID][unit] = dice;
+                      draft[playerID][unit] = {dice};
                     });
                   },
                   nextStep: ({G, events, ctx, playerID}) => {
@@ -645,7 +648,7 @@ export const TIO = {
                             Object.keys(G.dice[pid]).forEach(unit => {
                                 const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                                 if(technology && technology.barrage){
-                                    h += G.dice[pid][unit].filter(die => die >= technology.barrage.value).length;
+                                    h += G.dice[pid][unit].dice.filter(d => d >= technology.barrage.value).length;
                                 }
                             });
                         }
@@ -733,7 +736,7 @@ export const TIO = {
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
-                      draft[playerID][unit] = dice;
+                      draft[playerID][unit] = {dice};
                     });
                   },
                   nextStep: ({G, playerID, events, ctx}, hits) => {
@@ -999,7 +1002,7 @@ export const TIO = {
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
-                      draft[playerID][unit] = dice;
+                      draft[playerID][unit] = {dice};
                     });
                   },
                   nextStep: ({G, events, playerID, ctx}, hits) => {
@@ -1039,7 +1042,7 @@ export const TIO = {
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
-                      draft[playerID][unit] = dice;
+                      draft[playerID][unit] = {dice};
                     });
                   },
                   nextStep: ({G, events, playerID, ctx}, hits, setNoPds) => {
@@ -1080,7 +1083,7 @@ export const TIO = {
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
-                      draft[playerID][unit] = dice;
+                      draft[playerID][unit] = {dice};
                     });
                   },
                   nextStep: ({G, playerID, ctx, events}, hits, prevStages) => {
@@ -1385,7 +1388,53 @@ export const TIO = {
             }
         },
         moves: {
-          fromReinforcements: ({G, playerID}, pname, units, exhaustedCards) => {
+          moveFromTransit: ({G, playerID}, tileIndex, planetIndex, exhaustedCards) => {
+            const race = G.races[playerID];
+            const planet = G.tiles[tileIndex].tdata.planets[planetIndex];
+            if(!planet.units) planet.units = {};
+
+            race.reinforcement.transit.forEach(trooper => {
+              const tag = trooper.from.unit;
+              if(!planet.units[tag]) planet.units[tag]=[];
+              planet.units[tag].push({});
+            });
+
+            race.reinforcement.transit = [];
+
+            if(exhaustedCards && exhaustedCards.indexOf('TRANSIT_DIODES') > -1){
+              race.exhaustedCards.push('TRANSIT_DIODES');
+            }
+          },
+          moveToTransit: ({G, playerID}, args) => {
+            const { tile, planet, unit } = args;
+            const race = G.races[playerID];
+
+            if(!race.reinforcement.transit) race.reinforcement.transit = [];
+            const trooper = G.tiles[tile].tdata.planets[planet].units[unit].pop();
+            trooper.from = args;
+            race.reinforcement.transit.push(trooper);
+
+            if(G.tiles[tile].tdata.planets[planet].units[unit].length === 0){
+              delete G.tiles[tile].tdata.planets[planet].units[unit];
+            }
+            if(Object.keys(G.tiles[tile].tdata.planets[planet].units) === 0){
+              G.tiles[tile].tdata.planets[planet].units = undefined;
+            }
+          },
+          explorePlanet: ({G, playerID}, pname, exhaustedCards) => {
+            const planet = getPlanetByName(G.tiles, pname);
+            const explore = G.explorationDecks[planet.trait].pop();
+
+            if(explore.id.indexOf('Relic Fragment') > -1){
+              G.races[playerID].fragments[planet.trait[0]]++;
+            }
+            G.races[playerID].exploration.push(explore);
+
+            if(exhaustedCards && exhaustedCards.indexOf('SCANLINK_DRONE_NETWORK') > -1){
+              G.races[playerID].exhaustedCards.push('SCANLINK_DRONE_NETWORK');
+            }
+          },
+          fromReinforcement: ({G, playerID}, pname, units, exhaustedCards) => {
             const planet = getPlanetByName(G.tiles, pname);
             if(!planet.units) planet.units = {};
 
@@ -1427,6 +1476,11 @@ export const TIO = {
               }
             }
 
+          },
+          exhaustCard: ({G, playerID}, techId) => {
+            if(G.races[playerID].exhaustedCards.indexOf(techId) === -1){
+              G.races[playerID].exhaustedCards.push(techId);
+            }
           },
           producing: ({G, playerID}, pname, deploy, exhausted, tg, exhaustedCards) => {
 
@@ -1592,9 +1646,19 @@ export const TIO = {
             G.races[playerID].relics.push(G.relicsDeck.pop());
             G.races[playerID].actions.push('FRAGMENTS_PURGE');
           },
-          adjustToken: ({ G, playerID}, tag) => {
-            G.races[playerID].tokens.new--;
-            G.races[playerID].tokens[tag]++;
+          adjustToken: ({ G, playerID}, tag, inc) => {
+            let i = inc || 1;
+      
+            G.races[playerID].tokens.new -= i;
+            G.races[playerID].tokens[tag] += i;
+          },
+          redistTokens: ({ G, playerID}, inc, exhaustedCards) => {
+            Object.keys(inc).forEach(tag => {
+              G.races[playerID].tokens[tag] += inc[tag];
+            });
+            if(exhaustedCards && exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1){
+              G.races[playerID].exhaustedCards.push('PREDICTIVE_INTELLIGENCE');
+            }            
           },
           useStrategy: ({ G, events, playerID}, idx) => {
             if(idx === undefined) idx=0;
@@ -1687,13 +1751,19 @@ export const TIO = {
               console.log('too many actions');
               return INVALID_MOVE;
             }
-            const prevActive = G.tiles.find(t => t.active === true);
-            if(prevActive) prevActive.active = undefined;
-
+            
             const tile = G.tiles[tIndex];
 
             if(tile){
+              if(tile.tdata.tokens && tile.tdata.tokens.indexOf(race.rid) > -1){
+                console.log('already blocked');
+                return INVALID_MOVE;
+              }
               tile.tdata.tokens.push(race.rid);
+
+              const prevActive = G.tiles.find(t => t.active === true);
+              if(prevActive) prevActive.active = undefined;
+            
               tile.active = true;
             }
             else{
@@ -1716,6 +1786,11 @@ export const TIO = {
             }
 
             let idx = race.exhaustedCards.indexOf('GRAVITY_DRIVE');
+            if(idx > -1){
+              race.exhaustedCards.splice(idx, 1);
+            }
+
+            idx = race.exhaustedCards.indexOf('SCANLINK_DRONE_NETWORK');
             if(idx > -1){
               race.exhaustedCards.splice(idx, 1);
             }
@@ -1853,12 +1928,12 @@ export const TIO = {
         next: 'strat',
         turn: {
           order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
-          minMoves: 2,
+          minMoves: 0,
           maxMoves: 2,
         },
 
         moves: {
-          vote: ({G, ctx, playerID}, result) => {
+          vote: ({G, ctx, playerID, events}, result) => {
             let votes = 0;
             const exhaustPlanet = (exhausted, revert) => {
               if(exhausted && exhausted.length){
@@ -1879,11 +1954,20 @@ export const TIO = {
               }
             };
 
+            if(result.exhaustedCards && result.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE')>-1){
+              votes += 3;
+              G.races[playerID].exhaustedCards.push('PREDICTIVE_INTELLIGENCE');
+            }
+
             exhaustPlanet(Object.keys(result.ex));
-            G.races[playerID].voteResults.push({vote: result.vote, count: votes});
+            let vr = {vote: result.vote, count: votes};
+            if(result.exhaustedCards && result.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE')>-1){
+              vr.withTech = 'PREDICTIVE_INTELLIGENCE';
+            }
+            G.races[playerID].voteResults.push(vr);
 
             const agendaNumber = G.vote2 ? 2:1;
-            if(G.races.every(r => r.voteResults.length === agendaNumber)){
+            if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
               const voteResolution = {};
               G.races.forEach(r => {
                 if(!voteResolution[r.voteResults[agendaNumber - 1].vote]){
@@ -1902,17 +1986,31 @@ export const TIO = {
               if(G['vote' + agendaNumber].type === 'LAW'){
                 G.laws.push(G['vote' + agendaNumber]);
               }
-            }
 
-            if(G.vote2){
+              G.races.forEach(r => {
+                if(r.voteResults[agendaNumber - 1].withTech === 'PREDICTIVE_INTELLIGENCE'){
+                  if(r.voteResults[agendaNumber - 1].vote === decision){
+                    r.exhaustedCards.splice(r.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE'), 1);
+                  }
+                }
+              });
+
+              if(!G.vote2){
+                G.vote2 = G.agendaDeck.pop();
+              }
+              else{
+                if(G.passedPlayers.indexOf(playerID) === -1){
+                  G.passedPlayers.push(playerID);
+                }
+              }
+            }
+            else if(G.vote2){
               if(G.passedPlayers.indexOf(playerID) === -1){
                 G.passedPlayers.push(playerID);
               }
             }
-            else if(!G.vote2){
-              G.vote2 = G.agendaDeck.pop();
-            }
-
+            
+            events.endTurn();
             
           },
       

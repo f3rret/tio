@@ -56,7 +56,8 @@ export const getStratColor = (strat, op) => {
     return color;
 }
 
-export const AgendaDialog = ({ G, ctx, playerID, PLANETS, onConfirm }) => {
+export const AgendaDialog = ({ PLANETS, onConfirm }) => {
+    const { G, playerID, exhaustedCards } = useContext(StateContext);
     const [ex, setEx] = useState({});
     const [voteRadio, setVoteRadio] = useState('for');
     const [agendaNumber, setAgendaNumber] = useState(1);
@@ -81,14 +82,18 @@ export const AgendaDialog = ({ G, ctx, playerID, PLANETS, onConfirm }) => {
     }, [PLANETS, ex, imVoted]);
 
     const votes = useMemo(()=>{
-        return PLANETS.filter(p => ex[p.name]).reduce((a,b) => b.influence + a, 0)
-    },[ex, PLANETS]);
+        let result = PLANETS.filter(p => ex[p.name]).reduce((a,b) => b.influence + a, 0);
+        if(exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1){
+            result += 3;
+        }
+        return result;
+    },[ex, PLANETS, exhaustedCards]);
 
     const confirmClick = useCallback(() => {
-        onConfirm({vote: voteSelect.current ? voteSelect.current.value : voteRadio, ex});
+        onConfirm({vote: voteSelect.current ? voteSelect.current.value : voteRadio, ex, exhaustedCards});
         setEx({});
         setVoteRadio('for');
-    }, [ex, onConfirm, voteRadio]);
+    }, [ex, onConfirm, voteRadio, exhaustedCards]);
 
     const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
     const a = useMemo(() => G['vote' + agendaNumber], [agendaNumber, G]);
@@ -126,9 +131,20 @@ export const AgendaDialog = ({ G, ctx, playerID, PLANETS, onConfirm }) => {
                 </>}
                 <div style={{display: 'flex', flexDirection: 'column', marginTop: '2rem'}}>
                     {G.races.map((r, i) => {
+                        let adj = 0;
+                        
+                        if(haveTechnology(r, 'PREDICTIVE_INTELLIGENCE')){
+                            if(r.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') === -1){
+                                adj = 3;
+                            }
+                            if(agendaNumber > 1 && r.voteResults[agendaNumber-2] && r.voteResults[agendaNumber-2].withTech === 'PREDICTIVE_INTELLIGENCE'){
+                                adj += 3;
+                            }
+                        }
+
                         return <div key={i} style={{display: 'flex', lineHeight: '2rem'}}>
                             <div style={{width: '2rem', color: 'white', textAlign: 'center', background: 'url("icons/influence_bg.png") center no-repeat', backgroundSize: 'contain'}}>
-                                <b>{r.votesMax - (agendaNumber > 1 ? r.voteResults[agendaNumber-2].count:0)}</b>
+                                <b>{r.votesMax + adj - (agendaNumber > 1 ? r.voteResults[agendaNumber-2].count: 0)}</b>
                             </div>
                             <b>{r.name + ' : ' + ( r.voteResults.length >= agendaNumber ? r.voteResults[agendaNumber-1].count + 
                             ' ' + r.voteResults[agendaNumber-1].vote.toUpperCase() : '') }

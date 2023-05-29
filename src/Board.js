@@ -47,6 +47,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [moveSteps, setMoveSteps] = useState([]);
   const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
   const prevStages = useRef(null);
+  const [tempCt, setTempCt] = useState({t: 0, s: 0, f: 0, new: 0});
 
   const [payObj, setPayObj] = useState(null);
   const togglePaymentDialog = (payment) => {
@@ -303,8 +304,29 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return ctx.activePlayers && ctx.activePlayers[playerID] && ctx.activePlayers[playerID].startsWith('invasion');
   }, [ctx.activePlayers, playerID]);
 
-  const AddToken = ({tag}) => {
-    return (<div size='sm' style={{position: 'absolute', top: 0, right: 0, borderTopRightRadius: '4px', backgroundColor: 'rgba(242, 183, 7, 1)'}}><h5 style={{margin: '.25rem .5rem'}}>+</h5></div>);
+  const IncrToken = ({tag}) => {
+    let clickFn = ()=>{if(race.tokens.new){ moves.adjustToken(tag) }};
+    if(exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1){
+      clickFn = ()=>{
+        if(tempCt.new){ setTempCt(produce(tempCt, draft => {
+        draft[tag]++; 
+        draft.new--;
+      }))}
+      };
+    }
+    return (<div size='sm' onClick={()=>clickFn()} style={{position: 'absolute', top: 0, right: 0, borderTopRightRadius: '4px', width:'2rem', backgroundColor: 'rgba(242, 183, 7, 1)'}}>
+      <h5 style={{margin: '.25rem .5rem'}}>+</h5></div>);
+  }
+
+  const DecrToken = ({tag}) => {
+    let clickFn = ()=>{
+      if((tempCt[tag] === 0 && race.tokens[tag]>0) || tempCt[tag] > -race.tokens[tag]){ setTempCt(produce(tempCt, draft => {
+      draft[tag]--; 
+      draft.new++;
+    }))}
+    };
+    return (<div size='sm' onClick={()=>clickFn()} style={{position: 'absolute', top: '2rem', right: 0, width:'2rem', backgroundColor: 'rgba(242, 183, 7, 1)'}}>
+      <h5 style={{margin: '.25rem .5rem'}}>-</h5></div>);
   }
 
   const tileClick = (e, index) => {
@@ -361,11 +383,15 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const loadUnit = useCallback((args)=>{
 
     const tile = G.tiles[args.tile];
-    if(tile.tdata.occupied == playerID){
+    if(String(tile.tdata.occupied) === String(playerID)){
 
-      if(advUnitView && advUnitViewTechnology && advUnitView.tile && advUnitView.tile === args.tile){
+      if(exhaustedCards.indexOf('TRANSIT_DIODES') > -1){
+        if(!race.reinforcement.transit ||  race.reinforcement.transit.length < 4){
+          moves.moveToTransit(args);
+        }
+      }
+      else if(advUnitView && advUnitViewTechnology && advUnitView.tile && advUnitView.tile === args.tile){
         if(['infantry', 'fighter', 'mech'].indexOf(args.unit) > -1){
-          
           if(tile && tile.tdata.fleet){
             const carrier = tile.tdata.fleet[advUnitView.unit];
             if(!(payloadCursor && payloadCursor.i <= carrier.length - 1 && payloadCursor.j <= advUnitViewTechnology.capacity)){
@@ -381,7 +407,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
     }
 
-  },[G.tiles, advUnitView, advUnitViewTechnology, moves, payloadCursor, movePayloadCursor, playerID])
+  },[G.tiles, advUnitView, advUnitViewTechnology, moves, payloadCursor, movePayloadCursor, playerID, exhaustedCards, race.reinforcement])
 
   const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
 
@@ -603,6 +629,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   }, [moveSteps, G.tiles, activeTile]);
 
+  const flushTempCt = useCallback(() =>{
+    setTempCt({s: 0, t: 0, f: 0, new: 0})
+  }, []);
+
   const exhaustTechCard = useCallback((techId) => {
     if(G.races[playerID].exhaustedCards.indexOf(techId)>-1){
       return false;
@@ -626,10 +656,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         setProducing(null);
       }
     }
-    else{
-      
+    else if(techId === 'PREDICTIVE_INTELLIGENCE'){
+      flushTempCt()
     }
-  }, [exhaustedCards, setExhaustedCards, G.races, producing, G.tiles, selectedTile, playerID]);
+  }, [exhaustedCards, setExhaustedCards, G.races, producing, G.tiles, selectedTile, playerID, flushTempCt]);
 
   /*
   {haveTechnology(G.races[playerID], 'GRAVITY_DRIVE') && 
@@ -700,8 +730,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 </Sprite>}
               )}
               {element.tdata.producing_done === true && exhaustedCards.indexOf('SELF_ASSEMBLY_ROUTINES') > -1 &&
-                <Text interactive={true} pointerdown={()=>moves.fromReinforcements(p.name, {mech: 1}, exhaustedCards)} y={40} x={-30} style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'red', dropShadow: true, dropShadowDistance: 1}} 
+                <Text interactive={true} pointerdown={()=>moves.fromReinforcement(p.name, {mech: 1}, exhaustedCards)} y={40} x={-30} style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} 
                 text={'► Place 1 mech'}/>
+              }
+              {exhaustedCards.indexOf('TRANSIT_DIODES') > -1 && String(p.occupied) === String(playerID) && race.reinforcement.transit && race.reinforcement.transit.length > 0 &&
+                <Text interactive={true} pointerdown={()=>moves.moveFromTransit(index, i, exhaustedCards)} y={40} x={-30} 
+                  style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} 
+                  text={'► Place ' + race.reinforcement.transit.length + ' units'}/>
               }
               </Container>
 
@@ -762,8 +797,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           })}
         </Container>}
 
-        {ctx.phase === 'acts' && isMyTurn && selectedTile === index && race.actions.length < maxActs &&  element.tdata.type !== 'hyperlane' &&
-          <Text text='► Activate system' x={element.w/4 - 20} y={element.w/2 + 70} interactive={true} pointerdown={()=>moves.activateTile(index)} 
+        {ctx.phase === 'acts' && isMyTurn && selectedTile === index && race.actions.length < maxActs &&  
+        element.tdata.type !== 'hyperlane' && !(element.tdata.tokens && element.tdata.tokens.indexOf(race.rid) > -1) && 
+          <Text text='► Activate system' x={element.w/4 - 10} y={element.w/2 + 90} interactive={true} pointerdown={()=>moves.activateTile(index)} 
             style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}>
           </Text>}
         
@@ -809,7 +845,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     if(race.exhaustedCards.length){
       setExhaustedCards([]);
     }
-  },[race.exhaustedCards]);
+    flushTempCt();
+  },[race.exhaustedCards, flushTempCt]);
 
   useEffect(()=> {
     if(stratUnfold > 0 && rightBottomVisible){
@@ -881,23 +918,46 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [ctx.activePlayers, prevStages]);
 
   const TechAction = (args) => { 
+
     let disabled = race.exhaustedCards.indexOf(args.techId) > -1;
     let technology = techData.find(t => t.id === args.techId);
     let icon = technology ? technology.type:'propulsion';
 
+    if(!disabled && args.techId === 'SCANLINK_DRONE_NETWORK'){
+      if(ctx.phase !== 'acts') disabled = true;
+      if(!activeTile){
+        disabled = true;
+      }
+      else if(!activeTile.tdata.planets){
+        disabled = true;
+      }
+      else if(!activeTile.tdata.planets.find(p => !p.exhausted && p.trait && p.units && String(p.occupied) === String(playerID))){
+        disabled = true;
+      }
+    }
     if(!disabled && args.techId === 'SELF_ASSEMBLY_ROUTINES'){
+      if(ctx.phase !== 'acts') disabled = true;
       if(!G.tiles.find(t => t.tdata.producing_done === true)) disabled = true;
     }
     if(!disabled && args.techId === 'AI_DEVELOPMENT_ALGORITHM'){
       if(!(ctx.activePlayers && ctx.activePlayers[playerID]) === 'strategyCard' && G.strategy === 'TECHNOLOGY') disabled = true;
     }
     if(!disabled && args.techId === 'GRAVITY_DRIVE'){
+      if(ctx.phase !== 'acts') disabled = true;
       if(!activeTile) disabled = true;
     }
-    if(!disabled && args.techId === 'BIO_STIMS'){
+    if(!disabled && args.techId === 'BIO_STIMS'){ 
+      if(ctx.phase !== 'acts') disabled = true;
       if(race.actions.length === 0) disabled = true;
     }
+    if(!disabled && args.techId === 'TRANSIT_DIODES'){ 
+      if(ctx.phase !== 'acts' || race.actions.length > 0) disabled = true;
+    }
+    if(!disabled && args.techId === 'PREDICTIVE_INTELLIGENCE'){
+      if(ctx.phase !== 'agenda' && race.actions.length === 0) disabled = true;
+    }
     if(!disabled && args.techId === 'SLING_RELAY'){
+      if(ctx.phase !== 'acts') disabled = true;
       if(selectedTile < 0){
         disabled = true;
       }
@@ -917,6 +977,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       if(args.techId === 'BIO_STIMS'){
         exhaustTechCard(args.techId);
         setRightBottomSubVisible(exhaustedCards.indexOf(args.techId) === -1 ? 'context':null);
+      }
+      else if(args.techId === 'SCANLINK_DRONE_NETWORK'){
+        exhaustTechCard(args.techId);
+        setRightBottomSubVisible(exhaustedCards.indexOf(args.techId) === -1 ? 'context2':null);
       }
       else{
         exhaustTechCard(args.techId);
@@ -1014,7 +1078,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </CardBody>
             </Card>}
 
-            {ctx.phase === 'agenda' && <AgendaDialog G={G} ctx={ctx} playerID={playerID} PLANETS={PLANETS} onConfirm={moves.vote}/>}
+            {ctx.phase === 'agenda' && <AgendaDialog PLANETS={PLANETS} onConfirm={moves.vote}/>}
             
             {strategyStage && <StrategyDialog PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}
@@ -1084,6 +1148,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       {haveTechnology(race, 'BIO_STIMS') && <TechAction techId='BIO_STIMS'/>}
                       {haveTechnology(race, 'AI_DEVELOPMENT_ALGORITHM') && <TechAction techId='AI_DEVELOPMENT_ALGORITHM'/>}
                       {haveTechnology(race, 'SELF_ASSEMBLY_ROUTINES') && <TechAction techId='SELF_ASSEMBLY_ROUTINES'/>}
+                      {haveTechnology(race, 'SCANLINK_DRONE_NETWORK') && <TechAction techId='SCANLINK_DRONE_NETWORK'/>}
+                      {haveTechnology(race, 'PREDICTIVE_INTELLIGENCE') && <TechAction techId='PREDICTIVE_INTELLIGENCE'/>}
+                      {haveTechnology(race, 'TRANSIT_DIODES') && <TechAction techId='TRANSIT_DIODES'/>}
                     </ListGroup>
                     {rightBottomSubVisible === 'context' && <ListGroup style={{background: 'none', bottom: '2.5rem', position: 'absolute', right: '14rem', width: '13rem'}}>
                       <b>Ready one of:</b>
@@ -1099,6 +1166,17 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         return <Button key={i} onClick={() => {moves.readyTechnology(c, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} size='sm' color='warning'>
                           {c.replaceAll('_', ' ')}
                         </Button>
+                      })}
+                    </ListGroup>}
+                    {rightBottomSubVisible === 'context2' && <ListGroup style={{background: 'none', bottom: '2.5rem', position: 'absolute', right: '14rem', width: '13rem'}}>
+                      <b>Explore one of:</b>
+                      {activeTile.tdata.planets.map((p, i) => {
+                        if(p.trait){
+                          return <Button key={i} onClick={() => {moves.explorePlanet(p.name, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} size='sm' color='warning'>
+                            {p.name}
+                          </Button>
+                        }
+                        return <div key={i}></div>
                       })}
                     </ListGroup>}
                   </>}
@@ -1191,25 +1269,38 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       </ButtonGroup>
                       
                       {midPanelInfo === 'tokens' && <>
-                      {<h6 style={{textAlign: 'right'}}>{race.tokens.new || 0} unused</h6>}
+                      {<h6 style={{textAlign: 'right'}}>{race.tokens.new + tempCt.new || 0} unused</h6>}
+                      {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && 
+                        <Button size='sm' color='success' style={{position: 'absolute', top: '0', right: '0'}} 
+                          onClick={() => moves.redistTokens(tempCt, exhaustedCards)}>Confirm changes</Button>}
                       <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
-                        <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE} 
-                          onClick={()=>{if(race.tokens.new){ moves.adjustToken('t') }}}>
-                          <h6 style={{fontSize: 50}}>{race.tokens.t}</h6>
-                          {race.tokens.new > 0 && <AddToken tag={'t'}/>}
+                        <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE} >
+                          <h6 style={{fontSize: 50}}>{race.tokens.t + tempCt.t}</h6>
+                          {ctx.phase === 'acts' && <>
+                            {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'t'}/>}
+                            {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'t'}/>}
+                          </>}
                           <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>tactic</b>
                         </ListGroupItem>
-                        <ListGroupItem className={race.tokens.new ? 'hoverable':''} onClick={()=>{if(race.tokens.new){ moves.adjustToken('f') }}} tag='button' style={TOKENS_STYLE}>
-                          <h6 style={{fontSize: 50}}>{race.tokens.f}</h6>
-                          {race.tokens.new > 0 && <AddToken tag={'f'}/>}
+                        <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE}>
+                          <h6 style={{fontSize: 50}}>{race.tokens.f + tempCt.f}</h6>
+                          {ctx.phase === 'acts' && <>
+                            {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'f'}/>}
+                            {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'f'}/>}
+                          </>}
                           <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>fleet</b>
                         </ListGroupItem>
-                        <ListGroupItem className={race.tokens.new ? 'hoverable':''} onClick={()=>{if(race.tokens.new){ moves.adjustToken('s') }}} tag='button' style={TOKENS_STYLE}>
-                          <h6 style={{fontSize: 50}}>{race.tokens.s}</h6>
-                          {race.tokens.new > 0 && <AddToken tag={'s'}/>}
+                        <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE}>
+                          <h6 style={{fontSize: 50}}>{race.tokens.s + tempCt.s}</h6>
+                          {ctx.phase === 'acts' && <>
+                            {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'s'}/>}
+                            {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'s'}/>}
+                          </>}
                           <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>strategic</b>
                           </ListGroupItem>
-                      </ListGroup></>}
+                      </ListGroup>
+                      
+                      </>}
                       {midPanelInfo === 'fragments' && <>
                       
                       <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>

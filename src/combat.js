@@ -62,7 +62,28 @@ export const SpaceCannonAttack = () => {
                     Object.keys(G.dice[pid]).forEach(unit => {
                         const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                         if(technology && technology.spaceCannon){
-                            result += G.dice[pid][unit].filter(die => die+adj >= technology.spaceCannon.value).length;
+                            result += G.dice[pid][unit].dice.filter(d => d + adj >= technology.spaceCannon.value).length;
+                        }
+                    });
+                }
+            });
+        }
+        return result;
+    }, [G.dice, G.races, spaceCannons, ctx.currentPlayer]);
+
+    const nonFighterHits = useMemo(() => {
+        let result = 0;
+
+        if(spaceCannons !== undefined){
+            const adj = haveTechnology(G.races[ctx.currentPlayer], 'ANTIMASS_DEFLECTORS') ? -1:0;
+            Object.keys(spaceCannons).forEach(pid => {
+                if(G.dice[pid]){
+                    Object.keys(G.dice[pid]).forEach(unit => {
+                        if(G.dice[pid][unit].withTech === 'GRAVITON_LASER_SYSTEM'){
+                            const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                            if(technology && technology.spaceCannon){
+                                result += G.dice[pid][unit].dice.filter(d => d + adj >= technology.spaceCannon.value).length;
+                            }
                         }
                     });
                 }
@@ -124,11 +145,45 @@ export const SpaceCannonAttack = () => {
         return result;
     }, [G.races, activeTile.tdata, ctx.currentPlayer]);
 
+    const maxNonFighterHits = useMemo(() => {
+        let result = 0;
+        let fleet = activeTile.tdata.attacker || activeTile.tdata.fleet;
+        const technologies = getUnitsTechnologies([...Object.keys(fleet)], G.races[ctx.currentPlayer]);
+
+        Object.keys(fleet).forEach(tag => {
+            if(tag !== 'fighter'){
+                fleet[tag].forEach(car => {
+                    result += 1;
+                    if(technologies[tag] && technologies[tag].sustain){
+                        result += 1;
+                    }
+                    if(car.hit) result -= car.hit;
+                });
+            }
+        });
+
+
+        return result;
+    }, [G.races, activeTile.tdata, ctx.currentPlayer]);
+
     const allHitsAssigned = useMemo(() => {
+
+        if(nonFighterHits && ahits && maxNonFighterHits){
+            let nfh = 0; 
+            Object.keys(ahits).filter(k => k !== 'fighter').forEach(u => {
+                if(ahits[u] && ahits[u].length){
+                    ahits[u].forEach(ship => {
+                        if(ship.hit) nfh += ship.hit;
+                    })
+                }
+            });
+
+            if(nfh < nonFighterHits && nfh < maxNonFighterHits) return false;
+        }
 
         return !hits || (assigned === Math.min(hits, maxHits));
 
-    }, [assigned, hits, maxHits]);
+    }, [assigned, hits, maxHits, ahits, nonFighterHits, maxNonFighterHits]);
 
     const isLastOnStage = useMemo(()=>{
         const myStage = ctx.activePlayers[playerID];
@@ -158,7 +213,7 @@ export const SpaceCannonAttack = () => {
             {ctx.activePlayers[playerID] === 'spaceCannonAttack_step2' && <>
                 <Button color='warning' disabled= {playerID === ctx.currentPlayer && !allHitsAssigned}  onClick={()=>moves.nextStep(ahits)}>Next</Button>
                 <span style={{fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
-                    {playerID === ctx.currentPlayer ? assigned + ' / ' + hits + ' hits assigned ': hits + ' hits '}
+                    {playerID === ctx.currentPlayer ? assigned + ' / ' + hits + ' hits assigned ' + (nonFighterHits ? ' (' + nonFighterHits + ' non-fighter)':''): hits + ' hits '}
                 </span>
             </>}
         </CardFooter>
@@ -400,9 +455,9 @@ const CombatantForces = (args) => {
     const fireClick = useCallback((u, withTech) => {
         const count = Array.isArray(units[u]) ? units[u].length : units[u];
         let shots = (combatAbility ? technologies[u][combatAbility].count : u === 'pds' ? technologies[u]['spaceCannon'].count: technologies[u].shot) || 1;
-        if(withTech === 'PLASMA_SCORING') shots++; 
-        moves.rollDice(u, count*shots);
-        setPlasmaScoringUsed(true);        
+        if(withTech === 'PLASMA_SCORING') shots++;
+        moves.rollDice(u, count*shots, withTech);
+        if(withTech === 'PLASMA_SCORING') setPlasmaScoringUsed(true);        
     }, [moves, technologies, units, combatAbility]);
 
     const unitsInjury = useCallback((tag) => {
@@ -415,9 +470,13 @@ const CombatantForces = (args) => {
 
     }, [units]);
 
-    const dropdown = useMemo(() =>{
+    const dropdown_ps = useMemo(() =>{
         return (combatAbility === 'bombardment' || combatAbility === 'spaceCannon') && (haveTechnology(race, 'PLASMA_SCORING') && !plasmaScoringUsed)
     }, [race, plasmaScoringUsed, combatAbility]);
+
+    const dropdown_gls = useMemo(() =>{
+        return (combatAbility === 'spaceCannon') && (haveTechnology(race, 'GRAVITON_LASER_SYSTEM') && race.exhaustedCards.indexOf('GRAVITON_LASER_SYSTEM') === -1)
+    }, [race, combatAbility]);
 
     return (
         <div style={{display: 'flex', position: 'relative', flexDirection: 'row', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
@@ -469,20 +528,23 @@ const CombatantForces = (args) => {
                                 {!G.dice[owner][u] && ability && String(playerID) === String(owner) &&
                                         <UncontrolledDropdown group> 
                                             <Button size='sm' onClick={()=>fireClick(u)} color='danger' style={{width: '5rem'}}>Fire</Button>
-                                            {dropdown && <><DropdownToggle caret color='danger' style={{padding: '0.25rem 0.5rem 0 0.25rem'}}/>
+                                            {(dropdown_ps || dropdown_gls) && <><DropdownToggle caret color='danger' style={{padding: '0.25rem 0.5rem 0 0.25rem'}}/>
                                             <DropdownMenu>
-                                                <DropdownItem onClick={()=>fireClick(u, 'PLASMA_SCORING')}>
+                                                {dropdown_ps && <DropdownItem onClick={()=>fireClick(u, 'PLASMA_SCORING')}>
                                                     <img alt='warfare' src='icons/warfare.png' style={{width: '1rem', marginRight: '.5rem'}}/>Plasma scoring
-                                                </DropdownItem>
+                                                </DropdownItem>}
+                                                {dropdown_gls && <DropdownItem onClick={()=>fireClick(u, 'GRAVITON_LASER_SYSTEM')}>
+                                                    <img alt='warfare' src='icons/cybernetic.png' style={{width: '1rem', marginRight: '.5rem'}}/>Graviton laser system
+                                                </DropdownItem>}
                                             </DropdownMenu></>}
                                         </UncontrolledDropdown>}
                                 {G.dice[owner][u] && <ButtonGroup style={{flexWrap: 'wrap', maxWidth: '6rem'}}>
-                                    {G.dice[owner][u].map((d, j) =>{
+                                    {G.dice[owner][u].dice.map((d, j) =>{
                                         let color = 'light';
-                                        if(d+adj >= ability.value) color='success';
+                                        if(d + adj >= ability.value) color = G.dice[owner][u].withTech === 'GRAVITON_LASER_SYSTEM' ? 'danger':'success';
                                         return <Button key={j} size='sm' color={color} 
                                             style={{borderRadius: '5px', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', maxWidth:'1.25rem', height: '1.25rem'}}>
-                                            {(''+d).substr(-1)}</Button>
+                                            {('' + d).substr(-1)}</Button>
                                     })}
                                     </ButtonGroup>
                                 }
@@ -510,7 +572,7 @@ export const AntiFighterBarrage = () => {
                 Object.keys(G.dice[pid]).forEach(unit => {
                     const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                     if(technology && technology.barrage){
-                        h += G.dice[pid][unit].filter(die => die >= technology.barrage.value).length;
+                        h += G.dice[pid][unit].dice.filter(d => d >= technology.barrage.value).length;
                     }
                 });
             }
@@ -605,7 +667,7 @@ export const SpaceCombat = () => {
                     const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                     
                     if(technology && technology.combat){
-                        h += G.dice[pid][unit].filter(die => die >= technology.combat).length;
+                        h += G.dice[pid][unit].dice.filter(d => d >= technology.combat).length;
                     }
                 });
             }
@@ -1046,7 +1108,7 @@ export const Bombardment = () => {
             Object.keys(G.dice[pid]).forEach(unit => {
                 const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                 if(technology && technology.bombardment){
-                    result[pid] += G.dice[pid][unit].filter(die => die >= technology.bombardment.value).length;
+                    result[pid] += G.dice[pid][unit].dice.filter(d => d >= technology.bombardment.value).length;
                 }
             });
         }
@@ -1250,11 +1312,11 @@ export const Invasion = () => {
                         if(unit === 'pds'){
                             if(technology && technology.spaceCannon){
                                 const adj = haveTechnology(G.races[playerID], 'ANTIMASS_DEFLECTORS') ? -1:0;
-                                h += G.dice[pid][unit].filter(die => die+adj >= technology.spaceCannon.value).length;
+                                h += G.dice[pid][unit].dice.filter(die => die+adj >= technology.spaceCannon.value).length;
                             }
                         }
                         else if(technology && technology.combat){
-                            h += G.dice[pid][unit].filter(die => die >= technology.combat).length;
+                            h += G.dice[pid][unit].dice.filter(die => die >= technology.combat).length;
                         }
                     });
                 }
