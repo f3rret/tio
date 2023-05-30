@@ -7,7 +7,7 @@ import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText,
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList, TradePanel, ProducingPanel } from './dialogs';
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
-import { checkObjective, StateContext, haveTechnology } from './utils';
+import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT } from './utils';
 import { lineTo, pathFromCoordinates } from './Grid';
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion } from './combat';
@@ -104,7 +104,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   const R_UNITS = useMemo(() => {
     if(race){
-      const all_units = race.technologies.filter(t => t.type === 'unit' && !t.upgrade);
+      const all_units = race.technologies.filter(t => t.type === 'unit' && (!t.upgrade || (t.id === 'WARSUN' && race.knownTechs.indexOf('WARSUN')>-1)));
       all_units.forEach(u => all_units[u.id] = u);
       return all_units;
     }
@@ -1295,7 +1295,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       </CardText>
                     )}
                   </Card>}
-                  {race && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
+                  {race && <Card style={{...CARD_STYLE, height: '13rem', backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
                       <ButtonGroup style={{width: 'max-content'}}>
                         <Button size='sm' onClick={()=>setMidPanelInfo('tokens')} color={midPanelInfo === 'tokens' ? 'light':'dark'} style={{marginRight: '.5rem'}}>TOKENS</Button>
                         <Button size='sm' onClick={()=>setMidPanelInfo('fragments')} color={midPanelInfo === 'fragments' ? 'light':'dark'} style={{marginRight: '.5rem'}}>FRAGMENTS</Button>
@@ -1374,8 +1374,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           color='warning' onClick={()=>{moves.purgeFragments(purgingFragments); setPurgingFragments({c:0,i:0,h:0,u:0})}}>Purge</Button>
                       </div>
                       </>}
-                      {midPanelInfo === 'reinforce' && <div style={{border: 'none', display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', padding: '1rem', minHeight: '8.9rem'}}>
-                          
+                      {midPanelInfo === 'reinforce' && <div style={{border: 'none', justifyContent: 'space-around', display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', padding: '1rem 0'}}>
+                          {R_UNITS.map((u,ui) => {
+                            return <div key={ui} style={{width: '4rem', position: 'relative'}}>
+                              <img alt={u} src={'units/'+ u.id.toUpperCase() +'.png'} style={{width: '4rem'}}/>
+                              <div style={{fontSize: '30px', fontFamily: 'Handel Gothic', position: 'absolute', bottom: 0, right: 0, textShadow: '-2px 2px 3px black'}}>
+                                {UNITS_LIMIT[u.id.toLowerCase()] - (UNITS[u.id.toLowerCase()] || 0)}</div>
+                            </div>}
+                          )}
                       </div>}
                     </Card>}
                     {race && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)', display: 'flex', fontSize: '.8rem'}}>

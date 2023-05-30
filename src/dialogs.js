@@ -5,7 +5,7 @@ import { useState, useMemo, useCallback, useEffect, useRef, useContext } from 'r
 import { produce } from 'immer';
 import cardData from './cardData.json';
 import techData from './techData.json';
-import { checkObjective, StateContext, haveTechnology } from './utils';
+import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT } from './utils';
 
 export function PaymentDialog(args) {
     
@@ -629,6 +629,14 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
         }
     }
 
+    const exceedLimit = useCallback((currentUnit) => {
+        const unit = currentUnit.toLowerCase();
+        const d = deploy[currentUnit] || 0;
+        const u = UNITS[unit] || 0;
+        
+        return d + u >= UNITS_LIMIT[unit];
+    }, [UNITS, deploy]);
+
     const doneButtonClick = ()=>{ 
         let r = result;
         
@@ -903,7 +911,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
                                 <div style={{width: '35rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)', color: 'white', padding: '0 1rem 0 0'}}>
                                     <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} onSelect={(u)=>setCurrentUnit(u)}/>
                                     <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                        <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' disabled={['PDS', 'SPACEDOCK'].indexOf(currentUnit) > -1}><b>Deploy</b></Button>
+                                        <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' disabled={['PDS', 'SPACEDOCK'].indexOf(currentUnit) > -1 || exceedLimit(currentUnit)}><b>Deploy</b></Button>
                                     </div>
                                 </div>
                                 <div style={{width:'29rem', margin: '1rem'}}>
@@ -1012,7 +1020,8 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect}) => {
               </div>
             </Button>)}
         </div>
-        <div style={{paddingLeft: '1rem', flex: 'auto', width: '70%'}}>
+
+        {R_UNITS[showUnit] && <div style={{paddingLeft: '1rem', flex: 'auto', width: '70%'}}>
           <CardImg src={'units/' + showUnit + '.png'} style={{width: 'auto', float: 'left'}}/>
           <div style={{padding: '1rem', position: 'absolute', right: '1rem', textAlign: 'end'}}>
             {R_UNITS[showUnit].description && <h5>{R_UNITS[showUnit].description}</h5>}
@@ -1073,7 +1082,7 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect}) => {
           </ListGroup>
           {R_UNITS[showUnit].effect && <CardText style={{fontSize: '0.7rem'}}>{R_UNITS[showUnit].effect}</CardText>}
           {R_UNITS[showUnit].deploy && <CardText style={{fontSize: '0.7rem'}}><b>DEPLOY</b>{' '+R_UNITS[showUnit].deploy}</CardText>}
-        </div>
+        </div>}
       </div>
 
 }
@@ -1587,6 +1596,14 @@ export const ProducingPanel = (args) => {
         else onCancel(finish === true);
     }
 
+    const exceedLimit = useCallback((currentUnit) => {
+        const unit = currentUnit.toLowerCase();
+        const d = deploy[currentUnit] || 0;
+        const u = UNITS[unit] || 0;
+        
+        return d + u >= UNITS_LIMIT[unit];
+    }, [UNITS, deploy]);
+
     return <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', width: '70rem'}}>
                 <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Producing</h6></CardTitle>
                 <div style={{display: 'flex', flexDirection: 'row', flexWrap:'wrap', justifyContent:'space-between', width: '100%', margin: '1rem'}}>
@@ -1596,7 +1613,9 @@ export const ProducingPanel = (args) => {
                     <div style={{width: '35rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)', color: 'white', padding: '0 1rem 0 0'}}>
                         <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} onSelect={(u)=>setCurrentUnit(u)}/>
                         <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                            <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' disabled={bannedUnits.indexOf(currentUnit) > -1}><b>Deploy</b></Button>
+                            <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' 
+                                disabled={bannedUnits.indexOf(currentUnit) > -1 || exceedLimit(currentUnit)}>
+                                <b>Deploy</b></Button>
                         </div>
                     </div>
                     <div style={{width:'29rem', margin: '1rem'}}>

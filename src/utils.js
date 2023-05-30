@@ -6,6 +6,20 @@ import { createContext } from 'react';
 
 export const NUM_PLAYERS = 2;
 
+export const UNITS_LIMIT = {
+  spacedock: 3,
+  pds: 6,
+  destroyer: 8,
+  cruiser: 8,
+  warsun: 2,
+  infantry: 12,
+  fighter: 10,
+  carrier: 4,
+  dreadnought: 5,
+  flagship: 1,
+  mech: 4
+};
+
 export const StateContext = createContext(null);
 
 export const getPlayerUnits = (tiles, playerID)=> {

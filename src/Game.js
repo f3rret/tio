@@ -184,7 +184,7 @@ export const TIO = {
         }
       },
       stats: {
-        next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? /*'strat':*/'agenda':'agenda',
+        next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
         turn: {
           order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),//TurnOrder.ONCE,
           /*minMoves: 1,
