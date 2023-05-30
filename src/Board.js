@@ -48,6 +48,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
   const prevStages = useRef(null);
   const [tempCt, setTempCt] = useState({t: 0, s: 0, f: 0, new: 0});
+  const [justOccupied, setJustOccupied] = useState(null);
 
   const [payObj, setPayObj] = useState(null);
   const togglePaymentDialog = (payment) => {
@@ -638,6 +639,17 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       return false;
     }
 
+    if(techId === 'INTEGRATED_ECONOMY'){
+      if(exhaustedCards.indexOf(techId) === -1){
+        if(justOccupied && !producing){
+          setProducing(justOccupied);
+        }
+      }
+      else{
+        setProducing(null);
+      }
+    }
+
     setExhaustedCards(produce(exhaustedCards, draft => {
       const idx = draft.indexOf(techId)
       if( idx > -1){
@@ -657,9 +669,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
     }
     else if(techId === 'PREDICTIVE_INTELLIGENCE'){
-      flushTempCt()
+      flushTempCt();
     }
-  }, [exhaustedCards, setExhaustedCards, G.races, producing, G.tiles, selectedTile, playerID, flushTempCt]);
+    
+  }, [exhaustedCards, setExhaustedCards, G.races, producing, G.tiles, selectedTile, playerID, flushTempCt, justOccupied]);
 
   /*
   {haveTechnology(G.races[playerID], 'GRAVITY_DRIVE') && 
@@ -667,6 +680,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 {exhaustedCards.indexOf('GRAVITY_DRIVE') === -1 && <Sprite scale={.35} x={-30} image='icons/propulsion.png'/>}
                 {exhaustedCards.indexOf('GRAVITY_DRIVE') > -1 && <Text text='► ' x={-30} style={{fontSize: 20, fill:'white'}}/>}
               </Text>}
+
+  {activeTile && justOccupied && justOccupied === p.name && haveTechnology(race, 'INTEGRATED_ECONOMY') &&
+      <Text text='► Production' x={40} y={10} interactive={true} pointerdown={()=>{setProducing(p.name)}} 
+              style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>}
+                
   */
 
   const maxActs =  useMemo(() => haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1, [race]);
@@ -874,7 +892,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   
   const PREV_PLANETS = useRef([]);
 
-  useEffect(()=>{
+  useEffect(()=>{  //occupied new planet
     if(PLANETS && PLANETS.length){
       if(!PREV_PLANETS.current || !PREV_PLANETS.current.length){
         //PREV_PLANETS.current = PLANETS;
@@ -885,12 +903,23 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             const oldOne = PREV_PLANETS.current.find(pp => pp.name === p.name);
             return !oldOne;
           });
-          if(newOne) sendChatMessage('has occupied planet: ' + newOne.name);
+          if(newOne){
+            setJustOccupied(newOne.name);
+            sendChatMessage('has occupied planet: ' + newOne.name);
+          }
         }
       }
       PREV_PLANETS.current = PLANETS;
     }
   }, [PLANETS, sendChatMessage]);
+
+  useEffect(() => { //switch TechAction
+    if(!producing && justOccupied){
+      if(exhaustedCards.indexOf('INTEGRATED_ECONOMY') > -1){
+        exhaustTechCard('INTEGRATED_ECONOMY');
+      }
+    }
+  }, [producing, exhaustTechCard, exhaustedCards, justOccupied])
   
   useEffect(() => {
     if(ctx.activePlayers && Object.keys(ctx.activePlayers).length){
@@ -923,6 +952,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     let technology = techData.find(t => t.id === args.techId);
     let icon = technology ? technology.type:'propulsion';
 
+    if(!disabled && args.techId === 'INTEGRATED_ECONOMY'){
+      if(ctx.phase !== 'acts' || !justOccupied) disabled = true;
+    }
     if(!disabled && args.techId === 'SCANLINK_DRONE_NETWORK'){
       if(ctx.phase !== 'acts') disabled = true;
       if(!activeTile){
@@ -1038,8 +1070,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Trade</h6></CardTitle>
                 <TradePanel onTrade={moves.trade}/>
               </Card>}
-              {producing && <ProducingPanel onCancel={()=>setProducing(null)} pname={producing} 
-                PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
+              {producing && <ProducingPanel 
+                onCancel={(finish)=>{setProducing(null); if(finish && justOccupied && exhaustedCards.indexOf('INTEGRATED_ECONOMY')>-1){setJustOccupied(null)}}} 
+                pname={producing} PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
 
               <ChatBoard sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
             </CardColumns>
@@ -1151,6 +1184,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       {haveTechnology(race, 'SCANLINK_DRONE_NETWORK') && <TechAction techId='SCANLINK_DRONE_NETWORK'/>}
                       {haveTechnology(race, 'PREDICTIVE_INTELLIGENCE') && <TechAction techId='PREDICTIVE_INTELLIGENCE'/>}
                       {haveTechnology(race, 'TRANSIT_DIODES') && <TechAction techId='TRANSIT_DIODES'/>}
+                      {haveTechnology(race, 'INTEGRATED_ECONOMY') && <TechAction techId='INTEGRATED_ECONOMY'/>}
                     </ListGroup>
                     {rightBottomSubVisible === 'context' && <ListGroup style={{background: 'none', bottom: '2.5rem', position: 'absolute', right: '14rem', width: '13rem'}}>
                       <b>Ready one of:</b>

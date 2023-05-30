@@ -1476,39 +1476,6 @@ export const ProducingPanel = (args) => {
         }
     }, [ex2, PLANETS]);
 
-    const deployUnit = (inc, uname) => {
-        let unitsCount = 0;
-        const keys = Object.keys(deploy);
-        keys.forEach(k => unitsCount += deploy[k]);
-        if(unitsCount < maxDeployUnits || inc < 0){
-            setDeploy(produce(deploy, draft => {
-                if(inc > 0){
-                    if(!deploy[currentUnit]) draft[currentUnit] = 0;
-                    draft[currentUnit]++;
-                }
-                else{
-                    draft[uname]--;
-                    if(draft[uname] === 0) delete draft[uname];
-                }
-            }));
-        }
-    }
-
-    const maxDeployUnits = useMemo(() => {
-        if(exhaustedCards.indexOf('SLING_RELAY')>-1){
-            return 1;
-        }
-        const planet = PLANETS.find(p => p.name === pname);
-        
-        if(planet){
-            let sd = planet.units['spacedock'].length * R_UNITS['SPACEDOCK'].production;
-            let max = planet.resources + sd;
-            return max;
-        }
-
-        return 0;
-    }, [PLANETS, R_UNITS, pname, exhaustedCards]);
-
     const deployPrice = useMemo(() => {
 
         let sum = 0;
@@ -1534,6 +1501,57 @@ export const ProducingPanel = (args) => {
         return sum;
 
     }, [deploy, R_UNITS, exhaustedCards, G.races, playerID]);
+
+    const deployUnit = (inc, uname) => {
+        const du = () => {
+            setDeploy(produce(deploy, draft => {
+                if(inc > 0){
+                    if(!deploy[currentUnit]) draft[currentUnit] = 0;
+                    draft[currentUnit]++;
+                }
+                else{
+                    draft[uname]--;
+                    if(draft[uname] === 0) delete draft[uname];
+                }
+            }));
+        }
+
+        if(maxDeployUnits > 0){
+            let unitsCount = 0;
+            const keys = Object.keys(deploy);
+            keys.forEach(k => unitsCount += deploy[k]);
+            if(unitsCount < maxDeployUnits || inc < 0){
+                du();
+            }
+        }
+        else if(maxDeployUnits < 0){ //by summary cost
+            if(R_UNITS[uname || currentUnit].cost * inc + deployPrice <= Math.abs(maxDeployUnits)){
+                du();
+            }
+        }
+    }
+
+    const maxDeployUnits = useMemo(() => {
+        if(exhaustedCards.indexOf('SLING_RELAY')>-1){
+            return 1;
+        }
+        const planet = PLANETS.find(p => p.name === pname);
+        
+        if(planet){
+            if(exhaustedCards.indexOf('INTEGRATED_ECONOMY')>-1){
+                if(!planet.units || !planet.units['spacedock'] || !planet.units['spacedock'].length){
+                    return -planet.resources;
+                }
+            }
+            let sd = planet.units['spacedock'].length * R_UNITS['SPACEDOCK'].production;
+            let max = planet.resources + sd;
+            return max;
+        }
+
+        return 0;
+    }, [PLANETS, R_UNITS, pname, exhaustedCards]);
+
+    
 
     const tgClick = useCallback(() => {
     
@@ -1561,12 +1579,12 @@ export const ProducingPanel = (args) => {
         setResult(resources + tg);
     },[ex2, PLANETS, tg]);
 
-    const onCancelClick = () => {
+    const onCancelClick = (finish) => {
         if(exhaustedCards.indexOf('SLING_RELAY')>-1){
             exhaustTechCard('SLING_RELAY');
-            onCancel();
+            onCancel(finish === true);
         }
-        else onCancel();
+        else onCancel(finish === true);
     }
 
     return <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', width: '70rem'}}>
@@ -1589,7 +1607,8 @@ export const ProducingPanel = (args) => {
                         <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{deployPrice + ' needed'}</h6>
                     </div>
                     <div style={{width: '33rem', margin: '1rem'}}>
-                        <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{'Max units count: ' + maxDeployUnits}</h6>
+                        {maxDeployUnits >= 0 && <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{'Max units count: ' + maxDeployUnits}</h6>}
+                        {maxDeployUnits < 0 && <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{'Max summary units cost: ' + (-maxDeployUnits)}</h6>}
                         {deploy && Object.keys(deploy).map((k, i) => {
                             return (<p style={{margin: 0}} key={i}>
                             <Button size='sm' color='warning' style={{padding: '0 .25rem', fontSize: '.75rem'}} onClick={()=>deployUnit(-1, k)}>▼</Button>
@@ -1599,7 +1618,9 @@ export const ProducingPanel = (args) => {
                 </div>
                 <CardFooter style={{background: 'none', borderTop: '1px solid rgba(74, 111, 144, 0.42)', display: 'flex', justifyContent: 'space-between'}}>
                     <Button color='danger' onClick={onCancelClick}>Cancel</Button>
-                    <Button color='success' disabled={deployPrice > result} onClick={() => {moves.producing(pname, deploy, Object.keys(ex2), tg, exhaustedCards); onCancelClick()}}>Finish</Button>
+                    <Button color='success' disabled={deployPrice > result} 
+                        onClick={() => {moves.producing(pname, deploy, Object.keys(ex2), tg, exhaustedCards); onCancelClick(true)}}>
+                        Finish</Button>
                 </CardFooter>
             </Card>
 
