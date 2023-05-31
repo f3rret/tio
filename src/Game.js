@@ -256,6 +256,7 @@ export const TIO = {
                   cancel: ({G, ctx, playerID, events}) => {
                     if(String(ctx.currentPlayer) === String(playerID)){
                       events.setActivePlayers({});
+                      G.races[ctx.currentPlayer].currentActionCard = undefined;
                     }
                   },
                   pass: ({G, playerID, ctx, events}) => {
@@ -268,6 +269,65 @@ export const TIO = {
                   },
                   done: ({G, ctx, events, playerID}) => {
                     if(String(ctx.currentPlayer) === String(playerID)){
+                      const card = G.races[ctx.currentPlayer].currentActionCard;
+
+                      if(card.id === 'Cripple Defenses'){
+                        if(card.target.tidx > -1 && card.target.pidx > -1){
+                          const planet = G.tiles[card.target.tidx].tdata.planets[card.target.pidx];
+                          delete planet.units['pds'];
+                        }
+                      }
+                      else if(card.id === 'Economic Initiative'){
+                        G.tiles.forEach(t =>{
+                          if(t.tdata.planets){
+                            t.tdata.planets.forEach(p => {
+                              if(String(p.occupied) === String(ctx.currentPlayer) && p.trait === 'cultural' && p.exhausted){
+                                p.exhausted = false;
+                              }
+                            })
+                          }
+                        });
+                      }
+                      else if(card.id === 'Fighter Conscription'){
+                        G.tiles.forEach(t => {
+                          let got = false;
+                          if(t.tdata.planets && (!t.tdata.occupied || String(t.tdata.occupied) === String(ctx.currentPlayer))){           
+                            t.tdata.planets.find(p => {
+                              if(!got && String(p.occupied) === String(ctx.currentPlayer) && p.units && p.units.spacedock && p.units.spacedock.length){
+
+                                if(!p.units.fighter) p.units.fighter=[];
+                                p.units.fighter.push({});
+                                got = true;
+                              }
+                              return got;
+                            });
+
+                            if(!got && t.tdata.fleet){
+                              Object.keys(t.tdata.fleet).forEach(k => {
+
+                                if(!got){
+                                  const technology = G.races[ctx.currentPlayer].technologies.find(t => t.id === k.toUpperCase());
+                                  if(technology && technology.capacity){
+                                    t.tdata.fleet[k].find(car => {
+                                      if(!car.payload) car.payload = [];
+                                      if(car.payload.length < technology.capacity){
+                                        car.payload.push({id: 'fighter'});
+                                        got = true;
+                                      }
+                                      return got;
+                                    });
+                                  }
+                                }
+                              });
+                            }
+                          }
+
+                        });
+                      }
+
+                      G.races[ctx.currentPlayer].actionCards.splice(G.races[ctx.currentPlayer].actionCards.findIndex(a => a.id === card.id), 1);
+                      G.races[ctx.currentPlayer].currentActionCard = undefined;
+                      G.races[playerID].actions.push('ACTION_CARD');
                       events.setActivePlayers({});
                     }
                   }
@@ -1414,6 +1474,12 @@ export const TIO = {
         moves: {
           playActionCard: ({G, playerID, events}, card) => {
             if(card.when === 'ACTION'){
+              const maxActs = G.races[playerID].knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
+              if(G.races[playerID].actions.length > maxActs){
+                console.log('too many actions');
+                return INVALID_MOVE;
+              }
+
               G.races[playerID].currentActionCard = {...card, reaction: {}};
               events.setActivePlayers({ all: 'actionCard' });
             }

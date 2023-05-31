@@ -165,25 +165,30 @@ export const AgendaDialog = ({ PLANETS, onConfirm }) => {
 
 export const ActionCardDialog = ({selectedTile, selectedPlanet}) => {
     const {G, ctx, playerID, moves} = useContext(StateContext);
+    const [selection, setSelection] = useState();
+
+    const notarget = useMemo(() => ['Economic Initiative', 'Fighter Conscription'], []);
 
     const card = useMemo(() => G.races[ctx.currentPlayer].currentActionCard, [G.races, ctx]);
 
     const myTarget = useMemo(() => {
-        let result = false;
+        let result = notarget.indexOf(card.id) > -1;
 
         if(card.id === 'Cripple Defenses'){
             if(selectedTile > -1 && selectedPlanet > -1){
                 result = {tidx: selectedTile, pidx: selectedPlanet};
             }
         }
+        else if(card.id === 'Focused Research'){
+            console.log(selection) // AI_SELF_ASSEMBLY
+        }
 
         return result;
-    }, [card.id, selectedPlanet, selectedTile]);
+    }, [card.id, selectedPlanet, selectedTile, notarget, selection]);
 
     const isMine = useMemo(() => {
         return String(ctx.currentPlayer) === String(playerID);
     }, [ctx.currentPlayer, playerID]);
-
     
     return <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute', margin: '5rem'}}>
                 <CardTitle style={{borderBottom: '1px solid coral', color: 'black'}}><h3>Action card</h3></CardTitle>
@@ -198,10 +203,11 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet}) => {
                             <p>{card.description}</p>
                         </div>
 
-                        <h6 style={{margin: '2rem 1rem 1rem 1rem'}}>TARGET:</h6>
+                        {notarget.indexOf(card.id) === -1 && <h6 style={{margin: '2rem 1rem 1rem 1rem'}}>TARGET:</h6>}
 
                         {isMine && !card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', height: '3.5rem'}}>
                             {card.id === 'Cripple Defenses' && <PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/>}
+                            {card.id === 'Focused Research' && <TechnologySelect race={G.races[playerID]} onSelect={setSelection}/>}
                         </div>}
 
                         {card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', height: '3.5rem'}}>
@@ -229,6 +235,22 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet}) => {
                     }
                 </CardFooter>
             </Card>
+}
+
+const TechnologySelect = ({race, onSelect}) => {
+    
+    return  <Input type='select' onChange={(e)=>onSelect(e.target.value)} style={{margin: '.5rem', width: '80%', color: 'black'}}>
+               {[...techData, ...race.technologies].filter(t => (t.type !== 'unit' || t.upgrade) && race.knownTechs.indexOf(t.id) === -1).map((t,i) =>{
+                    let color = 'black';
+                    if(t.type === 'propulsion') color = 'deepskyblue';
+                    else if(t.type === 'biotic') color = 'green';
+                    else if(t.type === 'cybernetic') color = 'orange';
+                    else if(t.type === 'warfare') color = 'red';
+
+                    return <option key={i} value={t.id} style={{fontSize: '75%', fontWeight: 'bold', color}}>{t.id.replaceAll('_', ' ').replaceAll('2', ' II')}</option>
+                    }
+                )}
+            </Input>
 }
 
 const PlanetInfo = ({tidx, pidx}) => {
