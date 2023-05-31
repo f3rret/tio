@@ -163,6 +163,108 @@ export const AgendaDialog = ({ PLANETS, onConfirm }) => {
 
 }
 
+export const ActionCardDialog = ({selectedTile, selectedPlanet}) => {
+    const {G, ctx, playerID, moves} = useContext(StateContext);
+
+    const card = useMemo(() => G.races[ctx.currentPlayer].currentActionCard, [G.races, ctx]);
+
+    const myTarget = useMemo(() => {
+        let result = false;
+
+        if(card.id === 'Cripple Defenses'){
+            if(selectedTile > -1 && selectedPlanet > -1){
+                result = {tidx: selectedTile, pidx: selectedPlanet};
+            }
+        }
+
+        return result;
+    }, [card.id, selectedPlanet, selectedTile]);
+
+    const isMine = useMemo(() => {
+        return String(ctx.currentPlayer) === String(playerID);
+    }, [ctx.currentPlayer, playerID]);
+
+    
+    return <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute', margin: '5rem'}}>
+                <CardTitle style={{borderBottom: '1px solid coral', color: 'black'}}><h3>Action card</h3></CardTitle>
+                <CardBody style={{display: 'flex', color: 'black', width: 'min-content'}}>
+                    <div>
+                        <CardImg src={'race/'+ G.races[ctx.currentPlayer].rid +'.png'} style={{width: '205px'}}/>
+                    </div>
+                    <div style={{display: 'flex', flexDirection: 'column', padding: '0 1rem 1rem 1rem', minWidth: '30rem'}}>
+                        <h6 style={{margin: '0 0 1rem 1rem'}}>{card.when + ':'}</h6>
+                        <div style={{padding: '1rem', backgroundColor: 'rgba(0,0,0,.15)', position: 'relative'}}>
+                            <h5>{card.id}</h5>
+                            <p>{card.description}</p>
+                        </div>
+
+                        <h6 style={{margin: '2rem 1rem 1rem 1rem'}}>TARGET:</h6>
+
+                        {isMine && !card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', height: '3.5rem'}}>
+                            {card.id === 'Cripple Defenses' && <PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/>}
+                        </div>}
+
+                        {card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', height: '3.5rem'}}>
+                            {card.id === 'Cripple Defenses' && <PlanetInfo tidx={card.target.tidx} pidx={card.target.pidx}/>}
+                        </div>}
+                    </div>
+                </CardBody>
+                <CardFooter style={{background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid coral'}}>
+                    {isMine && !card.target && <>
+                        <Button color='danger' onClick={()=>moves.cancel()}>Cancel</Button>
+                        <Button color='success' onClick={()=>moves.next(myTarget)} disabled={!myTarget}>Next</Button>
+                    </>}
+                    {((isMine && card.target) || !isMine) && <div>
+                        {Object.keys(card.reaction).map((pid, i) => {
+                            return <p key={i} style={{color: 'black', margin: '.5rem'}}><b>{G.races[pid].name + ': '}</b>
+                                <b style={{color: card.reaction[pid] === 'pass' ? 'gray':'coral'}}>{card.reaction[pid]}</b></p>
+                        })}
+                        {isMine && Object.keys(card.reaction).length === 0 && <p style={{color: 'black'}}><b>Awaiting other players...</b></p>}
+                    </div>}
+                    {!isMine && !card.reaction[playerID] && <>
+                        <Button style={{alignSelf: 'flex-start'}} color='dark' onClick={()=>moves.pass()}>Pass</Button>
+                    </>}
+                    {isMine && card.target && Object.keys(card.reaction).length === (Object.keys(ctx.activePlayers).length - 1) && 
+                        <Button style={{alignSelf: 'flex-start'}} color='success' onClick={()=>moves.done()}>Done</Button>
+                    }
+                </CardFooter>
+            </Card>
+}
+
+const PlanetInfo = ({tidx, pidx}) => {
+    const {G} = useContext(StateContext);
+
+    const planet = useMemo(() => {
+        if(tidx > -1 && pidx > -1){
+            const tile = G.tiles[tidx];
+            if(tile && tile.tdata.planets){
+                const planet = tile.tdata.planets[pidx];
+                return planet;
+            }
+        }
+    }, [G.tiles, tidx, pidx]);
+
+    if(planet){
+        let trait;
+        if(planet.trait) trait = <img alt='trait' style={{width: '1.5rem'}} src={'icons/' + planet.trait + '.png'}/>;
+        let specialty;
+        if(planet.specialty) specialty = <img alt='specialty' style={{width: '1.5rem'}} src={'icons/' + planet.specialty + '.png'}/>;
+
+        return  <Row style={{cursor: 'default', padding: '.5rem', fontSize: '1.25rem', lineHeight: '2.3rem', color: 'white'}}>
+                    <Col xs='1'>{planet.occupied !== undefined && <img alt='race' style={{width: '1.5rem'}} src={'race/icons/' + G.races[planet.occupied].rid + '.png'} />}</Col>
+                    <Col xs='6' style={{color: 'black'}}>{planet.legendary ? <img alt='legendary' style={{width: '1.5rem'}} src={'icons/legendary_complete.png'}/>:'' } {planet.name}</Col>
+                    <Col xs='1' style={{padding: 0}}>{specialty}</Col>
+                    <Col xs='1' style={{padding: 0}}>{trait}</Col>
+                    <Col xs='1' style={{background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', paddingLeft: '.85rem'}}><b>{planet.resources}</b></Col>
+                    <Col style={{background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', paddingLeft: '.7rem'}}><b>{planet.influence}</b></Col>
+                    <Col/>
+                </Row>
+        
+    }
+
+    return <p style={{margin: '1rem', color: 'rgba(0,0,0,.5)'}}>Click planet on map</p>
+}
+
 export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTile, onComplete, onDecline }) => {
 
     const {G, ctx, playerID, exhaustedCards} = useContext(StateContext);

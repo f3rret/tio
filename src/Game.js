@@ -30,6 +30,8 @@ export const TIO = {
         });
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
+
+        r.actionCards.push(...cardData.actions.slice(0, 7)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -249,6 +251,28 @@ export const TIO = {
             maxMoves: 1,*/
             order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
             stages: {
+              actionCard: {
+                moves: {
+                  cancel: ({G, ctx, playerID, events}) => {
+                    if(String(ctx.currentPlayer) === String(playerID)){
+                      events.setActivePlayers({});
+                    }
+                  },
+                  pass: ({G, playerID, ctx, events}) => {
+                    G.races[ctx.currentPlayer].currentActionCard.reaction[playerID] = 'pass';
+                  },
+                  next: ({G, ctx, playerID}, target) => {
+                    if(String(ctx.currentPlayer) === String(playerID)){
+                      G.races[playerID].currentActionCard.target = target;
+                    }
+                  },
+                  done: ({G, ctx, events, playerID}) => {
+                    if(String(ctx.currentPlayer) === String(playerID)){
+                      events.setActivePlayers({});
+                    }
+                  }
+                }
+              },
               strategyCard: {
                 moves: {
                   joinStrategy: ({ G, ctx, playerID, events }, {exhausted, tg, result, exhaustedCards}) => {
@@ -1388,6 +1412,12 @@ export const TIO = {
             }
         },
         moves: {
+          playActionCard: ({G, playerID, events}, card) => {
+            if(card.when === 'ACTION'){
+              G.races[playerID].currentActionCard = {...card, reaction: {}};
+              events.setActivePlayers({ all: 'actionCard' });
+            }
+          },
           moveFromTransit: ({G, playerID}, tileIndex, planetIndex, exhaustedCards) => {
             const race = G.races[playerID];
             const planet = G.tiles[tileIndex].tdata.planets[planetIndex];

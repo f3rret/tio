@@ -4,7 +4,7 @@ import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip,/*UncontrolledAccordion, 
   AccordionItem, AccordionBody, AccordionHeader,*/ CardBody,
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont } from 'reactstrap';
-import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList, TradePanel, ProducingPanel } from './dialogs';
+import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList, TradePanel, ProducingPanel, ActionCardDialog } from './dialogs';
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
 import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT } from './utils';
@@ -42,6 +42,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [rightBottomVisible, setRightBottomVisible] = useState(null);
   const [rightBottomSubVisible, setRightBottomSubVisible] = useState(null);
   const [selectedTile, setSelectedTile] = useState(-1);
+  const [selectedPlanet, setSelectedPlanet] = useState(-1);
   const [midPanelInfo, setMidPanelInfo] = useState('tokens');
   const [purgingFragments, setPurgingFragments] = useState({c: 0, h: 0, i: 0, u: 0});
   const [moveSteps, setMoveSteps] = useState([]);
@@ -281,6 +282,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return G.strategy !== undefined && ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && Object.values(ctx.activePlayers)[0] === 'strategyCard'
   }, [G, ctx]);
 
+  const actionCardStage = useMemo(() => {
+    return ctx.phase === 'acts' && ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && Object.values(ctx.activePlayers)[0] === 'actionCard';
+  }, [ctx]);
+
   const spaceCannonAttack = useMemo(()=> {
     return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && (ctx.activePlayers[playerID] === 'spaceCannonAttack' || ctx.activePlayers[playerID] === 'spaceCannonAttack_step2');
   }, [ctx, playerID]);
@@ -330,11 +335,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       <h5 style={{margin: '.25rem .5rem'}}>-</h5></div>);
   }
 
-  const tileClick = (e, index) => {
-
+  const tileClick = (e, index, planetIndex) => {
     e.preventDefault(); 
     setSelectedTile(index);
-
+    setSelectedPlanet(planetIndex);
   }
 
   const advUnitViewTechnology = useMemo(() => {
@@ -708,7 +712,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         
         {element.tdata.planets.map((p,i) => {  
           return p.hitCenter && <Sprite image={'icons/empty.png'} scale={1} key={i} width={p.hitRadius * 2} height={p.hitRadius * 2} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}
-            interactive={true} pointerdown={ (e)=>tileClick(e, index) }>
+            interactive={true} pointerdown={ (e)=>tileClick(e, index, i) }>
               
               <Container x={0} y={50}>
                 {advUnitView && advUnitView.tile === index && (p.occupied === undefined || String(element.tdata.occupied) === String(p.occupied)) &&
@@ -1115,6 +1119,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             
             {strategyStage && <StrategyDialog PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}
+            {actionCardStage && <ActionCardDialog selectedTile={selectedTile} selectedPlanet={selectedPlanet}/> }
             
             {spaceCannonAttack && <SpaceCannonAttack />}
             {antiFighterBarrage && <AntiFighterBarrage />}
@@ -1228,9 +1233,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
                   {(rightBottomVisible === 'actions' || race.actionCards.length > 7) && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {race.actionCards.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
-                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
+                      <Button style={{width: '100%'}} onClick={()=>moves.playActionCard(pr)} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
                         <b>{pr.id.toUpperCase()}</b>
-                        {mustAction && race.actionCards.length > 7 && <b onClick={()=>moves.dropActionCard(pr.id)} className='bi bi-backspace-fill' style={{color: 'red', float: 'right'}}/>}
+                        {mustAction && race.actionCards.length > 7 && <b onClick={(e)=>{ e.stopPropagation(); moves.dropActionCard(pr.id)}} className='bi bi-backspace-fill' style={{color: 'red', float: 'right'}}/>}
                       </Button>
                       <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.description}</UncontrolledTooltip> 
                     </ListGroupItem>)}
@@ -1255,18 +1260,18 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   </ListGroup>}
                 </div>
                 <ButtonGroup style={{alignSelf: 'flex-end', height: '4rem', marginBottom: '1rem', position: 'fixed', bottom: 0}}>
-                    <Button id='lawsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>lawsSwitch()} 
-                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.6rem 1.2rem', width: '5rem'}} src='icons/agenda_white.png'/>
-                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#lawsSwitch'}>Agenda</UncontrolledTooltip>
-                    <Button id='relicsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>relicsSwitch()} 
-                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/relic_white.png'/>
-                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#relicsSwitch'}>Relics</UncontrolledTooltip>
-                    <Button id='actionsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>actionsSwitch()} 
-                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/action_card_white.png'/>
-                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#actionsSwitch'}>Actions</UncontrolledTooltip>
                     <Button id='promissorySwitch' size='sm' className='hoverable' tag='img' onClick={()=>promissorySwitch()} 
                       style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.75rem'}} src='icons/promissory_white.png'/>
                     <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#promissorySwitch'}>Promissory</UncontrolledTooltip>
+                    <Button id='relicsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>relicsSwitch()} 
+                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/relic_white.png'/>
+                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#relicsSwitch'}>Relics</UncontrolledTooltip>
+                    <Button id='lawsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>lawsSwitch()} 
+                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.6rem 1.2rem', width: '5rem'}} src='icons/agenda_white.png'/>
+                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#lawsSwitch'}>Agenda</UncontrolledTooltip>
+                    <Button id='actionsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>actionsSwitch()} 
+                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/action_card_white.png'/>
+                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#actionsSwitch'}>Actions</UncontrolledTooltip>
                     <Button id='contextSwitch' size='sm' className='hoverable' tag='img' onClick={()=>contextSwitch()} 
                       style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.6rem 1.5rem', width: '5rem'}} src='icons/codex_white.png'/>
                     <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#contextSwitch'}>Context</UncontrolledTooltip>
