@@ -31,7 +31,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(0, 7)); //test only
+        r.actionCards.push(...cardData.actions.slice(6, 13)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -325,15 +325,64 @@ export const TIO = {
                         });
                       }
                       else if(card.id === 'Focused Research'){
-                        G.races[ctx.currentPlayer].knownTechs.push(card.target.techId);
-                        if(card.target.AI_DEVELOPMENT){
-                          G.races[ctx.currentPlayer].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
+                        if(G.races[ctx.currentPlayer].tg >= 4){
+                          G.races[ctx.currentPlayer].knownTechs.push(card.target.techId);
+                          if(card.target.AI_DEVELOPMENT){
+                            G.races[ctx.currentPlayer].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
+                          }
+                          if(card.target.exhausted){
+                            Object.keys(card.target.exhausted).forEach(pname => {
+                              const planet = getPlanetByName(G.tiles, pname);
+                              planet.exhausted = true;
+                            });
+                          }
+                          G.races[ctx.currentPlayer].tg -= 4;
                         }
+                      }
+                      else if(card.id === 'Frontline Deployment'){
+                        if(card.target.tidx > -1 && card.target.pidx > -1){
+                          const planet = G.tiles[card.target.tidx].tdata.planets[card.target.pidx];
+                          if(!planet.units) planet.units={};
+                          if(!planet.units['infantry']) planet.units.infantry = [];
+                          planet.units['infantry'].push({}, {}, {});
+                        }
+                      }
+                      else if(card.id === 'Ghost Ship'){
+                        if(card.target.tidx > -1){
+                          const tile = G.tiles[card.target.tidx];
+
+                          if(!tile.tdata.fleet) tile.tdata.fleet={};
+                          if(!tile.tdata.fleet['destroyer']) tile.tdata.fleet.destroyer = [];
+                          tile.tdata.fleet['destroyer'].push({});
+                          tile.tdata.occupied = playerID;
+                        }
+                      }
+                      else if(card.id === 'Impersonation'){
                         if(card.target.exhausted){
-                          Object.keys(card.target.exhausted).forEach(pname => {
-                            const planet = getPlanetByName(G.tiles, pname);
+                          card.target.exhausted.forEach(p => {
+                            const planet = getPlanetByName(G.tiles, p.name);
                             planet.exhausted = true;
-                          })
+                          });
+                        }
+                        G.races[playerID].secretObjectives.push(G.secretObjDeck.pop());
+                      }
+                      else if(card.id === 'Industrial Initiative'){
+                        let sum = 0;
+                        G.tiles.forEach(t =>{
+                          if(t.tdata.planets){
+                            t.tdata.planets.forEach(p => {
+                              if(String(p.occupied) === String(ctx.currentPlayer) && p.trait === 'industrial'){
+                                sum++;
+                              }
+                            })
+                          }
+                        });
+                        G.races[playerID].tg += sum;
+                      }
+                      else if(card.id === 'Insubordination'){
+                        const race = G.races[card.target.playerID];
+                        if(race && race.tokens.t){
+                          race.tokens.t -= 1;
                         }
                       }
 

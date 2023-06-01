@@ -4,7 +4,8 @@ import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip,/*UncontrolledAccordion, 
   AccordionItem, AccordionBody, AccordionHeader,*/ CardBody,
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont } from 'reactstrap';
-import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList, TradePanel, ProducingPanel, ActionCardDialog } from './dialogs';
+import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList, TradePanel, ProducingPanel } from './dialogs';
+import { ActionCardDialog } from './actionCardDialog'; 
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
 import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT } from './utils';
@@ -1038,7 +1039,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   
 
   return (
-          <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS}}>      
+          <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>      
             <MyNavbar />
             <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <>
@@ -1076,7 +1077,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </Card>}
               {producing && <ProducingPanel 
                 onCancel={(finish)=>{setProducing(null); if(finish && justOccupied && exhaustedCards.indexOf('INTEGRATED_ECONOMY')>-1){setJustOccupied(null)}}} 
-                pname={producing} PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
+                pname={producing} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
 
               <ChatBoard sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
             </CardColumns>
@@ -1117,7 +1118,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
             {ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote}/>}
             
-            {strategyStage && <StrategyDialog UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
+            {strategyStage && <StrategyDialog R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}
             {actionCardStage && <ActionCardDialog selectedTile={selectedTile} selectedPlanet={selectedPlanet}/> }
             
