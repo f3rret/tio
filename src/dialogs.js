@@ -56,8 +56,8 @@ export const getStratColor = (strat, op) => {
     return color;
 }
 
-export const AgendaDialog = ({ PLANETS, onConfirm }) => {
-    const { G, playerID, exhaustedCards } = useContext(StateContext);
+export const AgendaDialog = ({ onConfirm }) => {
+    const { G, playerID, exhaustedCards, PLANETS } = useContext(StateContext);
     const [ex, setEx] = useState({});
     const [voteRadio, setVoteRadio] = useState('for');
     const [agendaNumber, setAgendaNumber] = useState(1);
@@ -164,14 +164,47 @@ export const AgendaDialog = ({ PLANETS, onConfirm }) => {
 }
 
 export const ActionCardDialog = ({selectedTile, selectedPlanet}) => {
-    const {G, ctx, playerID, moves} = useContext(StateContext);
+    const {G, ctx, playerID, moves, exhaustedCards, PLANETS} = useContext(StateContext);
     const [selection, setSelection] = useState();
+    const [exhausted, setExhausted] = useState({});
 
     const notarget = useMemo(() => ['Economic Initiative', 'Fighter Conscription'], []);
-
     const card = useMemo(() => G.races[ctx.currentPlayer].currentActionCard, [G.races, ctx]);
 
+    const technology = useMemo(() => {
+        if(selection && card.id === 'Focused Research'){
+            return [...techData, ...G.races[playerID].technologies].find(t => t.id === selection);
+        }
+    }, [selection, G.races, playerID, card.id]);
+
+    const requirements = useMemo(() => {
+        if(card.id === 'Focused Research' && selection){
+            
+            if(technology){
+                let adjSpec = [];
+                if(haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY')){
+                    PLANETS.forEach(p => {
+                        if(p.specialty){
+                            adjSpec.push(p.name);
+                        }
+                    });
+                }
+                else{
+                    adjSpec = Object.keys(exhausted);
+                }
+                
+                const ex2 = {};
+                ex2[selection] = technology;
+                const reqs = UnmeetReqs({separate: true, PLANETS, ex2, adjSpec, G, playerID});
+                reqs.adjSpec = adjSpec;
+                return reqs;
+            }
+
+        }
+    }, [G, card, playerID, PLANETS, selection, exhausted, technology]);
+
     const myTarget = useMemo(() => {
+        
         let result = notarget.indexOf(card.id) > -1;
 
         if(card.id === 'Cripple Defenses'){
@@ -180,11 +213,22 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet}) => {
             }
         }
         else if(card.id === 'Focused Research'){
-            console.log(selection) // AI_SELF_ASSEMBLY
+            if(selection){
+                let stopThere;
+                const AI_DEVELOPMENT = exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1;
+
+                if(AI_DEVELOPMENT){
+                    stopThere = requirements.upgrades.length > 1 || requirements.other.length > 0;
+                }
+                else{
+                    stopThere = requirements.upgrades.length > 0 || requirements.other.length > 0;
+                }
+                if(!stopThere) result = {techId: selection, AI_DEVELOPMENT, exhausted}
+            }
         }
 
         return result;
-    }, [card.id, selectedPlanet, selectedTile, notarget, selection]);
+    }, [card.id, selectedPlanet, selectedTile, notarget, selection, requirements, exhaustedCards, exhausted]);
 
     const isMine = useMemo(() => {
         return String(ctx.currentPlayer) === String(playerID);
@@ -205,13 +249,20 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet}) => {
 
                         {notarget.indexOf(card.id) === -1 && <h6 style={{margin: '2rem 1rem 1rem 1rem'}}>TARGET:</h6>}
 
-                        {isMine && !card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', height: '3.5rem'}}>
+                        {isMine && !card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)'}}>
                             {card.id === 'Cripple Defenses' && <PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/>}
-                            {card.id === 'Focused Research' && <TechnologySelect race={G.races[playerID]} onSelect={setSelection}/>}
+                            {card.id === 'Focused Research' && <TechnologySelect onSelect={setSelection} requirements={requirements} 
+                                exhausted={exhausted} setExhausted={setExhausted}/>}
                         </div>}
 
                         {card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', height: '3.5rem'}}>
                             {card.id === 'Cripple Defenses' && <PlanetInfo tidx={card.target.tidx} pidx={card.target.pidx}/>}
+                            {card.id === 'Focused Research' && <b style={{width: '60%', textAlign: 'left', display: 'block', position: 'relative', margin: '.75rem auto', 
+                                color: technology.type === 'propulsion' ? 'deepskyblue' : technology.type === 'warfare' ? 'red' : technology.type === 'cybernetic' ? 'orange' : 
+                                technology.type === 'biotic' ? 'green' : 'black' }}>
+                                {technology.id.replaceAll('_', ' ').replaceAll('2', ' II')}
+                                {technology.racial && <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.6rem'}} src={'race/icons/'+ G.races[playerID].rid +'.png'}/>}
+                            </b>}
                         </div>}
                     </div>
                 </CardBody>
@@ -237,20 +288,42 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet}) => {
             </Card>
 }
 
-const TechnologySelect = ({race, onSelect}) => {
-    
-    return  <Input type='select' onChange={(e)=>onSelect(e.target.value)} style={{margin: '.5rem', width: '80%', color: 'black'}}>
-               {[...techData, ...race.technologies].filter(t => (t.type !== 'unit' || t.upgrade) && race.knownTechs.indexOf(t.id) === -1).map((t,i) =>{
-                    let color = 'black';
-                    if(t.type === 'propulsion') color = 'deepskyblue';
-                    else if(t.type === 'biotic') color = 'green';
-                    else if(t.type === 'cybernetic') color = 'orange';
-                    else if(t.type === 'warfare') color = 'red';
+const TechnologySelect = ({onSelect, requirements, exhausted, setExhausted}) => {
+    const {G, playerID, PLANETS} = useContext(StateContext);
+    const splanets = PLANETS.filter(p => !p.exhausted && p.specialty);
+    const list = [{id:''}, ...techData, ...G.races[playerID].technologies].filter(t => (t.type !== 'unit' || t.upgrade) && G.races[playerID].knownTechs.indexOf(t.id) === -1);
 
-                    return <option key={i} value={t.id} style={{fontSize: '75%', fontWeight: 'bold', color}}>{t.id.replaceAll('_', ' ').replaceAll('2', ' II')}</option>
-                    }
-                )}
-            </Input>
+    return  <>
+                <Input type='select' onChange={(e)=>onSelect(e.target.value)} style={{margin: '.5rem', width: '96%', color: 'black'}}>
+                {list.map((t,i) =>{
+                        let color = 'black';
+                        if(t.type === 'propulsion') color = 'deepskyblue';
+                        else if(t.type === 'biotic') color = 'green';
+                        else if(t.type === 'cybernetic') color = 'orange';
+                        else if(t.type === 'warfare') color = 'red';
+
+                        return <option key={i} value={t.id} style={{fontSize: '75%', fontWeight: 'bold', color}}>{t.id.replaceAll('_', ' ').replaceAll('2', ' II')}</option>
+                        }
+                    )}
+                </Input>
+                
+                {(requirements && (requirements.upgrades.length > 0 || requirements.other.length > 0)) && <div style={{padding: '1rem'}}>
+                    <b>{'Technology have unmeet requirements:  '}</b>
+                    {[...requirements.upgrades, ...requirements.other].map((r,i)=><img alt={r} key={i} src={'icons/'+ r +'.png'} style={{width: '1rem'}}/>)}
+                </div>}
+                {!haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY') && splanets.length > 0 && 
+                    <div style={{overflowY: 'auto', maxHeight: '10rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                    <PlanetsRows PLANETS={splanets} exhausted={exhausted} onClick={(pname)=>setExhausted(
+                        produce(exhausted, draft => {
+                            if(draft[pname]){
+                                delete draft[pname];
+                            }
+                            else{
+                                draft[pname] = true;
+                            }
+                        }))}/>
+                </div>}
+            </>
 }
 
 const PlanetInfo = ({tidx, pidx}) => {
@@ -287,9 +360,9 @@ const PlanetInfo = ({tidx, pidx}) => {
     return <p style={{margin: '1rem', color: 'rgba(0,0,0,.5)'}}>Click planet on map</p>
 }
 
-export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTile, onComplete, onDecline }) => {
+export const StrategyDialog = ({ UNITS, R_UNITS, R_UPGRADES, selectedTile, onComplete, onDecline }) => {
 
-    const {G, ctx, playerID, exhaustedCards} = useContext(StateContext);
+    const {G, ctx, playerID, exhaustedCards, PLANETS} = useContext(StateContext);
     const sid = G.strategy;
     const isMine = ctx.currentPlayer === playerID;
     let lastStep = 1;
@@ -572,75 +645,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
         }
         return result;
     }
-
-    const UnmeetReqs = useCallback(({separate}) => {
-        const keys = Object.keys(ex2);
-        let result=[];
-
-        const known = G.races[playerID].knownTechs.map(t => {
-            let maped = G.races[playerID].technologies.find(r => r.id === t);
-            if(!maped){
-                maped = techData.find(d => d.id === t);
-            }
-            return maped;
-        });
-
-        const learning = {biotic: 0, warfare: 0, propulsion: 0, cybernetic: 0, unit: 0};
-
-        adjSpec.forEach(pname => {
-            const planet = PLANETS.find(p => p.name === pname);
-            if(planet && planet.specialty) learning[planet.specialty]++;
-        });
-
-        let upgradesUnmeet = []; //if need separate info
-        let techsUnmeet = [];
-
-        keys.forEach((k, i)=>{
-            const prekeys = Object.keys(ex2[k].prereq);
-            if(prekeys && prekeys.length){
-                let pre = [];
-
-                prekeys.forEach((p, ii)=> {
-                    let learned = known.filter(t => t.type === p).length;
-                    learned += learning[p];
-                    
-                    if(learned < ex2[k].prereq[p]){
-                        if(separate){
-                            if(ex2[k].type === 'unit'){
-                                for(var j=0; j<ex2[k].prereq[p] - learned; j++){
-                                    upgradesUnmeet.push(p)
-                                }
-                            }
-                            else{
-                                for(var h=0; h<ex2[k].prereq[p] - learned; h++){
-                                    techsUnmeet.push(p)
-                                }
-                            }
-                        }
-                        for(var n=0; n<ex2[k].prereq[p]; n++){
-                            pre.push(<img alt={p} key={ii+' '+n} src={'icons/'+ p +'.png'} style={{width: '1rem'}}/>);
-                        }
-                    }
-                    else{
-                        if(learning[ex2[k].type] !== undefined) learning[ex2[k].type]++;
-                    }
-                });
-
-                if(pre.length)result.push(<p key={i}><b>{ex2[k].id.replaceAll('_', ' ').replace('2', ' II')}</b><span>{' have unmeet requirements: '}</span>{pre}</p>);
-            }
-            else{
-                if(learning[ex2[k].type] !== undefined) learning[ex2[k].type]++;
-            }
-        });
-
-        if(separate){
-            return {upgrades: upgradesUnmeet, other: techsUnmeet};
-        }
-        else{
-            return <>{result}</>
-        }
-    }, [ex2, G.races, playerID, PLANETS, adjSpec]);
-
+//unmeet reqs
     const cantNext = useMemo(() => {
         let stopThere = false;
 
@@ -679,7 +684,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
         }
         else if(sid === 'TECHNOLOGY'){
             if(step === 2){
-                const reqs = UnmeetReqs({separate: true});
+                const reqs = UnmeetReqs({separate: true, PLANETS, ex2, adjSpec, G, playerID});
                 if(exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1){
                     stopThere = reqs.upgrades.length > 1 || reqs.other.length > 0;
                 }
@@ -714,7 +719,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
     
         return stopThere;
 
-    }, [selectedTile, selectedRace, G, step, isMine, sid, playerID, ex, ex2, ct, deployPrice, deploy, result, UnmeetReqs, exhaustedCards]);
+    }, [selectedTile, selectedRace, G, step, isMine, sid, playerID, ex, ex2, ct, deployPrice, deploy, result, PLANETS, adjSpec, exhaustedCards]);
 
     const placeAgendaTopOrBottom = useCallback((idx) => {
        setAgendaCards(produce(agendaCards, draft => {
@@ -974,7 +979,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
                     </div>}
                     {step === 2 && lastStep > 1 && <div style={{width: '100%', display: 'flex', flexFlow: 'column'}}>
                         <p style={{margin: 0, minWidth: '40rem'}}>{isMine ? cardData.strategy[sid].primary : cardData.strategy[sid].secondary}</p>
-                        {sid === 'DIPLOMACY' && <div style={{width: '60%', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                        {sid === 'DIPLOMACY' && <div style={{width: '70%', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                             {<PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>}
                         </div>}
                         {sid === 'POLITICS' && <div style={{display: 'flex', padding: '1rem', flexDirection: 'column', fontSize: '.8rem'}}>
@@ -1064,7 +1069,7 @@ export const StrategyDialog = ({ PLANETS, UNITS, R_UNITS, R_UPGRADES, selectedTi
                                 {getTechType('unit', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
                             </div>
                         </div>
-                        <div><UnmeetReqs /></div>
+                        <div><UnmeetReqs G={G} playerID={playerID} PLANETS={PLANETS} adjSpec={adjSpec} ex2={ex2}/></div>
                         </>}
                         {sid === 'IMPERIAL' && <>
                             {isMine && selectedRace > -1 && <>
@@ -1768,3 +1773,73 @@ export const ProducingPanel = (args) => {
             </Card>
 
 }
+
+
+const UnmeetReqs = ({separate, PLANETS, ex2, adjSpec, G, playerID}) => {
+
+    const keys = Object.keys(ex2);
+    let result=[];
+
+    const known = G.races[playerID].knownTechs.map(t => {
+        let maped = G.races[playerID].technologies.find(r => r.id === t);
+        if(!maped){
+            maped = techData.find(d => d.id === t);
+        }
+        return maped;
+    });
+
+    const learning = {biotic: 0, warfare: 0, propulsion: 0, cybernetic: 0, unit: 0};
+
+    adjSpec.forEach(pname => {
+        const planet = PLANETS.find(p => p.name === pname);
+        if(planet && planet.specialty) learning[planet.specialty]++;
+    });
+
+    let upgradesUnmeet = []; //if need separate info
+    let techsUnmeet = [];
+
+    keys.forEach((k, i)=>{
+        const prekeys = Object.keys(ex2[k].prereq);
+        if(prekeys && prekeys.length){
+            let pre = [];
+
+            prekeys.forEach((p, ii)=> {
+                let learned = known.filter(t => t.type === p).length;
+                learned += learning[p];
+                
+                if(learned < ex2[k].prereq[p]){
+                    if(separate){
+                        if(ex2[k].type === 'unit'){
+                            for(var j=0; j<ex2[k].prereq[p] - learned; j++){
+                                upgradesUnmeet.push(p)
+                            }
+                        }
+                        else{
+                            for(var h=0; h<ex2[k].prereq[p] - learned; h++){
+                                techsUnmeet.push(p)
+                            }
+                        }
+                    }
+                    for(var n=0; n<ex2[k].prereq[p]; n++){
+                        pre.push(<img alt={p} key={ii+' '+n} src={'icons/'+ p +'.png'} style={{width: '1rem'}}/>);
+                    }
+                }
+                else{
+                    if(learning[ex2[k].type] !== undefined) learning[ex2[k].type]++;
+                }
+            });
+
+            if(pre.length)result.push(<p key={i}><b>{ex2[k].id.replaceAll('_', ' ').replace('2', ' II')}</b><span>{' have unmeet requirements: '}</span>{pre}</p>);
+        }
+        else{
+            if(learning[ex2[k].type] !== undefined) learning[ex2[k].type]++;
+        }
+    });
+
+    if(separate){
+        return {upgrades: upgradesUnmeet, other: techsUnmeet};
+    }
+    else{
+        return <>{result}</>
+    }
+}//, [ex2, G.races, playerID, PLANETS, adjSpec]);

@@ -1038,7 +1038,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   
 
   return (
-          <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current}}>      
+          <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS}}>      
             <MyNavbar />
             <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <>
@@ -1115,9 +1115,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </CardBody>
             </Card>}
 
-            {ctx.phase === 'agenda' && <AgendaDialog PLANETS={PLANETS} onConfirm={moves.vote}/>}
+            {ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote}/>}
             
-            {strategyStage && <StrategyDialog PLANETS={PLANETS} UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
+            {strategyStage && <StrategyDialog UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}
             {actionCardStage && <ActionCardDialog selectedTile={selectedTile} selectedPlanet={selectedPlanet}/> }
             

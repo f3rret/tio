@@ -324,6 +324,18 @@ export const TIO = {
 
                         });
                       }
+                      else if(card.id === 'Focused Research'){
+                        G.races[ctx.currentPlayer].knownTechs.push(card.target.techId);
+                        if(card.target.AI_DEVELOPMENT){
+                          G.races[ctx.currentPlayer].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
+                        }
+                        if(card.target.exhausted){
+                          Object.keys(card.target.exhausted).forEach(pname => {
+                            const planet = getPlanetByName(G.tiles, pname);
+                            planet.exhausted = true;
+                          })
+                        }
+                      }
 
                       G.races[ctx.currentPlayer].actionCards.splice(G.races[ctx.currentPlayer].actionCards.findIndex(a => a.id === card.id), 1);
                       G.races[ctx.currentPlayer].currentActionCard = undefined;
