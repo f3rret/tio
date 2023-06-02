@@ -31,7 +31,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(6, 13)); //test only
+        r.actionCards.push(...cardData.actions.slice(13, 20)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -262,9 +262,18 @@ export const TIO = {
                   pass: ({G, playerID, ctx, events}) => {
                     G.races[ctx.currentPlayer].currentActionCard.reaction[playerID] = 'pass';
                   },
-                  next: ({G, ctx, playerID}, target) => {
+                  next: ({G, ctx, playerID, random}, target) => {
                     if(String(ctx.currentPlayer) === String(playerID)){
                       G.races[playerID].currentActionCard.target = target;
+                      const card = G.races[ctx.currentPlayer].currentActionCard;
+
+                      if(card.id === 'Plague'){
+                        const planet = G.tiles[card.target.tidx].tdata.planets[card.target.pidx];
+                        const count = planet.units && planet.units.infantry ? planet.units.infantry.length : 0;
+                        const dice = random.D10( count );
+                        card.dice = dice;
+                      }
+
                     }
                   },
                   done: ({G, ctx, events, playerID}) => {
@@ -410,6 +419,43 @@ export const TIO = {
                             if(planet) planet.exhausted = true;
                           });
                         }
+                      }
+                      else if(card.id === 'Plague'){
+                        if(card.target.tidx > -1 && card.target.pidx > -1){
+                          const planet = G.tiles[card.target.tidx].tdata.planets[card.target.pidx];
+                          if(planet.units && planet.units.infantry){
+                            planet.units.infantry.splice(0, card.dice.filter(d => d >= 6).length);
+                            if(!planet.units.infantry.length) delete planet.units['infantry'];
+                          }
+                        }
+                      }
+                      else if(card.id === 'Reactor Meltdown'){
+                        if(card.target.tidx > -1 && card.target.pidx > -1){
+                          const planet = G.tiles[card.target.tidx].tdata.planets[card.target.pidx];
+                          if(planet.units && planet.units.spacedock){
+                            planet.units.spacedock.splice(0, 1);
+                            if(!planet.units.spacedock.length) delete planet.units['spacedock'];
+                          }
+                        }
+                      }
+                      else if(card.id === 'Repeal Law'){
+                        const idx = G.laws.findIndex(l => l.id === card.target.law.id);
+                        if(idx > -1){
+                          G.laws.splice(idx, 1); // need discard law effects
+                        }
+                      }
+                      else if(card.id === 'Rise of a Messiah'){
+                        G.tiles.forEach(t =>{
+                          if(t.tdata.planets){
+                            t.tdata.planets.forEach(p => {
+                              if(String(p.occupied) === String(ctx.currentPlayer)){
+                                if(!p.units) p.units={};
+                                if(!p.units.infantry) p.units.infantry = [];
+                                p.units.infantry.push({});
+                              }
+                            })
+                          }
+                        });
                       }
 
                       G.races[ctx.currentPlayer].actionCards.splice(G.races[ctx.currentPlayer].actionCards.findIndex(a => a.id === card.id), 1);

@@ -10,14 +10,8 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     const [selection, setSelection] = useState();
     const [exhausted, setExhausted] = useState({});
 
-    const notarget = useMemo(() => ['Economic Initiative', 'Fighter Conscription', 'Industrial Initiative'], []);
+    const notarget = useMemo(() => ['Economic Initiative', 'Fighter Conscription', 'Industrial Initiative', 'Rise of a Messiah'], []);
     const card = useMemo(() => G.races[ctx.currentPlayer].currentActionCard, [G.races, ctx]);
-
-    /*const technology = useMemo(() => {
-        if(selection && card.id === 'Focused Research'){
-            return [...techData, ...G.races[playerID].technologies].find(t => t.id === selection);
-        }
-    }, [selection, G.races, playerID, card.id]);*/
 
     const requirements = useMemo(() => {
         if(card.id === 'Focused Research' && selection){
@@ -49,12 +43,12 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
         
         let result = notarget.indexOf(card.id) > -1;
 
-        if(['Cripple Defenses'].indexOf(card.id) > -1){
+        if(card.id === 'Cripple Defenses'){
             if(selectedTile > -1 && selectedPlanet > -1){
                 result = {tidx: selectedTile, pidx: selectedPlanet};
             }
         }
-        else if(['Frontline Deployment'].indexOf(card.id) > -1){
+        else if(card.id === 'Frontline Deployment'){
             if(selectedTile > -1 && selectedPlanet > -1){
                 const planet = G.tiles[selectedTile].tdata.planets[selectedPlanet];
                 if(String(planet.occupied) === String(playerID)){
@@ -62,7 +56,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                 }
             }
         }
-        else if(['Ghost Ship'].indexOf(card.id) > -1){
+        else if(card.id === 'Ghost Ship'){
             if(selectedTile > -1 && (!UNITS['destroyer'] || UNITS['destroyer'] < UNITS_LIMIT['destroyer'])){
                 const tile = G.tiles[selectedTile];
                 if((String(tile.tdata.occupied) === String(playerID)) || !tile.tdata.occupied){
@@ -132,6 +126,28 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                 }
             }
         }
+        else if(card.id === 'Plague'){
+            if(selectedTile > -1 && selectedPlanet > -1){
+                const planet = G.tiles[selectedTile].tdata.planets[selectedPlanet];
+                if(planet.occupied !== undefined && String(planet.occupied) !== String(playerID)){
+                    result = {tidx: selectedTile, pidx: selectedPlanet}
+                }
+            }
+        }
+        else if(card.id === 'Reactor Meltdown'){
+            if(selectedTile > -1 && selectedPlanet > -1){
+                const tile = G.tiles[selectedTile];
+                if(tile.tdata.type !== 'green'){
+                    result = {tidx: selectedTile, pidx: selectedPlanet}
+                }
+            }
+        }
+        else if(card.id === 'Repeal Law'){
+            if(selection){
+                const law = G.laws.find(l => l.id === selection)
+                result = {law}
+            }
+        }
 
         return result;
     }, [card.id, selectedPlanet, selectedTile, notarget, selection, 
@@ -191,7 +207,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                         {notarget.indexOf(card.id) === -1 && <h6 style={{margin: '2rem 1rem 1rem 1rem'}}>TARGET:</h6>}
 
                         {isMine && !card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
-                            {['Cripple Defenses', 'Frontline Deployment'].indexOf(card.id) > -1 && <PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/>}
+                            {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown'].indexOf(card.id) > -1 && <PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/>}
                             {card.id === 'Ghost Ship' && <TileInfo tidx={selectedTile}/>}
                             {card.id === 'Focused Research' && <TechnologySelect onSelect={setSelection} requirements={requirements} 
                                 exhausted={exhausted} setExhausted={setExhausted}/>}
@@ -205,12 +221,13 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                     <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} />
                                 </div>}
                                 </>}
+                            {card.id === 'Repeal Law' && <LawSelect onSelect={(law)=>setSelection(law)}/>}
                         </div>}
 
                         {card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
-                            {['Cripple Defenses', 'Frontline Deployment'].indexOf(card.id) > -1 && <PlanetInfo tidx={card.target.tidx} pidx={card.target.pidx}/>}
+                            {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown'].indexOf(card.id) > -1 && <PlanetInfo tidx={card.target.tidx} pidx={card.target.pidx}/>}
                             {card.id === 'Ghost Ship' && <TileInfo tidx={card.target.tidx}/>}
-                            {['Focused Research', 'Plagiarize'] && <div style={{padding: '1rem'}}><OneTechLine technology={card.target.tech}/></div>}
+                            {['Focused Research', 'Plagiarize'].indexOf(card.id) > -1 && <div style={{padding: '1rem'}}><OneTechLine technology={card.target.tech}/></div>}
                             {['Impersonation', 'Mining Initiative'].indexOf(card.id) > -1 && <div style={{overflowY: 'auto', maxHeight: '10rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                 <PlanetsRows PLANETS={card.target.exhausted} /></div>}
                             {card.id === 'Insubordination' && <b style={{width: '60%', textAlign: 'left', display: 'block', position: 'relative', margin: '.75rem auto', color: 'black'}}>
@@ -218,6 +235,17 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                 {G.races[card.target.playerID].name}
                             </b>}
                             {card.id === 'Lucky Shot' && <UnitInfo selectedUnit={card.target.selectedUnit} />}
+                            {card.id === 'Plague' && Object.keys(card.reaction).length === (Object.keys(ctx.activePlayers).length - 1) && 
+                                <div style={{padding: '1rem'}}>
+                                <b>Rolls: </b>
+                                {card.dice.map((d, j) =>{
+                                    let color = (d >= 6) ? 'success':'light';
+                                    return <Button key={j} size='sm' color={color} 
+                                        style={{borderRadius: '5px', fontFamily: 'Handel Gothic', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', maxWidth:'1.25rem', height: '1.25rem'}}>
+                                        {('' + d).substr(-1)}</Button>
+                                })}
+                                </div>}
+                            {card.id === 'Repeal Law' && <div style={{padding: '1rem'}}><b>{card.target.law.id}</b><p>{card.target.law.for}</p></div>}
                         </div>}
                     </div>
                 </CardBody>
@@ -242,21 +270,6 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                 </CardFooter>
             </Card>
 }
-
-/*
-<Input type='select' onChange={(e)=>onSelect(e.target.value)} style={{margin: '.5rem', width: '96%', color: 'black'}}>
-                {list.map((t,i) =>{
-                        let color = 'black';
-                        if(t.type === 'propulsion') color = 'deepskyblue';
-                        else if(t.type === 'biotic') color = 'green';
-                        else if(t.type === 'cybernetic') color = 'orange';
-                        else if(t.type === 'warfare') color = 'red';
-
-                        return <option key={i} value={t.id} style={{fontSize: '75%', fontWeight: 'bold', color}}>{t.id.replaceAll('_', ' ').replaceAll('2', ' II')}</option>
-                        }
-                    )}
-                </Input>
-*/
 
 const OneTechLine = ({technology}) => {
     return <b style={{textAlign: 'left', color: 'black', position: 'relative', paddingLeft: '2rem'}}>
@@ -348,6 +361,25 @@ const PlayerSelect = ({onSelect}) => {
     </Input>
 }
 
+const LawSelect = ({onSelect}) => {
+    const { G } = useContext(StateContext);
+    const [selected, setSelected] = useState();
+    const selectedLaw = useMemo(()=>{
+        if(selected){
+            return G.laws.find(l => l.id === selected)
+        }
+    }, [selected, G.laws]);
+
+    return <> 
+            <Input type='select' onChange={(e)=>{setSelected(e.target.value); onSelect(e.target.value)}} style={{margin: '.5rem', width: '96%', color: 'black'}}>
+                {[{id: '', for: ''}, ...G.laws].map((r,i) => <option key={i} value={r.id} style={{fontWeight: 'bold'}}>{r.id}</option>)}
+            </Input>
+            {selectedLaw && <p style={{padding: '1rem', fontSize: '80%'}}>
+                {selectedLaw.for}
+                {selectedLaw.decision && <><br/><b>{selectedLaw.decision}</b></>}
+            </p>}
+        </>
+}
 const PlanetInfo = ({tidx, pidx}) => {
     const { G } = useContext(StateContext);
 

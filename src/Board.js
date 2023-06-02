@@ -1255,10 +1255,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
                   {rightBottomVisible === 'agenda' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {G.laws.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
-                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
+                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_').replaceAll(':', '_')}>
                         <b>{pr.id.toUpperCase()}</b>
                       </Button>
-                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.for}</UncontrolledTooltip> 
+                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_').replaceAll(':', '_')}>{pr.for}</UncontrolledTooltip> 
                     </ListGroupItem>)}
                   </ListGroup>}
                 </div>
