@@ -1202,7 +1202,7 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
     })
   }
 
-export const getTechType = (typ, race, tooltipMode, onSelect, selected, onAction) => {
+export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
 
     const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
     const B_STYLE = {backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}
@@ -1224,57 +1224,62 @@ export const getTechType = (typ, race, tooltipMode, onSelect, selected, onAction
       </h6>
       
       <ListGroup>
-        {techs.map((t, i) => 
-          <ListGroupItem onClick={()=>ItemOnClick(t)} key={i} style={{opacity: race.exhaustedCards.indexOf(t.id)>-1 ? .35:1, background: 'none', padding: '.25rem', color: 'white', borderBottom: 'solid 1px rgba(255,255,255,.15)'}} >
-            <Button size='sm' color={race.knownTechs.indexOf(t.id) > -1 ? 'success': (selected.indexOf(t.id) > -1 ? 'warning':'dark')} id={t.id} style={{width: '100%', fontSize: '.7rem', textAlign: 'left'}}>
-              {t.id.replaceAll('_', ' ').replaceAll('2', ' II')}
-              {t.racial && <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.6rem'}} src={'race/icons/'+ race.rid +'.png'}/>}
-              {t.type === 'unit' && t.prereq && Object.keys(t.prereq).length > 0 && <div style={{textAlign: 'right', position: 'absolute', right: '.5rem', top: '.5rem'}}>
-                {Object.keys(t.prereq).map((p, j) =>{
-                  let result = [];
-                  for(var i=1; i<=t.prereq[p]; i++){
-                    result.push(<img key={j+''+i} alt='requirement' style={{width: '1rem'}} src={'icons/'+p+'.png'}/>);
-                  }
-                  return result;
-                })}
+        {techs.map((t, i) => {
+            let color = 'dark';
+            if(race.knownTechs.indexOf(t.id) > -1) color = 'success';
+            if(selected.indexOf(t.id) > -1) color = 'warning';
+            
+            return <ListGroupItem onClick={()=>ItemOnClick(t)} key={i} style={{opacity: race.exhaustedCards.indexOf(t.id)>-1 ? .35:1, background: 'none', padding: '.25rem', color: 'white', borderBottom: 'solid 1px rgba(255,255,255,.15)'}} >
+                <Button size='sm' color={color} id={t.id} style={{width: '100%', fontSize: '.7rem', textAlign: 'left'}}>
+                {t.id.replaceAll('_', ' ').replaceAll('2', ' II')}
+                {t.racial && <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.6rem'}} src={'race/icons/'+ race.rid +'.png'}/>}
+                {t.type === 'unit' && t.prereq && Object.keys(t.prereq).length > 0 && <div style={{textAlign: 'right', position: 'absolute', right: '.5rem', top: '.5rem'}}>
+                    {Object.keys(t.prereq).map((p, j) =>{
+                    let result = [];
+                    for(var i=1; i<=t.prereq[p]; i++){
+                        result.push(<img key={j+''+i} alt='requirement' style={{width: '1rem'}} src={'icons/'+p+'.png'}/>);
+                    }
+                    return result;
+                    })}
+                    </div>
+                }
+                </Button>
+                <Wrapper placement='right' toggler={'#'+t.id} target={'#'+t.id} style={{textAlign: 'left', minWidth: tooltipMode ? '14rem':'', width:'100%', fontSize: '.7rem', padding: tooltipMode ? '.5rem':'.2rem'}}>
+                {t.type !== 'unit' && t.prereq && Object.keys(t.prereq).length > 0 && <div style={{textAlign: 'right'}}>
+                    <b>require: </b>
+                    {Object.keys(t.prereq).map((p, j) =>{
+                    let result = [];
+                    for(var i=1; i<=t.prereq[p]; i++){
+                        result.push(<img key={j+''+i} alt='requirement' style={{width: '1rem'}} src={'icons/'+p+'.png'}/>);
+                    }
+                    return result;
+                    })}
+                </div>}
+                {t.type !== 'unit' && t.description}
+                
+                {t.type === 'unit' && <div style={{fontSize: tooltipMode ? '.9rem':'.7rem', width: '100%'}}>
+                    <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center', marginBottom: '.5rem'}}>
+                    {t.cost && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.cost}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>cost</b></ListGroupItem>}
+                    {t.combat && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}>
+                    <h6 style={{margin: 0}}>{t.combat}{t.shot && t.shot > 1 && 
+                        <i style={{position: 'absolute', fontSize: 10, top: '0.5rem', right: 0, transform: 'rotate(90deg)'}}>{'♦'.repeat(t.shot)}</i>}
+                    </h6><b style={{...B_STYLE, fontSize: '.5rem'}}>combat</b></ListGroupItem>}
+                    {t.move && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.move}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>move</b></ListGroupItem>}
+                    {t.capacity && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.capacity}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>capacity</b></ListGroupItem>}
+                </ListGroup>
+                {t.sustain && <p style={{margin: 0}}>♦ sustain damage </p>}
+                {t.bombardment && <p style={{margin: 0}}>♦ bombardment {t.bombardment.value + ' x ' + t.bombardment.count}</p>}
+                {t.barrage && <p style={{margin: 0}}>♦ barrage {t.barrage.value + ' x ' + t.barrage.count} </p>}
+                {t.planetaryShield && <p style={{margin: 0}}>♦ planetary shield </p>}
+                {t.spaceCannon && <p style={{margin: 0}}>♦ space cannon {t.spaceCannon.value + ' x ' + t.spaceCannon.count + ' range ' + t.spaceCannon.range}</p>}
+                {t.production && <p style={{margin: 0}}>♦ production {t.production}</p>}
+                {t.effect && <CardText style={{paddingTop: '.5rem'}}>{t.effect}</CardText>}
+                {t.deploy && <CardText style={{paddingTop: '.5rem'}}><b>DEPLOY</b>{' '+t.deploy}</CardText>}
                 </div>
-              }
-            </Button>
-            <Wrapper placement='right' toggler={'#'+t.id} target={'#'+t.id} style={{textAlign: 'left', minWidth: tooltipMode ? '14rem':'', width:'100%', fontSize: '.7rem', padding: tooltipMode ? '.5rem':'.2rem'}}>
-              {t.type !== 'unit' && t.prereq && Object.keys(t.prereq).length > 0 && <div style={{textAlign: 'right'}}>
-                <b>require: </b>
-                {Object.keys(t.prereq).map((p, j) =>{
-                  let result = [];
-                  for(var i=1; i<=t.prereq[p]; i++){
-                    result.push(<img key={j+''+i} alt='requirement' style={{width: '1rem'}} src={'icons/'+p+'.png'}/>);
-                  }
-                  return result;
-                })}
-              </div>}
-              {t.type !== 'unit' && t.description}
-              
-              {t.type === 'unit' && <div style={{fontSize: tooltipMode ? '.9rem':'.7rem', width: '100%'}}>
-                <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center', marginBottom: '.5rem'}}>
-                {t.cost && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.cost}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>cost</b></ListGroupItem>}
-                {t.combat && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}>
-                  <h6 style={{margin: 0}}>{t.combat}{t.shot && t.shot > 1 && 
-                    <i style={{position: 'absolute', fontSize: 10, top: '0.5rem', right: 0, transform: 'rotate(90deg)'}}>{'♦'.repeat(t.shot)}</i>}
-                  </h6><b style={{...B_STYLE, fontSize: '.5rem'}}>combat</b></ListGroupItem>}
-                {t.move && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.move}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>move</b></ListGroupItem>}
-                {t.capacity && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.capacity}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>capacity</b></ListGroupItem>}
-              </ListGroup>
-              {t.sustain && <p style={{margin: 0}}>♦ sustain damage </p>}
-              {t.bombardment && <p style={{margin: 0}}>♦ bombardment {t.bombardment.value + ' x ' + t.bombardment.count}</p>}
-              {t.barrage && <p style={{margin: 0}}>♦ barrage {t.barrage.value + ' x ' + t.barrage.count} </p>}
-              {t.planetaryShield && <p style={{margin: 0}}>♦ planetary shield </p>}
-              {t.spaceCannon && <p style={{margin: 0}}>♦ space cannon {t.spaceCannon.value + ' x ' + t.spaceCannon.count + ' range ' + t.spaceCannon.range}</p>}
-              {t.production && <p style={{margin: 0}}>♦ production {t.production}</p>}
-              {t.effect && <CardText style={{paddingTop: '.5rem'}}>{t.effect}</CardText>}
-              {t.deploy && <CardText style={{paddingTop: '.5rem'}}><b>DEPLOY</b>{' '+t.deploy}</CardText>}
-              </div>
-              }
-            </Wrapper>
-          </ListGroupItem>)}
+                }
+                </Wrapper>
+            </ListGroupItem>}
+          )}
       </ListGroup>
     </div>
   )};

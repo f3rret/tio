@@ -4,8 +4,8 @@ import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip,/*UncontrolledAccordion, 
   AccordionItem, AccordionBody, AccordionHeader,*/ CardBody,
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont } from 'reactstrap';
-import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, getTechType, ObjectivesList, TradePanel, ProducingPanel } from './dialogs';
-import { ActionCardDialog } from './actionCardDialog'; 
+import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, /*getTechType,*/ ObjectivesList, TradePanel, ProducingPanel } from './dialogs';
+import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
 import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT } from './utils';
@@ -1037,23 +1037,25 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }
 
   
-
-  return (
-          <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>      
-            <MyNavbar />
-            <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
-              {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <>
-                {race && techVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '1rem', position: 'relative', width: '70rem'}}>
+/*
+<Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '1rem', position: 'relative', width: '70rem'}}>
                   <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Technologies map</h6></CardTitle>
                   
                   <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                    {getTechType('propulsion', race/*,null,null,null,exhaustTechCard*/)}
+                    {getTechType('propulsion', race)}
                     {getTechType('biotic', race)}
                     {getTechType('warfare', race)}
                     {getTechType('cybernetic', race)}
                     {getTechType('unit', race)}
                   </div>
-                </Card>}
+                </Card>
+*/
+  return (
+          <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>      
+            <MyNavbar />
+            <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
+              {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <>
+                {race && techVisible && <TechnologyDialog />}
                 {objVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                   <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Objectives <span style={{float: 'right'}}>{'You have ' + VP + ' VP'}</span></h6></CardTitle>
                   <ObjectivesList onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective:()=>{}}/>
@@ -1120,7 +1122,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             
             {strategyStage && <StrategyDialog R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}
-            {actionCardStage && <ActionCardDialog selectedTile={selectedTile} selectedPlanet={selectedPlanet}/> }
+            {actionCardStage && <ActionCardDialog selectedTile={selectedTile} selectedPlanet={selectedPlanet} selectedUnit={advUnitView}/> }
             
             {spaceCannonAttack && <SpaceCannonAttack />}
             {antiFighterBarrage && <AntiFighterBarrage />}

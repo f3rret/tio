@@ -326,7 +326,7 @@ export const TIO = {
                       }
                       else if(card.id === 'Focused Research'){
                         if(G.races[ctx.currentPlayer].tg >= 4){
-                          G.races[ctx.currentPlayer].knownTechs.push(card.target.techId);
+                          G.races[ctx.currentPlayer].knownTechs.push(card.target.tech.id);
                           if(card.target.AI_DEVELOPMENT){
                             G.races[ctx.currentPlayer].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
                           }
@@ -383,6 +383,32 @@ export const TIO = {
                         const race = G.races[card.target.playerID];
                         if(race && race.tokens.t){
                           race.tokens.t -= 1;
+                        }
+                      }
+                      else if(card.id === 'Lucky Shot'){
+                        const tile = G.tiles[card.target.selectedUnit.tile];
+                        const units = tile.tdata.fleet[card.target.selectedUnit.unit];
+                        units.pop();
+                        if(!units.length) delete tile.tdata.fleet[card.target.selectedUnit.unit];
+                      }
+                      else if(card.id === 'Mining Initiative'){
+                        let tg = 0;
+                        if(card.target.exhausted){
+                          card.target.exhausted.forEach(p => {
+                            const planet = getPlanetByName(G.tiles, p.name);
+                            tg = planet.resources;
+                          });
+                        }
+                        G.races[playerID].tg += tg;
+                      }
+                      else if(card.id === 'Plagiarize'){
+                        G.races[ctx.currentPlayer].knownTechs.push(card.target.tech.id);
+                        
+                        if(card.target.exhausted){
+                          Object.keys(card.target.exhausted).forEach(pname => {
+                            const planet = getPlanetByName(G.tiles, pname);
+                            if(planet) planet.exhausted = true;
+                          });
                         }
                       }
 

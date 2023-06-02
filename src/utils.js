@@ -242,10 +242,10 @@ export const checkObjective = (G, playerID, oid) => {
         }
     }
     else if(req.neighbor){
-        let systems = G.tiles.filter( t => t.tdata.occupied === playerID || (t.tdata.planets && t.tdata.planets.some( p => p.occupied === playerID)) );
-        let neigh = [];
+        //let systems = G.tiles.filter( t => t.tdata.occupied === playerID || (t.tdata.planets && t.tdata.planets.some( p => p.occupied === playerID)) );
+        let neigh = getMyNeighbors(G, playerID);//[];
 
-        systems.forEach( s => neighbors([s.q, s.r]).forEach( n => {
+        /*systems.forEach( s => neighbors([s.q, s.r]).forEach( n => {
           const tile = G.tiles.find(t => t.tid === n.tileId);
             if(tile){
               if(tile.tdata.occupied !== undefined && tile.tdata.occupied !== playerID){
@@ -258,10 +258,10 @@ export const checkObjective = (G, playerID, oid) => {
               }
             }
           })
-        );
+        );*/
 
         if(neigh.length < req.neighbor){
-        return;
+          return;
         }
 
         let goals = 0;
@@ -323,4 +323,26 @@ export const enemyHaveTechnology = (races, players, myId, techId) => {
     return false;
   }
 
+}
+
+export const getMyNeighbors = (G, playerID) => {
+  let systems = G.tiles.filter( t => String(t.tdata.occupied) === String(playerID) || (t.tdata.planets && t.tdata.planets.some( p => String(p.occupied) === String(playerID))) );
+  let neigh = [];
+
+  systems.forEach( s => neighbors([s.q, s.r]).forEach( n => {
+    const tile = G.tiles.find(t => t.tid === n.tileId);
+      if(tile){
+        if(tile.tdata.occupied !== undefined && String(tile.tdata.occupied) !== String(playerID)){
+            if(neigh.indexOf(tile.tdata.occupied) === -1) neigh.push(tile.tdata.occupied);
+        }
+        else if(tile.tdata.planets){
+          tile.tdata.planets.forEach( p => { if(p.occupied !== undefined && String(p.occupied) !== String(playerID)){ 
+            if(neigh.indexOf(tile.tdata.occupied) === -1) neigh.push(p.occupied) 
+            } })
+        }
+      }
+    })
+  );
+
+  return neigh;
 }
