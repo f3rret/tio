@@ -2,7 +2,8 @@ import { Card, CardImg,  CardTitle, CardBody, CardFooter, ButtonGroup, Button, R
 import { useState, useMemo, useContext, useCallback } from 'react';
 import { produce } from 'immer';
 //import techData from './techData.json';
-import { StateContext, haveTechnology, UNITS_LIMIT, getPlanetByName, getMyNeighbors } from './utils';
+import { StateContext, haveTechnology, UNITS_LIMIT, getPlanetByName, getMyNeighbors} from './utils';
+import { neighbors } from './Grid.js'
 import { UnmeetReqs, PlanetsRows, getTechType } from './dialogs.js';
 
 export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) => {
@@ -91,7 +92,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                 if(sum >= 3) result = {exhausted: ex}
             }
         }
-        else if(card.id === 'Insubordination'){
+        else if(card.id === 'Insubordination' || card.id === 'Spy'){
             if(selection && String(selection) !== String(playerID)){
                 result = { playerID: selection }
             }
@@ -126,11 +127,13 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                 }
             }
         }
-        else if(card.id === 'Plague'){
+        else if(card.id === 'Plague' || card.id === 'Uprising'){
             if(selectedTile > -1 && selectedPlanet > -1){
                 const planet = G.tiles[selectedTile].tdata.planets[selectedPlanet];
                 if(planet.occupied !== undefined && String(planet.occupied) !== String(playerID)){
-                    result = {tidx: selectedTile, pidx: selectedPlanet}
+                    if(card.id !== 'Uprising' || G.tiles[selectedTile].tdata.type !== 'green'){
+                        result = {tidx: selectedTile, pidx: selectedPlanet}
+                    }
                 }
             }
         }
@@ -146,6 +149,72 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
             if(selection){
                 const law = G.laws.find(l => l.id === selection)
                 result = {law}
+            }
+        }
+        else if(card.id === 'Signal Jamming'){
+            if(selectedTile > -1){
+                const tile = G.tiles[selectedTile];
+                let accept = false;
+
+                if(String(tile.tdata.occupied) === String(playerID) && tile.tdata.fleet && Object.keys(tile.tdata.fleet).length > 0){
+                    accept = true;
+                }
+                else{
+                    const neigh = neighbors([tile.q, tile.r]);
+                    neigh.toArray().find( n => {
+                        const t = G.tiles.find(tl => tl.tid === n.tileId);
+                        if(String(t.tdata.occupied) === String(playerID) && t.tdata.fleet && Object.keys(t.tdata.fleet).length > 0){
+                            accept = true;
+                            return true;
+                        }
+                        return false;
+                    });
+                }
+
+                if(accept && tile.tdata.type !== 'green'){
+                    if(selection !== undefined && String(selection) !== String(playerID)){
+                        result = {tidx: selectedTile, playerID: selection};
+                    }
+                }
+            }
+        }
+        else if(card.id === 'Tactical Bombardment'){
+            if(selectedTile > -1){
+                const tile = G.tiles[selectedTile];
+                if(String(tile.tdata.occupied) === String(playerID) && tile.tdata.fleet && Object.keys(tile.tdata.fleet).length > 0){
+                    const bomb = Object.keys(tile.tdata.fleet).find(k => {
+                        const technology = G.races[playerID].technologies.find(t => t.id === k.toUpperCase());
+                        return (technology && technology.bombardment);
+                    });
+                    if(bomb){
+                        result = {tidx: selectedTile};
+                    }
+                }
+            }
+        }
+        else if(card.id === 'Unexpected Action'){
+            if(selectedTile > -1){
+                const tile = G.tiles[selectedTile];
+                const race = G.races[playerID];
+                if(tile.tdata.tokens && tile.tdata.tokens.indexOf(race.rid) > -1){
+                    result = {tidx: selectedTile}
+                }
+            }
+        }
+        else if(card.id === 'Unstable Planet'){
+            if(selectedTile > -1 && selectedPlanet > -1){
+                const planet = G.tiles[selectedTile].tdata.planets[selectedPlanet];
+                if(planet.trait === 'hazardous'){
+                    result = {tidx: selectedTile, pidx: selectedPlanet};
+                }
+            }
+        }
+        else if(card.id === 'War Effort'){
+            if(selectedTile > -1 && (!UNITS['cruiser'] || UNITS['cruiser'] < UNITS_LIMIT['cruiser'])){
+                const tile = G.tiles[selectedTile];
+                if(String(tile.tdata.occupied) === String(playerID) && tile.tdata.fleet && Object.keys(tile.tdata.fleet).length > 0){
+                    result = {tidx: selectedTile};
+                }
             }
         }
 
@@ -207,13 +276,13 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                         {notarget.indexOf(card.id) === -1 && <h6 style={{margin: '2rem 1rem 1rem 1rem'}}>TARGET:</h6>}
 
                         {isMine && !card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
-                            {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown'].indexOf(card.id) > -1 && <PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/>}
-                            {card.id === 'Ghost Ship' && <TileInfo tidx={selectedTile}/>}
+                            {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown', 'Unstable Planet', 'Uprising'].indexOf(card.id) > -1 && <PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/>}
+                            {['Ghost Ship', 'Tactical Bombardment', 'Unexpected Action', 'War Effort'].indexOf(card.id) > -1 && <TileInfo tidx={selectedTile}/>}
                             {card.id === 'Focused Research' && <TechnologySelect onSelect={setSelection} requirements={requirements} 
                                 exhausted={exhausted} setExhausted={setExhausted}/>}
                             {['Impersonation', 'Mining Initiative'].indexOf(card.id) > -1 && <div style={{overflowY: 'auto', maxHeight: '10rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                 <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} /></div>}
-                            {card.id === 'Insubordination' && <PlayerSelect onSelect={setSelection}/>}
+                            {['Insubordination', 'Spy'].indexOf(card.id) > -1 && <PlayerSelect onSelect={setSelection}/>}
                             {card.id === 'Lucky Shot' && <UnitInfo selectedUnit={selectedUnit} />}
                             {card.id === 'Plagiarize' && <>
                                 <TechnologySelect onSelect={setSelection} races={myNeighbors.map(n => G.races[n])}/>
@@ -222,18 +291,16 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                 </div>}
                                 </>}
                             {card.id === 'Repeal Law' && <LawSelect onSelect={(law)=>setSelection(law)}/>}
+                            {card.id === 'Signal Jamming' && <><TileInfo tidx={selectedTile}/><PlayerSelect onSelect={setSelection}/></>}
                         </div>}
 
                         {card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
-                            {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown'].indexOf(card.id) > -1 && <PlanetInfo tidx={card.target.tidx} pidx={card.target.pidx}/>}
-                            {card.id === 'Ghost Ship' && <TileInfo tidx={card.target.tidx}/>}
+                            {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown', 'Unstable Planet', 'Uprising'].indexOf(card.id) > -1 && <PlanetInfo tidx={card.target.tidx} pidx={card.target.pidx}/>}
+                            {['Ghost Ship', 'Tactical Bombardment', 'Unexpected Action', 'War Effort'].indexOf(card.id) > -1 && <TileInfo tidx={card.target.tidx}/>}
                             {['Focused Research', 'Plagiarize'].indexOf(card.id) > -1 && <div style={{padding: '1rem'}}><OneTechLine technology={card.target.tech}/></div>}
                             {['Impersonation', 'Mining Initiative'].indexOf(card.id) > -1 && <div style={{overflowY: 'auto', maxHeight: '10rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                 <PlanetsRows PLANETS={card.target.exhausted} /></div>}
-                            {card.id === 'Insubordination' && <b style={{width: '60%', textAlign: 'left', display: 'block', position: 'relative', margin: '.75rem auto', color: 'black'}}>
-                                <img alt='race' style={{width: '2rem', marginRight: '1rem'}} src={'race/icons/'+ G.races[card.target.playerID].rid + '.png'}/>
-                                {G.races[card.target.playerID].name}
-                            </b>}
+                            {['Insubordination', 'Spy'].indexOf(card.id) > -1 && <OneLinePlayerInfo race={G.races[card.target.playerID]}/>}
                             {card.id === 'Lucky Shot' && <UnitInfo selectedUnit={card.target.selectedUnit} />}
                             {card.id === 'Plague' && Object.keys(card.reaction).length === (Object.keys(ctx.activePlayers).length - 1) && 
                                 <div style={{padding: '1rem'}}>
@@ -246,6 +313,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                 })}
                                 </div>}
                             {card.id === 'Repeal Law' && <div style={{padding: '1rem'}}><b>{card.target.law.id}</b><p>{card.target.law.for}</p></div>}
+                            {card.id === 'Signal Jamming' && <><TileInfo tidx={selectedTile}/><OneLinePlayerInfo race={G.races[card.target.playerID]}/></>}
                         </div>}
                     </div>
                 </CardBody>
@@ -277,6 +345,13 @@ const OneTechLine = ({technology}) => {
                 {technology.id.replaceAll('_', ' ').replaceAll('2', ' II')}
                 {technology.racial && ' (racial)'}
             </b>
+}
+
+const OneLinePlayerInfo = ({race}) => {
+    return <b style={{width: '60%', textAlign: 'left', display: 'block', position: 'relative', margin: '.75rem auto', color: 'black'}}>
+        <img alt='race' style={{width: '2rem', marginRight: '1rem'}} src={'race/icons/'+ race.rid + '.png'}/>
+        {race.name}
+    </b>
 }
 
 const TechnologySelect = ({onSelect, requirements, exhausted, setExhausted, races}) => {
@@ -355,7 +430,7 @@ const PlayerSelect = ({onSelect}) => {
 
     return <Input type='select' onChange={(e)=>onSelect(e.target.value)} style={{margin: '.5rem', width: '96%', color: 'black'}}>
         {G.races.map((r,i) =>{
-            return <option key={i} value={i} style={{fontWeight: 'bold'}}>{r.name + ': ' + r.tokens.t}</option>
+            return <option key={i} value={i} style={{fontWeight: 'bold'}}>{r.name + ': ' + r.tokens.t + ' tactic tokens'}</option>
             }
         )}
     </Input>

@@ -31,7 +31,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(13, 20)); //test only
+        r.actionCards.push(...cardData.actions.slice(20, 24)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -276,7 +276,7 @@ export const TIO = {
 
                     }
                   },
-                  done: ({G, ctx, events, playerID}) => {
+                  done: ({G, ctx, events, playerID, random}) => {
                     if(String(ctx.currentPlayer) === String(playerID)){
                       const card = G.races[ctx.currentPlayer].currentActionCard;
 
@@ -456,6 +456,70 @@ export const TIO = {
                             })
                           }
                         });
+                      }
+                      else if(card.id === 'Signal Jamming'){
+                        if(card.target.tidx > -1){
+                          const tile = G.tiles[card.target.tidx];
+                          const race = G.races[card.target.playerID];
+                          tile.tdata.tokens.push(race.rid);
+                        }
+                      }
+                      else if(card.id === 'Spy'){
+                        const enemy = G.races[card.target.playerID];
+                        if(enemy && enemy.actionCards.length){
+                          const arr = random.Shuffle([...enemy.actionCards]);
+                          G.races[playerID].actionCards.push(arr[0]);
+
+                          const idx = enemy.actionCards.findIndex(a => a.id === arr[0].id);
+                          enemy.actionCards.splice(idx, 1);
+                        }
+                      }
+                      else if(card.id === 'Tactical Bombardment'){
+                        if(card.target.tidx > -1){
+                          const tile = G.tiles[card.target.tidx];
+                          if(tile.tdata.planets){
+                            tile.tdata.planets.forEach(p => {
+                              if(p.occupied !== undefined && String(p.occupied) !== String(playerID)){
+                                p.exhausted = true;
+                              }
+                            });
+                          }
+                        }
+                      }
+                      else if(card.id === 'Unexpected Action'){
+                        if(card.target.tidx > -1){
+                          const tile = G.tiles[card.target.tidx];
+                          const race = G.races[playerID];
+                          const idx = tile.tdata.tokens.indexOf(race.rid);
+                          if(idx > -1){
+                            tile.tdata.tokens.splice(idx, 1);
+                          }
+                        }
+                      }
+                      else if(card.id === 'Unstable Planet'){
+                        if(card.target.tidx > -1 && card.target.pidx > -1){
+                          const planet = G.tiles[card.target.tidx].tdata.planets[card.target.pidx];
+                          planet.exhausted = true;
+                          if(planet.units && planet.units.infantry){
+                            planet.units.infantry.splice(0, 3);
+                            if(!planet.units.infantry.length) delete planet.units['infantry'];
+                          }
+                        }
+                      }
+                      else if(card.id === 'Uprising'){
+                        if(card.target.tidx > -1 && card.target.pidx > -1){
+                          const planet = G.tiles[card.target.tidx].tdata.planets[card.target.pidx];
+                          planet.exhausted = true;
+                          G.races[playerID].tg += planet.resources;
+                        }
+                      }
+                      else if(card.id === 'War Effort'){
+                        if(card.target.tidx > -1){
+                          const tile = G.tiles[card.target.tidx];
+
+                          if(!tile.tdata.fleet['cruiser']) tile.tdata.fleet.cruiser = [];
+                          tile.tdata.fleet['cruiser'].push({});
+                        }
                       }
 
                       G.races[ctx.currentPlayer].actionCards.splice(G.races[ctx.currentPlayer].actionCards.findIndex(a => a.id === card.id), 1);
