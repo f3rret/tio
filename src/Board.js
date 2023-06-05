@@ -182,7 +182,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         {ctx.phase === 'acts' && <>
           <Button disabled={ctx.numMoves == 0} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}><h5 style={{margin: '.5rem'}}>Undo</h5></Button>
           {!G.spaceCannons && <>
-            {!(activeTile && activeTile.tdata.attacker) && <Button color='warning' onClick={()=>events.endTurn()}><h5 style={{margin: '.5rem'}}>End turn</h5></Button>}
+            {!(activeTile && activeTile.tdata.attacker) && <Button color='warning' onClick={()=>moves.endTurn()}><h5 style={{margin: '.5rem'}}>End turn</h5></Button>}
             {activeTile && activeTile.tdata.attacker && <Button color='warning' onClick={()=>moves.antiFighterBarrage()}><h5 style={{margin: '.5rem'}}>Space combat</h5></Button>}
             </>
           }
@@ -538,6 +538,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     
     let adj = 0;
     if(exhaustedCards.indexOf('GRAVITY_DRIVE')>-1) adj++;
+    if(race.moveBoost) adj += race.moveBoost;
 
     if(advUnitViewTechnology && (advUnitViewTechnology.move+adj) >= getPureMovePath.length-1){
       if(isBrokenLine(getMovePath)) return false;
@@ -575,12 +576,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       let adj = 0;
 
       if(exhaustedCards.indexOf('GRAVITY_DRIVE')>-1) adj++;
+      if(race.moveBoost) adj += race.moveBoost;
       return (advUnitViewTechnology.move + adj) + '/' + (getPureMovePath.length-1);
     }
     else{
       return '';
     }
-  }, [advUnitViewTechnology, getPureMovePath, exhaustedCards]);
+  }, [advUnitViewTechnology, getPureMovePath, exhaustedCards, race.moveBoost]);
 
   const moveToClick = useCallback((idx) => {
 
@@ -719,7 +721,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 {advUnitView && advUnitView.tile === index && (p.occupied === undefined || String(element.tdata.occupied) === String(p.occupied)) &&
                     <Sprite pointerdown={()=>unloadUnit(i)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={.5} alpha={.85}/>
                   }
-                {activeTile && element.tdata.occupied == playerID && !G.spaceCannons && <>
+                {activeTile && element.tdata.occupied == playerID && !G.spaceCannons && element.tdata.fleet && <>
                   {p.occupied !== undefined && String(element.tdata.occupied) !== String(p.occupied) && 
                     <Sprite tint={'red'} pointerdown={()=>moves.invasion(p)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={1} alpha={.85}/>}
                 </>}
@@ -927,15 +929,20 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [producing, exhaustTechCard, exhaustedCards, justOccupied])
   
   useEffect(() => {
-    if(ctx.activePlayers && Object.keys(ctx.activePlayers).length){
+    if(ctx.activePlayers && Object.keys(ctx.activePlayers).filter(ap => !ap.endsWith('ctionCard')).length){
       if(!prevStages.current){
         prevStages.current = {...ctx.activePlayers};
         Object.keys(prevStages.current).forEach(k => {
-          prevStages.current[k] = [prevStages.current[k]];
+          if(!k.endsWith('ctionCard')){
+            prevStages.current[k] = [prevStages.current[k]];
+          }
+          else{
+            prevStages.current[k] = undefined;
+          }
         });
       }
       else{
-        Object.keys(ctx.activePlayers).forEach(ap => {
+        Object.keys(ctx.activePlayers).filter(ap => !ap.endsWith('ctionCard')).forEach(ap => {
           if(!prevStages.current[ap] || !prevStages.current[ap].length){
             prevStages.current[ap]=[ctx.activePlayers[ap]];
           }
@@ -1235,13 +1242,19 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   </ListGroup>}
 
                   {(rightBottomVisible === 'actions' || race.actionCards.length > 7) && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
-                    {race.actionCards.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
-                      <Button style={{width: '100%'}} onClick={()=>moves.playActionCard(pr)} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
-                        <b>{pr.id.toUpperCase()}</b>
-                        {mustAction && race.actionCards.length > 7 && <b onClick={(e)=>{ e.stopPropagation(); moves.dropActionCard(pr.id)}} className='bi bi-backspace-fill' style={{color: 'red', right: 0, position: 'absolute'}}/>}
-                      </Button>
-                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.description}</UncontrolledTooltip> 
-                    </ListGroupItem>)}
+                    {race.actionCards.map((pr, i) => {
+                      const disabled = !mustAction && !(pr.when === 'ACTION' && ctx.currentPlayer === playerID) && 
+                                                      !(pr.when === 'TACTICAL' && (pr.target === 'self' || 
+                                                      (ctx.activePlayers && ctx.activePlayers[playerID] === 'tacticalActionCard' && !G.currentTacticalActionCard)));
+                      return <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
+                        <Button style={{width: '100%'}} onClick={()=>moves.playActionCard(pr)} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}
+                          disabled={disabled} >
+                          <b>{pr.id.toUpperCase()}</b>
+                          {mustAction && race.actionCards.length > 7 && <b onClick={(e)=>{ e.stopPropagation(); moves.dropActionCard(pr.id)}} className='bi bi-backspace-fill' style={{color: 'red', right: 0, position: 'absolute'}}/>}
+                        </Button>
+                        <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.description}</UncontrolledTooltip> 
+                      </ListGroupItem>}
+                    )}
                   </ListGroup>}
 
                   {rightBottomVisible === 'relics' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>

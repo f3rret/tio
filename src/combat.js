@@ -15,9 +15,15 @@ export const SpaceCannonAttack = () => {
         //enemy's pds at same tile
         if(activeTile.tdata.planets){
             activeTile.tdata.planets.forEach(p =>{ 
-                if(p.occupied !== undefined && p.occupied !== ctx.currentPlayer && p.units && p.units.pds){
-                    if(!result[p.occupied]) result[p.occupied] = [];
-                    result[p.occupied] = result[p.occupied].concat(p.units.pds);
+                if(p.occupied !== undefined && p.occupied !== ctx.currentPlayer && p.units){
+                    if(p.units.pds){
+                        if(!result[p.occupied]) result[p.occupied] = [];
+                        result[p.occupied] = result[p.occupied].concat(p.units.pds);
+                    }
+                    if(p.experimentalBattlestation && p.units.spacedock && p.units.spacedock.length){
+                        if(!result[p.occupied]) result[p.occupied] = [];
+                        result[p.occupied] = result[p.occupied].concat({id: 'spacedock', experimentalBattlestation: true});
+                    }
                 }
             });
         }
@@ -25,22 +31,29 @@ export const SpaceCannonAttack = () => {
         //cannon in adjacent systems
         const races = G.races.filter((r, i) => i !== ctx.currentPlayer && r.technologies.find(t => t.id === 'PDS').spaceCannon.range > 1).map(r => r.rid);
 
-        if(races.length > 0){
+        //if(races.length > 0){
             const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
-            neighs.forEach(n => {
+            neighs.forEach(nei => {
+                const n = G.tiles.find(t => t.tid === nei.tileId);
                 if(n.tdata.planets){
-                n.tdata.planets.forEach(p =>{ 
-                    if(races.indexOf(p.occupied) > -1 && p.units && p.units.pds){
-                        if(!result[p.occupied]) result[p.occupied] = [];
-                        result[p.occupied] = result[p.occupied].concat(p.units.pds);
-                    }
-                });
+                    n.tdata.planets.forEach(p =>{ 
+                        if((races.indexOf(p.occupied) > -1 && p.units) || p.experimentalBattlestation){
+                            if(p.units.pds && races.indexOf(p.occupied) > -1){ //only for upgraded
+                                if(!result[p.occupied]) result[p.occupied] = [];
+                                result[p.occupied] = result[p.occupied].concat(p.units.pds);
+                            }
+                            if(p.experimentalBattlestation && p.units.spacedock && p.units.spacedock.length){
+                                if(!result[p.occupied]) result[p.occupied] = [];
+                                result[p.occupied] = result[p.occupied].concat({id: 'spacedock', experimentalBattlestation: true});
+                            }
+                        }
+                    });
                 }
             });
-        }
+        //}
 
         return result;
-    }, [G.races, activeTile, ctx.currentPlayer]);
+    }, [G.races, G.tiles, activeTile, ctx.currentPlayer]);
 
     let fleet;
     if((activeTile.tdata.occupied !== ctx.currentPlayer) && activeTile.tdata.attacker){
@@ -64,6 +77,9 @@ export const SpaceCannonAttack = () => {
                         if(technology && technology.spaceCannon){
                             result += G.dice[pid][unit].dice.filter(d => d + adj >= technology.spaceCannon.value).length;
                         }
+                        else if(unit === 'spacedock' && G.dice[pid][unit].withTech && G.dice[pid][unit].withTech.indexOf('Experimental Battlestation') > -1){
+                            result += G.dice[pid][unit].dice.filter(d => d + adj >= 5).length;
+                        }
                     });
                 }
             });
@@ -79,7 +95,7 @@ export const SpaceCannonAttack = () => {
             Object.keys(spaceCannons).forEach(pid => {
                 if(G.dice[pid]){
                     Object.keys(G.dice[pid]).forEach(unit => {
-                        if(G.dice[pid][unit].withTech === 'GRAVITON_LASER_SYSTEM'){
+                        if(G.dice[pid][unit].withTech && G.dice[pid][unit].withTech.indexOf('GRAVITON_LASER_SYSTEM')>-1){
                             const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                             if(technology && technology.spaceCannon){
                                 result += G.dice[pid][unit].dice.filter(d => d + adj >= technology.spaceCannon.value).length;
@@ -198,8 +214,13 @@ export const SpaceCannonAttack = () => {
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             {ctx.activePlayers[playerID] === 'spaceCannonAttack' && <>
                 <CombatantForces race={G.races[ctx.currentPlayer]} units={fleet} owner={ctx.currentPlayer} combatAbility='spaceCannon'/>
-                {spaceCannons !== undefined && Object.keys(spaceCannons).map((k, i) => 
-                    <CombatantForces key={i} race={G.races[k]} combatAbility='spaceCannon' units={{pds: spaceCannons[k]}} owner={k}/>)}
+                {spaceCannons !== undefined && Object.keys(spaceCannons).map((k, i) => {
+                    const sd = spaceCannons[k].filter(s => s.id === 'spacedock');
+                    const pd = spaceCannons[k].filter(s => !s.id || s.id === 'pds');
+
+                    return <CombatantForces key={i} race={G.races[k]} combatAbility='spaceCannon' units={{pds: pd, spacedock: sd}} owner={k}/>
+                    })
+                }
             </>}
             {ctx.activePlayers[playerID] === 'spaceCannonAttack_step2' && <>
                 <HitAssign race={G.races[ctx.currentPlayer]} units={fleet} owner={ctx.currentPlayer} hits={ahits} setHits={setAhits}/>
@@ -454,9 +475,16 @@ const CombatantForces = (args) => {
 
     const fireClick = useCallback((u, withTech) => {
         const count = Array.isArray(units[u]) ? units[u].length : units[u];
-        let shots = (combatAbility ? technologies[u][combatAbility].count : u === 'pds' ? technologies[u]['spaceCannon'].count: technologies[u].shot) || 1;
+        const wt = [withTech];
+
+        let shots = (combatAbility && technologies[u][combatAbility] ? technologies[u][combatAbility].count : 
+                                    u === 'pds' ? technologies[u]['spaceCannon'].count: technologies[u].shot) || 1;
+        if(u === 'spacedock' && combatAbility === 'spaceCannon') { //experimental battlestation
+            shots = 3;
+            wt.push('Experimental Battlestation');
+        }
         if(withTech === 'PLASMA_SCORING') shots++;
-        moves.rollDice(u, count*shots, withTech);
+        moves.rollDice(u, count*shots, wt);
         if(withTech === 'PLASMA_SCORING') setPlasmaScoringUsed(true);        
     }, [moves, technologies, units, combatAbility]);
 
@@ -487,6 +515,8 @@ const CombatantForces = (args) => {
                 <Row className='row-cols-auto'>
                     {Object.keys(units).map((u, i) => {
                         const ucount = (Array.isArray(units[u]) ? units[u].length : units[u]);
+                        if(!ucount) return null;
+
                         let style = {marginLeft: '1rem', padding: 0, fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'};
                         const deflt = {value: technologies[u].combat, count: technologies[u].shot || 1};
                         let ability = isInvasion ? (u === 'pds' ? technologies[u]['spaceCannon']: deflt):
@@ -494,6 +524,7 @@ const CombatantForces = (args) => {
                                             combatAbility ? technologies[u][combatAbility] : deflt 
                                             : null;
                         if(combatAbility === 'bombardment' && u === 'pds') ability = null;
+                        if(u === 'spacedock' && combatAbility === 'spaceCannon' && units[u][0].experimentalBattlestation) ability = {value: 5, count: 3};
                         
                         if(ability){
                             style = {...style, padding: '.5rem', background: 'rgba(255,255,255,.15)'}
@@ -541,7 +572,7 @@ const CombatantForces = (args) => {
                                 {G.dice[owner][u] && <ButtonGroup style={{flexWrap: 'wrap', maxWidth: '6rem'}}>
                                     {G.dice[owner][u].dice.map((d, j) =>{
                                         let color = 'light';
-                                        if(d + adj >= ability.value) color = G.dice[owner][u].withTech === 'GRAVITON_LASER_SYSTEM' ? 'danger':'success';
+                                        if(d + adj >= ability.value) color = G.dice[owner][u].withTech && G.dice[owner][u].withTech.indexOf('GRAVITON_LASER_SYSTEM')>-1 ? 'danger':'success';
                                         return <Button key={j} size='sm' color={color} 
                                             style={{borderRadius: '5px', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', maxWidth:'1.25rem', height: '1.25rem'}}>
                                             {('' + d).substr(-1)}</Button>

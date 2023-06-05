@@ -77,7 +77,7 @@
         
         {"id":"Counterstroke", "when":"TACTICAL", "description":"After a player activates a system that contains 1 of your command tokens: Return that command token to your tactic pool."},
         {"id":"Experimental Battlestation", "when":"TACTICAL", "description":"Choose one of your space docks either in or adjacent to the activated system. That space dock uses Space Cannon 5 (x3) against ships in the active system."},
-        {"id":"Flank Speed", "count": 4, "when":"TACTICAL", "description":"After you activate a system: Apply +1 to the move value of each of your ships during this tactical action."},
+        {"id":"Flank Speed", "count": 4, "when":"TACTICAL", "target":"self", "description":"After you activate a system: Apply +1 to the move value of each of your ships during this tactical action."},
         {"id":"Forward Supply Base", "when":"TACTICAL", "description":"After another player activates a system that contains your units: Gain 3 trade goods. Then choose another player to gain 1 trade good."},
         {"id":"Harness Energy", "when":"TACTICAL", "description":"After you activate an anomaly: Replenish your commodities."},
         {"id":"In The Silence Of Space", "when":"TACTICAL", "description":"Choose a system. During this action your ships in that system can move through systems that contain other players' ships."},
