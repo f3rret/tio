@@ -8,7 +8,7 @@ import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
-import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT } from './utils';
+import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT, wormholesAreAdjacent } from './utils';
 import { lineTo, pathFromCoordinates } from './Grid';
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion } from './combat';
@@ -468,7 +468,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         for(var i=1; i<line.length; i++){
           result.push(first);
 
-          if(!ar[i-1].wormhole || ar[i-1].wormhole !== ar[i].wormhole){
+          if(!ar[i-1].wormhole || !wormholesAreAdjacent(G, ar[i-1].wormhole, ar[i].wormhole)){
             const segment = lineTo({start: [first.q, first.r], stop: [line[i].q, line[i].r]}).toArray();
             if(segment.length > 1){
               result = [...result, ...segment.splice(1, segment.length-2)];
@@ -480,7 +480,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         result.push(line[line.length-1]);
         return result;
       }
-      else if(activeTile.tdata.wormhole && activeTile.tdata.wormhole === G.tiles[advUnitView.tile].tdata.wormhole){
+      else if(activeTile.tdata.wormhole && wormholesAreAdjacent(G, activeTile.tdata.wormhole, G.tiles[advUnitView.tile].tdata.wormhole)){
         return [activeTile.tid, G.tiles[advUnitView.tile].tid];
       }
       else{
@@ -491,10 +491,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     else{
       return [];
     }
-  }, [activeTile, advUnitView, moveSteps, G.tiles]);
+
+  }, [activeTile, advUnitView, moveSteps, G]);
 
   const getPureMovePath = useMemo(() => {
-    return getMovePath.filter(t => tileData.hyperlanes.indexOf(t.tileId) === -1).map(t => String(t.tileId));
+    return getMovePath.filter(t => tileData.hyperlanes.indexOf(t.tileId) === -1).map(t => t.tileId !== undefined ? String(t.tileId):t);
   }, [getMovePath])
   
   const canMoveThatPath = useMemo(() => {
@@ -561,7 +562,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             }
           }
           else if(tile.tdata.occupied && String(tile.tdata.occupied) !== String(playerID) && String(activeTile.tid) !== String(p)){
-            return !haveTechnology(race, 'LIGHTWAVE_DEFLECTOR');
+            return !(haveTechnology(race, 'LIGHTWAVE_DEFLECTOR') || String(race.moveThroughEnemysFleet) === String(tile.tid));
           }
           return false;
         });
@@ -784,10 +785,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         </Sprite>}
 
         {element.tdata.fleet && <Container x={10} y={-30}>
-          {activeTile && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 &&
+          {activeTile && advUnitView && advUnitView.tile === index && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 &&
           <Container y={5} x={-10}>
             <Sprite interactive={true} pointerdown={()=>moveToClick(index)} scale={.75} image={'icons/move_to.png'}
-              alpha={advUnitView && advUnitView.tile === index ? (canMoveThatPath ? 1:.5):.5} >
+              alpha={canMoveThatPath ? 1:.5} >
                 <Text text={distanceInfo(element, activeTile)} x={-100} y={10} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
             </Sprite>
             
@@ -1244,7 +1245,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   {(rightBottomVisible === 'actions' || race.actionCards.length > 7) && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {race.actionCards.map((pr, i) => {
                       const disabled = !mustAction && !(pr.when === 'ACTION' && ctx.currentPlayer === playerID) && 
-                                                      !(pr.when === 'TACTICAL' && (pr.target === 'self' || 
+                                                      !(pr.when === 'TACTICAL' && (pr.who === 'self' || 
                                                       (ctx.activePlayers && ctx.activePlayers[playerID] === 'tacticalActionCard' && !G.currentTacticalActionCard)));
                       return <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                         <Button style={{width: '100%'}} onClick={()=>moves.playActionCard(pr)} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}

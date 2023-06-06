@@ -1,7 +1,7 @@
 import { Card, CardBody, CardTitle, CardFooter, CardText, CardImg, Button, ButtonGroup, Container, Row, Col,
 UncontrolledDropdown, DropdownMenu, DropdownItem, DropdownToggle } from 'reactstrap'; 
 import { useContext, useMemo, useCallback, useState, useEffect } from 'react';
-import { StateContext, getUnitsTechnologies, haveTechnology } from './utils';
+import { StateContext, getUnitsTechnologies, haveTechnology, wormholesAreAdjacent } from './utils';
 import { neighbors } from './Grid';
 import { produce } from 'immer';
 
@@ -665,7 +665,7 @@ export const AntiFighterBarrage = () => {
                     </span>
                 })}
             </span>
-            <Button color='danger' disabled = {everyoneRolls || enemyRetreat} onClick={()=>moves.nextStep(true)}>Retreat</Button>
+            <Button color='danger' disabled = {everyoneRolls || enemyRetreat} onClick={moves.retreat}>Retreat</Button>
         </CardFooter>
     </Card>);
 
@@ -923,6 +923,10 @@ export const CombatRetreat = (args) => {
 
     const possibleTiles = useMemo(() => {
         const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
+        if(activeTile.tdata.wormhole){
+            const wormholes = G.tiles.filter(t => t.tid !== activeTile.tid && t.tdata.wormhole && wormholesAreAdjacent(G, activeTile.tdata.wormhole, t.tdata.wormhole));
+            if(wormholes.length) neighs.push(...wormholes.map(w => ({tileId: w.tid})));
+        }
 
         return neighs.filter(n => {
             const tile = G.tiles.find(t => t.tid === n.tileId);
@@ -945,7 +949,7 @@ export const CombatRetreat = (args) => {
 
             return false;
         });
-    }, [activeTile, playerID, G.tiles, G.races]);
+    }, [activeTile, playerID, G]);
 
     const acceptableTile = useMemo(() => {
         return possibleTiles && selectedTile > -1 && possibleTiles.find(t => t.tileId === G.tiles[selectedTile].tid);

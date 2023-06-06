@@ -278,6 +278,11 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
             if(planet){
                 let sd = planet.units['spacedock'].length * R_UNITS['SPACEDOCK'].production;
                 let max = planet.resources + sd;
+
+                /*if(exhaustedCards.indexOf('War Machine')>-1){
+                    max += 4;
+                }*/
+
                 return max;
             }
         }
@@ -301,6 +306,10 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                     sum -= upgrades.length;
                 }
             }
+
+            /*if(exhaustedCards.indexOf('War Machine')>-1){
+                sum -= 1;
+            }*/
 
             if(haveTechnology(G.races[playerID], 'SARWEEN_TOOLS')){
                 sum -= 1;
@@ -1051,7 +1060,7 @@ const PaymentCard = (args) => {
 
     const [payment, setPayment] = useState({ influence: { planets: [], tg: 0 }, resources: { planets: [], tg: 0 }, tg: 0, token: { s:0, t:0 } });
     const [paid, setPaid] = useState({}); //exhausted
-    const tg = useMemo(() => args.race.tg - payment.influence.tg - payment.resources.tg, [payment, args]);
+    const tg = useMemo(() => args.race.tg - payment.influence.tg - payment.resources.tg - payment.tg, [payment, args]);
     const tokens = useMemo(()=> ({ t: args.race.tokens.t - payment.token.t, s: args.race.tokens.s - payment.token.s}), [payment, args]);
 
     const payPlanet = useCallback((e, planet, type) => {
@@ -1169,37 +1178,42 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
     const { G, playerID, moves } = useContext(StateContext);
     const psArch = haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY');
 
-    return PLANETS.map((p,i) => {
-      let trait;
-      if(p.trait) trait = <img alt='trait' style={{width: '1.5rem'}} src={'icons/' + p.trait + '.png'}/>;
-      let specialty;
-      if(p.specialty) specialty = <img alt='specialty' style={{width: '1.5rem'}} src={'icons/' + p.specialty + '.png'}/>;
+    if(PLANETS && PLANETS.length){
+        return PLANETS.map((p,i) => {
+        let trait;
+        if(p.trait) trait = <img alt='trait' style={{width: '1.5rem'}} src={'icons/' + p.trait + '.png'}/>;
+        let specialty;
+        if(p.specialty) specialty = <img alt='specialty' style={{width: '1.5rem'}} src={'icons/' + p.specialty + '.png'}/>;
 
-      let opac = '1';
-      if(exhausted[p.name] === 'pds' || exhausted[p.name] === 'spacedock'){
-          opac = p.exhausted ? '.25':'1';
-      }
-      else{
-        opac = p.exhausted || exhausted[p.name] ? (exhausted[p.name] === 'ready'  ? '1': '.25'):'1';
-      }
-      
-      return (<Row className='hoverable' onClick={()=>onClick(p.name)} key={i} 
-                    style={{cursor: 'default', paddingRight: '1rem', fontSize: '1.25rem', marginTop: '.25rem', lineHeight: '2.2rem', height: '2.5rem', background: exhausted[p.name] ? 'green':'',
-                    opacity: opac, color: 'white'}}>
-                <Col xs='7'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem'}} src={'icons/legendary_complete.png'}/>:'' } {p.name}</Col>
-                <Col xs='1' onClick={(e)=>specClick(e, p)} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
-                <Col xs='1' style={{padding: 0}}>{trait}</Col>
-                {variant !== 'small' && <>
-                <Col xs='1' onClick={(e)=>resClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
-                <Col xs='1' onClick={(e)=>infClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b>{p.influence}</b></Col>
-                
-                {(!psArch || p.exhausted) && <Col />}
-                {psArch && !p.exhausted && <Col className='bi bi-box-arrow-in-right' style={{padding: 0, cursor: 'pointer', position: 'relative'}}> 
-                    <img style={{width: '1.5rem', position: 'absolute', top: '.25rem', left: '1rem'}} onClick={(e)=>{e.stopPropagation(); moves.exhaustForTg(p.name)}} src='icons/trade_good_1.png' alt='tg'/> 
-                </Col>}
-                </>}
-              </Row>)
-    })
+        let opac = '1';
+        if(exhausted[p.name] === 'pds' || exhausted[p.name] === 'spacedock'){
+            opac = p.exhausted ? '.25':'1';
+        }
+        else{
+            opac = p.exhausted || exhausted[p.name] ? (exhausted[p.name] === 'ready'  ? '1': '.25'):'1';
+        }
+        
+        return (<Row className='hoverable' onClick={()=>onClick(p.name)} key={i} 
+                        style={{cursor: 'default', paddingRight: '1rem', fontSize: '1.25rem', marginTop: '.25rem', lineHeight: '2.2rem', height: '2.5rem', background: exhausted[p.name] ? 'green':'',
+                        opacity: opac, color: 'white'}}>
+                    <Col xs='7'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem'}} src={'icons/legendary_complete.png'}/>:'' } {p.name}</Col>
+                    <Col xs='1' onClick={(e)=>specClick(e, p)} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
+                    <Col xs='1' style={{padding: 0}}>{trait}</Col>
+                    {variant !== 'small' && <>
+                    <Col xs='1' onClick={(e)=>resClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
+                    <Col xs='1' onClick={(e)=>infClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b>{p.influence}</b></Col>
+                    
+                    {(!psArch || p.exhausted) && <Col />}
+                    {psArch && !p.exhausted && <Col className='bi bi-box-arrow-in-right' style={{padding: 0, cursor: 'pointer', position: 'relative'}}> 
+                        <img style={{width: '1.5rem', position: 'absolute', top: '.25rem', left: '1rem'}} onClick={(e)=>{e.stopPropagation(); moves.exhaustForTg(p.name)}} src='icons/trade_good_1.png' alt='tg'/> 
+                    </Col>}
+                    </>}
+                </Row>)
+        })
+    }
+    else {
+        return <></>;
+    }
   }
 
 export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
@@ -1440,6 +1454,10 @@ export const ProducingPanel = (args) => {
             }
         }
 
+        if(exhaustedCards.indexOf('War Machine')>-1){
+            sum -= 1;
+        }
+
         if(haveTechnology(G.races[playerID], 'SARWEEN_TOOLS')){
             sum -= 1;
         }
@@ -1491,6 +1509,11 @@ export const ProducingPanel = (args) => {
             }
             let sd = planet.units['spacedock'].length * R_UNITS['SPACEDOCK'].production;
             let max = planet.resources + sd;
+
+            if(exhaustedCards.indexOf('War Machine')>-1){
+                max += 4;
+            }
+
             return max;
         }
 

@@ -30,7 +30,7 @@ export const getPlayerUnits = (tiles, playerID)=> {
         if(t.tdata.fleet){
           Object.keys(t.tdata.fleet).forEach( k => {
             if(!units[k]) units[k] = 0;
-            units[k] += t.tdata.fleet[k];
+            units[k] += t.tdata.fleet[k].length;
           });
         }
       }
@@ -41,7 +41,7 @@ export const getPlayerUnits = (tiles, playerID)=> {
             if(p.units){
               Object.keys(p.units).forEach( k => {
                 if(!units[k]) units[k] = 0;
-                units[k] += p.units[k];
+                units[k] += p.units[k].length;
               });
             }
           }
@@ -345,4 +345,18 @@ export const getMyNeighbors = (G, playerID) => {
   );
 
   return neigh;
+}
+
+export const wormholesAreAdjacent = (G, wormhole1, wormhole2) => {
+
+  if(wormhole1 === wormhole2){
+    return true;
+  }
+  if(G.wormholesAdjacent){
+    if(G.wormholesAdjacent.indexOf(wormhole1) > -1 && G.wormholesAdjacent.indexOf(wormhole2) > -1){
+      return true;
+    }
+  }
+
+  return false;
 }

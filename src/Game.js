@@ -31,7 +31,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(24, 28)); //test only
+        r.actionCards.push(...cardData.actions.slice(34, 39)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -126,7 +126,7 @@ export const TIO = {
           if(!G.pubObjectives.length){
             cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
             G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-            //G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Push Boundaries'), players: []});
+            //G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Amass Wealth'), players: []});
           }
 
           if(!G.actionsDeck.length){
@@ -561,13 +561,13 @@ export const TIO = {
                         else if(card.id === 'Experimental Battlestation'){
                           const activeTile = G.tiles.find(t => t.active === true);
 
-                          if(activeTile && !activeTile.tdata.spaceCannons_done){
+                          if(activeTile && !activeTile.tdata.spaceCannons_done && !G.races[ctx.currentPlayer].spaceCannonsImmunity){
                             if(G.spaceCannons){
                               if(!G.spaceCannons[playerID]){
                                 G.spaceCannons[playerID] = 'spaceCannonAttack';
                               }
                             }
-                            else {
+                            else if(activeTile.tdata.attacker || (String(activeTile.tdata.occupied) !== String(playerID) && activeTile.tdata.fleet)){
                               G.spaceCannons = {};
                               G.spaceCannons[playerID] = 'spaceCannonAttack';
                             }
@@ -586,6 +586,59 @@ export const TIO = {
                           const race = G.races[card.target.playerID];
                           if(race){
                             race.tg += 1;
+                          }
+                        }
+                        else if(card.id === 'Harness Energy'){
+                          const activeTile = G.tiles.find(t => t.active === true);
+                          if(activeTile && activeTile.tdata.type === 'red'){
+                            G.races[playerID].commodity = G.races[playerID].commCap;
+                          }
+                        }
+                        else if(card.id === 'In The Silence Of Space'){
+                          G.races[playerID].moveThroughEnemysFleet = String(G.tiles[card.target.tidx].tid);
+                        }
+                        else if(card.id === 'Lost Star Chart'){
+                          G.wormholesAdjacent = ['alpha', 'beta'];
+                        }
+                        else if(card.id === 'Master Plan'){
+                          G.races[playerID].actions.splice(-1);
+                        }
+                        else if(card.id === 'Rally'){
+                          const activeTile = G.tiles.find(t => t.active === true);
+                          if(activeTile && activeTile.tdata.fleet && String(activeTile.tdata.occupied)!==String(playerID)){
+                            G.races[playerID].tokens.f += 2;
+                          }
+                        }
+                        else if(card.id === 'Reparations'){
+                          if(card.target.exhausted2){
+                            card.target.exhausted2.forEach(p => {
+                              const planet = getPlanetByName(G.tiles, p.name);
+                              planet.exhausted = true;
+                            });
+                          }
+                          if(card.target.exhausted){
+                            card.target.exhausted.forEach(p => {
+                              const planet = getPlanetByName(G.tiles, p.name);
+                              planet.exhausted = false;
+                            });
+                          }
+                        }
+                        else if(card.id === 'Solar Flare'){
+                          const activeTile = G.tiles.find(t => t.active === true);
+                          if(activeTile){
+                            G.races[playerID].spaceCannonsImmunity = true;
+                          }
+                        }
+                        else if(card.id === 'Upgrade'){
+                          const activeTile = G.tiles.find(t => t.active === true);
+                          if(activeTile){
+                            const fleet = activeTile.tdata.fleet;
+                            if(fleet && fleet['cruiser'] && String(activeTile.tdata.occupied) === String(playerID)){
+                              fleet['cruiser'].pop();
+                              if(!fleet['cruiser'].length) delete fleet['cruiser'];
+                              if(!fleet['dreadnought']) fleet.dreadnought = [];
+                              fleet['dreadnought'].push({});
+                            }
                           }
                         }
                       }
@@ -613,7 +666,7 @@ export const TIO = {
 
                           if(planets && planets.length){
                             planets.forEach( p => {
-                              if(p.occupied == playerID){
+                              if(String(p.occupied) === String(playerID)){
                                 if(exhausted.indexOf(p.name) > -1){
                                   p.exhausted = !revert;
                                 }
@@ -1267,7 +1320,7 @@ export const TIO = {
                     const activeTile = G.tiles.find(t => t.active === true);
 
                     if(selectedTile > -1 && Object.keys(escFleet).length){
-                      const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
+                      /*const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
                       const possible = neighs.filter(n => {
                           const tile = G.tiles.find(t => t.tid === n.tileId);
 
@@ -1287,7 +1340,8 @@ export const TIO = {
                           return false;
                       });
 
-                      const hex = possible.find(t => t.tileId === G.tiles[selectedTile].tid);
+                      const hex = possible.find(t => t.tileId === G.tiles[selectedTile].tid);*/
+                      const hex = {tileId: G.tiles[selectedTile].tid};
 
                       if(hex){
                         const tile = G.tiles.find(t => t.tid === hex.tileId);
@@ -1552,6 +1606,9 @@ export const TIO = {
                         if(ctx.currentPlayer === playerID){
                           activePlanet.units = {...activePlanet.invasion.troops};
                           delete activePlanet.invasion;
+                          if(activePlanet.occupied !== undefined && String(activePlanet.occupied) !== String(playerID)){
+                            checkTacticalActionCard({G, events, playerID: String(activePlanet.occupied), atype: 'PLANET_OCCUPIED'});
+                          }
                           activePlanet.occupied = playerID;
                           if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
                             if(!activePlanet.units['infantry']) activePlanet.units['infantry']=[];
@@ -1694,13 +1751,14 @@ export const TIO = {
               if(!G.spaceCannons && !ctx.activePlayers){
                 const activeTile = G.tiles.find(t => t.active === true);
 
-                if(activeTile && (activeTile.tdata.attacker || (activeTile.tdata.fleet && activeTile.tdata.occupied === ctx.currentPlayer))){
-                  if(!activeTile.tdata.spaceCannons_done){
+                if(activeTile && (activeTile.tdata.attacker || (activeTile.tdata.fleet && String(activeTile.tdata.occupied) === String(ctx.currentPlayer)) )){
+
+                  if(!activeTile.tdata.spaceCannons_done && !G.races[ctx.currentPlayer].spaceCannonsImmunity){
                     let spaceCannons = {};
                     //enemy's pds at same tile
                     if(activeTile.tdata.planets){
                       activeTile.tdata.planets.forEach(p =>{ 
-                        if(p.occupied !== undefined && p.occupied != ctx.currentPlayer && p.units && p.units.pds){
+                        if(p.occupied !== undefined && p.occupied != ctx.currentPlayer && p.units && (p.units.pds || p.experimentalBattlestation)){
                           spaceCannons[p.occupied] = 'spaceCannonAttack';
                         }
                       });
@@ -1708,19 +1766,18 @@ export const TIO = {
 
                     //cannon in adjacent systems
                     const races = G.races.filter((r, i) => i != ctx.currentPlayer && r.technologies.find(t => t.id === 'PDS').spaceCannon.range > 1).map(r => r.rid);
+                    const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
 
-                    if(races.length > 0){
-                      const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
-                      neighs.forEach(n => {
-                        if(n.tdata.planets){
-                          n.tdata.planets.forEach(p =>{ 
-                            if(races.indexOf(p.occupied) > -1 && p.units && p.units.pds){
-                              spaceCannons[p.occupied] = 'spaceCannonAttack';
-                            }
-                          });
-                        }
-                      });
-                    }
+                    neighs.forEach(nei => {
+                      const n = G.tiles.find(t => t.tid === nei.tileId);
+                      if(n.tdata.planets){
+                        n.tdata.planets.forEach(p =>{ 
+                          if(p.experimentalBattlestation || (races.indexOf(p.occupied) > -1 && p.units && p.units.pds)){
+                            spaceCannons[p.occupied] = 'spaceCannonAttack';
+                          }
+                        });
+                      }
+                    });
                   
                     if(spaceCannons && Object.keys(spaceCannons).length > 0){
                       G.spaceCannons = spaceCannons;
@@ -1736,7 +1793,11 @@ export const TIO = {
             },
             onEnd: ({G, ctx}) => {
               G.strategy = undefined;
+              if(G.wormholesAdjacent) delete G['wormholesAdjacent'];
               if(G.races[ctx.currentPlayer].moveBoost) delete G.races[ctx.currentPlayer]['moveBoost'];
+              if(G.races[ctx.currentPlayer].moveThroughEnemysFleet) delete G.races[ctx.currentPlayer]['moveThroughEnemysFleet'];
+              if(G.races[ctx.currentPlayer].spaceCannonsImmunity) delete G.races[ctx.currentPlayer]['spaceCannonsImmunity'];
+
               const myProds = G.tiles.filter(t =>{ 
                 if(t.tdata.producing_done === true){
                   if(String(t.tdata.occupied) === String(ctx.currentPlayer)){
@@ -1771,7 +1832,7 @@ export const TIO = {
               G.races[playerID].currentActionCard = {...card, reaction: {}, playerID};
               events.setActivePlayers({ all: 'actionCard' });
             }
-            else if(card.when === 'TACTICAL' && card.target === 'self'){
+            else if(card.when === 'TACTICAL' && card.who === 'self'){
               G.races[playerID].currentActionCard = {...card, reaction: {}, playerID};
               events.setActivePlayers({ all: 'actionCard' });
             }
@@ -2154,6 +2215,7 @@ export const TIO = {
             
               tile.active = true;
               if(race.moveBoost) delete race['moveBoost'];
+              if(race.spaceCannonsImmunity) delete race['spaceCannonsImmunity'];
               checkTacticalActionCard({G, playerID, events, atype: 'TILE_ACTIVATED'});
             }
             else{
@@ -2513,8 +2575,8 @@ const completeObjective = ({G, playerID, oid, payment}) => {
             });
             if(payment.resources.tg) race.tg -= payment.resources.tg;
           }
-          if(req.tg && payment.tg){
-            race.tg -= payment.tg;
+          if(req.tg){
+            race.tg -= req.tg;
           }
       }           
 
@@ -2625,13 +2687,20 @@ const checkTacticalActionCard = ({G, events, playerID, atype}) => {
         }
       }
       else if(activeTile.tdata.planets){
-        if(activeTile.tdata.planets.find(p => p.occupied !== undefined && 
-          String(p.occupied) !== String(playerID) && p.units && Object.keys(p.units).length)){
-            if(!players[activeTile.tdata.occupied] && cardOwners.indexOf(String(G.races[activeTile.tdata.occupied].rid)) > -1){
+        const otherPlanet = activeTile.tdata.planets.find(p => p.occupied !== undefined && String(p.occupied) !== String(playerID) && p.units && Object.keys(p.units).length);
+        if(otherPlanet){
+            if(!players[activeTile.tdata.occupied] && cardOwners.indexOf(String(G.races[otherPlanet.occupied].rid)) > -1){
               players[activeTile.tdata.occupied] = {stage: 'tacticalActionCard'};
             }
         }
       }
+    }
+  }
+  else if(atype === 'PLANET_OCCUPIED'){
+    //Reparations
+    const race = G.races[playerID];
+    if(race && race.actionCards.find(a => a.id === 'Reparations')){
+      players[playerID] = {stage: 'tacticalActionCard'};
     }
   }
 
