@@ -284,7 +284,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [G, ctx]);
 
   const actionCardStage = useMemo(() => {
-    return ctx.phase === 'acts' && ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && Object.values(ctx.activePlayers)[0] === 'actionCard';
+    return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && Object.values(ctx.activePlayers)[0] === 'actionCard';
   }, [ctx]);
 
   const spaceCannonAttack = useMemo(()=> {
@@ -1126,7 +1126,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </CardBody>
             </Card>}
 
-            {ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote}/>}
+            {ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote} mini={actionCardStage}/>}
             
             {strategyStage && <StrategyDialog R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}
@@ -1244,8 +1244,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
                   {(rightBottomVisible === 'actions' || race.actionCards.length > 7) && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {race.actionCards.map((pr, i) => {
-                      const disabled = !mustAction && !(pr.when === 'ACTION' && ctx.currentPlayer === playerID) && 
-                                                      !(pr.when === 'TACTICAL' && (pr.who === 'self' || 
+                      const disabled = !mustAction && !(pr.when === 'ACTION' && ctx.phase === 'acts' && ctx.currentPlayer === playerID) && 
+                                                      !(pr.when === 'AGENDA' && ctx.phase === 'agenda') &&
+                                                      !(pr.when === 'TACTICAL' && ctx.phase === 'acts' && (pr.who === 'self' || 
                                                       (ctx.activePlayers && ctx.activePlayers[playerID] === 'tacticalActionCard' && !G.currentTacticalActionCard)));
                       return <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                         <Button style={{width: '100%'}} onClick={()=>moves.playActionCard(pr)} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}

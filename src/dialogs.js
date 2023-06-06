@@ -56,8 +56,8 @@ export const getStratColor = (strat, op) => {
     return color;
 }
 
-export const AgendaDialog = ({ onConfirm }) => {
-    const { G, playerID, exhaustedCards, PLANETS } = useContext(StateContext);
+export const AgendaDialog = ({ onConfirm, mini }) => {
+    const { G, playerID, exhaustedCards, PLANETS, moves } = useContext(StateContext);
     const [ex, setEx] = useState({});
     const [voteRadio, setVoteRadio] = useState('for');
     const [agendaNumber, setAgendaNumber] = useState(1);
@@ -98,10 +98,10 @@ export const AgendaDialog = ({ onConfirm }) => {
     const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
     const a = useMemo(() => G['vote' + agendaNumber], [agendaNumber, G]);
 
-    return <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '50%', position: 'absolute', margin: '10rem'}}>
+    return <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: mini ? '25%':'50%', position: 'absolute', margin: mini ? '5rem 0 0 50%':'10rem'}}>
         <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>Agenda vote</h3></CardTitle>
         <CardBody style={{display: 'flex'}}>
-            <div style={{width: '50%', border: 'solid 1px', color: 'black', position: 'relative', padding: '1rem', marginBottom: '1rem', borderRadius: '5px'}}>
+            <div style={{width: mini ? '100%':'50%', border: 'solid 1px', color: 'black', position: 'relative', padding: '1rem', marginBottom: '1rem', borderRadius: '5px'}}>
                 <img alt='agenda card' style={{width: '3rem', float: 'right', margin: '.5rem'}} src='icons/agenda_black.png'/>
                 <h6 style={{marginBottom: '2rem'}}>{a.id + ' ' + a.type}</h6>
                 
@@ -109,55 +109,62 @@ export const AgendaDialog = ({ onConfirm }) => {
                 <p style={{margin: 0}}>{a.for && <>{a.against ? <b>{'For: '}</b> :''} {a.for}</>}</p>
                 <p>{a.against && <><b>{'Against: '}</b>{a.against}</>}</p>
 
-                {!imVoted && <>
-                    {!a.elect && a.for && <h6 style={{marginTop: '2rem'}}>
-                        <span onClick={()=>setVoteRadio('for')}><Input type='radio' name='vote' checked={voteRadio === 'for' ? 'checked':''} value='for' onChange={()=>setVoteRadio('for')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>For</Label></span>
-                        <span onClick={()=>setVoteRadio('against')}><Input type='radio' name='vote' checked={voteRadio === 'against' ? 'checked':''} value='against' onChange={()=>setVoteRadio('against')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>Against</Label></span>
-                        <span onClick={()=>setVoteRadio('pass')}><Input type='radio' name='vote' checked={voteRadio === 'pass' ? 'checked':''} value='pass' onChange={()=>setVoteRadio('pass')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>Pass</Label></span>
-                    </h6>}
-                    {a.elect && <>
-                        <Input type='select' innerRef={voteSelect} onChange={()=>{}} style={{margin: '1rem 0', color: 'black'}}>
-                            {a.elect === 'Player' && G.races.map((r,i) => <option key={i} value={r.name}>{r.name}</option>)}
-                            {a.elect === 'Law' && G.laws.map((l,i) => <option key={i} value={l.id}>{l.id}</option>)}
-                            {a.elect === 'Scored Secret Objective' && G.races.map((r,i) => r.secretObjectives.map(s => s.players && s.players.length > 0 && <option key={s} value={s.id}>{s.id}</option>))}
-                            {a.elect === 'Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
-                            {a.elect === 'Industrial Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'industrial' && <option key={p.name} value={p.name}>{p.name}</option>))}
-                            {a.elect === 'Hazardous Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'hazardous' && <option key={p.name} value={p.name}>{p.name}</option>))}
-                            {a.elect === 'Cultural Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'cultural' && <option key={p.name} value={p.name}>{p.name}</option>))}
-                            {a.elect === 'Non-home, non-Mecatol Rex system' && G.tiles.map((t) => t.tid > 0 && t.tdata.type !== 'green' && t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
-                        </Input>
-                    </>}
-                    <p><Button color='success' onClick={confirmClick}>{'Confirm ' + votes + ' vote(s)'}</Button></p>
+                {G.races[playerID].actions.length < agendaNumber && <>
+                    <br/><p><i>You can now use one of your action card or pass this step.</i></p>
+                    <Button color='dark' onClick={()=>moves.pass()}>Pass</Button>
                 </>}
-                <div style={{display: 'flex', flexDirection: 'column', marginTop: '2rem'}}>
-                    {G.races.map((r, i) => {
-                        let adj = 0;
-                        
-                        if(haveTechnology(r, 'PREDICTIVE_INTELLIGENCE')){
-                            if(r.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') === -1){
-                                adj = 3;
+                {G.races[playerID].actions.length === agendaNumber && <>
+                    {!imVoted && !mini && <>
+                        {!a.elect && a.for && <h6 style={{marginTop: '2rem'}}>
+                            <span onClick={()=>setVoteRadio('for')}><Input type='radio' name='vote' checked={voteRadio === 'for' ? 'checked':''} value='for' onChange={()=>setVoteRadio('for')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>For</Label></span>
+                            <span onClick={()=>setVoteRadio('against')}><Input type='radio' name='vote' checked={voteRadio === 'against' ? 'checked':''} value='against' onChange={()=>setVoteRadio('against')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>Against</Label></span>
+                            <span onClick={()=>setVoteRadio('pass')}><Input type='radio' name='vote' checked={voteRadio === 'pass' ? 'checked':''} value='pass' onChange={()=>setVoteRadio('pass')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>Pass</Label></span>
+                        </h6>}
+                        {a.elect && <>
+                            <Input type='select' innerRef={voteSelect} onChange={()=>{}} style={{margin: '1rem 0', color: 'black'}}>
+                                {a.elect === 'Player' && G.races.map((r,i) => <option key={i} value={r.name}>{r.name}</option>)}
+                                {a.elect === 'Law' && G.laws.map((l,i) => <option key={i} value={l.id}>{l.id}</option>)}
+                                {a.elect === 'Scored Secret Objective' && G.races.map((r,i) => r.secretObjectives.map(s => s.players && s.players.length > 0 && <option key={s} value={s.id}>{s.id}</option>))}
+                                {a.elect === 'Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
+                                {a.elect === 'Industrial Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'industrial' && <option key={p.name} value={p.name}>{p.name}</option>))}
+                                {a.elect === 'Hazardous Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'hazardous' && <option key={p.name} value={p.name}>{p.name}</option>))}
+                                {a.elect === 'Cultural Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'cultural' && <option key={p.name} value={p.name}>{p.name}</option>))}
+                                {a.elect === 'Non-home, non-Mecatol Rex system' && G.tiles.map((t) => t.tid > 0 && t.tdata.type !== 'green' && t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
+                            </Input>
+                        </>}
+                        <p><Button color='success' onClick={confirmClick}>{'Confirm ' + votes + ' vote(s)'}</Button></p>
+                    </>}
+                
+                    <div style={{display: 'flex', flexDirection: 'column', marginTop: '2rem'}}>
+                        {G.races.map((r, i) => {
+                            let adj = 0;
+                            
+                            if(haveTechnology(r, 'PREDICTIVE_INTELLIGENCE')){
+                                if(r.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') === -1){
+                                    adj = 3;
+                                }
+                                if(agendaNumber > 1 && r.voteResults[agendaNumber-2] && r.voteResults[agendaNumber-2].withTech === 'PREDICTIVE_INTELLIGENCE'){
+                                    adj += 3;
+                                }
                             }
-                            if(agendaNumber > 1 && r.voteResults[agendaNumber-2] && r.voteResults[agendaNumber-2].withTech === 'PREDICTIVE_INTELLIGENCE'){
-                                adj += 3;
-                            }
-                        }
 
-                        return <div key={i} style={{display: 'flex', lineHeight: '2rem'}}>
-                            <div style={{width: '2rem', color: 'white', textAlign: 'center', background: 'url("icons/influence_bg.png") center no-repeat', backgroundSize: 'contain'}}>
-                                <b>{r.votesMax + adj - (agendaNumber > 1 ? r.voteResults[agendaNumber-2].count: 0)}</b>
+                            return <div key={i} style={{display: 'flex', lineHeight: '2rem'}}>
+                                <div style={{width: '2rem', color: 'white', textAlign: 'center', background: 'url("icons/influence_bg.png") center no-repeat', backgroundSize: 'contain'}}>
+                                    <b>{r.votesMax + adj - (agendaNumber > 1 ? r.voteResults[agendaNumber-2].count: 0)}</b>
+                                </div>
+                                <b>{r.name + ' : ' + ( r.voteResults.length >= agendaNumber ? r.voteResults[agendaNumber-1].count + 
+                                ' ' + r.voteResults[agendaNumber-1].vote.toUpperCase() : '') }
+                                </b>
                             </div>
-                            <b>{r.name + ' : ' + ( r.voteResults.length >= agendaNumber ? r.voteResults[agendaNumber-1].count + 
-                            ' ' + r.voteResults[agendaNumber-1].vote.toUpperCase() : '') }
-                            </b>
-                        </div>
-                    })}
-                </div>
+                        })}
+                    </div>
+                </>}
                 {a && a.decision && <h6 style={{color: 'white', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.5)'}}>{'DECISION: ' + a.decision.toUpperCase()}</h6>}
                 {G.vote2 && !G.vote2.decision && agendaNumber < 2 && <Button color='success' onClick={()=>setAgendaNumber(agendaNumber + 1)} style={{marginTop: '2rem'}}>{'Next'}</Button>}
             </div>
-            <div style={{width: '50%', overflowY: 'auto', maxHeight: '30rem', marginLeft: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+            {!mini && <div style={{width: '50%', overflowY: 'auto', maxHeight: '30rem', marginLeft: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                 <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>
-            </div>
+            </div>}
         </CardBody>
     </Card>
 
