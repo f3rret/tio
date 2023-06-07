@@ -284,7 +284,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [G, ctx]);
 
   const actionCardStage = useMemo(() => {
-    return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && Object.values(ctx.activePlayers)[0] === 'actionCard';
+    return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && Object.values(ctx.activePlayers)[0]==='actionCard';
   }, [ctx]);
 
   const spaceCannonAttack = useMemo(()=> {
@@ -726,15 +726,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   {p.occupied !== undefined && String(element.tdata.occupied) !== String(p.occupied) && 
                     <Sprite tint={'red'} pointerdown={()=>moves.invasion(p)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={1} alpha={.85}/>}
                 </>}
-                {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) =>
-                  <Sprite key={ui} x={40 + ui*55} y={-10} scale={1} anchor={0} image={'icons/unit_ground_bg.png'}>
-                    <Sprite image={'units/' + u.toUpperCase() + '.png'} x={-5} y={-5} scale={.4} alpha={1}/>
-                    {p.units[u].length > 1 && <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
-                    x={40} y={25} text={p.units[u].length}/>}
-                    {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
-                      <Text text='► Production' x={0} y={-10} interactive={true} pointerdown={()=>setProducing(p.name)} 
-                          style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>}
-                  </Sprite>
+                {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) => {
+                  return <Sprite key={ui} x={40 + ui*55} y={-10} scale={1} anchor={0} image={'icons/unit_ground_bg.png'}>
+                      <Sprite image={'units/' + u.toUpperCase() + '.png'} x={-5} y={-5} scale={.4} alpha={1}/>
+                      {p.units[u].length > 1 && <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
+                      x={40} y={25} text={p.units[u].length}/>}
+                      {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
+                        <Text text='► Production' x={0} y={-10} interactive={true} pointerdown={()=>setProducing(p.name)} 
+                            style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>}
+                    </Sprite>
+                  }
                 )}
                 
                 {p.invasion && <Sprite scale={.75} x={p.hitRadius * 2} y={-30} image='icons/invader.png' alpha={0.85}>

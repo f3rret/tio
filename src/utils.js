@@ -360,3 +360,25 @@ export const wormholesAreAdjacent = (G, wormhole1, wormhole2) => {
 
   return false;
 }
+
+export const computeVoteResolution = (G, agendaNumber) => {
+
+  const voteResolution = {};
+  G.races.forEach(r => {
+    if(r.voteResults[agendaNumber - 1].vote){
+      if(!voteResolution[r.voteResults[agendaNumber - 1].vote]){
+        voteResolution[r.voteResults[agendaNumber - 1].vote] = 0;
+      }
+      voteResolution[r.voteResults[agendaNumber - 1].vote] += (r.voteResults[agendaNumber - 1].count || 0);
+    }
+  });
+
+  let decision;
+  Object.keys(voteResolution).forEach(k => {
+    if(!decision) decision = k;
+    if(voteResolution[decision] < voteResolution[k]) decision = k;
+  });
+
+  return decision;
+
+}

@@ -1,9 +1,11 @@
-import { getPlanetByName } from './utils';
+import { getPlanetByName, computeVoteResolution } from './utils';
 
 export const ACTION_CARD_STAGE = {
     moves: {
       cancel: ({G, ctx, playerID, events}) => {
-        const card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
+        let card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
+        if(ctx.phase === 'agenda') card = G.currentAgendaActionCard;
+
         if(String(card.playerID) === String(playerID)){
           events.setActivePlayers({});
           if(card.when === 'ACTION') G.races[card.playerID].currentActionCard = undefined;
@@ -11,11 +13,14 @@ export const ACTION_CARD_STAGE = {
         }
       },
       pass: ({G, playerID, ctx, events}) => {
-        const card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
+        let card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
+        if(ctx.phase === 'agenda') card = G.currentAgendaActionCard;
+
         card.reaction[playerID] = 'pass';
       },
       next: ({G, ctx, playerID, random}, target) => {
-        const card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
+        let card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
+        if(ctx.phase === 'agenda') card = G.currentAgendaActionCard;
 
         if(String(card.playerID) === String(playerID)){
           card.target = target;
@@ -30,7 +35,8 @@ export const ACTION_CARD_STAGE = {
         }
       },
       done: ({G, ctx, events, playerID, random}) => {
-        const card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
+        let card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
+        if(ctx.phase === 'agenda') card = G.currentAgendaActionCard;
 
         if(String(card.playerID) === String(playerID)){
           if(card.when === 'ACTION'){
@@ -371,6 +377,36 @@ export const ACTION_CARD_STAGE = {
               }
             }
           }
+          else if(card.when === 'AGENDA'){
+            if(card.id === 'Ancient Burial Sites'){
+              G.tiles.forEach(t =>{
+                if(t.tdata.planets){
+                  t.tdata.planets.forEach(p => {
+                    if(String(p.occupied) === String(card.target.playerID) && p.trait === 'cultural'){
+                      p.exhausted = true;
+                    }
+                  })
+                }
+              });
+            }
+            else if(card.id === 'Assassinate Representative'){
+              G.races[card.target.playerID].voteResults.push({vote: null, count: 0});
+              if(G.vote2){
+                if(G.passedPlayers.indexOf(card.target.playerID) === -1){
+                  G.passedPlayers.push(card.target.playerID);
+                }
+              }
+            }
+            else if(card.id === 'Bribery'){
+              const agendaNumber = G.races[playerID].voteResults.length;
+              G.races[playerID].voteResults[agendaNumber - 1].count += card.target.tg;
+              G['vote' + agendaNumber].decision = computeVoteResolution(G, agendaNumber);
+            }
+            else if(card.id === 'Confusing Legal Text'){
+              const agendaNumber = G.races[playerID].voteResults.length;
+              G['vote' + agendaNumber].decision = G.races[card.target.playerID].name;
+            }
+          }
 
           G.races[card.playerID].actionCards.splice(G.races[card.playerID].actionCards.findIndex(a => a.id === card.id), 1);
           if(card.when === 'ACTION'){
@@ -379,6 +415,12 @@ export const ACTION_CARD_STAGE = {
           }
           else if(card.when === 'TACTICAL'){
             G.currentTacticalActionCard = undefined;
+            G.races[card.playerID].currentActionCard = undefined;
+          }
+          else if(card.when === 'AGENDA'){
+            G.currentAgendaActionCard = undefined;
+            G.races[playerID].actions.push('ACTION_CARD');
+            events.endTurn();
           }                      
           events.setActivePlayers({});
         }

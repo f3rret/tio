@@ -7,7 +7,7 @@ import techData from './techData.json';
 import cardData from './cardData.json';
 import { ACTION_CARD_STAGE } from './gameStages';
 import { produce } from 'immer';
-import { NUM_PLAYERS, checkObjective, getUnitsTechnologies, haveTechnology, enemyHaveTechnology, getPlanetByName } from './utils';
+import { NUM_PLAYERS, checkObjective, getUnitsTechnologies, haveTechnology, enemyHaveTechnology, getPlanetByName, computeVoteResolution } from './utils';
 
 export const TIO = {
     
@@ -32,7 +32,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(34, 39)); //test only
+        r.actionCards.push(...cardData.actions.slice(40, 45)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -48,15 +48,15 @@ export const TIO = {
               if(races[idx].startingUnits){
                 draft.fleet = races[idx].startingUnits.fleet;
                 
-                if(draft.planets.length < 2){
+                //if(draft.planets.length < 2){
                   draft.planets[0].units = {...races[idx].startingUnits.ground};
-                }
+                /*}
                 else{
                   draft.planets[0].units = {...races[idx].startingUnits.ground};
                   delete draft.planets[0].units.pds;
 
                   draft.planets[1].units = {pds: races[idx].startingUnits.ground.pds};
-                }
+                }*/
               }
             }
           });
@@ -122,7 +122,7 @@ export const TIO = {
             events.endTurn();
           }
         },
-        onBegin: ({ G, ctx, random }) => {
+        onBegin: ({ G, ctx, random, events }) => {
          
           if(!G.pubObjectives.length){
             cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
@@ -177,60 +177,10 @@ export const TIO = {
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
           }
 
+          //events.endPhase(); //test only!
         },
         onEnd: ({ G }) => {
           G.TURN_ORDER = G.races.map((r, i) => ({initiative: r.initiative, i})).sort((a, b) => a.initiative > b.initiative ? 1 : (a.initiative < b.initiative ? -1 : 0)).map(r => r.i);
-        },
-        endIf: ({ G, ctx }) => {
-          const cardsCount = ctx.numPlayers > 1 ? 1 : 2; // more than 4!
-          return ctx.playOrder.every( r => G.races[r].strategy.length === cardsCount );
-        }
-      },
-      stats: {
-        next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
-        turn: {
-          order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),//TurnOrder.ONCE,
-          /*minMoves: 1,
-          maxMoves: 1*/
-        },
-        moves: {
-          completeObjective: ({G, playerID, events}, oid, payment) => {
-            completeObjective({G, playerID, oid, payment});
-            G.passedPlayers.push(playerID);
-            events.endTurn();
-          },
-          dropActionCard: ({G, playerID}, cardId) => {
-            const idx = G.races[playerID].actionCards.findIndex(a => a.id === cardId);
-
-            if(idx > -1){
-              delete G.races[playerID].actionCards[idx];
-              G.races[playerID].actionCards = G.races[playerID].actionCards.filter(a => a);
-            }
-          },
-          pass: ({ G, playerID, events }) => {
-            G.passedPlayers.push(playerID);
-            events.endTurn();
-          }
-        },
-        onBegin: ({ G, random }) => {
-          G.passedPlayers = [];
-          G.races.forEach(r => {
-            r.actionCards.push(G.actionsDeck.pop());
-            if(haveTechnology(r, 'NEURAL_MOTIVATOR')){
-              r.actionCards.push(G.actionsDeck.pop());
-            }
-            r.exhaustedCards = [];
-          });
-          //return {...G, passedPlayers: []}
-        },
-        onEnd: ({ G }) => {
-          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-          G.races.forEach( r => { 
-            r.strategy = []; 
-            r.initiative = undefined;
-            r.tokens.new += haveTechnology(r, 'HYPER_METABOLISM') ? 3:2; 
-          });
-
           G.tiles.forEach( t => {
             if(t.tdata.planets && t.tdata.planets.length){
               t.tdata.planets.forEach(p => {
@@ -240,13 +190,14 @@ export const TIO = {
               })
             }
           });
-          G.passedPlayers = [];
         },
-        endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
+        endIf: ({ G, ctx }) => {
+          const cardsCount = ctx.numPlayers > 1 ? 1 : 2; // more than 4!
+          return ctx.playOrder.every( r => G.races[r].strategy.length === cardsCount );
+        }
       },
       acts: {
-        //start: true,
-        next: 'agenda',//'stats',
+        next: /*'agenda',//test only!*/'stats',
         turn: {
             /*minMoves: 1,
             maxMoves: 1,*/
@@ -930,7 +881,7 @@ export const TIO = {
                       G.races[playerID].retreat = undefined;
 
                       const ap = {...ctx.activePlayers};
-                      Object.keys(ap).forEach(pid => ap[pid] = 'spaceCombat');
+                      Object.keys(ap).forEach(pid => ap[pid] = {stage: 'spaceCombat'});
                       events.setActivePlayers({value: ap});
                     }
 
@@ -1993,14 +1944,85 @@ export const TIO = {
         },
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       },
+      stats: {
+        next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
+        turn: {
+          order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),//TurnOrder.ONCE,
+          /*minMoves: 1,
+          maxMoves: 1*/
+        },
+        moves: {
+          completeObjective: ({G, playerID, events}, oid, payment) => {
+            completeObjective({G, playerID, oid, payment});
+            G.passedPlayers.push(playerID);
+            events.endTurn();
+          },
+          dropActionCard: ({G, playerID}, cardId) => {
+            const idx = G.races[playerID].actionCards.findIndex(a => a.id === cardId);
+
+            if(idx > -1){
+              delete G.races[playerID].actionCards[idx];
+              G.races[playerID].actionCards = G.races[playerID].actionCards.filter(a => a);
+            }
+          },
+          pass: ({ G, playerID, events }) => {
+            G.passedPlayers.push(playerID);
+            events.endTurn();
+          }
+        },
+        onBegin: ({ G, random }) => {
+          G.passedPlayers = [];
+          G.races.forEach(r => {
+            r.actionCards.push(G.actionsDeck.pop());
+            if(haveTechnology(r, 'NEURAL_MOTIVATOR')){
+              r.actionCards.push(G.actionsDeck.pop());
+            }
+            r.exhaustedCards = [];
+          });
+          //return {...G, passedPlayers: []}
+        },
+        onEnd: ({ G }) => {
+          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+          G.races.forEach( r => { 
+            r.strategy = []; 
+            r.initiative = undefined;
+            r.tokens.new += haveTechnology(r, 'HYPER_METABOLISM') ? 3:2; 
+          });
+
+          G.passedPlayers = [];
+          let order = G.races.map((r,i)=>i);
+          const spkIdx = G.races.findIndex(r => String(r.rid) === String(G.speaker));
+          order = [...order.slice(spkIdx), ...order.slice(0, spkIdx)];
+          G.TURN_ORDER = [...order.slice(1), order[0]]; //speaker at the end
+        },
+        endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
+      },
       agenda: {
         next: 'strat',
+
         turn: {
           order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
           /*minMoves: 1,
           maxMoves: 1,*/
           stages: {
-            actionCard: ACTION_CARD_STAGE
+            actionCard: ACTION_CARD_STAGE,
+            afterVoteActionCard: {
+              moves: {
+                playActionCard: ({G, playerID, events, ctx}, card) => {
+                  if(card.when === 'AGENDA' && card.after === true){
+                    if(!G.races[ctx.currentPlayer].currentActionCard){ //no current card from active player
+                      if(!G.currentAgendaActionCard){ //no current tactical card
+                        G.currentAgendaActionCard = {...card, reaction: {}, playerID};
+                        events.setActivePlayers({ all: 'actionCard' });
+                      }
+                    }
+                  }
+                },
+                pass: ({events}) => {
+                  events.endStage();
+                }
+              }
+            }
           }
         },
 
@@ -2039,33 +2061,43 @@ export const TIO = {
             G.races[playerID].voteResults.push(vr);
 
             const agendaNumber = G.vote2 ? 2:1;
+
             if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
-              const voteResolution = {};
-              G.races.forEach(r => {
-                if(!voteResolution[r.voteResults[agendaNumber - 1].vote]){
-                  voteResolution[r.voteResults[agendaNumber - 1].vote] = 0;
-                }
-                voteResolution[r.voteResults[agendaNumber - 1].vote] += (r.voteResults[agendaNumber - 1].votes || 0);
-              });
-
-              let decision;
-              Object.keys(voteResolution).forEach(k => {
-                if(!decision) decision = k;
-                if(voteResolution[decision] < voteResolution[k]) decision = k;
-              });
-
-              G['vote' + agendaNumber].decision = decision;
-              if(G['vote' + agendaNumber].type === 'LAW'){
-                G.laws.push(G['vote' + agendaNumber]);
-              }
+              G['vote' + agendaNumber].decision = computeVoteResolution(G, agendaNumber);
 
               G.races.forEach(r => {
                 if(r.voteResults[agendaNumber - 1].withTech === 'PREDICTIVE_INTELLIGENCE'){
-                  if(r.voteResults[agendaNumber - 1].vote === decision){
+                  if(r.voteResults[agendaNumber - 1].vote === G['vote' + agendaNumber].decision){
                     r.exhaustedCards.splice(r.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE'), 1);
                   }
                 }
               });
+
+              let afterVoteActions = {}; //check if players have this type action cards
+              G.races.forEach((r, i) => {
+                if(r.actionCards && r.actionCards.length){
+                  const haveCard = r.actionCards.find(ac => {
+                    if(ac.after === true){
+                      if(ac.id !== 'Confusing Legal Text'){
+                        return true;
+                      }
+                      else{
+                        if(G['vote' + agendaNumber].decision === r.name){
+                          return true;
+                        }
+                      }
+                    }
+                    return false;
+                  });
+                  if(haveCard){
+                    afterVoteActions[i]={stage: 'afterVoteActionCard'};
+                  }
+                }
+              });
+
+              if(Object.keys(afterVoteActions).length){
+                events.setActivePlayers({value: afterVoteActions});
+              }
 
               if(!G.vote2){
                 G.vote2 = G.agendaDeck.pop();
@@ -2075,14 +2107,21 @@ export const TIO = {
                   G.passedPlayers.push(playerID);
                 }
               }
+
+              if(!Object.keys(afterVoteActions).length){
+                events.endTurn();
+              }
             }
             else if(G.vote2){
               if(G.passedPlayers.indexOf(playerID) === -1){
                 G.passedPlayers.push(playerID);
               }
+
+              events.endTurn();
             }
-            
-            events.endTurn();
+            else{
+              events.endTurn();
+            }
             
           },
           pass: ({G, playerID, events}) => {
@@ -2098,8 +2137,7 @@ export const TIO = {
                 return INVALID_MOVE;
               }
 
-              G.races[playerID].currentActionCard = {...card, reaction: {}, playerID};
-              G.races[playerID].actions.push('ACTION_CARD');
+              G.currentAgendaActionCard = {...card, reaction: {}, playerID};
               events.setActivePlayers({ all: 'actionCard' });
             } 
           }
@@ -2115,6 +2153,8 @@ export const TIO = {
             if(t.active) t.active = false;
             if(t.tdata.planets && t.tdata.planets.length){
               t.tdata.planets.forEach(p => {
+                p.exhausted = false;
+
                 if(p.occupied !== undefined){
                   G.races[p.occupied].votesMax += p.influence;
                 }
@@ -2126,6 +2166,13 @@ export const TIO = {
         },
 
         onEnd: ({ G, ctx }) => {
+          
+          for(var i=1; i<=2; i++){
+            if(G['vote' + i].type === 'LAW' && G['vote' + i].decision.toUpperCase() !== 'AGAINST'){
+              G.laws.push(G['vote' + i]);
+            }
+          }
+
           G.vote1 = undefined;
           G.vote2 = undefined;
 
@@ -2141,7 +2188,13 @@ export const TIO = {
 
           G.races.forEach(r => r.actions = []);
           G.passedPlayers = [];
+
+          let order = G.races.map((r,i)=>i);
+          const spkIdx = G.races.findIndex(r => String(r.rid) === String(G.speaker));
+          order = [...order.slice(spkIdx), ...order.slice(0, spkIdx)];
+          G.TURN_ORDER = order; //speaker at the begin
         },
+
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       }
     },

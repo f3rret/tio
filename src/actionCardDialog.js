@@ -1,5 +1,5 @@
 import { Card, CardImg,  CardTitle, CardBody, CardFooter, ButtonGroup, Button, Row, Col, Input, Modal, ModalFooter, ModalBody } from 'reactstrap';
-import { useState, useMemo, useContext, useCallback } from 'react';
+import { useState, useMemo, useContext, useCallback, useEffect } from 'react';
 import { produce } from 'immer';
 //import techData from './techData.json';
 import { StateContext, haveTechnology, UNITS_LIMIT, getPlanetByName, getMyNeighbors} from './utils';
@@ -19,11 +19,16 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
 
     const card = useMemo(() => {
         let c = G.races[ctx.currentPlayer].currentActionCard;
-        if(!c){ //tactical
+
+        if(ctx.phase === 'agenda'){
+            c = G.currentAgendaActionCard;
+        }
+        else if(!c){ //tactical
             c = G.currentTacticalActionCard;
-        } 
+        }
+
         return c;
-    }, [G.races, ctx, G.currentTacticalActionCard]);
+    }, [G.races, ctx, G.currentTacticalActionCard, G.currentAgendaActionCard]);
 
     const cardOwner = useMemo(() => card.playerID !== undefined ? card.playerID : playerID, [card, playerID]);
 
@@ -265,6 +270,18 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                 }
             }
         }
+        else if(card.when === 'AGENDA'){
+            if(['Ancient Burial Sites', 'Assassinate Representative', 'Confusing Legal Text'].indexOf(card.id) > -1){
+                if(selection && String(selection) !== String(cardOwner)){
+                    result = { playerID: selection }
+                }
+            }
+            else if(card.id === 'Bribery'){
+                if(selection && selection > 0){
+                    result = { tg: selection }
+                }
+            }
+        }
 
         return result;
     }, [card, selectedPlanet, selectedTile, notarget, selection, 
@@ -388,6 +405,8 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                     {tabs === 1 && <PlanetsRows PLANETS={PLANETS.filter(p => p.exhausted === true)} exhausted={exhausted} onClick={planetsRowsClick} />}
                                 </div>
                             </>}
+                            {['Ancient Burial Sites', 'Assassinate Representative', 'Confusing Legal Text'].indexOf(card.id) > -1 && <PlayerSelect onSelect={setSelection} noTokensInfo={true}/>}
+                            {card.id === 'Bribery' && <PayTg onChange={setSelection}/>}
                         </div>}
 
                         {card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
@@ -425,6 +444,12 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                         </div>
                                     </div>
                             </>}
+                            {['Ancient Burial Sites', 'Assassinate Representative', 'Confusing Legal Text'].indexOf(card.id) > -1 && <OneLinePlayerInfo race={G.races[card.target.playerID]}/>}
+                            {card.id === 'Bribery' && <h5 style={{fontSize: '50px', width: '15rem', margin: '1rem'}}>
+                                {card.target.tg}<Button tag='img' src='/icons/trade_good_1.png' color='warning' 
+                                    style={{marginLeft: '1rem', width: '4rem', padding: '.5rem', borderTopLeftRadius: '5px', borderBottomLeftRadius: '5px', 
+                                    backgroundColor: 'rgba(33, 37, 41, 0.95)'}} />
+                                </h5>}
                         </div>}
                     </div>
                 </CardBody>
@@ -448,6 +473,31 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                     }
                 </CardFooter>
             </Card>
+}
+
+
+const PayTg = ({onChange}) => {
+    const {G, playerID} = useContext(StateContext);
+    const [tg, setTg] = useState(0);
+
+    const tgClick = useCallback(() => {
+        const max = G.races[playerID].tg;
+        if(tg < max){
+            setTg(tg+1);
+        }
+
+    }, [tg, G.races, playerID]);
+
+    useEffect(() => {
+        if(onChange) onChange(tg);
+    }, [tg, onChange]);
+
+    return <div style={{width: '15rem', margin: '1rem'}}>
+        <h5 style={{fontSize: '50px', display: 'flex', justifyContent: 'flex-end'}}>{'+'}{tg}{' '}<Button tag='img' onClick={tgClick} src='/icons/trade_good_1.png' color='warning' 
+            style={{marginLeft: '1rem', width: '4rem', padding: '.5rem', borderTopLeftRadius: '5px', borderBottomLeftRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} />
+            <Button disabled={tg < 1} color='warning' style={{width: '1.5rem', borderLeft: 'none', color:'orange', backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: 0}} onClick={()=>setTg(tg-1)}>▼</Button></h5>
+        <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{'You mean to spend ' + tg + ' tg'}</h6>
+    </div>;
 }
 
 const OneTechLine = ({technology}) => {
@@ -535,12 +585,12 @@ export const TechnologyDialog = ({tooltipMode, onSelect, selected, races}) => {
   </Card>
 }
 
-const PlayerSelect = ({onSelect}) => {
+const PlayerSelect = ({onSelect, noTokensInfo}) => {
     const { G } = useContext(StateContext);
 
     return <Input type='select' onChange={(e)=>onSelect(e.target.value)} style={{margin: '.5rem', width: '96%', color: 'black'}}>
         {G.races.map((r,i) =>{
-            return <option key={i} value={i} style={{fontWeight: 'bold'}}>{r.name + ': ' + r.tokens.t + ' tactic tokens'}</option>
+            return <option key={i} value={i} style={{fontWeight: 'bold'}}>{r.name + (noTokensInfo ? '':': ' + r.tokens.t + ' tactic tokens')}</option>
             }
         )}
     </Input>
