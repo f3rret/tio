@@ -10,6 +10,7 @@ export const ACTION_CARD_STAGE = {
           events.setActivePlayers({});
           if(card.when === 'ACTION') G.races[card.playerID].currentActionCard = undefined;
           else if(card.when === 'TACTICAL') G.currentTacticalActionCard = undefined;
+          else if(card.when === 'AGENDA') G.currentAgendaActionCard = undefined;
         }
       },
       pass: ({G, playerID, ctx, events}) => {
@@ -31,7 +32,11 @@ export const ACTION_CARD_STAGE = {
             const dice = random.D10( count );
             card.dice = dice;
           }
-
+          else if(card.id === 'Insider Information'){
+            if(G.agendaDeck.length){
+              card.nextAgenda = {...G.agendaDeck[G.agendaDeck.length-1]};
+            }
+          }
         }
       },
       done: ({G, ctx, events, playerID, random}) => {
@@ -405,6 +410,27 @@ export const ACTION_CARD_STAGE = {
             else if(card.id === 'Confusing Legal Text'){
               const agendaNumber = G.races[playerID].voteResults.length;
               G['vote' + agendaNumber].decision = G.races[card.target.playerID].name;
+            }
+            else if(['Construction Rider', 'Diplomacy Rider', 'Imperial Rider', 'Leadership Rider', 'Politics Rider'].indexOf(card.id)>-1){
+              G.predict.push({playerID, card});
+              G.races[playerID].voteResults.push({vote: null, count: 0});
+
+              if(G.vote2){
+                if(G.passedPlayers.indexOf(playerID) === -1){
+                  G.passedPlayers.push(playerID);
+                }
+              }
+            }
+            else if(card.id === 'Distinguished Councilor'){
+              const agendaNumber = G.races[playerID].voteResults.length;
+              G.races[playerID].voteResults[agendaNumber - 1].count += 5;
+              G['vote' + agendaNumber].decision = computeVoteResolution(G, agendaNumber);
+            }
+            else if(card.id === 'Hack Election'){
+              G.TURN_ORDER_IS_REVERSED = true;
+            }
+            else if(card.id === 'Insider Information'){
+              //nothing
             }
           }
 

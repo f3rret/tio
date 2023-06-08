@@ -7,7 +7,8 @@ import techData from './techData.json';
 import cardData from './cardData.json';
 import { ACTION_CARD_STAGE } from './gameStages';
 import { produce } from 'immer';
-import { NUM_PLAYERS, checkObjective, getUnitsTechnologies, haveTechnology, enemyHaveTechnology, getPlanetByName, computeVoteResolution } from './utils';
+import { NUM_PLAYERS, checkObjective, getUnitsTechnologies, haveTechnology, 
+  enemyHaveTechnology, getPlanetByName, votingProcessDone, dropACard } from './utils';
 
 export const TIO = {
     
@@ -32,7 +33,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(40, 45)); //test only
+        r.actionCards.push(...cardData.actions.slice(43, 48)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -177,7 +178,7 @@ export const TIO = {
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
           }
 
-          //events.endPhase(); //test only!
+          events.endPhase(); //test only!
         },
         onEnd: ({ G }) => {
           G.TURN_ORDER = G.races.map((r, i) => ({initiative: r.initiative, i})).sort((a, b) => a.initiative > b.initiative ? 1 : (a.initiative < b.initiative ? -1 : 0)).map(r => r.i);
@@ -197,7 +198,7 @@ export const TIO = {
         }
       },
       acts: {
-        next: /*'agenda',//test only!*/'stats',
+        next: 'stats',
         turn: {
             /*minMoves: 1,
             maxMoves: 1,*/
@@ -1947,9 +1948,7 @@ export const TIO = {
       stats: {
         next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
         turn: {
-          order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),//TurnOrder.ONCE,
-          /*minMoves: 1,
-          maxMoves: 1*/
+          order: TurnOrder.CUSTOM_FROM('TURN_ORDER')
         },
         moves: {
           completeObjective: ({G, playerID, events}, oid, payment) => {
@@ -1957,20 +1956,13 @@ export const TIO = {
             G.passedPlayers.push(playerID);
             events.endTurn();
           },
-          dropActionCard: ({G, playerID}, cardId) => {
-            const idx = G.races[playerID].actionCards.findIndex(a => a.id === cardId);
-
-            if(idx > -1){
-              delete G.races[playerID].actionCards[idx];
-              G.races[playerID].actionCards = G.races[playerID].actionCards.filter(a => a);
-            }
-          },
+          dropActionCard: dropACard,
           pass: ({ G, playerID, events }) => {
             G.passedPlayers.push(playerID);
             events.endTurn();
           }
         },
-        onBegin: ({ G, random }) => {
+        onBegin: ({ G, events }) => {
           G.passedPlayers = [];
           G.races.forEach(r => {
             r.actionCards.push(G.actionsDeck.pop());
@@ -1979,7 +1971,8 @@ export const TIO = {
             }
             r.exhaustedCards = [];
           });
-          //return {...G, passedPlayers: []}
+          
+          events.setPhase('agenda'); //test only!
         },
         onEnd: ({ G }) => {
           G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
@@ -1991,9 +1984,10 @@ export const TIO = {
 
           G.passedPlayers = [];
           let order = G.races.map((r,i)=>i);
-          const spkIdx = G.races.findIndex(r => String(r.rid) === String(G.speaker));
+          /*const spkIdx = G.races.findIndex(r => String(r.rid) === String(G.speaker));
           order = [...order.slice(spkIdx), ...order.slice(0, spkIdx)];
-          G.TURN_ORDER = [...order.slice(1), order[0]]; //speaker at the end
+          G.TURN_ORDER = [...order.slice(1), order[0]]; //speaker at the end*/
+          G.TURN_ORDER = order;
         },
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       },
@@ -2001,9 +1995,62 @@ export const TIO = {
         next: 'strat',
 
         turn: {
-          order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
-          /*minMoves: 1,
-          maxMoves: 1,*/
+          order: {//TurnOrder.CUSTOM_FROM('TURN_ORDER'),
+            playOrder: ({ G }) => G.TURN_ORDER,
+            first: () => 1, //speaker at the end
+            next: ({ G, ctx }) => {
+              const agendaNumber = G.vote2 ? 2:1;
+              let acPlayers = 0;
+              let votedPlayers = 0;
+
+              G.races.forEach(r => {
+                if(!r.actions){
+                  acPlayers++;
+                }
+                else{
+                  if(r.actions.length < agendaNumber) acPlayers++;
+                  if(r.voteResults && r.voteResults.length === agendaNumber) votedPlayers++;
+                }
+              });
+
+              if(acPlayers === 0){
+                if(G.TURN_ORDER_IS_REVERSED === true){
+                  if(votedPlayers === 0) return ctx.numPlayers - 1; //next before speaker
+
+                  let result = 1;
+                  if(ctx.playOrderPos){
+                    result = ctx.playOrderPos - 1;
+                  }
+                  return Math.abs(result % ctx.numPlayers);
+                }
+                else{ 
+                  if(votedPlayers === 0) return 1;
+                  else return (ctx.playOrderPos + 1) % ctx.numPlayers;
+                }
+              }
+              else{
+                if(acPlayers === ctx.numPlayers) return 1;
+                else return (ctx.playOrderPos + 1) % ctx.numPlayers;
+              }
+            }
+          },
+          onBegin: ({ G, ctx, events }) => {
+            if(!ctx.activePlayers){ //pass turn if some action cards was effect
+              const agendaNumber = G.vote2 ? 2:1;
+              const voteResults = G.races[ctx.currentPlayer].voteResults;
+
+              if(voteResults && voteResults.length === agendaNumber){
+                if(voteResults[agendaNumber-1].vote === null){
+                  if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
+                    votingProcessDone({G, agendaNumber, playerID: ctx.currentPlayer, events});
+                  }
+                  else{
+                    events.endTurn();
+                  }
+                }
+              }
+            }
+          },
           stages: {
             actionCard: ACTION_CARD_STAGE,
             afterVoteActionCard: {
@@ -2011,16 +2058,18 @@ export const TIO = {
                 playActionCard: ({G, playerID, events, ctx}, card) => {
                   if(card.when === 'AGENDA' && card.after === true){
                     if(!G.races[ctx.currentPlayer].currentActionCard){ //no current card from active player
-                      if(!G.currentAgendaActionCard){ //no current tactical card
+                      if(!G.currentAgendaActionCard){ //no current after-vote-agenda card
                         G.currentAgendaActionCard = {...card, reaction: {}, playerID};
                         events.setActivePlayers({ all: 'actionCard' });
                       }
                     }
                   }
                 },
-                pass: ({events}) => {
+                pass: ({ctx, events}) => {
                   events.endStage();
-                }
+                  if(ctx.activePlayers && Object.keys(ctx.activePlayers).length === 1) events.endTurn();
+                },
+                dropActionCard: dropACard
               }
             }
           }
@@ -2054,6 +2103,7 @@ export const TIO = {
             }
 
             exhaustPlanet(Object.keys(result.ex));
+            
             let vr = {vote: result.vote, count: votes};
             if(result.exhaustedCards && result.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE')>-1){
               vr.withTech = 'PREDICTIVE_INTELLIGENCE';
@@ -2063,54 +2113,7 @@ export const TIO = {
             const agendaNumber = G.vote2 ? 2:1;
 
             if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
-              G['vote' + agendaNumber].decision = computeVoteResolution(G, agendaNumber);
-
-              G.races.forEach(r => {
-                if(r.voteResults[agendaNumber - 1].withTech === 'PREDICTIVE_INTELLIGENCE'){
-                  if(r.voteResults[agendaNumber - 1].vote === G['vote' + agendaNumber].decision){
-                    r.exhaustedCards.splice(r.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE'), 1);
-                  }
-                }
-              });
-
-              let afterVoteActions = {}; //check if players have this type action cards
-              G.races.forEach((r, i) => {
-                if(r.actionCards && r.actionCards.length){
-                  const haveCard = r.actionCards.find(ac => {
-                    if(ac.after === true){
-                      if(ac.id !== 'Confusing Legal Text'){
-                        return true;
-                      }
-                      else{
-                        if(G['vote' + agendaNumber].decision === r.name){
-                          return true;
-                        }
-                      }
-                    }
-                    return false;
-                  });
-                  if(haveCard){
-                    afterVoteActions[i]={stage: 'afterVoteActionCard'};
-                  }
-                }
-              });
-
-              if(Object.keys(afterVoteActions).length){
-                events.setActivePlayers({value: afterVoteActions});
-              }
-
-              if(!G.vote2){
-                G.vote2 = G.agendaDeck.pop();
-              }
-              else{
-                if(G.passedPlayers.indexOf(playerID) === -1){
-                  G.passedPlayers.push(playerID);
-                }
-              }
-
-              if(!Object.keys(afterVoteActions).length){
-                events.endTurn();
-              }
+              votingProcessDone({G, agendaNumber, playerID, events});
             }
             else if(G.vote2){
               if(G.passedPlayers.indexOf(playerID) === -1){
@@ -2128,6 +2131,7 @@ export const TIO = {
             G.races[playerID].actions.push('PASS');
             events.endTurn();
           },
+          dropActionCard: dropACard,
           playActionCard: ({G, playerID, events}, card) => {
             if(card.when === 'AGENDA'){
               const agendaNumber = G.vote2 ? 2:1;
@@ -2163,6 +2167,7 @@ export const TIO = {
           });
 
           G.passedPlayers = [];
+          G.predict = []; //vote prediction by agenda action card
         },
 
         onEnd: ({ G, ctx }) => {
@@ -2188,6 +2193,7 @@ export const TIO = {
 
           G.races.forEach(r => r.actions = []);
           G.passedPlayers = [];
+          G.predict = []; //vote prediction by agenda action card
 
           let order = G.races.map((r,i)=>i);
           const spkIdx = G.races.findIndex(r => String(r.rid) === String(G.speaker));

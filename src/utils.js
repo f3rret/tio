@@ -379,6 +379,120 @@ export const computeVoteResolution = (G, agendaNumber) => {
     if(voteResolution[decision] < voteResolution[k]) decision = k;
   });
 
+  if(G.predict && G.predict.length){
+
+    G.predict.forEach(predict => {
+      const card = predict.card;
+
+      if(String(card.target.selection).toUpperCase() === String(decision).toUpperCase()){
+
+        if(card.id === 'Construction Rider'){
+          const tile = G.tiles[card.target.tidx];
+          const planet = tile.tdata.planets[card.target.pidx];
+
+          if(!planet.units) planet.units = {};
+          if(!planet.units.spacedock) planet.units.spacedock = [];
+          if(planet.units.spacedock.length === 0){
+            const units = getPlayerUnits(G.tiles, predict.playerID);
+
+            if(!units['spacedock'] || units['spacedock'] < UNITS_LIMIT['spacedock']){
+              planet.units.spacedock.push({});
+            }
+          }
+        }
+        else if(card.id === 'Diplomacy Rider'){
+          const tile = G.tiles[card.target.tidx];
+          G.races.forEach((r, i) => {
+            if(String(predict.playerID) !== String(i)){
+              tile.tdata.tokens.push(r.rid);
+            }
+          });
+        }
+        else if(card.id === 'Imperial Rider'){
+          G.races[card.playerID].vp++;
+        }
+        else if(card.id === 'Leadership Rider'){
+          G.races[card.playerID].tokens.new += 3;
+        }
+        else if(card.id === 'Politics Rider'){
+          G.races[card.playerID].actionCards.push(...G.actionsDeck.splice(-3));
+          G.speaker = G.races[card.playerID].rid;
+        }
+
+      }
+
+    });
+
+  }
+
+  G.predict = [];
+
   return decision;
 
+}
+
+
+export const votingProcessDone = ({G, agendaNumber, playerID, events}) => {
+
+  if(G.TURN_ORDER_IS_REVERSED){
+    delete G['TURN_ORDER_IS_REVERSED'];
+  }
+  
+  G['vote' + agendaNumber].decision = computeVoteResolution(G, agendaNumber);
+
+  G.races.forEach(r => {
+    if(r.voteResults[agendaNumber - 1].withTech === 'PREDICTIVE_INTELLIGENCE'){
+      if(r.voteResults[agendaNumber - 1].vote === G['vote' + agendaNumber].decision){
+        r.exhaustedCards.splice(r.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE'), 1);
+      }
+    }
+  });
+
+  let afterVoteActions = {}; //check if players have this type action cards
+  G.races.forEach((r, i) => {
+    if(r.actionCards && r.actionCards.length){
+      const haveCard = r.actionCards.find(ac => {
+        if(ac.after === true){
+          if(ac.id !== 'Confusing Legal Text'){
+            return true;
+          }
+          else{
+            if(G['vote' + agendaNumber].decision === r.name){
+              return true;
+            }
+          }
+        }
+        return false;
+      });
+      if(haveCard){
+        afterVoteActions[i]={stage: 'afterVoteActionCard'};
+      }
+    }
+  });
+
+  if(Object.keys(afterVoteActions).length){
+    events.setActivePlayers({value: afterVoteActions});
+  }
+
+  if(!G.vote2){
+    G.vote2 = G.agendaDeck.pop();
+  }
+  else{
+    if(G.passedPlayers.indexOf(playerID) === -1){
+      G.passedPlayers.push(playerID);
+    }
+  }
+
+  if(!Object.keys(afterVoteActions).length){
+    events.endTurn();
+  }
+}
+
+export const dropACard = ({G, playerID}, cardId) => {
+  const idx = G.races[playerID].actionCards.findIndex(a => a.id === cardId);
+
+  if(idx > -1){
+    delete G.races[playerID].actionCards[idx];
+    G.races[playerID].actionCards = G.races[playerID].actionCards.filter(a => a);
+  }
 }

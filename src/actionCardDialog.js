@@ -1,5 +1,5 @@
-import { Card, CardImg,  CardTitle, CardBody, CardFooter, ButtonGroup, Button, Row, Col, Input, Modal, ModalFooter, ModalBody } from 'reactstrap';
-import { useState, useMemo, useContext, useCallback, useEffect } from 'react';
+import { Card, CardImg,  CardTitle, CardBody, CardFooter, ButtonGroup, Button, Row, Col, Input, Modal, ModalFooter, ModalBody, Label } from 'reactstrap';
+import { useState, useMemo, useContext, useCallback, useEffect, useRef } from 'react';
 import { produce } from 'immer';
 //import techData from './techData.json';
 import { StateContext, haveTechnology, UNITS_LIMIT, getPlanetByName, getMyNeighbors} from './utils';
@@ -15,7 +15,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
 
     const notarget = useMemo(() => ['Economic Initiative', 'Fighter Conscription', 'Industrial Initiative', 
     'Rise of a Messiah', 'Counterstroke', 'Flank Speed', 'Harness Energy', 'Lost Star Chart', 'Master Plan', 
-    'Rally', 'Solar Flare', 'Upgrade', 'War Machine'], []);
+    'Rally', 'Solar Flare', 'Upgrade', 'War Machine', 'Distinguished Councilor', 'Hack Election', 'Insider Information'], []);
 
     const card = useMemo(() => {
         let c = G.races[ctx.currentPlayer].currentActionCard;
@@ -272,20 +272,49 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
         }
         else if(card.when === 'AGENDA'){
             if(['Ancient Burial Sites', 'Assassinate Representative', 'Confusing Legal Text'].indexOf(card.id) > -1){
-                if(selection && String(selection) !== String(cardOwner)){
+                if(selection !== undefined && String(selection) !== String(cardOwner)){
                     result = { playerID: selection }
                 }
             }
             else if(card.id === 'Bribery'){
-                if(selection && selection > 0){
+                if(selection !== undefined && selection > 0){
                     result = { tg: selection }
+                }
+            }
+            else if(card.id === 'Construction Rider'){
+                if(selection !== undefined && selectedTile > -1 && selectedPlanet > -1){
+                    const tile = G.tiles[selectedTile];
+                    const planet = tile.tdata.planets[selectedPlanet];
+
+                    if(String(planet.occupied) === String(playerID)){
+                        if(!planet.units || !planet.units.spacedock || !planet.units.spacedock.length){
+                            if(!UNITS['spacedock'] || UNITS['spacedock'] < UNITS_LIMIT['spacedock']){
+                                result = { selection, tidx: selectedTile, pidx: selectedPlanet }
+                            }
+                        }
+                    }
+                }
+            }
+            else if(card.id === 'Diplomacy Rider'){
+                if(selection !== undefined && selectedTile > -1){
+                    const tile = G.tiles[selectedTile];
+
+                    if(tile.tdata.planets && tile.tdata.planets.find(p => String(p.occupied) === String(playerID))){
+                        result = { selection, tidx: selectedTile }
+                    }
+                }
+            }
+            else if(['Imperial Rider', 'Leadership Rider', 'Politics Rider'].indexOf(card.id)>-1){
+                if(selection !== undefined){
+                    result = { selection }
                 }
             }
         }
 
         return result;
     }, [card, selectedPlanet, selectedTile, notarget, selection, 
-        requirements, exhaustedCards, exhausted, exhausted2, G, cardOwner, UNITS, selectedUnit]);
+        requirements, exhaustedCards, exhausted, exhausted2, G, 
+        cardOwner, UNITS, selectedUnit, playerID]);
 
     const isMine = useMemo(() => {
         return String(playerID) === String(cardOwner);
@@ -407,6 +436,17 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             </>}
                             {['Ancient Burial Sites', 'Assassinate Representative', 'Confusing Legal Text'].indexOf(card.id) > -1 && <PlayerSelect onSelect={setSelection} noTokensInfo={true}/>}
                             {card.id === 'Bribery' && <PayTg onChange={setSelection}/>}
+                            {card.id === 'Construction Rider' && <>
+                                <Predict onSelect={setSelection}/>
+                                <p style={{margin: '1rem 0 0 1rem'}}><b>Choose one:</b></p>
+                                <div style={{padding: '0 .5rem 1rem'}}><PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/></div>
+                            </>}
+                            {card.id === 'Diplomacy Rider' && <>
+                                <Predict onSelect={setSelection}/>
+                                <p style={{margin: '1rem 0 0 1rem'}}><b>Choose one:</b></p>
+                                <TileInfo tidx={selectedTile}/>
+                            </>}
+                            {['Imperial Rider', 'Leadership Rider', 'Politics Rider'].indexOf(card.id) > -1 && <Predict onSelect={setSelection}/>}
                         </div>}
 
                         {card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
@@ -449,7 +489,15 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                 {card.target.tg}<Button tag='img' src='/icons/trade_good_1.png' color='warning' 
                                     style={{marginLeft: '1rem', width: '4rem', padding: '.5rem', borderTopLeftRadius: '5px', borderBottomLeftRadius: '5px', 
                                     backgroundColor: 'rgba(33, 37, 41, 0.95)'}} />
-                                </h5>}
+                            </h5>}
+                            {['Construction Rider', 'Diplomacy Rider', 'Imperial Rider', 'Leadership Rider', 'Politics Rider'].indexOf(card.id) > -1 && <h6 style={{margin: '1rem'}}> {selection.toUpperCase()} </h6>}
+                            {card.id === 'Insider Information' && card.playerID === playerID && Object.keys(card.reaction).length === (Object.keys(ctx.activePlayers).length - 1) && card.nextAgenda && 
+                            <div style={{padding: '1rem'}}>
+                                <h6>{card.nextAgenda.id + ' ' + card.nextAgenda.type}</h6>
+                                {card.nextAgenda.elect && <b>{'Elect: ' + card.nextAgenda.elect}</b>}
+                                <p style={{margin: 0}}>{card.nextAgenda.for && <>{card.nextAgenda.against ? <b>{'For: '}</b> :''} {card.nextAgenda.for}</>}</p>
+                                <p>{card.nextAgenda.against && <><b>{'Against: '}</b>{card.nextAgenda.against}</>}</p>
+                            </div>}
                         </div>}
                     </div>
                 </CardBody>
@@ -475,6 +523,43 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
             </Card>
 }
 
+
+const Predict = ({onSelect}) => {
+    const { G } = useContext(StateContext);
+    const [voteRadio, setVoteRadio] = useState('for');
+    const a = G.vote2 ? G.vote2 : G.vote1;
+    const ref = useRef();
+
+    useEffect(()=> {
+        if(a && !a.elect && a.for){
+            onSelect(voteRadio);
+        }
+        else if(a && a.elect && ref.current){
+            onSelect(ref.current.value); 
+        }
+    }, [a, onSelect, voteRadio])
+
+    return <>
+        <p style={{margin: '1rem 0 0 1rem'}}><b>Predict vote outcome:</b></p>
+        {!a.elect && a.for && <h6 style={{margin: '2rem'}}>
+            <span onClick={()=>setVoteRadio('for')}><Input type='radio' name='vote' checked={voteRadio === 'for' ? 'checked':''} value='for' onChange={()=>setVoteRadio('for')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>For</Label></span>
+            <span onClick={()=>setVoteRadio('against')}><Input type='radio' name='vote' checked={voteRadio === 'against' ? 'checked':''} value='against' onChange={()=>setVoteRadio('against')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>Against</Label></span>
+            <span onClick={()=>setVoteRadio('pass')}><Input type='radio' name='vote' checked={voteRadio === 'pass' ? 'checked':''} value='pass' onChange={()=>setVoteRadio('pass')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>Pass</Label></span>
+        </h6>}
+        {a.elect && <>
+            <Input type='select' innerRef={ref} onChange={(e)=>onSelect(e.target.value)} style={{margin: '1rem', width: '90%', color: 'black'}}>
+                {a.elect === 'Player' && G.races.map((r,i) => <option key={i} value={r.name}>{r.name}</option>)}
+                {a.elect === 'Law' && G.laws.map((l,i) => <option key={i} value={l.id}>{l.id}</option>)}
+                {a.elect === 'Scored Secret Objective' && G.races.map((r,i) => r.secretObjectives.map(s => s.players && s.players.length > 0 && <option key={s} value={s.id}>{s.id}</option>))}
+                {a.elect === 'Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
+                {a.elect === 'Industrial Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'industrial' && <option key={p.name} value={p.name}>{p.name}</option>))}
+                {a.elect === 'Hazardous Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'hazardous' && <option key={p.name} value={p.name}>{p.name}</option>))}
+                {a.elect === 'Cultural Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'cultural' && <option key={p.name} value={p.name}>{p.name}</option>))}
+                {a.elect === 'Non-home, non-Mecatol Rex system' && G.tiles.map((t) => t.tid > 0 && t.tdata.type !== 'green' && t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
+            </Input>
+        </>}
+    </>
+}
 
 const PayTg = ({onChange}) => {
     const {G, playerID} = useContext(StateContext);
@@ -654,7 +739,7 @@ const TileInfo = ({tidx}) => {
 
     return <div style={{width: '80%', padding: '1rem', display: 'flex', alignItems: 'center'}}>
             {tidx === -1 && <p style={{margin: '1rem', color: 'rgba(0,0,0,.5)'}}>Click tile on map</p>}
-            {tidx > -1 && <CardImg style={{width: '75%'}} src={'tiles/ST_'+G.tiles[tidx].tid+'.png'} />}
+            {tidx > -1 && <CardImg style={{width: '65%'}} src={'tiles/ST_'+G.tiles[tidx].tid+'.png'} />}
         </div>
 }
 

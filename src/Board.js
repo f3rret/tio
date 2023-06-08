@@ -208,8 +208,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }
 
   const mustAction = useMemo(() => {
-    return ctx.phase === 'stats' && race.actionCards.length > 7
-  }, [ctx.phase, race.actionCards])
+    return /*ctx.phase === 'stats' && */race.actionCards.length > 7
+  }, [race.actionCards])
 
   const promissorySwitch = useCallback(() => {
     setStratUnfold(0);
@@ -1245,15 +1245,23 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
                   {(rightBottomVisible === 'actions' || race.actionCards.length > 7) && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
                     {race.actionCards.map((pr, i) => {
-                      const disabled = !mustAction && !(pr.when === 'ACTION' && ctx.phase === 'acts' && ctx.currentPlayer === playerID) && 
+                      let disabled = !mustAction && !(pr.when === 'ACTION' && ctx.phase === 'acts' && ctx.currentPlayer === playerID) && 
                                                       !(pr.when === 'AGENDA' && ctx.phase === 'agenda') &&
                                                       !(pr.when === 'TACTICAL' && ctx.phase === 'acts' && (pr.who === 'self' || 
                                                       (ctx.activePlayers && ctx.activePlayers[playerID] === 'tacticalActionCard' && !G.currentTacticalActionCard)));
+                      if(!disabled && pr.when === 'AGENDA'){
+                        if(pr.after === true){
+                          if(!(ctx.activePlayers && ctx.activePlayers[playerID] === 'afterVoteActionCard')) disabled = true;
+                        }
+                        else{
+                          if(ctx.activePlayers) disabled = true;
+                        }
+                      }
                       return <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
-                        <Button style={{width: '100%'}} onClick={()=>moves.playActionCard(pr)} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}
+                        <Button style={{width: '100%'}} onClick={()=>mustAction ? moves.dropActionCard(pr.id) : moves.playActionCard(pr)} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}
                           disabled={disabled} >
                           <b>{pr.id.toUpperCase()}</b>
-                          {mustAction && race.actionCards.length > 7 && <b onClick={(e)=>{ e.stopPropagation(); moves.dropActionCard(pr.id)}} className='bi bi-backspace-fill' style={{color: 'red', right: 0, position: 'absolute'}}/>}
+                          {mustAction && race.actionCards.length > 7 && <b className='bi bi-backspace-fill' style={{color: 'red', right: 0, position: 'absolute'}}/>}
                         </Button>
                         <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.description}</UncontrolledTooltip> 
                       </ListGroupItem>}
