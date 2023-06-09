@@ -682,18 +682,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     
   }, [exhaustedCards, setExhaustedCards, G.races, producing, G.tiles, selectedTile, playerID, flushTempCt, justOccupied]);
 
-  /*
-  {haveTechnology(G.races[playerID], 'GRAVITY_DRIVE') && 
-              <Text interactive={true} pointerdown={()=>exhaustTechCard('GRAVITY_DRIVE')} x={-100} y={70} alpha={race.exhaustedCards && race.exhaustedCards.indexOf('GRAVITY_DRIVE')>-1 ? .5:1} style={{fontSize: 20, fill:'white'}} text='GRAVITY DRIVE'>
-                {exhaustedCards.indexOf('GRAVITY_DRIVE') === -1 && <Sprite scale={.35} x={-30} image='icons/propulsion.png'/>}
-                {exhaustedCards.indexOf('GRAVITY_DRIVE') > -1 && <Text text='► ' x={-30} style={{fontSize: 20, fill:'white'}}/>}
-              </Text>}
-
-  {activeTile && justOccupied && justOccupied === p.name && haveTechnology(race, 'INTEGRATED_ECONOMY') &&
-      <Text text='► Production' x={40} y={10} interactive={true} pointerdown={()=>{setProducing(p.name)}} 
-              style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>}
-                
-  */
 
   const maxActs =  useMemo(() => haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1, [race]);
 
@@ -954,6 +942,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         });
       }
     }
+
     else{
       prevStages.current = null;
     }
@@ -1234,7 +1223,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       let disabled = !mustAction && !(pr.when === 'ACTION' && ctx.phase === 'acts' && ctx.currentPlayer === playerID) && 
                                                       !(pr.when === 'AGENDA' && ctx.phase === 'agenda') &&
                                                       !(pr.when === 'TACTICAL' && ctx.phase === 'acts' && (pr.who === 'self' || 
-                                                      (ctx.activePlayers && ctx.activePlayers[playerID] === 'tacticalActionCard' && !G.currentTacticalActionCard)));
+                                                          (ctx.activePlayers && ctx.activePlayers[playerID] === 'tacticalActionCard' && !G.currentTacticalActionCard)));
                       if(!disabled && pr.when === 'AGENDA'){
                         if(pr.after === true){
                           if(!(ctx.activePlayers && ctx.activePlayers[playerID] === 'afterVoteActionCard')) disabled = true;
@@ -1243,9 +1232,15 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           if(ctx.activePlayers) disabled = true;
                         }
                       }
+                      if(disabled && pr.when === 'COMBAT'){
+                        if(ctx.phase === 'acts' && ctx.activePlayers && ['bombardment', 'invasion'].indexOf(ctx.activePlayers[playerID]) > -1){
+                          disabled = false;
+                        }
+                      }
                       return <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
-                        <Button style={{width: '100%'}} onClick={()=>mustAction ? moves.dropActionCard(pr.id) : moves.playActionCard(pr)} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}
-                          disabled={disabled} >
+                        <Button style={{width: '100%'}} onClick={()=> { 
+                                  if(mustAction){moves.dropActionCard(pr.id)}
+                                  else{ moves.playActionCard(pr); setRightBottomVisible(null)}}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')} disabled={disabled} >
                           <b>{pr.id.toUpperCase()}</b>
                           {mustAction && race.actionCards.length > 7 && <b className='bi bi-backspace-fill' style={{color: 'red', right: 0, position: 'absolute'}}/>}
                         </Button>

@@ -325,6 +325,19 @@ export const enemyHaveTechnology = (races, players, myId, techId) => {
 
 }
 
+export const enemyHaveCombatAC = (races, players, myId, acId) => {
+
+  const enemyId = Object.keys(players).find(k => String(k) !== String(myId));
+  
+  if(enemyId){
+    return races[enemyId].combatActionCards.indexOf(acId) > -1;  
+  }
+  else{
+    return false;
+  }
+
+}
+
 export const getMyNeighbors = (G, playerID) => {
   let systems = G.tiles.filter( t => String(t.tdata.occupied) === String(playerID) || (t.tdata.planets && t.tdata.planets.some( p => String(p.occupied) === String(playerID))) );
   let neigh = [];
@@ -525,4 +538,16 @@ export const dropACard = ({G, playerID}, cardId) => {
     delete G.races[playerID].actionCards[idx];
     G.races[playerID].actionCards = G.races[playerID].actionCards.filter(a => a);
   }
+}
+
+export const playCombatAC = ({G, playerID}, card) => {
+
+  if(card.when === 'COMBAT'){
+    const idx = G.races[playerID].actionCards.findIndex(ac => ac.id === card.id);
+    if(idx > -1){
+      G.races[playerID].actionCards.splice(idx, 1);
+      G.races[playerID].combatActionCards.push(card.id);
+    }
+  }
+
 }

@@ -1,7 +1,7 @@
 import { Card, CardBody, CardTitle, CardFooter, CardText, CardImg, Button, ButtonGroup, Container, Row, Col,
-UncontrolledDropdown, DropdownMenu, DropdownItem, DropdownToggle } from 'reactstrap'; 
+UncontrolledDropdown, DropdownMenu, DropdownItem, DropdownToggle, Badge } from 'reactstrap'; 
 import { useContext, useMemo, useCallback, useState, useEffect } from 'react';
-import { StateContext, getUnitsTechnologies, haveTechnology, wormholesAreAdjacent } from './utils';
+import { StateContext, getUnitsTechnologies, haveTechnology, wormholesAreAdjacent, enemyHaveCombatAC } from './utils';
 import { neighbors } from './Grid';
 import { produce } from 'immer';
 
@@ -506,8 +506,8 @@ const CombatantForces = (args) => {
         return (combatAbility === 'spaceCannon') && (haveTechnology(race, 'GRAVITON_LASER_SYSTEM') && race.exhaustedCards.indexOf('GRAVITON_LASER_SYSTEM') === -1)
     }, [race, combatAbility]);
 
-    return (
-        <div style={{display: 'flex', position: 'relative', flexDirection: 'row', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+    return (<div style={{margin: '1rem 0'}}>
+        <div style={{display: 'flex', padding: '1rem', position: 'relative', flexDirection: 'row', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             border: String(playerID) === String(owner) ? 'solid 1px rgba(255,255,0,.5)':'solid 1px rgba(255,255,255,.25)'}}>
             <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
             {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: 'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
@@ -525,6 +525,9 @@ const CombatantForces = (args) => {
                                             : null;
                         if(combatAbility === 'bombardment' && u === 'pds') ability = null;
                         if(u === 'spacedock' && combatAbility === 'spaceCannon' && units[u][0].experimentalBattlestation) ability = {value: 5, count: 3};
+                        if(!ability && combatAbility === 'bombardment' && ['fighter', 'infantry', 'mech'].indexOf(u) === -1 && race.combatActionCards.indexOf('Blitz')>-1){
+                            ability = {value: 6, count: 1}
+                        }
                         
                         if(ability){
                             style = {...style, padding: '.5rem', background: 'rgba(255,255,255,.15)'}
@@ -533,10 +536,26 @@ const CombatantForces = (args) => {
                         const className = technologies[u].sustain ? 'sustain_ability':'';
                         const injury = unitsInjury(u);
                         let adj = 0;
+
+                        if(!combatAbility && u === 'pds'){ //spaceCannon: defence
+                            if(G.races[ctx.currentPlayer].combatActionCards.indexOf('Disable') > -1){
+                                ability = null;
+                            }
+                        }
                         if(combatAbility === 'spaceCannon' || u === 'pds'){
                             const enemyId = ctx.currentPlayer; //pds shots only for this player
                             if(haveTechnology(G.races[enemyId], 'ANTIMASS_DEFLECTORS')){
                                 adj = -1;
+                            }
+                        }
+                        else if(combatAbility === 'bombardment'){
+                            if(enemyHaveCombatAC(G.races, ctx.activePlayers, ctx.currentPlayer, 'PLANETARY SHIELD')){
+                                if(G.races[ctx.currentPlayer].combatActionCards.indexOf('Disable') === -1){ //todo: exclude arborecs mech!
+                                    ability = null;
+                                }
+                            }
+                            if(enemyHaveCombatAC(G.races, ctx.activePlayers, ctx.currentPlayer, 'Bunker')){
+                                adj = -4;
                             }
                         }
                         
@@ -584,6 +603,11 @@ const CombatantForces = (args) => {
                     })}
                 </Row>
             </Container>
+        </div>
+        {race.combatActionCards && <div style={{display: 'flex', flexDirection: 'row-reverse'}}>
+            {race.combatActionCards.map((ca, i) => <Badge key={i} color='warning' style={{color: 'black'}}>{ca}</Badge>)}
+            </div>
+        }
         </div>
     );
 
@@ -1133,6 +1157,18 @@ export const Bombardment = () => {
     const { G, ctx, moves } = useContext(StateContext);
     const activeTile = G.tiles.find(t => t.active === true);
 
+    const getTechnology = useCallback((k) => {
+        const race = G.races[ctx.currentPlayer];
+        let technology = race.technologies.find(t => t.id === k.toUpperCase() && t.bombardment);
+
+        if(!technology && race.combatActionCards.indexOf('Blitz')>-1 && ['FIGHTER', 'INFANTRY', 'MECH'].indexOf(k.toUpperCase()) === -1){
+            technology = {...race.technologies.find(t => t.id === k.toUpperCase())};
+            technology.bombardment = {value: 6, count: 1};
+        }
+
+        return technology;
+    }, [ctx.currentPlayer, G.races]);
+
     const hits = useMemo(() => {
         let result = {};
 
@@ -1140,27 +1176,30 @@ export const Bombardment = () => {
         result[pid] = 0;
 
         if(G.dice[pid]){
+            let adj = enemyHaveCombatAC(G.races, ctx.activePlayers, ctx.currentPlayer, 'Bunker') ? -4:0;
             Object.keys(G.dice[pid]).forEach(unit => {
-                const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
-                if(technology && technology.bombardment){
-                    result[pid] += G.dice[pid][unit].dice.filter(d => d >= technology.bombardment.value).length;
+                let technology = getTechnology(unit);
+                if(technology){
+                    result[pid] += G.dice[pid][unit].dice.filter(d => d+adj >= technology.bombardment.value).length;
                 }
             });
         }
         
         return result;
-    }, [G.dice, G.races, ctx.currentPlayer]);
+    }, [G.dice, ctx.currentPlayer, getTechnology, G.races, ctx.activePlayers]);
 
     const bombAbilities = useCallback((race, units)=>{
         const result = {};
     
-        Object.keys(units).forEach( k => {
-            const technology = race.technologies.find(t => t.id === k.toUpperCase() && t.bombardment);
-            if(technology) result[k] = technology;
-        });
+        if(!enemyHaveCombatAC(G.races, ctx.activePlayers, ctx.currentPlayer, 'PLANETARY SHIELD') || race.combatActionCards.indexOf('Disable')>-1){
+            Object.keys(units).forEach( k => {
+                let technology = getTechnology(k);
+                if(technology) result[k] = technology;
+            });
+        }
 
         return result;
-    },[]);
+    },[getTechnology, G.races, ctx]);
 
     const everyoneRolls = useMemo(() => {
         const attacker = bombAbilities(G.races[ctx.currentPlayer], activeTile.tdata.fleet);
@@ -1305,15 +1344,19 @@ export const Invasion = () => {
     const defenderForces = useMemo(() => {
         const result = {};
         if(activePlanet){
-            const possible = (activePlanet.invasion && activePlanet.invasion.nopds) ? ['infantry', 'mech']:['infantry', 'mech', 'pds'];
+            let possible = (activePlanet.invasion && activePlanet.invasion.nopds) ? ['infantry', 'mech']:['infantry', 'mech', 'pds'];
+            if(G.races[ctx.currentPlayer].combatActionCards.indexOf('Disable')>-1){
+                possible = ['infantry', 'mech'];
+            }
             Object.keys(activePlanet.units).forEach(k => {
                 if(possible.indexOf(k) > -1){
                     result[k] = activePlanet.units[k];
                 }
             });
         }
+
         return result;
-    },[activePlanet]);
+    },[activePlanet, ctx.currentPlayer, G.races]);
 
     const magen = useMemo(() => {
         if(activePlanet && activePlanet.invasion && !activePlanet.invasion.magenUsed){
@@ -1342,9 +1385,19 @@ export const Invasion = () => {
                 let h = 0;
                 if(G.dice[pid]){
                     Object.keys(G.dice[pid]).forEach(unit => {
-                        const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                        let technology = {...G.races[pid].technologies.find(t => t.id === unit.toUpperCase())};
                         
-                        if(unit === 'pds'){
+                        if(prevStages[pid] && prevStages[pid][0] === 'bombardment' && prevStages[pid].indexOf('invasion') === -1){ //just after bombardment
+                            if(!technology.bombardment && G.races[pid].combatActionCards.indexOf('Blitz')>-1 && ['FIGHTER', 'INFANTRY', 'MECH'].indexOf(unit.toUpperCase()) === -1){
+                                technology.bombardment = {value: 6, count: 1};
+                            }
+
+                            if(technology && technology.bombardment){
+                                const adj = enemyHaveCombatAC(G.races, ctx.activePlayers, playerID, 'Bunker') ? -4:0;
+                                h += G.dice[pid][unit].dice.filter(die => die+adj >= technology.bombardment.value).length;
+                            }
+                        }
+                        else if(unit === 'pds'){
                             if(technology && technology.spaceCannon){
                                 const adj = haveTechnology(G.races[playerID], 'ANTIMASS_DEFLECTORS') ? -1:0;
                                 h += G.dice[pid][unit].dice.filter(die => die+adj >= technology.spaceCannon.value).length;
@@ -1360,7 +1413,7 @@ export const Invasion = () => {
         }
 
         return result;
-    }, [G.dice, G.races, ctx.activePlayers, activePlanet, ctx.currentPlayer, playerID, magen]);
+    }, [G.dice, G.races, ctx.activePlayers, activePlanet, ctx.currentPlayer, playerID, magen, prevStages]);
 
     const assignedA = useMemo(() => {
         let result = 0;

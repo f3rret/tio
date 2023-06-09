@@ -8,7 +8,7 @@ import cardData from './cardData.json';
 import { ACTION_CARD_STAGE } from './gameStages';
 import { produce } from 'immer';
 import { NUM_PLAYERS, checkObjective, getUnitsTechnologies, haveTechnology, 
-  enemyHaveTechnology, getPlanetByName, votingProcessDone, dropACard } from './utils';
+  enemyHaveTechnology, getPlanetByName, votingProcessDone, dropACard, playCombatAC } from './utils';
 
 export const TIO = {
     
@@ -33,7 +33,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(50, 55)); //test only
+        r.actionCards.push(...cardData.actions.slice(53, 58)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -980,6 +980,7 @@ export const TIO = {
               },
               bombardment: {
                 moves: {
+                  playActionCard: playCombatAC,
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
@@ -1020,6 +1021,7 @@ export const TIO = {
               },
               invasion : {
                 moves: {
+                  playActionCard: playCombatAC,
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
@@ -1314,7 +1316,10 @@ export const TIO = {
                 }
               });
             },
-            onMove: ({ G, ctx }) => {
+            onMove: ({ G, ctx, playerID }) => {
+              if(!ctx.activePlayers || !ctx.activePlayers[playerID]){
+                G.races[playerID].combatActionCards = [];
+              }
 
               //space cannon
               if(!G.spaceCannons && !ctx.activePlayers){
@@ -1576,6 +1581,12 @@ export const TIO = {
             const activePlanet = activeTile.tdata.planets.find(p => p.name === planet.name);
             const defUnits = Object.keys(activePlanet.units);
             
+            const defTechs = getUnitsTechnologies(defUnits, G.races[planet.occupied]);
+            G.races[planet.occupied].combatActionCards = [];
+            if(defUnits.find(u => defTechs[u] && defTechs[u].planetaryShield)){
+              G.races[planet.occupied].combatActionCards.push('PLANETARY SHIELD');
+            }
+
             let stage = 'bombardment';
             if(defUnits.indexOf('infantry') === -1 && defUnits.indexOf('mech') === -1){ //if only pds
               stage = 'invasion_await';
@@ -1941,7 +1952,8 @@ export const TIO = {
           G.passedPlayers = [];
         },
         onBegin: ({ G, random }) => {
-          G.passedPlayers = []; 
+          G.passedPlayers = [];
+          G.races.forEach(r => r.combatActionCards = []); 
         },
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       },
@@ -1970,6 +1982,7 @@ export const TIO = {
               r.actionCards.push(G.actionsDeck.pop());
             }
             r.exhaustedCards = [];
+            r.combatActionCards = [];
           });
           
          // events.setPhase('agenda'); //test only!
