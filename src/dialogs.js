@@ -1648,8 +1648,9 @@ export const ProducingPanel = (args) => {
 }
 
 
-export const UnmeetReqs = ({separate, PLANETS, ex2, adjSpec, G, playerID}) => {
+export const UnmeetReqs = (args) => {
 
+    const {separate, PLANETS, ex2, adjSpec, G, playerID} = args;
     const keys = Object.keys(ex2);
     let result=[];
 

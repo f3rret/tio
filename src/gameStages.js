@@ -411,7 +411,8 @@ export const ACTION_CARD_STAGE = {
               const agendaNumber = G.races[playerID].voteResults.length;
               G['vote' + agendaNumber].decision = G.races[card.target.playerID].name;
             }
-            else if(['Construction Rider', 'Diplomacy Rider', 'Imperial Rider', 'Leadership Rider', 'Politics Rider'].indexOf(card.id)>-1){
+            else if(['Construction Rider', 'Diplomacy Rider', 'Imperial Rider', 'Leadership Rider', 'Politics Rider', 'Sanction', 
+            'Technology Rider', 'Trade Rider', 'Warfare Rider'].indexOf(card.id)>-1){
               G.predict.push({playerID, card});
               G.races[playerID].voteResults.push({vote: null, count: 0});
 
@@ -431,6 +432,12 @@ export const ACTION_CARD_STAGE = {
             }
             else if(card.id === 'Insider Information'){
               //nothing
+            }
+            else if(card.id === 'Veto'){
+              if(G.agendaDeck.length){
+                const agendaNumber = G.vote2 ? 2:1;
+                G['vote'+agendaNumber] = G.agendaDeck.pop();
+              }
             }
           }
 

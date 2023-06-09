@@ -9,13 +9,14 @@ import { UnmeetReqs, PlanetsRows, getTechType } from './dialogs.js';
 export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) => {
     const {G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, PLANETS, UNITS} = useContext(StateContext);
     const [selection, setSelection] = useState();
+    const [selection2, setSelection2] = useState();
     const [exhausted, setExhausted] = useState({});
     const [exhausted2, setExhausted2] = useState({});
     const [tabs, setTabs] = useState(0);
 
     const notarget = useMemo(() => ['Economic Initiative', 'Fighter Conscription', 'Industrial Initiative', 
     'Rise of a Messiah', 'Counterstroke', 'Flank Speed', 'Harness Energy', 'Lost Star Chart', 'Master Plan', 
-    'Rally', 'Solar Flare', 'Upgrade', 'War Machine', 'Distinguished Councilor', 'Hack Election', 'Insider Information'], []);
+    'Rally', 'Solar Flare', 'Upgrade', 'War Machine', 'Distinguished Councilor', 'Hack Election', 'Insider Information', 'Veto'], []);
 
     const card = useMemo(() => {
         let c = G.races[ctx.currentPlayer].currentActionCard;
@@ -33,7 +34,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     const cardOwner = useMemo(() => card.playerID !== undefined ? card.playerID : playerID, [card, playerID]);
 
     const requirements = useMemo(() => {
-        if(card.id === 'Focused Research' && selection){
+        if(['Focused Research', 'Technology Rider'].indexOf(card.id) > -1 && selection){
             
             if(selection){ //technology
                 let adjSpec = [];
@@ -50,7 +51,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                 
                 const ex2 = {};
                 ex2[selection.id] = selection; //ex2[selection] = technology;
-                const reqs = UnmeetReqs({separate: true, PLANETS, ex2, adjSpec, G, cardOwner});
+                const reqs = UnmeetReqs({separate: true, PLANETS, ex2, adjSpec, G, playerID: cardOwner});
                 reqs.adjSpec = adjSpec;
                 return reqs;
             }
@@ -304,15 +305,44 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                     }
                 }
             }
-            else if(['Imperial Rider', 'Leadership Rider', 'Politics Rider'].indexOf(card.id)>-1){
+            else if(['Imperial Rider', 'Leadership Rider', 'Politics Rider', 'Sanction', 'Trade Rider'].indexOf(card.id)>-1){
                 if(selection !== undefined){
                     result = { selection }
+                }
+            }
+            else if(card.id === 'Technology Rider'){
+                if(selection){
+                    let stopThere;
+                    const AI_DEVELOPMENT = exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1;
+
+                    if(AI_DEVELOPMENT){
+                        stopThere = requirements.upgrades.length > 1 || requirements.other.length > 0;
+                    }
+                    else{
+                        stopThere = requirements.upgrades.length > 0 || requirements.other.length > 0;
+                    }
+                    if(!stopThere && selection2 !== undefined){
+                        result = {tech: selection, selection: selection2, AI_DEVELOPMENT, exhausted}
+                    }
+                }
+            }
+            else if(card.id === 'Warfare Rider'){
+                if(selection !== undefined && selectedTile > -1){
+                    const tile = G.tiles[selectedTile];
+
+                    if(String(tile.tdata.occupied) === String(playerID)){
+                        if(tile.tdata.fleet && Object.keys(tile.tdata.fleet).length){
+                            if(!UNITS['dreadnought'] || UNITS['dreadnought'] < UNITS_LIMIT['dreadnought']){
+                                result = { selection, tidx: selectedTile }
+                            }
+                        }
+                    }
                 }
             }
         }
 
         return result;
-    }, [card, selectedPlanet, selectedTile, notarget, selection, 
+    }, [card, selectedPlanet, selectedTile, notarget, selection, selection2,
         requirements, exhaustedCards, exhausted, exhausted2, G, 
         cardOwner, UNITS, selectedUnit, playerID]);
 
@@ -410,7 +440,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown', 
                             'Unstable Planet', 'Uprising', 'Experimental Battlestation'].indexOf(card.id) > -1 && <PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/>}
                             {['Ghost Ship', 'Tactical Bombardment', 'Unexpected Action', 'War Effort', 'In The Silence Of Space'].indexOf(card.id) > -1 && <TileInfo tidx={selectedTile}/>}
-                            {card.id === 'Focused Research' && <TechnologySelect onSelect={setSelection} requirements={requirements} 
+                            {card.id === 'Focused Research' && <TechnologySelect  races={[G.races[playerID]]}  onSelect={setSelection} requirements={requirements} 
                                 exhausted={exhausted} setExhausted={setExhausted}/>}
                             {['Impersonation', 'Mining Initiative'].indexOf(card.id) > -1 && <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                 <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} /></div>}
@@ -441,12 +471,16 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                 <p style={{margin: '1rem 0 0 1rem'}}><b>Choose one:</b></p>
                                 <div style={{padding: '0 .5rem 1rem'}}><PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/></div>
                             </>}
-                            {card.id === 'Diplomacy Rider' && <>
+                            {['Diplomacy Rider', 'Warfare Rider'].indexOf(card.id) > -1 && <>
                                 <Predict onSelect={setSelection}/>
                                 <p style={{margin: '1rem 0 0 1rem'}}><b>Choose one:</b></p>
                                 <TileInfo tidx={selectedTile}/>
                             </>}
-                            {['Imperial Rider', 'Leadership Rider', 'Politics Rider'].indexOf(card.id) > -1 && <Predict onSelect={setSelection}/>}
+                            {card.id === 'Technology Rider' && <>
+                                <Predict onSelect={setSelection2}/>
+                                <TechnologySelect onSelect={setSelection} races={[G.races[playerID]]} requirements={requirements} exhausted={exhausted} setExhausted={setExhausted}/>
+                            </>}
+                            {['Imperial Rider', 'Leadership Rider', 'Politics Rider', 'Sanction', 'Trade Rider'].indexOf(card.id) > -1 && <Predict onSelect={setSelection}/>}
                         </div>}
 
                         {card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
@@ -490,7 +524,9 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                     style={{marginLeft: '1rem', width: '4rem', padding: '.5rem', borderTopLeftRadius: '5px', borderBottomLeftRadius: '5px', 
                                     backgroundColor: 'rgba(33, 37, 41, 0.95)'}} />
                             </h5>}
-                            {['Construction Rider', 'Diplomacy Rider', 'Imperial Rider', 'Leadership Rider', 'Politics Rider'].indexOf(card.id) > -1 && <h6 style={{margin: '1rem'}}> {selection.toUpperCase()} </h6>}
+                            {['Construction Rider', 'Diplomacy Rider', 'Imperial Rider', 'Leadership Rider', 
+                            'Politics Rider', 'Sanction', 'Trade Rider', 'Warfare Rider'].indexOf(card.id) > -1 && <h6 style={{margin: '1rem'}}> {selection.toUpperCase()} </h6>}
+                            {card.id === 'Technology Rider' && <h6 style={{margin: '1rem'}}> {selection2.toUpperCase()} </h6>}
                             {card.id === 'Insider Information' && card.playerID === playerID && Object.keys(card.reaction).length === (Object.keys(ctx.activePlayers).length - 1) && card.nextAgenda && 
                             <div style={{padding: '1rem'}}>
                                 <h6>{card.nextAgenda.id + ' ' + card.nextAgenda.type}</h6>

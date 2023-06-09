@@ -418,6 +418,36 @@ export const computeVoteResolution = (G, agendaNumber) => {
           G.races[card.playerID].actionCards.push(...G.actionsDeck.splice(-3));
           G.speaker = G.races[card.playerID].rid;
         }
+        else if(card.id === 'Sanction'){
+          G.races.forEach(r => {
+            if(r.voteResults && r.voteResults[agendaNumber-1] && String(r.voteResults[agendaNumber-1].vote) === String(decision)){
+              if(r.tokens.f) r.tokens.f--;
+            }
+          });
+        }
+        else if(card.id === 'Technology Rider'){
+          G.races[card.playerID].knownTechs.push(card.target.tech.id);
+          if(card.target.AI_DEVELOPMENT){
+            G.races[card.playerID].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
+          }
+          if(card.target.exhausted){
+            Object.keys(card.target.exhausted).forEach(pname => {
+              const planet = getPlanetByName(G.tiles, pname);
+              planet.exhausted = true;
+            });
+          }
+        }
+        else if(card.id === 'Trade Rider'){
+          G.races[card.playerID].tg += 5;
+        }
+        else if(card.id === 'Warfare Rider'){
+          if(card.target.tidx > -1){
+            const tile = G.tiles[card.target.tidx];
+
+            if(!tile.tdata.fleet['dreadnought']) tile.tdata.fleet.dreadnought = [];
+            tile.tdata.fleet['dreadnought'].push({});
+          }
+        }
 
       }
 

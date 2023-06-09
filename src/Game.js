@@ -33,7 +33,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(43, 48)); //test only
+        r.actionCards.push(...cardData.actions.slice(50, 55)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -1972,7 +1972,7 @@ export const TIO = {
             r.exhaustedCards = [];
           });
           
-          events.setPhase('agenda'); //test only!
+         // events.setPhase('agenda'); //test only!
         },
         onEnd: ({ G }) => {
           G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});

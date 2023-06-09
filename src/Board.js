@@ -1045,20 +1045,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             </ListGroupItem>
   }
 
-  
-/*
-<Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '1rem', position: 'relative', width: '70rem'}}>
-                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Technologies map</h6></CardTitle>
-                  
-                  <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                    {getTechType('propulsion', race)}
-                    {getTechType('biotic', race)}
-                    {getTechType('warfare', race)}
-                    {getTechType('cybernetic', race)}
-                    {getTechType('unit', race)}
-                  </div>
-                </Card>
-*/
   return (
           <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>      
             <MyNavbar />
