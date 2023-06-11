@@ -4,7 +4,8 @@ import { useContext, useMemo, useCallback, useState, useEffect } from 'react';
 import { StateContext, getUnitsTechnologies, haveTechnology, wormholesAreAdjacent, enemyHaveCombatAC } from './utils';
 import { neighbors } from './Grid';
 import { produce } from 'immer';
-
+import { ActionCardDialog } from './actionCardDialog';
+ 
 export const SpaceCannonAttack = () => {
 
     const { G, ctx, playerID, moves } = useContext(StateContext);
@@ -265,7 +266,7 @@ const HitAssign = (args) => {
                 }
                 else{
                     if(technologies[tag].sustain && !units[tag][dmg].hit){
-                        draft[tag][dmg].hit++;
+                        draft[tag][dmg].hit = (draft[tag][dmg].hit || 0 ) + 1;
                         if(draft[tag][dmg].hit > 2) draft[tag][dmg].hit = 0;
                     }
                     else{
@@ -386,8 +387,8 @@ const HitAssign = (args) => {
         }
     }, [allowRepair, hits, setHits]);
 
-    return (
-        <div style={{display: 'flex', position: 'relative', flexDirection: 'row', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+    return (<div style={{margin: '1rem 0'}}>
+        <div style={{display: 'flex', position: 'relative', flexDirection: 'row', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             border: String(playerID) === String(owner) ? 'solid 1px rgba(255,255,0,.5)':'solid 1px rgba(255,255,255,.25)'}}>
             <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
             {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: 'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
@@ -437,13 +438,18 @@ const HitAssign = (args) => {
                 })}
             </div>
         </div>
+        {race.combatActionCards && <div style={{display: 'flex', flexDirection: 'row-reverse'}}>
+            {race.combatActionCards.map((ca, i) => <Badge key={i} color='warning' style={{color: 'black'}}>{ca}</Badge>)}
+            </div>
+        }
+        </div>
     );
 
 }
 
 const CombatantForces = (args) => {
 
-    const { G, moves, playerID, ctx } = useContext(StateContext);
+    const { G, moves, playerID, ctx, prevStages } = useContext(StateContext);
     const {race, units: fleet, owner, combatAbility, isInvasion} = args;
     const [plasmaScoringUsed, setPlasmaScoringUsed] = useState(false);
 
@@ -506,6 +512,16 @@ const CombatantForces = (args) => {
         return (combatAbility === 'spaceCannon') && (haveTechnology(race, 'GRAVITON_LASER_SYSTEM') && race.exhaustedCards.indexOf('GRAVITON_LASER_SYSTEM') === -1)
     }, [race, combatAbility]);
 
+    const mayReroll = useCallback((owner, unit, didx) => {
+        if(String(playerID) === String(owner)){
+            if(G.races[playerID].combatActionCards.indexOf('Fire Team') > -1){
+                if(!(G.dice[owner][unit].reroll && G.dice[owner][unit].reroll[didx] !== undefined)){
+                    return true;
+                }
+            }
+        }
+    }, [playerID, G.races, G.dice]);
+
     return (<div style={{margin: '1rem 0'}}>
         <div style={{display: 'flex', padding: '1rem', position: 'relative', flexDirection: 'row', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             border: String(playerID) === String(owner) ? 'solid 1px rgba(255,255,0,.5)':'solid 1px rgba(255,255,255,.25)'}}>
@@ -558,6 +574,11 @@ const CombatantForces = (args) => {
                                 adj = -4;
                             }
                         }
+
+                        if(ability && ability.value && u === 'fighter' && 
+                        race.combatActionCards.indexOf('Fighter Prototype')>-1 && prevStages[race.pid].filter(s => s === 'spaceCombat').length === 1){
+                            adj = 2;
+                        }
                         
                         return <Col className='col-md-auto' key={i} style={style}>
                             <span className={className} style={{position: 'relative'}}>
@@ -568,7 +589,7 @@ const CombatantForces = (args) => {
                             <span style={{fontSize: 16, marginLeft: '1rem', minWidth: 'max-content'}}>
                                 {ability && <>
                                     <p style={{margin: 0}}>{'combat: ' + ability.value} 
-                                        {adj !==0 ? <span style={{color: adj<0 ? 'red':'green'}}>
+                                        {adj !==0 ? <span style={{color: adj<0 ? 'red':'yellowgreen'}}>
                                             {' (' + (ability.value - adj) + ')'}
                                         </span> : ''}
                                     </p>
@@ -590,11 +611,16 @@ const CombatantForces = (args) => {
                                         </UncontrolledDropdown>}
                                 {G.dice[owner][u] && <ButtonGroup style={{flexWrap: 'wrap', maxWidth: '6rem'}}>
                                     {G.dice[owner][u].dice.map((d, j) =>{
+                                        const val = G.dice[owner][u].reroll ? G.dice[owner][u].reroll[j] || d : d;
                                         let color = 'light';
-                                        if(d + adj >= ability.value) color = G.dice[owner][u].withTech && G.dice[owner][u].withTech.indexOf('GRAVITON_LASER_SYSTEM')>-1 ? 'danger':'success';
-                                        return <Button key={j} size='sm' color={color} 
+                                        if(val + adj >= ability.value) color = G.dice[owner][u].withTech && G.dice[owner][u].withTech.indexOf('GRAVITON_LASER_SYSTEM')>-1 ? 'danger':'success';
+
+                                        const mr = mayReroll(owner, u, j);
+                                        if(color === 'light' && mr) color = 'warning';
+
+                                        return <Button key={j} size='sm' color={color} onClick = { mr ? ()=>moves.rerollDice(u, j):()=>{} }
                                             style={{borderRadius: '5px', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', maxWidth:'1.25rem', height: '1.25rem'}}>
-                                            {('' + d).substr(-1)}</Button>
+                                            {('' + val).substr(-1)}</Button>
                                     })}
                                     </ButtonGroup>
                                 }
@@ -719,10 +745,12 @@ export const SpaceCombat = () => {
             let h = 0;
             if(G.dice[pid]){
                 Object.keys(G.dice[pid]).forEach(unit => {
+                    let adj = (unit === 'fighter' && G.races[pid].combatActionCards.indexOf('Fighter Prototype') > -1 &&
+                        prevStages[pid].filter(s => s === 'spaceCombat').length === 1) ? 2:0;
                     const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                     
                     if(technology && technology.combat){
-                        h += G.dice[pid][unit].dice.filter(d => d >= technology.combat).length;
+                        h += G.dice[pid][unit].dice.filter(d => d+adj >= technology.combat).length;
                     }
                 });
             }
@@ -730,7 +758,7 @@ export const SpaceCombat = () => {
         });
 
         return result;
-    }, [G.dice, G.races, ctx.activePlayers, assaultCannon, playerID]);
+    }, [G.dice, G.races, ctx.activePlayers, assaultCannon, playerID, prevStages]);
 
     const assignedA = useMemo(() => {
         let result = 0;
@@ -876,6 +904,10 @@ export const SpaceCombat = () => {
         return undefined;
     }, [activeTile.tdata, ctx.currentPlayer]);
 
+    const haveACDialog = useMemo(() => {
+        return G.currentCombatActionCard !== undefined;
+    }, [G.currentCombatActionCard]);
+
     useEffect(()=>{
         if(ahitsA && Object.keys(ahitsA).length > 0){
             setAhitsA({});
@@ -922,13 +954,13 @@ export const SpaceCombat = () => {
         {(!needAwait || winner !== undefined) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
             {needAwait && winner !== undefined && <Button color='warning' onClick={() => moves.endBattle()}>Next</Button>}
             {ctx.activePlayers[playerID] === 'spaceCombat' && <>
-                <Button color='warning' disabled = {!everyoneRolls} onClick={() => moves.nextStep(hits)}>Next</Button>
+                <Button color='warning' disabled = {!everyoneRolls || haveACDialog} onClick={() => moves.nextStep(hits)}>Next</Button>
                 <HitsInfo />
-                <Button color='danger' disabled = {everyoneRolls || (anyoneRetreat !== undefined)} onClick={()=>moves.retreat()}>Retreat</Button>
+                <Button color='danger' disabled = {everyoneRolls || (anyoneRetreat !== undefined) || haveACDialog} onClick={()=>moves.retreat()}>Retreat</Button>
             </>}
             {ctx.activePlayers[playerID] === 'spaceCombat_step2' && <>
-                {!assaultCannon && <Button color='warning' disabled = {!allHitsAssigned} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD)}>Next</Button>}
-                {assaultCannon && <Button color='warning' disabled = {!allHitsAssigned} onClick={() => moves.nextStep(ahitsA, true)}>Next</Button>}
+                {!assaultCannon && <Button color='warning' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD)}>Next</Button>}
+                {assaultCannon && <Button color='warning' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(ahitsA, true)}>Next</Button>}
                 <HitsInfo />
             </>}
         </CardFooter>}
@@ -1221,6 +1253,10 @@ export const Bombardment = () => {
         return result;
     },[activePlanet]);
 
+    const haveACDialog = useMemo(() => {
+        return G.currentCombatActionCard !== undefined;
+    }, [G.currentCombatActionCard]);
+
     return (
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
@@ -1230,7 +1266,7 @@ export const Bombardment = () => {
             <CombatantForces race={G.races[activePlanet.occupied]} units={defenderForces} owner={activePlanet.occupied} combatAbility='bombardment'/>
         </CardBody>
         <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-            <Button color='warning' disabled = {!everyoneRolls} onClick={()=>moves.nextStep(hits)}>Next</Button>
+            <Button color='warning' disabled = {!everyoneRolls || haveACDialog} onClick={()=>moves.nextStep(hits)}>Next</Button>
             <span style={{display: 'flex', justifyContent: 'space-around', fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
                 {Object.keys(hits).map((h, i) => {
                     return <span key={i}>
@@ -1394,17 +1430,23 @@ export const Invasion = () => {
 
                             if(technology && technology.bombardment){
                                 const adj = enemyHaveCombatAC(G.races, ctx.activePlayers, playerID, 'Bunker') ? -4:0;
-                                h += G.dice[pid][unit].dice.filter(die => die+adj >= technology.bombardment.value).length;
+                                h += G.dice[pid][unit].dice.filter((die, idx) => {
+                                    const val = G.dice[pid][unit].reroll ? G.dice[pid][unit].reroll[idx] || die : die;
+                                    return val+adj >= technology.bombardment.value}).length;
                             }
                         }
                         else if(unit === 'pds'){
                             if(technology && technology.spaceCannon){
                                 const adj = haveTechnology(G.races[playerID], 'ANTIMASS_DEFLECTORS') ? -1:0;
-                                h += G.dice[pid][unit].dice.filter(die => die+adj >= technology.spaceCannon.value).length;
+                                h += G.dice[pid][unit].dice.filter((die, idx) => {
+                                    const val = G.dice[pid][unit].reroll ? G.dice[pid][unit].reroll[idx] || die : die;
+                                    return val+adj >= technology.spaceCannon.value}).length;
                             }
                         }
                         else if(technology && technology.combat){
-                            h += G.dice[pid][unit].dice.filter(die => die >= technology.combat).length;
+                            h += G.dice[pid][unit].dice.filter((die, idx) => {
+                                const val = G.dice[pid][unit].reroll ? G.dice[pid][unit].reroll[idx] || die : die;
+                                return val >= technology.combat}).length;
                         }
                     });
                 }
@@ -1554,6 +1596,13 @@ export const Invasion = () => {
         return undefined;
     }, [activePlanet, ctx.currentPlayer, ctx.activePlayers]);
 
+    const haveACDialog = useMemo(() => {
+        return G.currentCombatActionCard !== undefined;
+    }, [G.currentCombatActionCard]);
+
+    const enemyMakeReroll = useMemo(() => {
+        return enemyHaveCombatAC(G.races, ctx.activePlayers, playerID, 'Fire Team');
+    }, [G.races, ctx.activePlayers, playerID]);
 
     useEffect(()=>{
         if(ahitsA && Object.keys(ahitsA).length > 0){
@@ -1570,7 +1619,7 @@ export const Invasion = () => {
     }, [activePlanet.units]);
 
     
-    return (
+    return (<>
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{landing ? 'Landing': magen ? 'Magen defence grid' : 'Invasion'}</h3></CardTitle>
@@ -1601,19 +1650,21 @@ export const Invasion = () => {
         </CardBody>
         {(!needAwait || magen || landing || (needAwait && winner !== undefined)) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
             {landing && <Button color='warning' onClick={() => moves.landTroops(troops)}>{troops.length > 0 ? 'Next':'Cancel'}</Button>}
-            {!landing && !magen && needAwait && winner !== undefined && <Button color='warning' onClick={() => moves.endBattle()}>Next</Button>}
+            {!landing && !magen && needAwait && winner !== undefined && <Button disabled={haveACDialog || enemyMakeReroll} color='warning' onClick={() => moves.endBattle()}>Next</Button>}
             {magen && <Button color='warning' onClick={() => moves.magenDefense(ahitsA)}>Next</Button>}
             {ctx.activePlayers[playerID] === 'invasion' && <>
-                <Button color='warning' disabled = {!everyoneRolls} onClick={() => moves.nextStep(hits, true)}>Next</Button>
+                <Button color='warning' disabled = {!everyoneRolls || haveACDialog || enemyMakeReroll} onClick={() => moves.nextStep(hits, true)}>Next</Button>
                 <HitsInfo />
             </>}
             {ctx.activePlayers[playerID] === 'invasion_step2' && <>
-                <Button color='warning' disabled = {!allHitsAssigned} 
+                <Button color='warning' disabled = {!allHitsAssigned || haveACDialog || enemyMakeReroll} 
                 onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD, prevStages[playerID])}>
                     Next</Button>
                 <HitsInfo />
             </>}
         </CardFooter>}
-    </Card>);
+    </Card>
+    {G.currentCombatActionCard && <ActionCardDialog />}
+    </>);
 
 }

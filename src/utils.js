@@ -545,9 +545,56 @@ export const playCombatAC = ({G, playerID}, card) => {
   if(card.when === 'COMBAT'){
     const idx = G.races[playerID].actionCards.findIndex(ac => ac.id === card.id);
     if(idx > -1){
-      G.races[playerID].actionCards.splice(idx, 1);
-      G.races[playerID].combatActionCards.push(card.id);
+      //G.races[playerID].actionCards.splice(idx, 1);
+      G.currentCombatActionCard = {...card, reaction: {}, playerID};
+      //G.races[playerID].combatActionCards.push(card.id);
     }
   }
 
+}
+
+export const repairUnits = (ships, race) => {
+  const technologies = getUnitsTechnologies([...Object.keys(ships), 'mech'], race);
+  Object.keys(ships).forEach(unit => {
+    if(ships[unit] && technologies[unit] && technologies[unit].sustain){
+      ships[unit].forEach(ship => {
+        if(ship.hit) ship.hit = 0;
+      });
+    }
+    if(ships[unit] && technologies[unit] && technologies[unit].capacity){
+      ships[unit].forEach(ship => {
+        if(ship.payload){
+          ship.payload.forEach(p => {
+            if(p.id && technologies[p.id] && technologies[p.id].sustain){
+              if(p.hit) p.hit = 0;
+            }
+          })
+        }
+      });
+    }
+  });
+}
+
+export const repairAllActiveTileUnits = (G, playerID) => {
+  const activeTile = G.tiles.find(t => t.active);
+  let ships = activeTile.tdata.attacker;
+
+  if(String(activeTile.tdata.occupied) === String(playerID)){
+    ships = activeTile.tdata.fleet;
+  }
+
+  if(ships && Object.keys(ships).length){
+    repairUnits(ships, G.races[playerID]);
+  }
+
+  if(activeTile.tdata.planets){
+    activeTile.tdata.planets.forEach(p => {
+      if(String(p.occupied) === String(playerID) && p.units){
+        repairUnits(p.units, G.races[playerID]);
+      }
+      else if(p.invasion && p.invasion.troops){
+        repairUnits(p.invasion.troops, G.races[playerID]);
+      }
+    })
+  }
 }

@@ -16,12 +16,16 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
 
     const notarget = useMemo(() => ['Economic Initiative', 'Fighter Conscription', 'Industrial Initiative', 
     'Rise of a Messiah', 'Counterstroke', 'Flank Speed', 'Harness Energy', 'Lost Star Chart', 'Master Plan', 
-    'Rally', 'Solar Flare', 'Upgrade', 'War Machine', 'Distinguished Councilor', 'Hack Election', 'Insider Information', 'Veto'], []);
+    'Rally', 'Solar Flare', 'Upgrade', 'War Machine', 'Distinguished Councilor', 'Hack Election', 'Insider Information', 'Veto',
+    'Fire Team'], []);
 
     const card = useMemo(() => {
         let c = G.races[ctx.currentPlayer].currentActionCard;
 
-        if(ctx.phase === 'agenda'){
+        if(!c && ctx.phase === 'acts' && ctx.activePlayers && G.currentCombatActionCard){
+            c = G.currentCombatActionCard;
+        }
+        else if(!c && ctx.phase === 'agenda'){
             c = G.currentAgendaActionCard;
         }
         else if(!c){ //tactical
@@ -29,7 +33,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
         }
 
         return c;
-    }, [G.races, ctx, G.currentTacticalActionCard, G.currentAgendaActionCard]);
+    }, [G.races, ctx, G.currentTacticalActionCard, G.currentAgendaActionCard, G.currentCombatActionCard]);
 
     const cardOwner = useMemo(() => card.playerID !== undefined ? card.playerID : playerID, [card, playerID]);
 
@@ -415,20 +419,32 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     }, [G.tiles]);
 
     const doneClick = useCallback(() => {
-        moves.done();
+        if(card.when === 'COMBAT'){
+            moves.actionCardDone();
+        }
+        else{
+            moves.done();
+        }
         if(card.id === 'War Machine'){
             exhaustTechCard(card.id);
         }
-    }, [card.id, exhaustTechCard, moves]);
+    }, [card, exhaustTechCard, moves]);
 
-    return <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute', margin: '5rem'}}>
+    let style = {border: 'solid 1px rgba(74, 111, 144, 0.42)', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute', margin: '5rem'};
+    if(card.when === 'COMBAT'){
+        style = {...style, right: '25%', bottom: '5%'}
+    }
+
+    return <Card style={style}>
                 <CardTitle style={{borderBottom: '1px solid coral', color: 'black'}}><h3>Action card</h3></CardTitle>
                 <CardBody style={{display: 'flex', color: 'black', width: 'min-content'}}>
-                    <div>
+                    {card.when !== 'COMBAT' && <div>
                         <CardImg src={'race/'+ G.races[cardOwner].rid +'.png'} style={{width: '205px'}}/>
-                    </div>
+                    </div>}
                     <div style={{display: 'flex', flexDirection: 'column', padding: '0 1rem 1rem 1rem', minWidth: '30rem'}}>
-                        <h6 style={{margin: '0 0 1rem 1rem'}}>{card.when + ':'}</h6>
+                        <h6 style={{margin: '0 0 1rem 1rem'}}>{card.when !== 'COMBAT' && card.when + ':'}
+                            {card.when === 'COMBAT' && <><CardImg src={'race/icons/'+ G.races[cardOwner].rid +'.png'} style={{width: '2rem'}}/>{' '+G.races[cardOwner].name}</>}
+                        </h6>
                         <div style={{padding: '1rem', backgroundColor: 'rgba(0,0,0,.15)', position: 'relative'}}>
                             <h5>{card.id}</h5>
                             <p>{card.description}</p>
@@ -436,7 +452,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
 
                         {notarget.indexOf(card.id) === -1 && <h6 style={{margin: '2rem 1rem 1rem 1rem'}}>TARGET:</h6>}
 
-                        {isMine && !card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
+                        {isMine && !card.target && card.when !=='COMBAT' && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
                             {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown', 
                             'Unstable Planet', 'Uprising', 'Experimental Battlestation'].indexOf(card.id) > -1 && <PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/>}
                             {['Ghost Ship', 'Tactical Bombardment', 'Unexpected Action', 'War Effort', 'In The Silence Of Space'].indexOf(card.id) > -1 && <TileInfo tidx={selectedTile}/>}
@@ -539,8 +555,8 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                 </CardBody>
                 <CardFooter style={{background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid coral'}}>
                     {isMine && !card.target && <>
-                        <Button color='danger' onClick={()=>moves.cancel()}>Cancel</Button>
-                        <Button color='success' onClick={()=>moves.next(myTarget)} disabled={!myTarget}>Next</Button>
+                        <Button color='danger' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardCancel() : ()=>moves.cancel()}>Cancel</Button>
+                        <Button color='success' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardNext(myTarget) : ()=>moves.next(myTarget)} disabled={!myTarget}>Next</Button>
                     </>}
                     {((isMine && card.target) || !isMine) && <div>
                         {Object.keys(card.reaction).map((pid, i) => {
@@ -550,7 +566,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                         {isMine && Object.keys(card.reaction).length === 0 && <p style={{color: 'black'}}><b>Awaiting other players...</b></p>}
                     </div>}
                     {!isMine && !card.reaction[playerID] && <>
-                        <Button style={{alignSelf: 'flex-start'}} color='dark' onClick={()=>moves.pass()}>Pass</Button>
+                        <Button style={{alignSelf: 'flex-start'}} color='dark' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardPass() : ()=>moves.pass()}>Pass</Button>
                     </>}
                     {isMine && card.target && Object.keys(card.reaction).length === (Object.keys(ctx.activePlayers).length - 1) && 
                         <Button style={{alignSelf: 'flex-start'}} color='success' onClick={doneClick}>Done</Button>

@@ -5,23 +5,28 @@ export const ACTION_CARD_STAGE = {
       cancel: ({G, ctx, playerID, events}) => {
         let card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
         if(ctx.phase === 'agenda') card = G.currentAgendaActionCard;
+        if(!card) card = G.currentCombatActionCard;
 
         if(String(card.playerID) === String(playerID)){
-          events.setActivePlayers({});
+          if(card.when !== 'COMBAT') events.setActivePlayers({});
+          
           if(card.when === 'ACTION') G.races[card.playerID].currentActionCard = undefined;
           else if(card.when === 'TACTICAL') G.currentTacticalActionCard = undefined;
           else if(card.when === 'AGENDA') G.currentAgendaActionCard = undefined;
+          else if(card.when === 'COMBAT') G.currentCombatActionCard = undefined;
         }
       },
       pass: ({G, playerID, ctx, events}) => {
         let card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
         if(ctx.phase === 'agenda') card = G.currentAgendaActionCard;
+        if(!card) card = G.currentCombatActionCard;
 
         card.reaction[playerID] = 'pass';
       },
       next: ({G, ctx, playerID, random}, target) => {
         let card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
         if(ctx.phase === 'agenda') card = G.currentAgendaActionCard;
+        if(!card) card = G.currentCombatActionCard;
 
         if(String(card.playerID) === String(playerID)){
           card.target = target;
@@ -42,6 +47,7 @@ export const ACTION_CARD_STAGE = {
       done: ({G, ctx, events, playerID, random}) => {
         let card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
         if(ctx.phase === 'agenda') card = G.currentAgendaActionCard;
+        if(!card) card = G.currentCombatActionCard;
 
         if(String(card.playerID) === String(playerID)){
           if(card.when === 'ACTION'){
@@ -440,6 +446,9 @@ export const ACTION_CARD_STAGE = {
               }
             }
           }
+          else if(card.when === 'COMBAT'){
+            
+          }
 
           G.races[card.playerID].actionCards.splice(G.races[card.playerID].actionCards.findIndex(a => a.id === card.id), 1);
           if(card.when === 'ACTION'){
@@ -454,8 +463,13 @@ export const ACTION_CARD_STAGE = {
             G.currentAgendaActionCard = undefined;
             G.races[playerID].actions.push('ACTION_CARD');
             events.endTurn();
+          }
+          else if(card.when === 'COMBAT'){
+            G.currentCombatActionCard = undefined;
+            G.races[playerID].combatActionCards.push(card.id);
           }                      
-          events.setActivePlayers({});
+          
+          if(card.when !== 'COMBAT') events.setActivePlayers({});
         }
       }
     }

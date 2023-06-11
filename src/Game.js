@@ -8,7 +8,7 @@ import cardData from './cardData.json';
 import { ACTION_CARD_STAGE } from './gameStages';
 import { produce } from 'immer';
 import { NUM_PLAYERS, checkObjective, getUnitsTechnologies, haveTechnology, 
-  enemyHaveTechnology, getPlanetByName, votingProcessDone, dropACard, playCombatAC } from './utils';
+  enemyHaveTechnology, getPlanetByName, votingProcessDone, dropACard, playCombatAC, repairAllActiveTileUnits } from './utils';
 
 export const TIO = {
     
@@ -16,7 +16,7 @@ export const TIO = {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
-                  .map( r => ({...r, ...raceData[r.rid], strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
+                  .map( (r, idx) => ({...r, ...raceData[r.rid], pid: idx, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
                     exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
@@ -33,7 +33,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(53, 58)); //test only
+        r.actionCards.push(...cardData.actions.slice(58, 63)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -178,7 +178,7 @@ export const TIO = {
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
           }
 
-          events.endPhase(); //test only!
+          //events.endPhase(); //test only!
         },
         onEnd: ({ G }) => {
           G.TURN_ORDER = G.races.map((r, i) => ({initiative: r.initiative, i})).sort((a, b) => a.initiative > b.initiative ? 1 : (a.initiative < b.initiative ? -1 : 0)).map(r => r.i);
@@ -713,6 +713,12 @@ export const TIO = {
               },
               spaceCombat: {
                 moves: {
+                  playActionCard: playCombatAC,
+                  actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
+                  actionCardNext: ACTION_CARD_STAGE.moves.next,
+                  actionCardPass: ACTION_CARD_STAGE.moves.pass,
+                  actionCardDone: ACTION_CARD_STAGE.moves.done,
+
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
@@ -720,6 +726,12 @@ export const TIO = {
                     });
                   },
                   nextStep: ({G, playerID, events, ctx}, hits) => {
+                    let acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
+                    if(acIdx > -1){
+                      repairAllActiveTileUnits(G, playerID);
+                      G.races[playerID].combatActionCards.splice(acIdx, 1);
+                    }
+                  
                     if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
                       if(G.races[playerID].retreat !== true){
                         const enemyRetreat = Object.keys(ctx.activePlayers).find(k => G.races[k].retreat === true);
@@ -747,6 +759,11 @@ export const TIO = {
               },
               spaceCombat_step2: {
                 moves: {
+                 playActionCard: playCombatAC,
+                 actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
+                 actionCardNext: ACTION_CARD_STAGE.moves.next,
+                 actionCardPass: ACTION_CARD_STAGE.moves.pass,
+                 actionCardDone: ACTION_CARD_STAGE.moves.done,
                  nextStep: ({G, playerID, ctx, events}, hits, assaultCannon) => {
                   let fleet;
                   const activeTile = G.tiles.find(t => t.active === true);
@@ -850,6 +867,12 @@ export const TIO = {
                     }
                   }
 
+
+                  const acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
+                  if(acIdx > -1){
+                    repairAllActiveTileUnits(G, playerID);
+                    G.races[playerID].combatActionCards.splice(acIdx, 1);
+                  }
                  } 
                 }
               },
@@ -981,6 +1004,11 @@ export const TIO = {
               bombardment: {
                 moves: {
                   playActionCard: playCombatAC,
+                  actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
+                  actionCardNext: ACTION_CARD_STAGE.moves.next,
+                  actionCardPass: ACTION_CARD_STAGE.moves.pass,
+                  actionCardDone: ACTION_CARD_STAGE.moves.done,
+
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
@@ -1022,13 +1050,31 @@ export const TIO = {
               invasion : {
                 moves: {
                   playActionCard: playCombatAC,
+                  actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
+                  actionCardNext: ACTION_CARD_STAGE.moves.next,
+                  actionCardPass: ACTION_CARD_STAGE.moves.pass,
+                  actionCardDone: ACTION_CARD_STAGE.moves.done,
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
                       draft[playerID][unit] = {dice};
                     });
                   },
+                  rerollDice: ({G, playerID, random}, unit, didx) => {
+                    const dice = random.D10(1);
+                    if(!G.dice[playerID][unit].reroll) G.dice[playerID][unit].reroll = {};
+                    G.dice[playerID][unit].reroll[didx] = dice[0];
+                  },
                   nextStep: ({G, events, playerID, ctx}, hits, setNoPds) => {
+                    let acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
+                    if(acIdx > -1){
+                      repairAllActiveTileUnits(G, playerID);
+                      G.races[playerID].combatActionCards.splice(acIdx, 1);
+                    }
+                    acIdx = G.races[playerID].combatActionCards.indexOf('Fire Team');
+                    if(acIdx > -1){
+                      G.races[playerID].combatActionCards.splice(acIdx, 1);
+                    }
 
                     const activeTile = G.tiles.find(t => t.active === true);
                     const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
@@ -1063,6 +1109,11 @@ export const TIO = {
               },
               invasion_step2 : {
                 moves: {
+                  playActionCard: playCombatAC,
+                  actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
+                  actionCardNext: ACTION_CARD_STAGE.moves.next,
+                  actionCardPass: ACTION_CARD_STAGE.moves.pass,
+                  actionCardDone: ACTION_CARD_STAGE.moves.done,
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
@@ -1153,6 +1204,11 @@ export const TIO = {
                       
                     }
   
+                    const acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
+                    if(acIdx > -1){
+                      repairAllActiveTileUnits(G, playerID);
+                      G.races[playerID].combatActionCards.splice(acIdx, 1);
+                    }
                   } 
                 }
               },

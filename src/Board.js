@@ -706,7 +706,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           return p.hitCenter && <Sprite image={'icons/empty.png'} scale={1} key={i} width={p.hitRadius * 2} height={p.hitRadius * 2} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}
             interactive={true} pointerdown={ (e)=>tileClick(e, index, i) }>
               
-              <Container x={0} y={50}>
+              <Container sortableChildren={true} x={0} y={50}>
                 {advUnitView && advUnitView.tile === index && (p.occupied === undefined || String(element.tdata.occupied) === String(p.occupied)) &&
                     <Sprite pointerdown={()=>unloadUnit(i)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={.5} alpha={.85}/>
                   }
@@ -715,7 +715,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     <Sprite tint={'red'} pointerdown={()=>moves.invasion(p)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={1} alpha={.85}/>}
                 </>}
                 {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) => {
-                  return <Sprite key={ui} x={40 + ui*55} y={-10} scale={1} anchor={0} image={'icons/unit_ground_bg.png'}>
+                  return <Sprite zIndex={u === 'spacedock' ? 3:1} key={ui} x={40 + ui*55} y={-10} scale={1} anchor={0} image={'icons/unit_ground_bg.png'}>
                       <Sprite image={'units/' + u.toUpperCase() + '.png'} x={-5} y={-5} scale={.4} alpha={1}/>
                       {p.units[u].length > 1 && <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
                       x={40} y={25} text={p.units[u].length}/>}
@@ -1233,7 +1233,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         }
                       }
                       if(disabled && pr.when === 'COMBAT'){
-                        if(ctx.phase === 'acts' && ctx.activePlayers && ['bombardment', 'invasion'].indexOf(ctx.activePlayers[playerID]) > -1){
+                        if(ctx.phase === 'acts' && ctx.activePlayers && ['bombardment', 'invasion', 'invasion_step2', 'spaceCombat', 'spaceCombat_step2'].indexOf(ctx.activePlayers[playerID]) > -1){
                           disabled = false;
                         }
                       }
