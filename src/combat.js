@@ -70,7 +70,8 @@ export const SpaceCannonAttack = () => {
         let result = 0;
 
         if(spaceCannons !== undefined){
-            const adj = haveTechnology(G.races[ctx.currentPlayer], 'ANTIMASS_DEFLECTORS') ? -1:0;
+            let adj = haveTechnology(G.races[ctx.currentPlayer], 'ANTIMASS_DEFLECTORS') ? -1:0;
+            
             Object.keys(spaceCannons).forEach(pid => {
                 if(G.dice[pid]){
                     Object.keys(G.dice[pid]).forEach(unit => {
@@ -84,6 +85,10 @@ export const SpaceCannonAttack = () => {
                     });
                 }
             });
+
+            if(G.races[ctx.currentPlayer].combatActionCards && G.races[ctx.currentPlayer].combatActionCards.indexOf('Maneuvering Jets') > -1){
+                if(result > 0) result--;
+            }
         }
         return result;
     }, [G.dice, G.races, spaceCannons, ctx.currentPlayer]);
@@ -93,6 +98,7 @@ export const SpaceCannonAttack = () => {
 
         if(spaceCannons !== undefined){
             const adj = haveTechnology(G.races[ctx.currentPlayer], 'ANTIMASS_DEFLECTORS') ? -1:0;
+
             Object.keys(spaceCannons).forEach(pid => {
                 if(G.dice[pid]){
                     Object.keys(G.dice[pid]).forEach(unit => {
@@ -105,6 +111,10 @@ export const SpaceCannonAttack = () => {
                     });
                 }
             });
+
+            if(G.races[ctx.currentPlayer].combatActionCards && G.races[ctx.currentPlayer].combatActionCards.indexOf('Maneuvering Jets') > -1){
+                if(result > 0) result--;
+            }
         }
         return result;
     }, [G.dice, G.races, spaceCannons, ctx.currentPlayer]);
@@ -208,7 +218,7 @@ export const SpaceCannonAttack = () => {
         return players && players.length === 1;
     }, [playerID, ctx.activePlayers]);
 
-    return (
+    return (<>
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Space cannon: attack</h3></CardTitle>
@@ -239,7 +249,9 @@ export const SpaceCannonAttack = () => {
                 </span>
             </>}
         </CardFooter>
-    </Card>);
+    </Card>
+    {G.currentCombatActionCard && <ActionCardDialog />}
+    </>);
 
 }
 
@@ -391,7 +403,7 @@ const HitAssign = (args) => {
         <div style={{display: 'flex', position: 'relative', flexDirection: 'row', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             border: String(playerID) === String(owner) ? 'solid 1px rgba(255,255,0,.5)':'solid 1px rgba(255,255,255,.25)'}}>
             <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
-            {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: 'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
+            {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: race.retreat === 'cancel' ? 'gray':'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
             <div style={{display: 'flex', flexWrap: 'wrap'}}>
                 {Object.keys(units).map((u, i) => {
                     return <div key={i} style={{marginLeft: '1rem', display: 'flex', flexWrap: 'wrap'}}>
@@ -526,7 +538,7 @@ const CombatantForces = (args) => {
         <div style={{display: 'flex', padding: '1rem', position: 'relative', flexDirection: 'row', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             border: String(playerID) === String(owner) ? 'solid 1px rgba(255,255,0,.5)':'solid 1px rgba(255,255,255,.25)'}}>
             <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
-            {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: 'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
+            {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: race.retreat === 'cancel' ? 'gray':'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
             <Container>
                 <Row className='row-cols-auto'>
                     {Object.keys(units).map((u, i) => {
@@ -578,6 +590,12 @@ const CombatantForces = (args) => {
                         if(ability && ability.value && u === 'fighter' && 
                         race.combatActionCards.indexOf('Fighter Prototype')>-1 && prevStages[race.pid].filter(s => s === 'spaceCombat').length === 1){
                             adj = 2;
+                        }
+
+                        if(!combatAbility && ability && ability.value && u !== 'pds' && u !== 'spacedock'){
+                            if(race.combatActionCards.indexOf('Morale Boost')>-1){
+                                adj++;
+                            }
                         }
                         
                         return <Col className='col-md-auto' key={i} style={style}>
@@ -693,11 +711,11 @@ export const AntiFighterBarrage = () => {
     const enemyRetreat = useMemo(() => {
         const enemyID = Object.keys(ctx.activePlayers).find(pid => String(pid) !== String(playerID));
         if(enemyID){
-            return G.races[enemyID].retreat;
+            return G.races[enemyID].retreat === true;
         }
     }, [playerID, ctx.activePlayers, G.races]);
 
-    return (
+    return (<>
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Antifighter barrage</h3></CardTitle>
@@ -717,7 +735,9 @@ export const AntiFighterBarrage = () => {
             </span>
             <Button color='danger' disabled = {everyoneRolls || enemyRetreat} onClick={moves.retreat}>Retreat</Button>
         </CardFooter>
-    </Card>);
+    </Card>
+    {G.currentCombatActionCard && <ActionCardDialog />}
+    </>);
 
 }
 
@@ -747,6 +767,10 @@ export const SpaceCombat = () => {
                 Object.keys(G.dice[pid]).forEach(unit => {
                     let adj = (unit === 'fighter' && G.races[pid].combatActionCards.indexOf('Fighter Prototype') > -1 &&
                         prevStages[pid].filter(s => s === 'spaceCombat').length === 1) ? 2:0;
+                    if(G.races[pid].combatActionCards.indexOf('Morale Boost') > -1 && unit !== 'pds' && unit !== 'spacedock'){
+                        adj++;
+                    }
+
                     const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                     
                     if(technology && technology.combat){
@@ -823,7 +847,7 @@ export const SpaceCombat = () => {
         let retreater = undefined;
 
         Object.keys(ctx.activePlayers).find(pid => {
-            retreater = G.races[pid].retreat ? pid : undefined;
+            retreater = G.races[pid].retreat === true ? pid : undefined;
             return retreater !== undefined;
         });
         
@@ -922,7 +946,7 @@ export const SpaceCombat = () => {
     // eslint-disable-next-line
     }, [activeTile.tdata.fleet]);
 
-    return (
+    return (<>
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{assaultCannon ? 'Assault cannon': 'Space combat'}</h3></CardTitle>
@@ -964,7 +988,9 @@ export const SpaceCombat = () => {
                 <HitsInfo />
             </>}
         </CardFooter>}
-    </Card>);
+    </Card>
+    {G.currentCombatActionCard && <ActionCardDialog />}
+    </>);
 
 }
 
@@ -1257,7 +1283,7 @@ export const Bombardment = () => {
         return G.currentCombatActionCard !== undefined;
     }, [G.currentCombatActionCard]);
 
-    return (
+    return (<>
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Bombardment</h3></CardTitle>
@@ -1276,13 +1302,15 @@ export const Bombardment = () => {
                 })}
             </span>
         </CardFooter>
-    </Card>);
+    </Card>
+    {G.currentCombatActionCard && <ActionCardDialog />}
+    </>);
 
 }
 
 const LandingForces = (args) => {
 
-    const { playerID } = useContext(StateContext);
+    const { G, playerID } = useContext(StateContext);
     const {race, owner, units, troops, setTroops} = args;
     
     const technologies = useMemo(()=>{
@@ -1319,6 +1347,7 @@ const LandingForces = (args) => {
     }, [troops, setTroops]);
 
     return (
+        <>
         <div style={{display: 'flex', position: 'relative', flexDirection: 'row', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             border: String(playerID) === String(owner) ? 'solid 1px rgba(255,255,0,.5)':'solid 1px rgba(255,255,255,.25)'}}>
             <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
@@ -1360,6 +1389,8 @@ const LandingForces = (args) => {
                 })}
             </div>
         </div>
+        {G.currentCombatActionCard && <ActionCardDialog />}
+        </>
     );
 
 }
@@ -1397,14 +1428,16 @@ export const Invasion = () => {
     const magen = useMemo(() => {
         if(activePlanet && activePlanet.invasion && !activePlanet.invasion.magenUsed){
             if(String(playerID) !== String(ctx.currentPlayer)){
-                if((activePlanet.units.pds && activePlanet.units.pds.length) || (activePlanet.units.spacedock && activePlanet.units.spacedock.length)){
-                    if(ctx.activePlayers[playerID] === 'invasion_await' && activePlanet.invasion.troops){
-                        return true;
+                if(haveTechnology(G.races[playerID], 'MAGEN_DEFENSE_GRID')){
+                    if((activePlanet.units.pds && activePlanet.units.pds.length) || (activePlanet.units.spacedock && activePlanet.units.spacedock.length)){
+                        if(ctx.activePlayers[playerID] === 'invasion_await' && activePlanet.invasion.troops){
+                            return true;
+                        }
                     }
                 }
             }
         }
-    }, [activePlanet, ctx.activePlayers, playerID, ctx.currentPlayer]);
+    }, [activePlanet, ctx.activePlayers, playerID, ctx.currentPlayer, G.races]);
 
     const hits = useMemo(() => {
         let result = {};
@@ -1441,12 +1474,18 @@ export const Invasion = () => {
                                 h += G.dice[pid][unit].dice.filter((die, idx) => {
                                     const val = G.dice[pid][unit].reroll ? G.dice[pid][unit].reroll[idx] || die : die;
                                     return val+adj >= technology.spaceCannon.value}).length;
+                                
+                                if(G.races[playerID].combatActionCards && G.races[playerID].combatActionCards.indexOf('Maneuvering Jets') > -1){
+                                    if(h > 0) h--;
+                                }
                             }
                         }
                         else if(technology && technology.combat){
+                            const adj = G.races[pid].combatActionCards.indexOf('Morale Boost') > -1 ? 1:0;
+
                             h += G.dice[pid][unit].dice.filter((die, idx) => {
                                 const val = G.dice[pid][unit].reroll ? G.dice[pid][unit].reroll[idx] || die : die;
-                                return val >= technology.combat}).length;
+                                return val+adj >= technology.combat}).length;
                         }
                     });
                 }

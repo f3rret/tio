@@ -17,7 +17,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     const notarget = useMemo(() => ['Economic Initiative', 'Fighter Conscription', 'Industrial Initiative', 
     'Rise of a Messiah', 'Counterstroke', 'Flank Speed', 'Harness Energy', 'Lost Star Chart', 'Master Plan', 
     'Rally', 'Solar Flare', 'Upgrade', 'War Machine', 'Distinguished Councilor', 'Hack Election', 'Insider Information', 'Veto',
-    'Fire Team'], []);
+    'Fire Team', 'Infiltrate', 'Intercept', 'Maneuvering Jets', 'Morale Boost'], []);
 
     const card = useMemo(() => {
         let c = G.races[ctx.currentPlayer].currentActionCard;
@@ -344,6 +344,13 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                 }
             }
         }
+        else if(card.when === 'COMBAT'){
+            if(card.id === 'Ghost Squad'){
+                if(selection){
+                    result = selection
+                }
+            }
+        }
 
         return result;
     }, [card, selectedPlanet, selectedTile, notarget, selection, selection2,
@@ -499,6 +506,10 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             {['Imperial Rider', 'Leadership Rider', 'Politics Rider', 'Sanction', 'Trade Rider'].indexOf(card.id) > -1 && <Predict onSelect={setSelection}/>}
                         </div>}
 
+                        {isMine && card.id === 'Ghost Squad' && !card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem', padding: '1rem'}}>
+                            <ForcesRelocation onResult={setSelection}/>
+                        </div>}
+
                         {card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
                             {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown', 'Unstable Planet', 'Uprising', 
                             'Experimental Battlestation'].indexOf(card.id) > -1 && <PlanetInfo tidx={card.target.tidx} pidx={card.target.pidx}/>}
@@ -550,6 +561,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                 <p style={{margin: 0}}>{card.nextAgenda.for && <>{card.nextAgenda.against ? <b>{'For: '}</b> :''} {card.nextAgenda.for}</>}</p>
                                 <p>{card.nextAgenda.against && <><b>{'Against: '}</b>{card.nextAgenda.against}</>}</p>
                             </div>}
+                            {card.id === 'Ghost Squad' && <ForcesRelocationRO selection={selection}/>}
                         </div>}
                     </div>
                 </CardBody>
@@ -575,6 +587,164 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
             </Card>
 }
 
+const ForcesRelocationRO = ({selection}) => {
+    const { G } = useContext(StateContext);
+
+    const activeTile = useMemo(() => {
+        return G.tiles.find(t => t.active === true);
+    }, [G.tiles]);
+
+    return <>
+        {selection && activeTile.tdata.planets && <div style={{fontSize: '.8rem'}}>
+            {selection.from !== undefined && <Row>
+                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>From planet:</b></Col>
+                <Col><b style={{display: 'block', margin: '.5rem'}}>{activeTile.tdata.planets[selection.from] && activeTile.tdata.planets[selection.from].name}</b></Col>
+            </Row>}
+            {selection.to !== undefined && <Row>
+                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>To planet:</b></Col>
+                <Col><b style={{display: 'block', margin: '.5rem'}}>{activeTile.tdata.planets[selection.to] && activeTile.tdata.planets[selection.to].name}</b></Col>
+            </Row>}
+
+            {selection.forces && Object.keys(selection.forces).map((u, i) =>{
+                return selection.forces[u].map((g, j) => 
+                    <Button key={i+''+j} style={{width: '3rem', padding: 0, border: 'none'}} outline>
+                        <img alt='unit' src={'units/' + u.toUpperCase() + '.png'} style={{width: '100%'}}/>
+                    </Button>
+                )          
+            })}
+        </div>}
+    </>
+}
+
+const ForcesRelocation = ({onResult}) => {
+
+    const { G, playerID, ctx, prevStages } = useContext(StateContext);
+    const [from, setFrom] = useState(undefined);
+    const [to, setTo] = useState(undefined);
+    const [escGround, setEscGround] = useState({});
+
+    const activeTile = useMemo(() => {
+        return G.tiles.find(t => t.active === true);
+    }, [G.tiles]);
+    
+    const justLanding = useMemo(() => {
+        if(ctx.activePlayers && ctx.activePlayers[playerID] === 'invasion'){
+            if(prevStages && prevStages[playerID]){
+                if(prevStages[playerID].indexOf('invasion') === prevStages[playerID].length - 1){
+                    if(activeTile.tdata.planets){
+                        const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+                        if(activePlanet && String(activePlanet.occupied) === String(playerID)){
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }, [ctx.activePlayers, playerID, prevStages, activeTile.tdata.planets]);
+
+    const groundForces = useMemo(()=>{
+        let result = null;
+
+        if(activeTile.tdata.planets && from !== undefined){
+            const p = activeTile.tdata.planets[from];
+            if(p){
+                if(String(p.occupied) === String(playerID)){
+                    const forces = {fighter:[], mech: [], infantry: []};
+
+                    Object.keys(p.units).forEach(u => {
+                        if(forces[u]) forces[u] = forces[u].concat(p.units[u]);
+                    });
+
+                    Object.keys(forces).forEach( k => {
+                        if(!forces[k].length) delete forces[k];
+                    });
+
+                    if(forces && Object.keys(forces).length){
+                        result = forces;
+                    }
+                }
+            }
+        }        
+
+        return result;
+    }, [activeTile.tdata, playerID, from]);
+
+    const groundClick = useCallback((tag, idx) => {
+        setEscGround(produce(escGround, draft => {
+            if(!draft[tag]) draft[tag]=[];
+            const index = draft[tag].findIndex(u => u.idx === idx);
+            if(index === -1){
+                draft[tag].push({idx});
+            }
+            else{
+                draft[tag].splice(index, 1);
+            }
+        }))
+    }, [escGround]);
+
+    useEffect(() => {
+        if(from !== undefined && to !== undefined){
+            onResult({from, to, forces: escGround});
+        }
+        else{
+            onResult(null);
+        }
+    }, [from, to, escGround, onResult]);
+
+    useEffect(() => {
+        if(from === undefined){
+            if(activeTile.tdata.planets && activeTile.tdata.planets.length){
+                setFrom('0');
+            }
+        }
+        else{
+            setEscGround({});
+        }
+    }, [from, activeTile.tdata.planets]);
+
+    useEffect(() => {
+        if(to === undefined){
+            if(activeTile.tdata.planets && activeTile.tdata.planets.length){
+                setTo('0');
+            }
+        }
+    }, [to, activeTile.tdata.planets]);
+
+    return <>
+        {activeTile.tdata.planets && justLanding && <div style={{fontSize: '.8rem'}}>
+            <Row>
+                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>From planet:</b></Col>
+                <Col><Input type='select' onChange={(e)=>setFrom(e.target.value)} style={{width: '90%', fontSize: '.8rem', color: 'black'}}>
+                {activeTile.tdata.planets.map((p,i) =>
+                    <option key={i} value={i} style={{fontWeight: 'bold'}}>{p.name}</option>
+                )}
+                </Input></Col>
+            </Row>
+            <Row>
+                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>To planet:</b></Col>
+                <Col><Input type='select' onChange={(e)=>setTo(e.target.value)} style={{width: '90%', fontSize: '.8rem', color: 'black'}}>
+                {activeTile.tdata.planets.map((p,i) =>
+                    <option key={i} value={i} style={{fontWeight: 'bold'}}>{p.name}</option>
+                )}
+                </Input></Col>
+            </Row>
+
+            {groundForces && Object.keys(groundForces).map((u, i) =>{
+                const planet = activeTile.tdata.planets[from];
+
+                return planet.units[u].map((g, j) => 
+                    <Button key={i+''+j} style={{width: '3rem', padding: 0, border: 'none', 
+                        backgroundColor: escGround[u] && escGround[u].findIndex(n => n.pname === planet.pname && n.idx === j)>-1 ? 'rgba(255,255,255,.5)':''}} 
+                        outline onClick={() => groundClick(u, j)}>
+                            <img alt='unit' src={'units/' + u.toUpperCase() + '.png'} style={{width: '100%'}}/>
+                    </Button>
+                )          
+            })}
+
+        </div>}
+    </>
+
+}
 
 const Predict = ({onSelect}) => {
     const { G } = useContext(StateContext);

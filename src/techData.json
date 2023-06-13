@@ -232,7 +232,7 @@
         "prereq": { },
         "cost": 4,
         "combat": 5,
-        "move": 3,
+        "move": 1,
         "capacity": 1,
         "sustain": true,
         "bombardment": { "count": 1, "value": 5 },

@@ -33,7 +33,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(58, 63)); //test only
+        r.actionCards.push(...cardData.actions.slice(63, 69)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -475,6 +475,12 @@ export const TIO = {
               },
               spaceCannonAttack: {
                 moves: {
+                playActionCard: playCombatAC,
+                actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
+                actionCardNext: ACTION_CARD_STAGE.moves.next,
+                actionCardPass: ACTION_CARD_STAGE.moves.pass,
+                actionCardDone: ACTION_CARD_STAGE.moves.done,
+
                  rollDice: ({G, playerID, random}, unit, count, withTech) => {
                   const dice = random.D10(count || 1);
                   G.dice = produce(G.dice, draft => {
@@ -534,6 +540,12 @@ export const TIO = {
               },
               spaceCannonAttack_step2: {
                 moves: {
+                playActionCard: playCombatAC,
+                actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
+                actionCardNext: ACTION_CARD_STAGE.moves.next,
+                actionCardPass: ACTION_CARD_STAGE.moves.pass,
+                actionCardDone: ACTION_CARD_STAGE.moves.done,
+
                  nextStep: ({G, playerID, ctx, events}, hits) => {
                   let fleet;
                   const activeTile = G.tiles.find(t => t.active === true);
@@ -614,6 +626,12 @@ export const TIO = {
               },
               antiFighterBarrage: {
                 moves: {
+                  playActionCard: playCombatAC,
+                  actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
+                  actionCardNext: ACTION_CARD_STAGE.moves.next,
+                  actionCardPass: ACTION_CARD_STAGE.moves.pass,
+                  actionCardDone: ACTION_CARD_STAGE.moves.done,
+
                   rollDice: ({G, playerID, random}, unit, count) => {
                     const dice = random.D10(count || 1);
                     G.dice = produce(G.dice, draft => {
@@ -705,8 +723,10 @@ export const TIO = {
 
                   },
                   retreat: ({G, playerID}) => {
-                    G.races[playerID].retreat = true;
-                    loadUnitsOnRetreat(G, playerID);
+                    if(G.races[playerID].retreat !== 'cancel'){
+                      G.races[playerID].retreat = true;
+                      loadUnitsOnRetreat(G, playerID);
+                    }
                   }
                 },
                 
@@ -734,6 +754,10 @@ export const TIO = {
                   
                     if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
                       if(G.races[playerID].retreat !== true){
+                        if(G.races[playerID].retreat === 'cancel'){
+                          G.races[playerID].retreat = undefined;
+                        }
+
                         const enemyRetreat = Object.keys(ctx.activePlayers).find(k => G.races[k].retreat === true);
                         if(enemyRetreat !== undefined){
                           events.setStage('spaceCombat_await'); //await while enemy retreating
@@ -752,8 +776,10 @@ export const TIO = {
                     }
                   },
                   retreat: ({G, playerID}) => {
-                    G.races[playerID].retreat = true;
-                    loadUnitsOnRetreat(G, playerID);
+                    if(G.races[playerID].retreat !== 'cancel'){
+                      G.races[playerID].retreat = true;
+                      loadUnitsOnRetreat(G, playerID);
+                    }
                   }
                 }
               },
@@ -834,10 +860,13 @@ export const TIO = {
                     events.setStage('spaceCombat_await'); //end space battle
                   }
                   else{
-                    if(G.races[playerID].retreat){ //if I retreat
+                    if(G.races[playerID].retreat === true){ //if I retreat
                       events.setStage('combatRetreat');
                     }
                     else{
+                      if(G.races[playerID].retreat === 'cancel'){
+                        G.races[playerID].retreat = undefined;
+                      }
                       let needAwait = true; //wait before new round or while enemy retreat
                       Object.keys(ctx.activePlayers).forEach(pid => {
                         if(ctx.activePlayers[pid] === 'spaceCombat_await') needAwait = false;
@@ -868,16 +897,28 @@ export const TIO = {
                   }
 
 
-                  const acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
+                  let acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
                   if(acIdx > -1){
                     repairAllActiveTileUnits(G, playerID);
                     G.races[playerID].combatActionCards.splice(acIdx, 1);
                   }
+
+                  acIdx = G.races[playerID].combatActionCards.indexOf('Morale Boost');
+                  if(acIdx > -1){
+                    G.races[playerID].combatActionCards.splice(acIdx, 1);
+                  }
+
                  } 
                 }
               },
               spaceCombat_await:{
                 moves: {
+                  playActionCard: playCombatAC,
+                  actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
+                  actionCardNext: ACTION_CARD_STAGE.moves.next,
+                  actionCardPass: ACTION_CARD_STAGE.moves.pass,
+                  actionCardDone: ACTION_CARD_STAGE.moves.done,
+
                   endBattle: ({G, events, playerID, ctx}) => {
                     const activeTile = G.tiles.find(t => t.active === true);
 
@@ -1204,16 +1245,27 @@ export const TIO = {
                       
                     }
   
-                    const acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
+                    let acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
                     if(acIdx > -1){
                       repairAllActiveTileUnits(G, playerID);
                       G.races[playerID].combatActionCards.splice(acIdx, 1);
                     }
+                    acIdx = G.races[playerID].combatActionCards.indexOf('Morale Boost');
+                    if(acIdx > -1){
+                      G.races[playerID].combatActionCards.splice(acIdx, 1);
+                    }
+
                   } 
                 }
               },
               invasion_await:{
                 moves: {
+                  playActionCard: playCombatAC,
+                  actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
+                  actionCardNext: ACTION_CARD_STAGE.moves.next,
+                  actionCardPass: ACTION_CARD_STAGE.moves.pass,
+                  actionCardDone: ACTION_CARD_STAGE.moves.done,
+
                   endBattle: ({G, events, playerID, ctx}) => {
                     const activeTile = G.tiles.find(t => t.active === true);
                     const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
@@ -1231,8 +1283,18 @@ export const TIO = {
 
                       if(!Object.keys(defenderForces()).length && Object.keys(activePlanet.invasion.troops).length){
                         if(ctx.currentPlayer === playerID){
+                          if(G.races[playerID].combatActionCards && G.races[playerID].combatActionCards.indexOf('Infiltrate')>-1){
+                            if(activePlanet.units && activePlanet.units.pds && activePlanet.units.pds.length){
+                              activePlanet.invasion.troops.pds = {...activePlanet.units.pds};
+                            }
+                            if(activePlanet.units && activePlanet.units.spacedock && activePlanet.units.spacedock.length){
+                              activePlanet.invasion.troops.spacedock = {...activePlanet.units.spacedock};
+                            }
+                          }
+
                           activePlanet.units = {...activePlanet.invasion.troops};
                           delete activePlanet.invasion;
+
                           if(activePlanet.occupied !== undefined && String(activePlanet.occupied) !== String(playerID)){
                             checkTacticalActionCard({G, events, playerID: String(activePlanet.occupied), atype: 'PLANET_OCCUPIED'});
                           }

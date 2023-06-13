@@ -23,7 +23,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
   const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
 
-  const race = useMemo(() => G.races[playerID], [G.races, playerID]);
+  const race = useMemo(() => {
+    if(playerID !== null){
+      return G.races[playerID];
+    }
+    else return {isSpectator: true, knownTechs: [], technologies:[], abilities:[], strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
+      exploration:[], vp: 0, tg: 0, tokens: { t: 0, f: 0, s: 0, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []};
+  }, [G.races, playerID]);
 
   const [exhaustedCards, setExhaustedCards] = useState([]);
   const [producing, setProducing] = useState(null);
@@ -123,13 +129,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const VP = useMemo(() => {
     let result = 0;
 
-    race.secretObjectives.concat(G.pubObjectives).forEach(o => {
-      if(o && o.players && o.players.length > 0){
-        if(o.players.indexOf(playerID) > -1) result += (o.vp ? o.vp : 1);
-      }
-    });
+    if(race){
+      race.secretObjectives.concat(G.pubObjectives).forEach(o => {
+        if(o && o.players && o.players.length > 0){
+          if(o.players.indexOf(playerID) > -1) result += (o.vp ? o.vp : 1);
+        }
+      });
 
-    result += race.vp;
+      result += race.vp;
+    }
+
     return result;
   }, [race, G.pubObjectives, playerID]);
 
@@ -208,8 +217,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }
 
   const mustAction = useMemo(() => {
-    return /*ctx.phase === 'stats' && */race.actionCards.length > 7
-  }, [race.actionCards])
+    if(race) return race.actionCards.length > 7
+  }, [race])
 
   const promissorySwitch = useCallback(() => {
     setStratUnfold(0);
@@ -343,10 +352,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }
 
   const advUnitViewTechnology = useMemo(() => {
-    if(advUnitView && advUnitView.unit){
+    if(race && advUnitView && advUnitView.unit){
       return race.technologies.find( t => t.id === advUnitView.unit.toUpperCase());
     }
-  },[advUnitView, race.technologies]);
+  },[advUnitView, race]);
 
   const movePayloadCursor = useCallback(()=>{
     let nexti = payloadCursor.i;
@@ -413,7 +422,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
     }
 
-  },[G.tiles, advUnitView, advUnitViewTechnology, moves, payloadCursor, movePayloadCursor, playerID, exhaustedCards, race.reinforcement])
+  },[G.tiles, advUnitView, advUnitViewTechnology, moves, payloadCursor, movePayloadCursor, playerID, exhaustedCards, race])
 
   const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
 
@@ -573,7 +582,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   },[G.tiles, G.races, race, getMovePath, getPureMovePath, advUnitViewTechnology, playerID, activeTile, exhaustedCards]);
 
   const distanceInfo = useCallback(()=>{
-    if(advUnitViewTechnology && advUnitViewTechnology.move && getPureMovePath.length){
+    if(race && advUnitViewTechnology && advUnitViewTechnology.move && getPureMovePath.length){
       let adj = 0;
 
       if(exhaustedCards.indexOf('GRAVITY_DRIVE')>-1) adj++;
@@ -583,7 +592,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     else{
       return '';
     }
-  }, [advUnitViewTechnology, getPureMovePath, exhaustedCards, race.moveBoost]);
+  }, [advUnitViewTechnology, getPureMovePath, exhaustedCards, race]);
 
   const moveToClick = useCallback((idx) => {
 
@@ -619,7 +628,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
       
     }));
-  }, [purgingFragments, race.fragments])
+  }, [purgingFragments, race])
  
   const modifyMoveStep = useCallback((index) => {
     if(G.tiles[index].tid === activeTile.tid) return;
@@ -683,7 +692,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [exhaustedCards, setExhaustedCards, G.races, producing, G.tiles, selectedTile, playerID, flushTempCt, justOccupied]);
 
 
-  const maxActs =  useMemo(() => haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1, [race]);
+  const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);
 
   const TileContent = ({element, index}) => {
 
@@ -1038,8 +1047,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>      
             <MyNavbar />
             <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
-              {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && <>
-                {race && techVisible && <TechnologyDialog />}
+              {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && !race.isSpectator && <>
+                {techVisible && <TechnologyDialog />}
                 {objVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                   <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Objectives <span style={{float: 'right'}}>{'You have ' + VP + ' VP'}</span></h6></CardTitle>
                   <ObjectivesList onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective:()=>{}}/>
@@ -1052,23 +1061,23 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       </Cont>
                     </div>
                 </Card>}
-                {race && unitsVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                {unitsVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                   <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Units</h6></CardTitle>
                   <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}/>
                 </Card>}
               </>}
-              {race && tradeVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+              {!race.isSpectator && tradeVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                 <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Trade</h6></CardTitle>
                 <TradePanel onTrade={moves.trade}/>
               </Card>}
-              {producing && <ProducingPanel 
+              {!race.isSpectator && producing && <ProducingPanel 
                 onCancel={(finish)=>{setProducing(null); if(finish && justOccupied && exhaustedCards.indexOf('INTEGRATED_ECONOMY')>-1){setJustOccupied(null)}}} 
                 pname={producing} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
 
               <ChatBoard sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
             </CardColumns>
 
-            {ctx.phase === 'strat' && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '50%', position: 'absolute', margin: '10rem'}}>
+            {!race.isSpectator && ctx.phase === 'strat' && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '50%', position: 'absolute', margin: '10rem'}}>
               <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>Strategy pick</h3></CardTitle>
               <CardBody style={{display: 'flex'}}>
                 <ListGroup style={{background: 'none', width: '60%'}}>
@@ -1102,7 +1111,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </CardBody>
             </Card>}
 
-            {ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote} mini={actionCardStage}/>}
+            {!race.isSpectator && ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote} mini={actionCardStage}/>}
             
             {strategyStage && <StrategyDialog R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}
@@ -1159,7 +1168,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </PixiViewport> 
             </Stage>
             
-            <div style={{ display:'flex', flexDirection: 'row', justifyContent: 'flex-end', position:'fixed', right: 0, top: 0, height: 0, width: '35%' }}>
+            {!race.isSpectator && <div style={{ display:'flex', flexDirection: 'row', justifyContent: 'flex-end', position:'fixed', right: 0, top: 0, height: 0, width: '35%' }}>
               <CardColumns style={{minWidth: '13rem', width:'13rem', height: 'fit-content', position: 'relative', display:'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
                 <div>
                   {race && race.strategy.length > 0 && 
@@ -1233,7 +1242,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         }
                       }
                       if(disabled && pr.when === 'COMBAT'){
-                        if(ctx.phase === 'acts' && ctx.activePlayers && ['bombardment', 'invasion', 'invasion_step2', 'spaceCombat', 'spaceCombat_step2'].indexOf(ctx.activePlayers[playerID]) > -1){
+                        if(ctx.phase === 'acts' && ctx.activePlayers && ['bombardment', 'invasion', 'invasion_step2', 
+                        'invasion_await', 'spaceCombat', 'spaceCombat_step2', 'antiFighterBarrage', 'spaceCannonAttack'].indexOf(ctx.activePlayers[playerID]) > -1){
                           disabled = false;
                         }
                       }
@@ -1421,7 +1431,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </Card>}
                   
               </CardColumns>
-            </div>
+            </div>}
 
             {payObj !== null && <PaymentDialog oid={payObj} G={G} race={race} planets={PLANETS} 
                             isOpen={payObj !== null} toggle={(payment)=>togglePaymentDialog(payment)}/>}

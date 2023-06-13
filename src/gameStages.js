@@ -447,7 +447,50 @@ export const ACTION_CARD_STAGE = {
             }
           }
           else if(card.when === 'COMBAT'){
-            
+            if(card.id === 'Ghost Squad'){
+              const activeTile = G.tiles.find(t => t.active === true);
+              
+              if(card.target.from !== undefined){
+                const from = activeTile.tdata.planets[parseInt(card.target.from)];
+                
+                if(card.target.to !== undefined){
+                  const to = activeTile.tdata.planets[parseInt(card.target.to)];
+                  
+                  if(from && String(from.occupied) === String(playerID) && to && String(to.occupied) === String(playerID) && card.target.forces){
+                    Object.keys(card.target.forces).forEach(u => {
+                      const units = card.target.forces[u];
+
+                      if(units && units.length){
+                        if(!to.units) to.units = {};
+                        if(!to.units[u]) to.units[u] = [];
+                        
+                        units.forEach(f => {
+                          to.units[u].push({...from.units[u][f.idx]});
+                          from.units[u][f.idx] = null;
+                        });
+
+                        units.forEach(f => {
+                          from.units[u] = from.units[u].filter(f => f !== null);
+                        });
+
+                        if(from.units[u].length === 0) delete from.units[u];
+                      }
+                    });
+                  }
+                }
+              }
+            }
+            else if(card.id === 'Intercept'){
+              if(ctx.activePlayers){
+                Object.keys(ctx.activePlayers).forEach(apid => {
+                  if(String(apid) !== String(playerID)){
+                    if(G.races[apid].retreat === true){
+                      G.races[apid].retreat = 'cancel';
+                    }
+                  }
+                });
+              }
+            }
           }
 
           G.races[card.playerID].actionCards.splice(G.races[card.playerID].actionCards.findIndex(a => a.id === card.id), 1);
