@@ -1118,8 +1118,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             {actionCardStage && <ActionCardDialog selectedTile={selectedTile} selectedPlanet={selectedPlanet} selectedUnit={advUnitView}/> }
             
             {spaceCannonAttack && <SpaceCannonAttack />}
-            {antiFighterBarrage && <AntiFighterBarrage />}
-            {spaceCombat && <SpaceCombat prevStages={prevStages}/>}
+            {antiFighterBarrage && <AntiFighterBarrage selectedTile={selectedTile}/>}
+            {spaceCombat && <SpaceCombat prevStages={prevStages} selectedTile={selectedTile}/>}
             {combatRetreat && <CombatRetreat selectedTile={selectedTile}/>}
             {bombardment && <Bombardment />}
             {invasion && <Invasion />}

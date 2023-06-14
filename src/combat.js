@@ -664,9 +664,10 @@ const CombatantForces = (args) => {
 
 }
 
-export const AntiFighterBarrage = () => {
+export const AntiFighterBarrage = (args) => {
 
     const { G, ctx, moves, playerID } = useContext(StateContext);
+    const { selectedTile } = args;
     const activeTile = G.tiles.find(t => t.active === true);
 
     const hits = useMemo(() => {
@@ -743,12 +744,12 @@ export const AntiFighterBarrage = () => {
             <Button color='danger' disabled = {everyoneRolls || enemyRetreat} onClick={moves.retreat}>Retreat</Button>
         </CardFooter>
     </Card>
-    {G.currentCombatActionCard && <ActionCardDialog />}
+    {G.currentCombatActionCard && <ActionCardDialog selectedTile={selectedTile}/>}
     </>);
 
 }
 
-export const SpaceCombat = () => {
+export const SpaceCombat = ({selectedTile}) => {
 
     const { G, ctx, moves, playerID, prevStages } = useContext(StateContext);
     const activeTile = G.tiles.find(t => t.active === true);
@@ -794,6 +795,10 @@ export const SpaceCombat = () => {
                         }); 
                             
                         if(hitted) h += 2;
+                    }
+                    if(enemyHaveCombatAC(G.races, ctx.activePlayers, pid, 'Shields Holding')){
+                        h -= 2;
+                        if(h < 0) h=0;
                     }
                 });
             }
@@ -1008,7 +1013,7 @@ export const SpaceCombat = () => {
             </>}
         </CardFooter>}
     </Card>
-    {G.currentCombatActionCard && <ActionCardDialog />}
+    {G.currentCombatActionCard && <ActionCardDialog selectedTile={selectedTile}/>}
     </>);
 
 }

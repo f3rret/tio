@@ -2,7 +2,7 @@ import { Card, CardImg,  CardTitle, CardBody, CardFooter, ButtonGroup, Button, R
 import { useState, useMemo, useContext, useCallback, useEffect, useRef } from 'react';
 import { produce } from 'immer';
 //import techData from './techData.json';
-import { StateContext, haveTechnology, UNITS_LIMIT, getPlanetByName, getMyNeighbors} from './utils';
+import { StateContext, haveTechnology, UNITS_LIMIT, getPlanetByName, getMyNeighbors, wormholesAreAdjacent} from './utils';
 import { neighbors } from './Grid.js'
 import { UnmeetReqs, PlanetsRows, getTechType } from './dialogs.js';
 
@@ -17,7 +17,8 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     const notarget = useMemo(() => ['Economic Initiative', 'Fighter Conscription', 'Industrial Initiative', 
     'Rise of a Messiah', 'Counterstroke', 'Flank Speed', 'Harness Energy', 'Lost Star Chart', 'Master Plan', 
     'Rally', 'Solar Flare', 'Upgrade', 'War Machine', 'Distinguished Councilor', 'Hack Election', 'Insider Information', 'Veto',
-    'Fire Team', 'Infiltrate', 'Intercept', 'Maneuvering Jets', 'Morale Boost', 'Parley', 'Reflective Shielding', 'Salvage'], []);
+    'Fire Team', 'Infiltrate', 'Intercept', 'Maneuvering Jets', 'Morale Boost', 'Parley', 'Reflective Shielding', 'Salvage', 
+    'Scramble Frequency', 'Shields Holding'], []);
 
     const card = useMemo(() => {
         let c = G.races[ctx.currentPlayer].currentActionCard;
@@ -350,6 +351,25 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                     result = selection
                 }
             }
+            else if(card.id === 'Skilled Retreat'){
+                if(!G.dice || !G.dice[playerID] || Object.keys(G.dice[playerID]).length === 0){
+                    if(selectedTile > -1){
+                        const tile = G.tiles[selectedTile];
+                        if(tile && (tile.tdata.occupied === undefined || String(tile.tdata.occupied) === String(playerID))){
+                            const activeTile = G.tiles.find(t => t.active === true);
+                            const neigh = neighbors([activeTile.q, activeTile.r]);
+                            const isAdjacent = neigh.toArray().find( n => {
+                                return n.tileId === G.tiles[selectedTile].tid;
+                            });
+
+                            if(isAdjacent || (activeTile.tdata.wormhole && tile.tdata.wormhole && wormholesAreAdjacent(G, activeTile.tdata.wormhole, tile.tdata.wormhole))){
+                                result = { tidx: selectedTile };
+                            }
+                            
+                        }
+                    }
+                }
+            }
         }
 
         return result;
@@ -441,7 +461,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     if(card.when === 'COMBAT'){
         style = {...style, right: '25%', bottom: '5%'}
     }
-
+// {card.id === 'Skilled Retreat' && <TileInfo tidx={selectedTile}/>}
     return <Card style={style}>
                 <CardTitle style={{borderBottom: '1px solid coral', color: 'black'}}><h3>Action card</h3></CardTitle>
                 <CardBody style={{display: 'flex', color: 'black', width: 'min-content'}}>
@@ -457,7 +477,8 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             <p>{card.description}</p>
                         </div>
 
-                        {notarget.indexOf(card.id) === -1 && <h6 style={{margin: '2rem 1rem 1rem 1rem'}}>TARGET:</h6>}
+                        {(notarget.indexOf(card.id) === -1 && !(card.id === 'Skilled Retreat' && isMine && !card.target)) && 
+                        <h6 style={{margin: '2rem 1rem 1rem 1rem'}}>TARGET:</h6>}
 
                         {isMine && !card.target && card.when !=='COMBAT' && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
                             {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown', 
@@ -513,7 +534,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                         {card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
                             {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown', 'Unstable Planet', 'Uprising', 
                             'Experimental Battlestation'].indexOf(card.id) > -1 && <PlanetInfo tidx={card.target.tidx} pidx={card.target.pidx}/>}
-                            {['Ghost Ship', 'Tactical Bombardment', 'Unexpected Action', 'War Effort', 'In The Silence Of Space'].indexOf(card.id) > -1 && <TileInfo tidx={card.target.tidx}/>}
+                            {['Ghost Ship', 'Tactical Bombardment', 'Unexpected Action', 'War Effort', 'In The Silence Of Space', 'Skilled Retreat'].indexOf(card.id) > -1 && <TileInfo tidx={card.target.tidx}/>}
                             {['Focused Research', 'Plagiarize'].indexOf(card.id) > -1 && <div style={{padding: '1rem'}}><OneTechLine technology={card.target.tech}/></div>}
                             {['Impersonation', 'Mining Initiative'].indexOf(card.id) > -1 && <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                 <PlanetsRows PLANETS={card.target.exhausted} /></div>}

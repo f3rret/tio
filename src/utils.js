@@ -475,7 +475,6 @@ export const computeVoteResolution = (G, agendaNumber) => {
 
 }
 
-
 export const votingProcessDone = ({G, agendaNumber, playerID, events}) => {
 
   if(G.TURN_ORDER_IS_REVERSED){
@@ -599,7 +598,6 @@ export const repairAllActiveTileUnits = (G, playerID) => {
     })
   }
 }
-
 
 export const completeObjective = ({G, playerID, oid, payment}) => {
 
@@ -786,4 +784,13 @@ export const checkTacticalActionCard = ({G, events, playerID, atype}) => {
     events.setActivePlayers({currentPlayer: Stage.NULL, value: players});
   }
 
+}
+
+export const spliceCombatAC = (race, cardid) => {
+  const acIdx = race.combatActionCards.indexOf(cardid);
+  if(acIdx > -1){
+    race.combatActionCards.splice(acIdx, 1);
+    return true;
+  }
+  return false;
 }

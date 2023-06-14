@@ -33,7 +33,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(63, 69)); //test only
+        r.actionCards.push(...cardData.actions.slice(68, 72)); //test only
       });
 
       tiles.forEach( (t, i) => {

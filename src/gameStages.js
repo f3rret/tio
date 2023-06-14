@@ -1,7 +1,7 @@
 import { produce } from 'immer';
 import { INVALID_MOVE } from 'boardgame.io/core';
 import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveTechnology, getPlanetByName, 
-  completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits } from './utils';
+  completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits, spliceCombatAC } from './utils';
 
 export const ACTION_CARD_STAGE = {
     moves: {
@@ -527,6 +527,65 @@ export const ACTION_CARD_STAGE = {
 
               delete activePlanet.invasion['troops'];
             }
+            else if(card.id === 'Scramble Frequency'){
+              if(!ctx.activePlayers) return INVALID_MOVE;
+
+              const enemyId = Object.keys(ctx.activePlayers).find(apid => String(apid) !== String(playerID));
+              if(enemyId === undefined) return INVALID_MOVE;
+
+              let spaceCannonDefence;
+
+              if(ctx.activePlayers[enemyId] === 'invasion'){
+                const activeTile = G.tiles.find(t => t.active === true);
+                if(!activeTile || !activeTile.tdata.planets) return INVALID_MOVE;
+                const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+
+                if(String(activePlanet.occupied) === String(enemyId)){
+                  if(activePlanet.invasion && !activePlanet.invasion.nopds){
+                    spaceCannonDefence = true;
+                  }
+                }
+              }
+
+              if(ctx.activePlayers[enemyId] === 'bombardment' || ctx.activePlayers[enemyId] === 'antiFighterBarrage' || 
+              ctx.activePlayers[enemyId] === 'spaceCannonAttack' || spaceCannonDefence){
+                if(G.dice[enemyId]){
+                  G.dice[enemyId]={};
+                }
+              }
+            }
+            else if(card.id === 'Skilled Retreat'){
+              const dst = G.tiles[card.target.tidx];
+              if(!dst.tdata.fleet) dst.tdata.fleet = {};
+
+              const activeTile = G.tiles.find(t => t.active === true);
+              let myFleet;
+              if(String(activeTile.tdata.occupied) === String(playerID)){
+                myFleet = activeTile.tdata.fleet;
+              }
+              else{
+                myFleet = activeTile.tdata.attacker;
+              }
+
+              Object.keys(myFleet).forEach(tag => {
+                if(myFleet[tag] && myFleet[tag].length){
+                  if(!dst.tdata.fleet[tag]) dst.tdata.fleet[tag] = [];
+                  dst.tdata.fleet[tag].push(...myFleet[tag]);
+                }
+              });
+
+              if(String(activeTile.tdata.occupied) === String(playerID)){
+                activeTile.tdata.fleet = activeTile.tdata.attacker;
+                activeTile.tdata.occupied = ctx.currentPlayer;
+              }
+              
+              delete activeTile.tdata.attacker;
+              dst.tdata.occupied = playerID;
+              if(!dst.tdata.tokens) dst.tdata.tokens=[];
+              dst.tdata.tokens.push(G.races[playerID].rid);
+
+              events.setActivePlayers({});
+            }
           }
 
           G.races[card.playerID].actionCards.splice(G.races[card.playerID].actionCards.findIndex(a => a.id === card.id), 1);
@@ -990,6 +1049,8 @@ export const ACTS_STAGES = {
         });
       },
       nextStep: ({G, events, ctx, playerID}) => {
+        spliceCombatAC(G.races[playerID], 'Scramble Frequency');
+
         let hits = {};
         Object.keys(ctx.activePlayers).forEach(pid => {
             let h = 0;
@@ -1097,10 +1158,9 @@ export const ACTS_STAGES = {
         });
       },
       nextStep: ({G, playerID, events, ctx}, hits) => {
-        let acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
-        if(acIdx > -1){
+       
+        if(spliceCombatAC(G.races[playerID], 'Emergency Repairs')){
           repairAllActiveTileUnits(G, playerID);
-          G.races[playerID].combatActionCards.splice(acIdx, 1);
         }
       
         if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
@@ -1248,21 +1308,12 @@ export const ACTS_STAGES = {
       }
 
 
-      let acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
-      if(acIdx > -1){
+      if(spliceCombatAC(G.races[playerID], 'Emergency Repairs')){
         repairAllActiveTileUnits(G, playerID);
-        G.races[playerID].combatActionCards.splice(acIdx, 1);
       }
-
-      acIdx = G.races[playerID].combatActionCards.indexOf('Morale Boost');
-      if(acIdx > -1){
-        G.races[playerID].combatActionCards.splice(acIdx, 1);
-      }
-
-      acIdx = G.races[playerID].combatActionCards.indexOf('Reflective Shielding');
-      if(acIdx > -1){
-        G.races[playerID].combatActionCards.splice(acIdx, 1);
-      }
+      spliceCombatAC(G.races[playerID], 'Morale Boost');
+      spliceCombatAC(G.races[playerID], 'Reflective Shielding');
+      spliceCombatAC(G.races[playerID], 'Shields Holding');
 
      } 
     }
@@ -1302,8 +1353,7 @@ export const ACTS_STAGES = {
         G.races[playerID].retreat = undefined;
 
         if(looser !== undefined && String(looser) !== String(playerID)){
-          let acIdx = G.races[playerID].combatActionCards.indexOf('Salvage');
-          if(acIdx > -1){
+          if(spliceCombatAC(G.races[playerID], 'Salvage')){
             G.races[playerID].commodity += G.races[looser].commodity;
             if(G.races[playerID].commodity > G.races[playerID].commCap) G.races[playerID].commodity = G.races[playerID].commCap;
             G.races[looser].commodity = 0;
@@ -1462,6 +1512,8 @@ export const ACTS_STAGES = {
         else{
           events.setStage('invasion_step2');
         }
+
+        spliceCombatAC(G.races[playerID], 'Scramble Frequency');
       }
     }
   },
@@ -1484,15 +1536,11 @@ export const ACTS_STAGES = {
         G.dice[playerID][unit].reroll[didx] = dice[0];
       },
       nextStep: ({G, events, playerID, ctx}, hits, setNoPds) => {
-        let acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
-        if(acIdx > -1){
+
+        if(spliceCombatAC(G.races[playerID], 'Emergency Repairs')){
           repairAllActiveTileUnits(G, playerID);
-          G.races[playerID].combatActionCards.splice(acIdx, 1);
         }
-        acIdx = G.races[playerID].combatActionCards.indexOf('Fire Team');
-        if(acIdx > -1){
-          G.races[playerID].combatActionCards.splice(acIdx, 1);
-        }
+        spliceCombatAC(G.races[playerID], 'Fire Team');
 
         const activeTile = G.tiles.find(t => t.active === true);
         const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
@@ -1628,15 +1676,11 @@ export const ACTS_STAGES = {
           
         }
 
-        let acIdx = G.races[playerID].combatActionCards.indexOf('Emergency Repairs');
-        if(acIdx > -1){
+        if(spliceCombatAC(G.races[playerID], 'Emergency Repairs')){
           repairAllActiveTileUnits(G, playerID);
-          G.races[playerID].combatActionCards.splice(acIdx, 1);
         }
-        acIdx = G.races[playerID].combatActionCards.indexOf('Morale Boost');
-        if(acIdx > -1){
-          G.races[playerID].combatActionCards.splice(acIdx, 1);
-        }
+        spliceCombatAC(G.races[playerID], 'Morale Boost');
+        spliceCombatAC(G.races[playerID], 'Scramble Frequency');
 
       } 
     }
