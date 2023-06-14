@@ -2,6 +2,7 @@
 import tileData from './tileData.json';
 import techData from './techData.json';
 import { neighbors } from './Grid';
+import { Stage } from 'boardgame.io/core';
 import { createContext } from 'react';
 
 export const NUM_PLAYERS = 2;
@@ -597,4 +598,192 @@ export const repairAllActiveTileUnits = (G, playerID) => {
       }
     })
   }
+}
+
+
+export const completeObjective = ({G, playerID, oid, payment}) => {
+
+  const objective = G.pubObjectives.find(o => o.id === oid);
+  if(objective && objective.players.indexOf(playerID) === -1){
+
+    const req = objective.req;
+    const race = G.races[playerID];
+    
+    if(objective.type === 'SPEND'){
+      const rkeys = Object.keys(req);
+
+      const check = rkeys.every((k) => {
+        if(k === 'influence' || k === 'resources'){
+            return payment[k] && payment[k].planets.reduce((a,b) => b[k] + a, 0) + payment[k].tg >= req[k]
+        }
+        else if(k === 'tg'){
+            return G.races[playerID].tg >= req[k]
+        }
+        else if(k === 'token'){
+            return payment[k] && payment[k].t + payment[k].s >= req[k]
+        }
+        else return false;
+      });
+
+      if(!check){
+        console.log('not enough pay');
+        return;
+      }
+
+      if(rkeys.indexOf('token') > -1){
+          if(race.tokens && payment.tokens){
+            race.tokens.t -= payment.tokens.t;
+            race.tokens.s -= payment.tokens.s;
+          }
+      }
+      else{
+          if(req.influence && payment.influence){
+            if(payment.influence.planets){
+              payment.influence.planets.forEach( p => {
+              const tile = G.tiles.find( t => t.tid === p.tid);
+              tile.tdata.planets.find( pl => pl.name === p.name).exhausted = true; 
+              });
+            }
+            if(payment.influence.tg) race.tg -= payment.influence.tg;
+          }
+          if(req.resources && payment.resources){
+            if(payment.resources.planets) payment.resources.planets.forEach( p => {
+                const tile = G.tiles.find( t => t.tid === p.tid);
+                tile.tdata.planets.find( pl => pl.name === p.name).exhausted = true; 
+            });
+            if(payment.resources.tg) race.tg -= payment.resources.tg;
+          }
+          if(req.tg){
+            race.tg -= req.tg;
+          }
+      }           
+
+      objective.players.push(playerID);
+    }
+    else if(objective.type === 'HAVE'){
+      if(checkObjective(G, playerID, oid) === true){
+        objective.players.push(playerID);
+      }
+    }
+    else{
+      return;
+    }
+    
+  }
+
+}
+
+export const loadUnitsOnRetreat = (G, playerID) => {
+  
+  const activeTile = G.tiles.find(t => t.active === true);
+
+  if(String(activeTile.tdata.occupied) === String(playerID) && activeTile.tdata.planets){ //load fighters and mech if capacity
+    const fleet = activeTile.tdata.fleet;
+    
+    Object.keys(fleet).forEach(tag => {
+
+      const technology = G.races[playerID].technologies.find(t => t.id === tag.toUpperCase());
+
+      if(technology && technology.capacity){
+        fleet[tag].forEach((car, c) => {
+          if(!car.payload) car.payload=[];
+          
+          for(var i=0; i<technology.capacity; i++){
+              if(car.payload.length < i) car.payload.push({});
+              const place = car.payload[i];
+
+              activeTile.tdata.planets.forEach(planet => {
+                if(String(planet.occupied) === String(playerID)){
+                  if(!place || !place.id){
+                    if(planet.units.fighter && planet.units.fighter.length){
+                      car.payload.push({...planet.units.fighter[0], id: 'fighter'});
+                      planet.units.fighter.splice(0,1);
+                      if(planet.units.fighter.length === 0) delete planet.units['fighter'];
+                    }
+                    else if(planet.units.mech && planet.units.mech.length){
+                      car.payload.push({...planet.units.mech[0], id: 'mech'});
+                      planet.units.mech.splice(0,1);
+                      if(planet.units.mech.length === 0) delete planet.units['mech']
+                    } 
+                  }
+                }
+              });
+
+              car.payload = car.payload.filter( p => p.id);
+          }
+          
+        });
+      }
+
+    });
+  }
+  
+}
+
+export const checkTacticalActionCard = ({G, events, playerID, atype}) => {
+  const players={};
+
+  if(atype === 'TILE_ACTIVATED'){
+    const activeTile = G.tiles.find(t => t.active === true);
+    const race = G.races[playerID];
+
+    if(activeTile){
+      //Counterstroke
+      let cardOwners = G.races.filter(r => r.actionCards.find(a => a.id === 'Counterstroke')).map(r => String(r.rid));
+      activeTile.tdata.tokens.filter(t => String(t) !== String(race.rid) && cardOwners.indexOf(String(t)) > -1 ).forEach(rid => { 
+        const ri = G.races.findIndex(r => r.rid === rid);
+        if(ri > -1){        
+          players[ri]={stage: 'tacticalActionCard'};
+        }
+      });
+
+      //Experimental Battlestation
+      cardOwners = G.races.filter(r => r.actionCards.find(a => a.id === 'Experimental Battlestation')).map(r => String(r.rid));
+      const neigh = neighbors([activeTile.q, activeTile.r]).toArray().map(n => n.tileId);
+      const tids = [activeTile.tid, ...neigh];
+
+      tids.forEach(tid => {
+        const t = G.tiles.find(f => f.tid === tid);
+
+        if(t.tdata.planets){
+          t.tdata.planets.forEach(p => {
+            if(p.occupied !== undefined && String(p.occupied) !== String(playerID) && p.units && p.units.spacedock){         
+                if(!players[p.occupied] && cardOwners.indexOf(String(G.races[p.occupied].rid)) > -1){
+                  players[p.occupied]={stage: 'tacticalActionCard'};
+                }
+            }
+          });
+        }
+      });
+
+      //Forward Supply Base
+      cardOwners = G.races.filter(r => r.actionCards.find(a => a.id === 'Forward Supply Base')).map(r => String(r.rid));
+
+      if(activeTile.tdata.occupied !== undefined && String(activeTile.tdata.occupied) !== String(playerID)){
+        if(!players[activeTile.tdata.occupied] && cardOwners.indexOf(String(G.races[activeTile.tdata.occupied].rid)) > -1){
+          players[activeTile.tdata.occupied] = {stage: 'tacticalActionCard'};
+        }
+      }
+      else if(activeTile.tdata.planets){
+        const otherPlanet = activeTile.tdata.planets.find(p => p.occupied !== undefined && String(p.occupied) !== String(playerID) && p.units && Object.keys(p.units).length);
+        if(otherPlanet){
+            if(!players[activeTile.tdata.occupied] && cardOwners.indexOf(String(G.races[otherPlanet.occupied].rid)) > -1){
+              players[activeTile.tdata.occupied] = {stage: 'tacticalActionCard'};
+            }
+        }
+      }
+    }
+  }
+  else if(atype === 'PLANET_OCCUPIED'){
+    //Reparations
+    const race = G.races[playerID];
+    if(race && race.actionCards.find(a => a.id === 'Reparations')){
+      players[playerID] = {stage: 'tacticalActionCard'};
+    }
+  }
+
+  if(Object.keys(players).length > 0){
+    events.setActivePlayers({currentPlayer: Stage.NULL, value: players});
+  }
+
 }

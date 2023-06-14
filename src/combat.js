@@ -261,7 +261,12 @@ const HitAssign = (args) => {
     const {race, units, hits, setHits, owner, allowRepair} = args;
     
     const technologies = useMemo(()=>{
-        return getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech'], race);
+        if(units){
+            return getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech'], race);
+        }
+        else{
+            return {};
+        }
     },[race, units]);
 
     const hitAssign = useCallback((tag, idx, pidx, payloadId) => {
@@ -470,15 +475,17 @@ const CombatantForces = (args) => {
             fighter: [], mech: [], infantry: []
         };
 
-        Object.keys(fleet).forEach(unit => {
-            fleet[unit].forEach( car =>{
-                if(car.payload && car.payload.length){
-                    car.payload.forEach(p => {
-                        if(p && payload[p.id]) payload[p.id].push(p);
-                    })
-                }
-            })
-        });
+        if(fleet){
+            Object.keys(fleet).forEach(unit => {
+                fleet[unit].forEach( car =>{
+                    if(car.payload && car.payload.length){
+                        car.payload.forEach(p => {
+                            if(p && payload[p.id]) payload[p.id].push(p);
+                        })
+                    }
+                })
+            });
+        }
 
         Object.keys(payload).forEach(k => {
             if(payload[k].length === 0) delete payload[k];
@@ -776,13 +783,25 @@ export const SpaceCombat = () => {
                     if(technology && technology.combat){
                         h += G.dice[pid][unit].dice.filter(d => d+adj >= technology.combat).length;
                     }
+
+                    if(G.races[pid].combatActionCards.indexOf('Reflective Shielding') > -1){
+                        let fleet = (String(pid) === String(ctx.currentPlayer)) ? activeTile.tdata.attacker : activeTile.tdata.fleet;
+                        let hitted = Object.keys(fleet).find(tag =>{
+                            if(fleet[tag] && fleet[tag].length){
+                                return fleet[tag].find(c => c.hit && c.hit > 0)
+                            }
+                            return false;
+                        }); 
+                            
+                        if(hitted) h += 2;
+                    }
                 });
             }
             result[pid] = h;
         });
 
         return result;
-    }, [G.dice, G.races, ctx.activePlayers, assaultCannon, playerID, prevStages]);
+    }, [G.dice, G.races, ctx, assaultCannon, playerID, prevStages, activeTile.tdata]);
 
     const assignedA = useMemo(() => {
         let result = 0;
@@ -1551,11 +1570,11 @@ export const Invasion = () => {
         if(activePlanet && activePlanet.invasion){
             if(String(playerID) === String(ctx.currentPlayer)){
                 if(ctx.activePlayers[playerID] === 'invasion_await' && !activePlanet.invasion.troops){
-                    return true;
+                    if(!enemyHaveCombatAC(G.races, ctx.activePlayers, playerID, 'Parley')) return true;
                 }
             }
         }
-    }, [ctx.currentPlayer, playerID, activePlanet, ctx.activePlayers]);
+    }, [ctx.currentPlayer, playerID, activePlanet, ctx.activePlayers, G.races]);
 
     const withNoPds = (units) => {
         const u = {...units};
@@ -1616,7 +1635,12 @@ export const Invasion = () => {
 
     const winner = useMemo(() => {
         if(!activePlanet.invasion) return -1; //not you
-        if(!activePlanet.invasion.troops) return undefined;
+        if(!activePlanet.invasion.troops){
+            if(G.races[playerID].combatActionCards.indexOf('Parley')>-1){
+                return playerID;
+            }
+            return undefined;
+        }
 
         const attacker = activePlanet.invasion.troops;
         const defender = Object.keys(activePlanet.units).filter(k => ['infantry', 'mech'].indexOf(k) > -1);
@@ -1633,7 +1657,7 @@ export const Invasion = () => {
         }
 
         return undefined;
-    }, [activePlanet, ctx.currentPlayer, ctx.activePlayers]);
+    }, [activePlanet, ctx.currentPlayer, ctx.activePlayers, G.races, playerID]);
 
     const haveACDialog = useMemo(() => {
         return G.currentCombatActionCard !== undefined;
@@ -1657,7 +1681,6 @@ export const Invasion = () => {
     // eslint-disable-next-line
     }, [activePlanet.units]);
 
-    
     return (<>
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>

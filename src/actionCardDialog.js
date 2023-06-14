@@ -17,7 +17,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     const notarget = useMemo(() => ['Economic Initiative', 'Fighter Conscription', 'Industrial Initiative', 
     'Rise of a Messiah', 'Counterstroke', 'Flank Speed', 'Harness Energy', 'Lost Star Chart', 'Master Plan', 
     'Rally', 'Solar Flare', 'Upgrade', 'War Machine', 'Distinguished Councilor', 'Hack Election', 'Insider Information', 'Veto',
-    'Fire Team', 'Infiltrate', 'Intercept', 'Maneuvering Jets', 'Morale Boost'], []);
+    'Fire Team', 'Infiltrate', 'Intercept', 'Maneuvering Jets', 'Morale Boost', 'Parley', 'Reflective Shielding', 'Salvage'], []);
 
     const card = useMemo(() => {
         let c = G.races[ctx.currentPlayer].currentActionCard;
@@ -566,9 +566,9 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                     </div>
                 </CardBody>
                 <CardFooter style={{background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid coral'}}>
-                    {isMine && !card.target && <>
+                    {isMine && <>
                         <Button color='danger' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardCancel() : ()=>moves.cancel()}>Cancel</Button>
-                        <Button color='success' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardNext(myTarget) : ()=>moves.next(myTarget)} disabled={!myTarget}>Next</Button>
+                        {!card.target && <Button color='success' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardNext(myTarget) : ()=>moves.next(myTarget)} disabled={!myTarget}>Next</Button>}
                     </>}
                     {((isMine && card.target) || !isMine) && <div>
                         {Object.keys(card.reaction).map((pid, i) => {
