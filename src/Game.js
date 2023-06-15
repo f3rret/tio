@@ -33,7 +33,7 @@ export const TIO = {
         r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
-        r.actionCards.push(...cardData.actions.slice(68, 72)); //test only
+        //r.actionCards.push(...cardData.actions.slice(70, 76)); //test only
       });
 
       tiles.forEach( (t, i) => {
@@ -98,10 +98,25 @@ export const TIO = {
         next: 'acts',
         turn: {
           order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
-          minMoves: 1,
-          maxMoves: 1
+          /*minMoves: 0,
+          maxMoves: 1,*/
+          stages: {
+            actionCard: ACTION_CARD_STAGE
+          },
+
+          onBegin: ({G, ctx, events}) => {
+            if(G.races[ctx.currentPlayer].exhaustedCards.indexOf('Political Stability') > -1){
+              events.endTurn();
+            }
+          }
         },
         moves: {
+          playActionCard: ({G, playerID, events}, card) => {
+            if(card.when === 'STRATEGY'){
+              G.races[playerID].currentActionCard = {...card, reaction: {}, playerID};
+              events.setActivePlayers({ all: 'actionCard' });
+            }
+          },
           pickStrategy: ({G, playerID, events}, sid) => {
             if(!cardData.strategy[sid]){
               console.log('invalid card');
@@ -190,6 +205,9 @@ export const TIO = {
                 }
               })
             }
+          });
+          G.races.forEach(r => {
+            if(r.forbiddenStrategy) delete r.forbiddenStrategy;
           });
         },
         endIf: ({ G, ctx }) => {
@@ -864,9 +882,18 @@ export const TIO = {
       stats: {
         next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
         turn: {
-          order: TurnOrder.CUSTOM_FROM('TURN_ORDER')
+          order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
+          stages: {
+            actionCard: ACTION_CARD_STAGE
+          }
         },
         moves: {
+          playActionCard: ({G, playerID, events}, card) => {
+            if(card.when === 'STATUS'){
+              G.races[playerID].currentActionCard = {...card, reaction: {}, playerID};
+              events.setActivePlayers({ all: 'actionCard' });
+            }
+          },
           completeObjective: ({G, playerID, events}, oid, payment) => {
             completeObjective({G, playerID, oid, payment});
             G.passedPlayers.push(playerID);
@@ -894,7 +921,7 @@ export const TIO = {
         onEnd: ({ G }) => {
           G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
           G.races.forEach( r => { 
-            r.strategy = []; 
+            if(r.exhaustedCards.indexOf('Political Stability') === -1) r.strategy = []; 
             r.initiative = undefined;
             r.tokens.new += haveTechnology(r, 'HYPER_METABOLISM') ? 3:2; 
           });

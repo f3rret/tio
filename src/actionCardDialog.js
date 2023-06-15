@@ -18,7 +18,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     'Rise of a Messiah', 'Counterstroke', 'Flank Speed', 'Harness Energy', 'Lost Star Chart', 'Master Plan', 
     'Rally', 'Solar Flare', 'Upgrade', 'War Machine', 'Distinguished Councilor', 'Hack Election', 'Insider Information', 'Veto',
     'Fire Team', 'Infiltrate', 'Intercept', 'Maneuvering Jets', 'Morale Boost', 'Parley', 'Reflective Shielding', 'Salvage', 
-    'Scramble Frequency', 'Shields Holding', 'Courageous to the End'], []);
+    'Scramble Frequency', 'Shields Holding', 'Courageous to the End', 'Political Stability', 'Summit'], []);
 
     const card = useMemo(() => {
         let c = G.races[ctx.currentPlayer].currentActionCard;
@@ -370,6 +370,18 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                     }
                 }
             }
+            else if(card.id === 'Direct Hit'){
+                if(selection && selection.tag && selection.idx !== undefined){
+                    result = {tag: selection.tag, idx: selection.idx}
+                }
+            }
+        }
+        else if(card.when === 'STRATEGY'){
+            if(card.id === 'Public Disgrace'){
+                if(selection !== undefined && String(selection) !== String(cardOwner)){
+                    result = { playerID: selection }
+                }
+            }
         }
 
         return result;
@@ -457,11 +469,16 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
         }
     }, [card, exhaustTechCard, moves]);
 
+    const haveSabotageCard = useMemo(() => G.races[playerID].actionCards && G.races[playerID].actionCards.find(c => c.id === 'Sabotage'), [G.races, playerID]);
+    const isSabotaged = useMemo(() => {
+        return card.reaction && Object.keys(card.reaction).find(pid => card.reaction[pid] === 'sabotage') !== undefined;
+    }, [card]);
+
     let style = {border: 'solid 1px rgba(74, 111, 144, 0.42)', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute', margin: '5rem'};
     if(card.when === 'COMBAT'){
         style = {...style, right: '25%', bottom: '5%'}
     }
-// {card.id === 'Skilled Retreat' && <TileInfo tidx={selectedTile}/>}
+
     return <Card style={style}>
                 <CardTitle style={{borderBottom: '1px solid coral', color: 'black'}}><h3>Action card</h3></CardTitle>
                 <CardBody style={{display: 'flex', color: 'black', width: 'min-content'}}>
@@ -488,7 +505,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                 exhausted={exhausted} setExhausted={setExhausted}/>}
                             {['Impersonation', 'Mining Initiative'].indexOf(card.id) > -1 && <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                 <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} /></div>}
-                            {['Insubordination', 'Spy', 'Forward Supply Base'].indexOf(card.id) > -1 && <PlayerSelect onSelect={setSelection}/>}
+                            {['Insubordination', 'Spy', 'Forward Supply Base'].indexOf(card.id) > -1 && <PlayerSelect selected={selection} onSelect={setSelection}/>}
                             {['Lucky Shot'].indexOf(card.id) > -1 && <UnitInfo selectedUnit={selectedUnit} />}
                             {card.id === 'Plagiarize' && <>
                                 <TechnologySelect onSelect={setSelection} races={myNeighbors.map(n => G.races[n])}/>
@@ -497,7 +514,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                 </div>}
                                 </>}
                             {card.id === 'Repeal Law' && <LawSelect onSelect={(law)=>setSelection(law)}/>}
-                            {card.id === 'Signal Jamming' && <><TileInfo tidx={selectedTile}/><PlayerSelect onSelect={setSelection}/></>}
+                            {card.id === 'Signal Jamming' && <><TileInfo tidx={selectedTile}/><PlayerSelect selected={selection}  onSelect={setSelection}/></>}
                             {card.id === 'Reparations' && <>
                                 <ButtonGroup>
                                     <Button color={tabs === 0 ? 'dark':'light'} onClick={()=>setTabs(0)}>1. Exhaust enemy's planet</Button>
@@ -508,7 +525,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                     {tabs === 1 && <PlanetsRows PLANETS={PLANETS.filter(p => p.exhausted === true)} exhausted={exhausted} onClick={planetsRowsClick} />}
                                 </div>
                             </>}
-                            {['Ancient Burial Sites', 'Assassinate Representative', 'Confusing Legal Text'].indexOf(card.id) > -1 && <PlayerSelect onSelect={setSelection} noTokensInfo={true}/>}
+                            {['Ancient Burial Sites', 'Assassinate Representative', 'Confusing Legal Text', 'Public Disgrace'].indexOf(card.id) > -1 && <PlayerSelect selected={selection} onSelect={setSelection} noTokensInfo={true}/>}
                             {card.id === 'Bribery' && <PayTg onChange={setSelection}/>}
                             {card.id === 'Construction Rider' && <>
                                 <Predict onSelect={setSelection}/>
@@ -529,6 +546,9 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
 
                         {isMine && card.id === 'Ghost Squad' && !card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem', padding: '1rem'}}>
                             <ForcesRelocation onResult={setSelection}/>
+                        </div>}
+                        {isMine && card.id === 'Direct Hit' && !card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem', padding: '1rem'}}>
+                            <SelectSustained onSelect={setSelection} selected={selection} initiator={playerID}/>
                         </div>}
 
                         {card.target && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
@@ -566,7 +586,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                         </div>
                                     </div>
                             </>}
-                            {['Ancient Burial Sites', 'Assassinate Representative', 'Confusing Legal Text'].indexOf(card.id) > -1 && <OneLinePlayerInfo race={G.races[card.target.playerID]}/>}
+                            {['Ancient Burial Sites', 'Assassinate Representative', 'Confusing Legal Text', 'Public Disgrace'].indexOf(card.id) > -1 && <OneLinePlayerInfo race={G.races[card.target.playerID]}/>}
                             {card.id === 'Bribery' && <h5 style={{fontSize: '50px', width: '15rem', margin: '1rem'}}>
                                 {card.target.tg}<Button tag='img' src='/icons/trade_good_1.png' color='warning' 
                                     style={{marginLeft: '1rem', width: '4rem', padding: '.5rem', borderTopLeftRadius: '5px', borderBottomLeftRadius: '5px', 
@@ -595,13 +615,17 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                 })}
                                 </div>
                             </>}
+                            {card.id === 'Direct Hit' && card.target.tag && <div style={{margin: '1rem'}}><SelectSustained selected={selection} initiator={card.playerID}/></div>}
                         </div>}
                     </div>
                 </CardBody>
                 <CardFooter style={{background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid coral'}}>
                     {isMine && <>
-                        <Button color='danger' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardCancel() : ()=>moves.cancel()}>Cancel</Button>
+                        <Button color='danger' disabled={isSabotaged} onClick={card.when === 'COMBAT' ? ()=>moves.actionCardCancel() : ()=>moves.cancel()}>Cancel</Button>
                         {!card.target && <Button color='success' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardNext(myTarget) : ()=>moves.next(myTarget)} disabled={!myTarget}>Next</Button>}
+                    </>}
+                    {!isMine && !card.reaction[playerID] && <>
+                        <Button style={{alignSelf: 'flex-start'}} disabled={!haveSabotageCard} color='danger' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardSabotage() : ()=>moves.sabotage()}>Sabotage</Button>
                     </>}
                     {((isMine && card.target) || !isMine) && <div>
                         {Object.keys(card.reaction).map((pid, i) => {
@@ -618,6 +642,66 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                     }
                 </CardFooter>
             </Card>
+}
+
+const SelectSustained = ({selected, onSelect, initiator, readOnly}) => {
+
+    const { G } = useContext(StateContext);
+    const activeTile = useMemo(() => G.tiles.find(t => t.active === true), [G.tiles]);
+
+    const fleet = useMemo(() => {
+        if(!activeTile) return;
+
+        if(String(activeTile.tdata.occupied) === String(initiator)){
+            return activeTile.tdata.attacker;
+        }
+        else{
+            return activeTile.tdata.fleet;
+        }
+    }, [activeTile, initiator]);
+
+    const sustained = useMemo(() => {
+        if(!fleet || !Object.keys(fleet).length) return [];
+
+        let result = [];
+        Object.keys(fleet).forEach(tag => {
+            fleet[tag].forEach((car, idx) => {
+                if(car.hit && car.hit > 0) result.push({tag, idx, ...car});
+            });
+        });
+
+        return result;
+    }, [fleet]);
+
+    const isSelected = useCallback((tag, idx) => {
+        return selected && selected.tag === tag && selected.idx === idx;
+    }, [selected]);
+
+    return <div style={{marginLeft: '1rem', display: 'flex', flexWrap: 'wrap'}}>
+        {sustained.map((t, j) =>{
+            return <div key={j} style={{margin: '0.25rem 1rem 0 0', display: 'flex', alignItems: 'flex-start'}}>
+                <div style={{display: 'flex', flexDirection: 'column'}}>
+                    <Button style={{width: '5rem', padding: 0, background: isSelected(t.tag, t.idx) ? '#bb2d3b':'none', border: 'none'}} 
+                        outline onClick={() =>{ if(!readOnly){onSelect({tag: t.tag, idx: t.idx}) }}}>
+                        <img alt='unit' src={'units/' + t.tag.toUpperCase() + '.png'} style={{width: '100%'}}/>
+                    </Button>
+                </div>
+                <div style={{display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', maxWidth: '10rem'}}>
+                    {t.payload && t.payload.map((p, l) =>{
+                        if(p){
+                            return <div key={l} style={{display: 'flex', flexDirection: 'column'}}>
+                            <Button outline 
+                                style={{width: '2rem', background: 'transparent',
+                                border: 'solid 1px rgba(255,255,255,.15)', margin: '.1rem', padding: 0}}>
+                                <img alt='unit' src={'units/' + p.id.toUpperCase() + '.png'} style={{width: '100%'}}/>
+                            </Button>
+                            </div>
+                        }
+                        return <></>
+                    })}
+                </div>
+            </div>})}
+    </div>;
 }
 
 const ForcesRelocationRO = ({selection}) => {
@@ -925,10 +1009,17 @@ export const TechnologyDialog = ({tooltipMode, onSelect, selected, races}) => {
   </Card>
 }
 
-const PlayerSelect = ({onSelect, noTokensInfo}) => {
+const PlayerSelect = ({selected, onSelect, noTokensInfo}) => {
     const { G } = useContext(StateContext);
+    const myRef = useRef(null);
 
-    return <Input type='select' onChange={(e)=>onSelect(e.target.value)} style={{margin: '.5rem', width: '96%', color: 'black'}}>
+    useEffect(() => {
+        if(!selected && myRef && myRef.current && myRef.current.value !== undefined){
+            onSelect(myRef.current.value);
+        }
+    }, [onSelect, selected]);
+
+    return <Input type='select' innerRef={myRef} onChange={(e)=>onSelect(e.target.value)} style={{margin: '.5rem', width: '96%', color: 'black'}}>
         {G.races.map((r,i) =>{
             return <option key={i} value={i} style={{fontWeight: 'bold'}}>{r.name + (noTokensInfo ? '':': ' + r.tokens.t + ' tactic tokens')}</option>
             }
@@ -955,6 +1046,7 @@ const LawSelect = ({onSelect}) => {
             </p>}
         </>
 }
+
 const PlanetInfo = ({tidx, pidx}) => {
     const { G } = useContext(StateContext);
 

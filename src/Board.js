@@ -1077,16 +1077,22 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               <ChatBoard sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
             </CardColumns>
 
-            {!race.isSpectator && ctx.phase === 'strat' && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '50%', position: 'absolute', margin: '10rem'}}>
+            {!race.isSpectator && ctx.phase === 'strat' && 
+            <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: actionCardStage ? '35%':'50%', position: 'absolute', margin: actionCardStage ? '5rem 0 0 40%':'10rem'}}>
               <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>Strategy pick</h3></CardTitle>
               <CardBody style={{display: 'flex'}}>
-                <ListGroup style={{background: 'none', width: '60%'}}>
+                <ListGroup style={{background: 'none', width: actionCardStage ? '100%':'60%'}}>
                     {Object.keys(cardData.strategy).map((key, idx) => {
-                      const r = G.races.find( r => r.strategy.length && r.strategy.find(s => s.id === key));
+                      let r = G.races.find( r => r.strategy.length && r.strategy.find(s => s.id === key));
+                      if(!r && race.forbiddenStrategy && race.forbiddenStrategy.find(s => s.id === key)){
+                        let sum = 0;
+                        G.races.forEach(r => sum += r.strategy.length);
+                        if(sum < 7) r = true;
+                      }
 
                       return <ListGroupItem key={idx} style={{background: 'none', display:'flex', justifyContent: 'flex-end', border: 'none', padding: '1rem'}}>
                         <div style={{width: 'auto'}}>
-                          {r && <div style={{position: 'absolute', left: '0', width: '100%'}}>
+                          {r && r!== true && <div style={{position: 'absolute', left: '0', width: '100%'}}>
                                   <img alt='race icon' src={'race/icons/'+r.rid+'.png'} style={{marginTop: '-.5rem', float: 'left', width: '3rem'}}/>
                                   <h5 style={{marginLeft: '4rem'}}>{r.name}</h5>
                                 </div>}
@@ -1098,7 +1104,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       </ListGroupItem>
                     })}
                   </ListGroup>
-                  <Card style={{width: '40%', background: 'none', border: 'none', color: 'black'}}>
+                  {!actionCardStage && <Card style={{width: '40%', background: 'none', border: 'none', color: 'black'}}>
                     <CardBody>
                       <CardTitle><h4>{strategyHover}</h4></CardTitle>
                       <CardSubtitle style={{margin: '2rem 0'}}>{cardData.strategy[strategyHover].hit}</CardSubtitle>
@@ -1107,7 +1113,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       <h5>Secondary:</h5>
                       <p>{cardData.strategy[strategyHover].secondary}</p>
                     </CardBody>
-                  </Card>
+                  </Card>}
               </CardBody>
             </Card>}
 
@@ -1248,10 +1254,17 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           disabled = false;
                         }
                       }
+                      if(disabled && pr.when === 'STATUS'){
+                        if(ctx.phase === 'stats') disabled = false;
+                      }
+                      if(disabled && pr.when === 'STRATEGY'){
+                        if(ctx.phase === 'strat') disabled = false;
+                      }
+
                       return <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                         <Button style={{width: '100%'}} onClick={()=> { 
                                   if(mustAction){moves.dropActionCard(pr.id)}
-                                  else{ moves.playActionCard(pr); setRightBottomVisible(null)}}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')} disabled={disabled} >
+                                  else if(!disabled){ moves.playActionCard(pr); setRightBottomVisible(null)}}} size='sm' color={disabled ? 'dark':'warning'} id={pr.id.replaceAll(' ', '_')} >
                           <b>{pr.id.toUpperCase()}</b>
                           {mustAction && race.actionCards.length > 7 && <b className='bi bi-backspace-fill' style={{color: 'red', right: 0, position: 'absolute'}}/>}
                         </Button>
