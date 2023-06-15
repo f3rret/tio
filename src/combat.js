@@ -1735,3 +1735,201 @@ export const Invasion = () => {
     </>);
 
 }
+
+
+export const ChooseAndDestroy = () => {
+
+    const { G, playerID, moves } = useContext(StateContext);
+    const [destroyed, setDestroyed] = useState({});
+
+    const units = useMemo(() => {
+        let result = {};
+
+        const info = G.races[playerID].mustChooseAndDestroy;
+        if(info.tile === 'active'){
+            const activeTile = G.tiles.find(t => t.active === true);
+            if(!activeTile) return;
+
+            if(String(activeTile.tdata.occupied) === String(playerID)){
+                result = activeTile.tdata.fleet;
+            }
+            else if(activeTile.tdata.attacker){
+                result = activeTile.tdata.attacker;
+            }
+        }
+
+        return result;
+    }, [G, playerID]);
+
+    const race = useMemo(() => G.races[playerID], [G, playerID]);
+
+    const destroy = useCallback((tag, idx, pidx, payloadId) => {
+
+        if(payloadId && payloadId !== 'fighter') return;
+
+        setDestroyed(produce(destroyed, draft => {
+            if(!draft[tag]) draft[tag]=[];
+            if(pidx === undefined){
+                const dmg = draft[tag].findIndex(ship => ship.idx === idx);
+                if(dmg === -1){
+                    draft[tag].push({idx, hit: 1, payload:[]});
+                }
+                else{
+                    if(draft[tag][dmg].hit === 1){
+                        draft[tag][dmg].hit = 0;
+                    }
+                    else{
+                        draft[tag][dmg].hit = 1;
+                    }
+                }
+            }
+            else{
+                const dmg = draft[tag].findIndex(ship => ship.idx === idx);
+                let carrier = draft[tag][dmg];
+
+                if(!carrier){
+                    draft[tag].push({idx, payload: [{pidx, id: payloadId}]});
+                }
+                else{       
+                    let index = carrier.payload.findIndex(p => p.pidx === pidx);
+                    if(index === -1){
+                        carrier.payload.push({pidx, id: payloadId});
+                    }
+                    else{
+                        carrier.payload.splice(index, 1);
+                    }
+                }
+            }
+        }));
+    }, [destroyed, setDestroyed]);
+
+    const isDestroyed = useCallback((tag, idx, pidx) => {
+        let result;
+
+        if(pidx === undefined){
+            if(destroyed[tag]){
+                const car = destroyed[tag].find(c => c.idx === idx);
+                result = car && car.hit === 1;
+            }
+        }
+        else{
+            if(destroyed[tag]){
+                const car = destroyed[tag].find(c => c.idx === idx);
+                if(car && car.payload){
+                    result = car.payload.find(pl => pl.pidx === pidx);
+                }
+            }
+        }
+
+        return result;
+
+    }, [destroyed]);
+
+    const technologies = useMemo(()=>{
+        if(units){
+            return getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech'], race);
+        }
+        else{
+            return {};
+        }
+    },[race, units]);
+
+    const haveHit = useCallback((tag, idx, pidx) => {
+        let result = 0;
+
+        if(pidx === undefined){
+            result = (units[tag][idx].hit || 0);
+        }
+        else{
+            if(units[tag][idx] && units[tag][idx].payload[pidx]){
+                result = (units[tag][idx].payload[pidx].hit || 0);
+            }
+        }
+
+        return result;
+
+    }, [units]);
+
+    const canNext = useMemo(() => {
+        const info = G.races[playerID].mustChooseAndDestroy;
+        let selected = 0;
+
+        Object.keys(destroyed).forEach(tag => {
+            selected += destroyed[tag].filter(u => u.hit === 1).length;
+            destroyed[tag].forEach(car => {
+                if(car.payload && car.payload.length){
+                    selected += car.payload.length;
+                }
+            });
+        });
+
+        let max = 0;
+        Object.keys(units).forEach(tag => {
+            max += units[tag].length;
+            units[tag].forEach(car => {
+                if(car.payload && car.payload.length){
+                    max += car.payload.filter(p => p.id === 'fighter').length;
+                }
+            });
+        });
+
+        return selected >= Math.min(max, info.count);
+    }, [G, playerID, destroyed, units]);
+
+    return (
+        <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '50%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(160, 160, 160, 0.85)', 
+            position: 'absolute', margin: '10rem', color: 'black'}}>
+            <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Choose and destroy {' ' + G.races[playerID].mustChooseAndDestroy.count + ' ships'}</h3></CardTitle>
+            <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
+                <div style={{display: 'flex', position: 'relative', flexDirection: 'row', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', border: 'solid 1px rgba(255,255,0,.5)'}}>
+                    <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
+                    {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: race.retreat === 'cancel' ? 'gray':'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
+                    <div style={{display: 'flex', flexWrap: 'wrap'}}>
+                        {Object.keys(units).map((u, i) => {
+                            return <div key={i} style={{marginLeft: '1rem', display: 'flex', flexWrap: 'wrap'}}>
+                                {units[u].map((t, j) =>{
+                                    const hh = haveHit(u, j);
+                                    
+                                    let className=technologies[u].sustain ? 'sustain_ability':'';
+                                    className += ' hit_assigned' + hh;
+
+                                    return <div key={j} style={{margin: '0.25rem 1rem 0 0', display: 'flex', alignItems: 'flex-start'}}>
+                                        <div style={{display: 'flex', flexDirection: 'column'}}>
+                                            <Button style={{width: '5rem', padding: 0, background: isDestroyed(u, j) ? '#bb2d3b':'none', border: 'none'}} 
+                                                className={className} outline onClick={() => destroy(u, j)}>
+                                                <img alt='unit' src={'units/' + u.toUpperCase() + '.png'} style={{width: '100%'}}/>
+                                            </Button>
+                                        </div>
+                                        <div style={{display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', maxWidth: '10rem'}}>
+                                            {t.payload && t.payload.map((p, l) =>{
+                                                if(p){
+                                                    const hh2 = haveHit(u, j, l);
+
+                                                    let clName = technologies[p.id] && technologies[p.id].sustain ? 'sustain_ability':'';
+                                                    clName += ' hit_assigned' + hh2;
+
+                                                    return <div key={l} style={{display: 'flex', flexDirection: 'column'}}>
+                                                    <Button outline onClick={() => destroy(u, j, l, p.id)} className={clName}
+                                                        style={{width: '2rem', background: isDestroyed(u, j, l, p.id) ? '#bb2d3b':'transparent',
+                                                        border: 'solid 1px rgba(255,255,255,.15)', margin: '.1rem', padding: 0}}>
+                                                        <img alt='unit' src={'units/' + p.id.toUpperCase() + '.png'} style={{width: '100%'}}/>
+                                                    </Button>
+                                                    </div>
+                                                }
+                                                return <></>
+                                            })}
+                                        </div>
+                                    </div>})}
+                            </div>
+                        })}
+                    </div>
+                </div>
+            </CardBody>
+            <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
+                <Button disabled={!canNext} color='warning' onClick={() => moves.chooseAndDestroy(destroyed)}>Done</Button>
+            </CardFooter>
+        </Card>
+
+    );
+
+}

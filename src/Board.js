@@ -11,7 +11,7 @@ import cardData from './cardData.json';
 import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT, wormholesAreAdjacent } from './utils';
 import { lineTo, pathFromCoordinates } from './Grid';
 import { ChatBoard } from './chat';
-import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion } from './combat';
+import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion, ChooseAndDestroy } from './combat';
 import { produce } from 'immer';
 import techData from './techData.json';
 import tileData from './tileData.json';
@@ -1123,6 +1123,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             {combatRetreat && <CombatRetreat selectedTile={selectedTile}/>}
             {bombardment && <Bombardment />}
             {invasion && <Invasion />}
+            {race.mustChooseAndDestroy && <ChooseAndDestroy />}
 
             {mustAction && 
             <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '30%', position: 'absolute', margin: '20rem'}}>

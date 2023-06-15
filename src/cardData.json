@@ -109,6 +109,7 @@
         
         {"id":"Blitz", "when":"COMBAT", "description":"At the start of an invasion: Each of your non-fighter ships in the active system that do not have Bombardment gain Bombardment 6 until the end of the invasion."},
         {"id":"Bunker", "when":"COMBAT", "description":"During this invasion apply -4 to the result of each Bombardment roll against planets you control."},
+        {"id":"Courageous to the End", "when":"COMBAT", "description":"After one of your ships is destroyed in space combat roll 2 dice. For each result equal to or great then that ships combat value, your opponent must choose and destroy one of their ships."},
         {"id":"Disable", "when":"COMBAT", "description":"Your opponent's PDS units lose Planetary Shield and Space Cannon during this invasion."},
         {"id":"Emergency Repairs", "when":"COMBAT", "description":"At the start or end of a combat round repair all of your units that have Sustain Damage in the active system."},
         {"id":"Fighter Prototype", "when":"COMBAT", "description":"Your fighters have +2 to combat rolls during the first round of combat."},
@@ -124,7 +125,6 @@
         {"id":"Scramble Frequency", "when":"COMBAT", "description":"After another player makes a Bombardment, Space Cannon or Anti-Fighter Barrage roll: That player rerolls all of their dice."},
         {"id":"Shields Holding", "count": 4, "when":"COMBAT", "description":"Before you assign hits to your ships during a space combat: Cancel up to 2 hits."},
         {"id":"Skilled Retreat", "count": 4, "when":"COMBAT", "description":"At the start of a combat round: Move all of your ships from the active system into an adjacent system that does not contain another player's ships; the space combat ends in a draw. Then, place a command token from your reinforcements in that system."},
-        {"id":"Courageous to the End", "when":"COMBAT", "description":"After one of your ships is destroyed in space combat roll 2 dice. For each result equal to or great then that ships combat value, your opponent must choose and destroy one of their ships."},
         {"id":"Direct Hit", "count": 4, "when":"COMBAT", "description":"After another player’s ship uses 'Sustain Damage' to cancel a hit produced by your units or abilities: Destroy that ship."},
 
         {"id":"Sabotage", "count": 4, "when":"REACTION", "description":"When another player plays an action card other then 'Sabotage': Cancel that action card."},

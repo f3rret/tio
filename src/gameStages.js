@@ -45,6 +45,22 @@ export const ACTION_CARD_STAGE = {
               card.nextAgenda = {...G.agendaDeck[G.agendaDeck.length-1]};
             }
           }
+          else if(card.id === 'Courageous to the End'){
+            const dice = random.D10( 2 );
+            card.dice = dice;
+
+            const destroyed = G.races[playerID].destroyedUnits;
+            const technologies = getUnitsTechnologies(destroyed, G.races[playerID]);
+            let min = {combat: 11};
+
+            Object.keys(technologies).forEach(t => {
+              if(technologies[t].combat){
+                if(technologies[t].combat < min.combat) min = technologies[t];
+              }
+            });
+
+            card.target = min;
+          }
         }
       },
       done: ({G, ctx, events, playerID, random}) => {
@@ -586,6 +602,18 @@ export const ACTION_CARD_STAGE = {
 
               events.setActivePlayers({});
             }
+            else if(card.id === 'Courageous to the End'){
+              const count = card.dice.filter(d => d >= card.target.combat).length;
+              if(count){
+                const enemyId = Object.keys(ctx.activePlayers).find(apid => String(apid) !== String(playerID));
+                if(enemyId){
+                  G.races[enemyId].mustChooseAndDestroy = {
+                    count,
+                    tile: 'active'
+                  }
+                }
+              }
+            }
           }
 
           G.races[card.playerID].actionCards.splice(G.races[card.playerID].actionCards.findIndex(a => a.id === card.id), 1);
@@ -612,6 +640,53 @@ export const ACTION_CARD_STAGE = {
       }
     }
   }
+
+
+const chooseAndDestroyMove = ({G, playerID},  destroyed) => {
+  const info = G.races[playerID].mustChooseAndDestroy;
+  let fleet = {};
+
+  if(info.tile === 'active'){
+      const activeTile = G.tiles.find(t => t.active === true);
+      if(!activeTile) return;
+
+      if(String(activeTile.tdata.occupied) === String(playerID)){
+          fleet = activeTile.tdata.fleet;
+      }
+      else if(activeTile.tdata.attacker){
+        fleet = activeTile.tdata.attacker;
+      }
+  }
+
+  Object.keys(destroyed).forEach(tag => {
+    destroyed[tag].forEach(car => {
+      if(car.payload && car.payload.length){
+        car.payload.forEach(p => {
+          if(fleet[tag] && fleet[tag][car.idx] && fleet[tag][car.idx].payload){
+            if(fleet[tag][car.idx].payload[p.pidx]){
+              delete fleet[tag][car.idx].payload[p.pidx];
+              G.races[playerID].destroyedUnits.push(p.id); //remember destroyed units
+            }
+          }
+        });
+
+        if(fleet[tag] && fleet[tag][car.idx] && fleet[tag][car.idx].payload){
+          fleet[tag][car.idx].payload = fleet[tag][car.idx].payload.filter(p => p);
+        }
+      }
+
+      if(car.hit && fleet[tag] && fleet[tag][car.idx]){
+        delete fleet[tag][car.idx];
+        G.races[playerID].destroyedUnits.push(tag); //remember destroyed units
+      }
+    });
+
+    fleet[tag] = fleet[tag].filter(f => f);
+    if(!fleet[tag].length) delete fleet[tag];
+  });
+
+  delete G.races[playerID].mustChooseAndDestroy;
+}
 
 export const ACTS_STAGES = {
   tacticalActionCard: {
@@ -1150,7 +1225,7 @@ export const ACTS_STAGES = {
       actionCardNext: ACTION_CARD_STAGE.moves.next,
       actionCardPass: ACTION_CARD_STAGE.moves.pass,
       actionCardDone: ACTION_CARD_STAGE.moves.done,
-
+      chooseAndDestroy: chooseAndDestroyMove,
       rollDice: ({G, playerID, random}, unit, count) => {
         const dice = random.D10(count || 1);
         G.dice = produce(G.dice, draft => {
@@ -1191,7 +1266,8 @@ export const ACTS_STAGES = {
           G.races[playerID].retreat = true;
           loadUnitsOnRetreat(G, playerID);
         }
-      }
+      },
+      
     }
   },
   spaceCombat_step2: {
@@ -1201,6 +1277,7 @@ export const ACTS_STAGES = {
      actionCardNext: ACTION_CARD_STAGE.moves.next,
      actionCardPass: ACTION_CARD_STAGE.moves.pass,
      actionCardDone: ACTION_CARD_STAGE.moves.done,
+     chooseAndDestroy: chooseAndDestroyMove,
      nextStep: ({G, playerID, ctx, events}, hits, assaultCannon) => {
       let fleet;
       const activeTile = G.tiles.find(t => t.active === true);
@@ -1248,11 +1325,13 @@ export const ACTS_STAGES = {
       Object.keys(fleet).forEach(f => { //remove destroyed units
         fleet[f].forEach((car, i) => {
           if(car.hit > 1 || (car.hit === 1 && !technologies[f].sustain)){
+            G.races[playerID].destroyedUnits.push(f); //remember destroyed units
             delete fleet[f][i];
           }
           else if(car.payload && car.payload.length){
             car.payload.forEach((p, idx) => {
               if(p.hit > 1 || (p.hit === 1 && !technologies[p.id].sustain)){
+                G.races[playerID].destroyedUnits.push(p.id);
                 delete fleet[f][i].payload[idx];
                 if(p.id === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
                   G.races[playerID].tg += 1;
@@ -1325,7 +1404,7 @@ export const ACTS_STAGES = {
       actionCardNext: ACTION_CARD_STAGE.moves.next,
       actionCardPass: ACTION_CARD_STAGE.moves.pass,
       actionCardDone: ACTION_CARD_STAGE.moves.done,
-
+      chooseAndDestroy: chooseAndDestroyMove,
       endBattle: ({G, events, playerID, ctx}) => {
         const activeTile = G.tiles.find(t => t.active === true);
         let looser;
@@ -1636,6 +1715,7 @@ export const ACTS_STAGES = {
         Object.keys(fleet).forEach(f => { //remove destroyed units
           fleet[f].forEach((car, i) => {
             if((car.hit === 1 && f !== 'mech') || car.hit > 1){
+              G.races[playerID].destroyedUnits.push(f);
               delete fleet[f][i];
               if(f === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
                 G.races[playerID].tg += 1;

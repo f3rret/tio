@@ -16,7 +16,7 @@ export const TIO = {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
-                  .map( (r, idx) => ({...r, ...raceData[r.rid], pid: idx, commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
+                  .map( (r, idx) => ({...r, ...raceData[r.rid], pid: idx, destroyedUnits: [], commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
                     exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
@@ -206,6 +206,7 @@ export const TIO = {
             onBegin: ({ G, ctx }) => {
               G.tiles.filter(t => t.active === true).forEach( t => { t.active = false });
               G.races[ctx.currentPlayer].actions = [];
+              G.races[ctx.currentPlayer].destroyedUnits = [];
               G.tiles.forEach(t => {
                 if(t.tdata.planets){
                   t.tdata.planets.forEach(p => {
@@ -531,6 +532,9 @@ export const TIO = {
                 return (myFleet >= 3) && (enemyFleet > 0);
               }
 
+              G.races[activeTile.tdata.occupied].destroyedUnits = [];
+              G.races[playerID].destroyedUnits = [];
+
               def[activeTile.tdata.occupied] = {stage: 'antiFighterBarrage'};
               def[playerID] = {stage: 'antiFighterBarrage'};
 
@@ -853,7 +857,7 @@ export const TIO = {
         },
         onBegin: ({ G, random }) => {
           G.passedPlayers = [];
-          G.races.forEach(r => r.combatActionCards = []); 
+          G.races.forEach(r => {r.combatActionCards = []; r.destroyedUnits = []}); 
         },
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       },

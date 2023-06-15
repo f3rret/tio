@@ -18,7 +18,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     'Rise of a Messiah', 'Counterstroke', 'Flank Speed', 'Harness Energy', 'Lost Star Chart', 'Master Plan', 
     'Rally', 'Solar Flare', 'Upgrade', 'War Machine', 'Distinguished Councilor', 'Hack Election', 'Insider Information', 'Veto',
     'Fire Team', 'Infiltrate', 'Intercept', 'Maneuvering Jets', 'Morale Boost', 'Parley', 'Reflective Shielding', 'Salvage', 
-    'Scramble Frequency', 'Shields Holding'], []);
+    'Scramble Frequency', 'Shields Holding', 'Courageous to the End'], []);
 
     const card = useMemo(() => {
         let c = G.races[ctx.currentPlayer].currentActionCard;
@@ -583,6 +583,18 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                 <p>{card.nextAgenda.against && <><b>{'Against: '}</b>{card.nextAgenda.against}</>}</p>
                             </div>}
                             {card.id === 'Ghost Squad' && <ForcesRelocationRO selection={selection}/>}
+                            {card.id === 'Courageous to the End' && card.target.id && Object.keys(card.reaction).length === (Object.keys(ctx.activePlayers).length - 1) && <>
+                                <CardImg style={{width: '5rem', margin: '1rem', float: 'left'}} src={'units/' + card.target.id.toUpperCase() + '.png'}/>
+                                <div style={{padding: '1rem'}}>
+                                <b>Rolls: </b>
+                                {card.dice.map((d, j) =>{
+                                    let color = (d >= card.target.combat) ? 'success':'light';
+                                    return <Button key={j} size='sm' color={color} 
+                                        style={{borderRadius: '5px', fontFamily: 'Handel Gothic', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', maxWidth:'1.25rem', height: '1.25rem'}}>
+                                        {('' + d).substr(-1)}</Button>
+                                })}
+                                </div>
+                            </>}
                         </div>}
                     </div>
                 </CardBody>
