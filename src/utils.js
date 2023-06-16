@@ -5,7 +5,7 @@ import { neighbors } from './Grid';
 import { Stage } from 'boardgame.io/core';
 import { createContext } from 'react';
 
-export const NUM_PLAYERS = 2;
+export const NUM_PLAYERS = 5;
 
 export const UNITS_LIMIT = {
   spacedock: 3,
