@@ -11,7 +11,7 @@ export const App = Client({
   board: TIOBoard,
   debug: false,
   numPlayers: NUM_PLAYERS,
-  multiplayer: SocketIO({ server: 'assist:8000' })
+  multiplayer: SocketIO({ server: 'localhost:8000' })
 });
 
 export const AppLocal = Client({ 
