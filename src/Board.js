@@ -44,6 +44,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [unitsVisible, setUnitsVisible] = useState(false);
   const [abilVisible, setAbilVisible] = useState(0);
   const [agentVisible, setAgentVisible] = useState('agent');
+  const [subcardVisible, setSubcardVisible] = useState('stuff');
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
   const [stratUnfold, setStratUnfold] = useState(0);
   const [rightBottomVisible, setRightBottomVisible] = useState(null);
@@ -144,7 +145,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   
   const MyNavbar = () =>
-    <div style={{ position: 'fixed', height: 0, width: '80%', zIndex: '1', display: 'flex', justifyContent: 'space-between', padding: '1rem 1rem 0 1rem'}}>
+    <div style={{ position: 'fixed', height: 0, width: '100%', zIndex: '1', display: 'flex', justifyContent: 'space-between', padding: '1rem 1rem 0 1rem'}}>
         <div style={{display: 'flex'}}>
           <Nav style={{marginRight: '2rem'}}>
             <NavItem onClick={()=>setObjVisible(!objVisible)} style={{cursor: 'pointer'}}>
@@ -1175,7 +1176,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </PixiViewport> 
             </Stage>
             
-            {!race.isSpectator && <div style={{ display:'flex', flexDirection: 'row', justifyContent: 'flex-end', position:'fixed', right: 0, top: 0, height: 0, width: '35%' }}>
+            {!race.isSpectator && <div style={{ display:'flex', flexDirection: 'row', justifyContent: 'flex-end', position:'fixed', right: 0, bottom: 0, width: '35%' }}>
               <CardColumns style={{minWidth: '13rem', width:'13rem', height: 'fit-content', position: 'relative', display:'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
                 <div>
                   {race && race.strategy.length > 0 && 
@@ -1310,35 +1311,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   </ButtonGroup>
               </CardColumns>
 
-              <CardColumns style={{margin: '1rem', display: 'flex', height: 'max-content', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  {race && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
-                    <div style={{display: 'flex'}}>
-                      <CardImg src={'race/'+race.rid+'.png'} style={{width: '205px'}}/>
-                      {G.speaker === race.rid && <SpeakerToken />}
-                      <div style={{paddingLeft: '1rem', display: 'flex', flexFlow: 'column'}}>
-                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.commodity || 0 + '/' + race.commCap}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>commodity</b></Button>
-                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>trade goods</b></Button>
-                      </div>
-                    </div>
-                    <div style={{display: 'flex', paddingTop: '1rem', fontSize: '.8rem'}}>
-                      {race.abilities.map((a, i) => 
-                          <Button key={i} size='sm' onClick={()=>setAbilVisible(i)} color={abilVisible === i ? 'light':'dark'} style={{marginRight: '.5rem'}}>{a.id.replaceAll('_', ' ')}</Button>
-                        )}
-                    </div>
+              <CardColumns style={{marginRight: '1rem', display: 'flex', height: 'max-content', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                  
+                  {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, marginBottom: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
 
-                    {race.abilities.map((a, i) => 
-                      <CardText key={i} style={{margin:'1rem 0 0 0', minHeight: '3rem', fontSize: '.8rem', display: abilVisible === i ? 'unset':'none'}}>
-                        {a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}
-                      </CardText>
-                    )}
-                  </Card>}
-                  {race && <Card style={{...CARD_STYLE, height: '13rem', backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
-                      <ButtonGroup style={{width: 'max-content'}}>
-                        <Button size='sm' onClick={()=>setMidPanelInfo('tokens')} color={midPanelInfo === 'tokens' ? 'light':'dark'} style={{marginRight: '.5rem'}}>TOKENS</Button>
-                        <Button size='sm' onClick={()=>setMidPanelInfo('fragments')} color={midPanelInfo === 'fragments' ? 'light':'dark'} style={{marginRight: '.5rem'}}>FRAGMENTS</Button>
-                        <Button size='sm' onClick={()=>setMidPanelInfo('reinforce')} color={midPanelInfo === 'reinforce' ? 'light':'dark'} style={{marginRight: '.5rem'}}>REINFORCE</Button>
-                      </ButtonGroup>
-                      
                       {midPanelInfo === 'tokens' && <>
                       {<h6 style={{textAlign: 'right'}}>{race.tokens.new + tempCt.new || 0} unused</h6>}
                       {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && 
@@ -1420,29 +1396,69 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                             </div>}
                           )}
                       </div>}
+                    </Card>
+                    
+                    <ButtonGroup >
+                      <Button size='sm' onClick={()=>setMidPanelInfo('tokens')} color={midPanelInfo === 'tokens' ? 'light':'dark'} style={{flexBasis: 1}}>TOKENS</Button>
+                      <Button size='sm' onClick={()=>setMidPanelInfo('fragments')} color={midPanelInfo === 'fragments' ? 'light':'dark'} style={{flexBasis: 1}}>FRAGMENTS</Button>
+                      <Button size='sm' onClick={()=>setMidPanelInfo('reinforce')} color={midPanelInfo === 'reinforce' ? 'light':'dark'} style={{flexBasis: 1}}>REINFORCE</Button>
+                    </ButtonGroup>
+                    </>}
+                  {race && subcardVisible === 'persons' && <><Card style={{...CARD_STYLE, marginBottom: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)', display: 'flex', fontSize: '.8rem'}}>
+                    {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
+                      <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
+                      <CardText>{race.agentAbility}</CardText>
                     </Card>}
-                    {race && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)', display: 'flex', fontSize: '.8rem'}}>
-                      <ButtonGroup>
-                        <Button size='sm' onClick={()=>setAgentVisible('agent')} color={agentVisible === 'agent' ? 'light':'dark'} style={{marginRight: '.5rem'}}>AGENT</Button>
-                        <Button size='sm' onClick={()=>setAgentVisible('commander')} color={agentVisible === 'commander' ? 'light':'dark'} style={{marginRight: '.5rem'}}>COMMANDER</Button>
-                        <Button size='sm' onClick={()=>setAgentVisible('hero')} color={agentVisible === 'hero' ? 'light':'dark'} style={{marginRight: '.5rem'}}>HERO</Button>
-                      </ButtonGroup>
-                      {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
-                        <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
-                        <CardText>{race.agentAbility}</CardText>
-                      </Card>}
-                      {agentVisible === 'commander' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
-                        <CardImg src={'race/commander/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
-                        <CardText>{race.commanderAbility}</CardText>
-                      </Card>}
-                      {agentVisible === 'hero' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
-                        <CardImg src={'race/hero/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
-                        <CardText><b>{race.heroAbilityType}</b>{' ' + race.heroAbility}</CardText>
-                      </Card>}
-                      {(agentVisible === 'agent') && <CardText><b>{'Ready'}</b></CardText>}
-                      {(agentVisible === 'commander') && <CardText><b>{'Unlock: '}</b> {race.commanderUnlock}</CardText>}
-                      {(agentVisible === 'hero') && <CardText><b>{'Unlock: '}</b> {'complete 3 objectives.'}</CardText>}
+                    {agentVisible === 'commander' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
+                      <CardImg src={'race/commander/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
+                      <CardText>{race.commanderAbility}</CardText>
                     </Card>}
+                    {agentVisible === 'hero' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
+                      <CardImg src={'race/hero/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
+                      <CardText><b>{race.heroAbilityType}</b>{' ' + race.heroAbility}</CardText>
+                    </Card>}
+                    {(agentVisible === 'agent') && <CardText><b>{'Ready'}</b></CardText>}
+                    {(agentVisible === 'commander') && <CardText><b>{'Unlock: '}</b> {race.commanderUnlock}</CardText>}
+                    {(agentVisible === 'hero') && <CardText><b>{'Unlock: '}</b> {'complete 3 objectives.'}</CardText>}
+                    </Card>
+                    <ButtonGroup>
+                        <Button size='sm' onClick={()=>setAgentVisible('agent')} color={agentVisible === 'agent' ? 'light':'dark'} style={{flexBasis: 1}}>AGENT</Button>
+                        <Button size='sm' onClick={()=>setAgentVisible('commander')} color={agentVisible === 'commander' ? 'light':'dark'} style={{flexBasis: 1}}>COMMANDER</Button>
+                        <Button size='sm' onClick={()=>setAgentVisible('hero')} color={agentVisible === 'hero' ? 'light':'dark'} style={{flexBasis: 1}}>HERO</Button>
+                    </ButtonGroup>
+                  </>}
+                  {race && subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, marginBottom: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)', display: 'flex', fontSize: '.8rem'}}>
+                      {race.abilities.map((a, i) => 
+                        <CardText key={i} style={{margin:'1rem 0 0 0', minHeight: '3rem', fontSize: '.8rem', display: abilVisible === i ? 'unset':'none'}}>
+                          {a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}
+                        </CardText>
+                      )}
+                    </Card>
+                    <ButtonGroup style={{}}>
+                        {race.abilities.map((a, i) => 
+                            <Button key={i} size='sm' onClick={()=>setAbilVisible(i)} color={abilVisible === i ? 'light':'dark'} style={{flexBasis: 1}}>{a.id.replaceAll('_', ' ')}</Button>
+                          )}
+                    </ButtonGroup>
+                  </>}
+
+                  {race && <ButtonGroup style={{marginTop: '1rem'}}>
+                    <Button size='sm' className='bi bi-stack' onClick={()=>setSubcardVisible('stuff')} color={subcardVisible === 'stuff' ? 'light':'dark'} style={{}}></Button>
+                    <Button size='sm' className='bi bi-people-fill' onClick={()=>setSubcardVisible('persons')} color={subcardVisible === 'persons' ? 'light':'dark'} style={{}}></Button>
+                    <Button size='sm' className='bi bi-lightning-fill' onClick={()=>setSubcardVisible('abilities')} color={subcardVisible === 'abilities' ? 'light':'dark'} style={{}}></Button>
+                  </ButtonGroup>}
+
+                  {race && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
+                    <div style={{display: 'flex'}}>
+                      <div style={{display: 'flex', flexFlow: 'column'}}>
+                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.commodity || 0 + '/' + race.commCap}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>commodity</b></Button>
+                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>trade goods</b></Button>
+                        {G.speaker === race.rid && <SpeakerToken />}
+                      </div>
+                      <CardImg src={'race/'+race.rid+'.png'} style={{width: '205px'}}/>
+                      
+                    </div>
+                    
+                  </Card>}
                   
               </CardColumns>
             </div>}
@@ -1504,9 +1520,9 @@ const InvasionForce = (args) => {
 }
 
 const SpeakerToken = () => {
-  return <span style={{position: 'absolute', borderRadius:'10px', backgroundColor: 'rgba(33, 37, 41, 0.95)', left: '-1rem', 
+  return <span style={{width: '10rem', borderRadius:'10px', backgroundColor: 'rgba(33, 37, 41, 0.95)', margin: '.5rem',
           border: 'double rgba(255,255,0,.25)', color: 'white', padding: '1rem', top: '220px', boxShadow: 'rgba(255,255,255,.15)1px 1px 5px 3px'}}>
-            <h5 style={{margin: 0}}>SPEAKER</h5>
+            <h5 style={{margin: 0, textAlign: 'center'}}>SPEAKER</h5>
           </span>
 }
 

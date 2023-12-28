@@ -1,0 +1,9 @@
+{
+    "editor.autoClosingBrackets": "never",
+    "editor.guides.bracketPairsHorizontal": false,
+    "editor.autoClosingDelete": "never",
+    "editor.autoSurround": "never",
+    "html.autoClosingTags": false,
+    "javascript.autoClosingTags": false,
+    "typescript.autoClosingTags": false
+}
