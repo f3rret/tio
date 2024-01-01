@@ -219,7 +219,7 @@ export const SpaceCannonAttack = () => {
     }, [playerID, ctx.activePlayers]);
 
     return (<>
-    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Space cannon: attack</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
@@ -724,7 +724,7 @@ export const AntiFighterBarrage = (args) => {
     }, [playerID, ctx.activePlayers, G.races]);
 
     return (<>
-    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Antifighter barrage</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
@@ -971,7 +971,7 @@ export const SpaceCombat = ({selectedTile}) => {
     }, [activeTile.tdata.fleet]);
 
     return (<>
-    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{assaultCannon ? 'Assault cannon': 'Space combat'}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
@@ -1164,7 +1164,7 @@ export const CombatRetreat = (args) => {
     }, [freePayload]);
 
     return (
-        <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+        <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             position: 'absolute', margin: '5rem', color: 'white'}}>
             <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Retreat</h3></CardTitle>
             <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
@@ -1308,7 +1308,7 @@ export const Bombardment = () => {
     }, [G.currentCombatActionCard]);
 
     return (<>
-    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Bombardment</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
@@ -1687,7 +1687,7 @@ export const Invasion = () => {
     }, [activePlanet.units]);
 
     return (<>
-    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '30%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
+    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{landing ? 'Landing': magen ? 'Magen defence grid' : 'Invasion'}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>

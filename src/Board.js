@@ -180,7 +180,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         {isMyTurn ? 'You turn' : G.races[ctx.currentPlayer].name + ' turns '}
       </h4>
     </Nav>
-    <Nav style={{float: 'right', marginRight: '5rem'}}>
+    <Nav style={{}}>
       <NavItem style={{marginRight: '1rem'}}>
         <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
       </NavItem>
@@ -274,9 +274,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const StrategyCard = ({card, idx, style}) => {
     const i = idx + 1;
 
-    return <Card onClick={()=>setStratUnfold((stratUnfold & i) === i ? stratUnfold - i:stratUnfold + i)} style={{...style, opacity: card.exhausted ? '.5':'.95', border: 'none', background: 'none', position: 'relative', marginTop: idx > 0 ? '-1rem':'5rem', alignItems: 'end'}}>
-      <CardImg src={'strategy/'+ card.id + '.png'} style={{position: 'relative', top: '2rem', cursor: 'pointer'}}></CardImg>
-      <div style={{width:'95%', borderRadius: '3px', padding: '.7rem', background: 'rgba(33, 37, 41, 0.65)', marginRight: '.5rem', border: 'solid 1px ' + getStratColor(card.id, '.6'), fontSize: '.8rem'}}>
+    return <Card onClick={()=>setStratUnfold((stratUnfold & i) === i ? stratUnfold - i:stratUnfold + i)} style={{...style, opacity: card.exhausted ? '.5':'.95', border: 'none', background: 'none', position: 'relative', marginTop: idx > 0 ? '-1rem':'0rem', alignItems: 'end'}}>
+      <CardImg src={'strategy/'+ card.id + '.png'} style={{position: 'relative', cursor: 'pointer'}}></CardImg>
+      <div style={{width:'95%', borderRadius: '3px', padding: '.7rem', background: 'rgba(33, 37, 41, 0.65)', marginRight: '.5rem', marginTop: '-2rem', border: 'solid 1px ' + getStratColor(card.id, '.6'), fontSize: '.8rem'}}>
         {(stratUnfold & i) === i && <div>
           <h6 style={{marginTop: '.5rem'}}>Primary:</h6>
           <CardText>{cardData.strategy[card.id].primary}</CardText>
@@ -1047,7 +1047,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   return (
           <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>      
             <MyNavbar />
-            <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem'}}>
+            <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem', zIndex: '1'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && !race.isSpectator && <>
                 {techVisible && <TechnologyDialog />}
                 {objVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
@@ -1079,7 +1079,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             </CardColumns>
 
             {!race.isSpectator && ctx.phase === 'strat' && 
-            <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: actionCardStage ? '35%':'50%', position: 'absolute', margin: actionCardStage ? '5rem 0 0 40%':'10rem'}}>
+            <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: actionCardStage ? '35%':'60%', position: 'absolute', margin: actionCardStage ? '5rem 0 0 40%':'5% 10%'}}>
               <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>Strategy pick</h3></CardTitle>
               <CardBody style={{display: 'flex'}}>
                 <ListGroup style={{background: 'none', width: actionCardStage ? '100%':'60%'}}>
@@ -1179,7 +1179,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             {!race.isSpectator && <div style={{ display:'flex', flexDirection: 'row', justifyContent: 'flex-end', position:'fixed', right: 0, bottom: 0, width: '35%' }}>
               <CardColumns style={{minWidth: '13rem', width:'13rem', height: 'fit-content', position: 'relative', display:'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
                 <div>
-                  {race && race.strategy.length > 0 && 
+                  {race && race.strategy.length > 0 && ctx.phase !== 'strat' &&
                     race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
                 </div>
                 <div style={{display: 'flex', flexDirection: 'column', position: 'fixed', bottom: '4rem', width: '13rem'}}>
