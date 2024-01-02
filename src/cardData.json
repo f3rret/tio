@@ -134,7 +134,7 @@
     ],
 
     "agenda": [
-        {"id": "Anti-Intellectual Revolution", "type": "LAW","for": "After a player researches a technology, they must destroy one of their nonfighter ships.", "against": "At the start of the next strategy phase each player exhausts one planet for each technology they have researched."},  
+        {"id": "Anti-Intellectual Revolution", "type": "LAW","for": "After a player researches a technology, they must destroy one of their non-fighter ships.", "against": "At the start of the next strategy phase each player exhausts one planet for each technology they have researched."},  
         {"id": "Archived Secret", "type": "DIRECTIVE", "elect": "Player", "for": "Elected player draws 1 secret objective."},   
         {"id": "Arms Reduction", "type": "DIRECTIVE", "for": "Each player destroys all but 2 of their dreadnaughts and all but 4 of their cruisers.", "against": "At the start of the next strategy phase, each player exhausts each of their planets with a technology specialty."},  
         {"id": "Classified Document Leaks", "type": "LAW", "elect": "Scored Secret Objective", "for": "The elected secret objective becomes a public objective."},  
