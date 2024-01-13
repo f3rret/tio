@@ -196,6 +196,7 @@
             {"id": "Mercenary Outfit", "count": 3, "effect": "You may place 1 infantry from your reinforcements on this planet."},
             {"id": "Paradise World", "type": "ATTACH", "effect": "This planet's influence value is increased by 2."},
             {"id": "Tomb of Emphidia", "type": "ATTACH", "effect": "This planet's influence value is increased by 1."}
+            
         ],
         "hazardous": [
             {"id": "Core Mine", "count": 3, "effect": "If you have at least 1 mech on this planet, or if you remove 1 infantry from this planet, gain 1 trade good."},

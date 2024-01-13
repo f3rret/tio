@@ -832,6 +832,7 @@ export const ACTS_STAGES = {
 
                   if(planets && planets.length){
                     planets.some( p => {
+                      if(p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone')>-1) return false;
                       if(String(p.occupied) === String(playerID) && p.name === keys[0]){
                         if(!p.units) p.units={}
                         if(!p.units[obj[keys[0]]]) p.units[obj[keys[0]]]=[];

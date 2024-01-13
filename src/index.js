@@ -12,7 +12,7 @@ const params = url.searchParams;
 //</React.StrictMode>
 const pid = params.get('playerID') == null ? '0' : params.get('playerID');
 
-if(params.get('dev')){
+if(!params.get('multiplayer')){
   root.render( 
       <AppLocal playerID={pid}/>
   )

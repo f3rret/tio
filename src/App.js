@@ -1,4 +1,5 @@
 import { Client } from 'boardgame.io/react';
+import { Debug } from 'boardgame.io/debug';
 import { Local, SocketIO } from 'boardgame.io/multiplayer';
 import { TIO } from './Game';
 import { TIOBoard } from './Board';
@@ -18,5 +19,6 @@ export const AppLocal = Client({
   game: TIO,
   board: TIOBoard,
   numPlayers: NUM_PLAYERS,
-  multiplayer: Local()
+  multiplayer: Local(),
+  debug: { impl: Debug, collapseOnLoad: true }
 });

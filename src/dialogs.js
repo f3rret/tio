@@ -1238,7 +1238,10 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
         return (<Row className='hoverable' onClick={()=>onClick(p.name)} key={i} 
                         style={{cursor: 'default', paddingRight: '1rem', fontSize: '1.25rem', marginTop: '.25rem', lineHeight: '2.2rem', height: '2.5rem', background: exhausted[p.name] ? 'green':'',
                         opacity: opac, color: 'white'}}>
-                    <Col xs='7'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem'}} src={'icons/legendary_complete.png'}/>:'' } {p.name}</Col>
+                    <Col xs='7'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/legendary_complete.png'}/>:'' } 
+                                {p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1 ? 
+                                    <img alt='dmz' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/dmz.png'}/>:'' } 
+                                {p.name}</Col>
                     <Col xs='1' onClick={(e)=>specClick(e, p)} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
                     <Col xs='1' style={{padding: 0}}>{trait}</Col>
                     {variant !== 'small' && <>

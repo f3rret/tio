@@ -8,7 +8,7 @@ import cardData from './cardData.json';
 import { ACTION_CARD_STAGE, ACTS_STAGES } from './gameStages';
 import { produce } from 'immer';
 import { NUM_PLAYERS, checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
- getPlanetByName, votingProcessDone, dropACard, completeObjective } from './utils';
+ getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName } from './utils';
 
 export const TIO = {
     
@@ -176,7 +176,9 @@ export const TIO = {
                   deck.push(exp);
                 }
               });
-              G.explorationDecks[k] = random.Shuffle(deck); 
+              //no shuffle for testing only!!
+              G.explorationDecks[k] = deck;
+              //G.explorationDecks[k] = random.Shuffle(deck); 
             });
 
           }
@@ -364,17 +366,7 @@ export const TIO = {
             }
           },
           explorePlanet: ({G, playerID}, pname, exhaustedCards) => {
-            const planet = getPlanetByName(G.tiles, pname);
-            const explore = G.explorationDecks[planet.trait].pop();
-
-            if(explore.id.indexOf('Relic Fragment') > -1){
-              G.races[playerID].fragments[planet.trait[0]]++;
-            }
-            G.races[playerID].exploration.push(explore);
-
-            if(exhaustedCards && exhaustedCards.indexOf('SCANLINK_DRONE_NETWORK') > -1){
-              G.races[playerID].exhaustedCards.push('SCANLINK_DRONE_NETWORK');
-            }
+            explorePlanetByName(G, playerID, pname, exhaustedCards);
           },
           fromReinforcement: ({G, playerID}, pname, units, exhaustedCards) => {
             const planet = getPlanetByName(G.tiles, pname);
@@ -465,6 +457,7 @@ export const TIO = {
             }
             
             const planet = activeTile.tdata.planets.find(p => p.name === pname);
+            if(planet.attach && planet.attach.length && planet.attach.indexOf('Demilitarized Zone')>-1) return;
             const ukeys = Object.keys(deploy);
 
             ukeys.forEach(uk => {
@@ -498,6 +491,8 @@ export const TIO = {
           invasion: ({G, playerID, events}, planet) => {
             const activeTile = G.tiles.find(t => t.active === true);
             const activePlanet = activeTile.tdata.planets.find(p => p.name === planet.name);
+            if(activePlanet.attach && activePlanet.attach.length && activePlanet.attach.indexOf('Demilitarized Zone')>-1) return;
+
             const defUnits = Object.keys(activePlanet.units);
             
             const defTechs = getUnitsTechnologies(defUnits, G.races[planet.occupied]);
@@ -659,6 +654,8 @@ export const TIO = {
           unloadUnit: ({G, playerID}, {src, dst}) => {
             
             let to = G.tiles[dst.tile].tdata.planets[dst.planet];
+            if(to.attach && to.attach.length && to.attach.indexOf('Demilitarized Zone')>-1) return;
+
             const from = G.tiles[src.tile].tdata.fleet[src.unit];
            
             if(from && to){
@@ -676,11 +673,12 @@ export const TIO = {
                 G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload.filter(p => p);
 
               if(!to.occupied && to.trait){
-                const explore = G.explorationDecks[to.trait].pop();
+                /*const explore = G.explorationDecks[to.trait].pop();
                 if(explore.id.indexOf('Relic Fragment') > -1){
                   G.races[playerID].fragments[to.trait[0]]++;
                 }
-                G.races[playerID].exploration.push(explore);
+                G.races[playerID].exploration.push(explore);*/
+                explorePlanetByName(G, playerID, to.name);
               }
               if(to.occupied != playerID){
                 to.occupied = playerID;

@@ -696,6 +696,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
 
   const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);
+  const isDMZ = useCallback((p) => p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1, []);
 
   const TileContent = ({element, index}) => {
 
@@ -719,11 +720,15 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             interactive={true} pointerdown={ (e)=>tileClick(e, index, i) }>
               
               <Container sortableChildren={true} x={0} y={50}>
+                {isDMZ(p) &&
+                    <Sprite image={'icons/dmz.png'} x={0} y={35} scale={1} alpha={.75}/>
+                  }
                 {advUnitView && advUnitView.tile === index && (p.occupied === undefined || String(element.tdata.occupied) === String(p.occupied)) &&
+                  !isDMZ(p) &&
                     <Sprite pointerdown={()=>unloadUnit(i)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={.5} alpha={.85}/>
                   }
                 {activeTile && element.tdata.occupied == playerID && !G.spaceCannons && element.tdata.fleet && <>
-                  {p.occupied !== undefined && String(element.tdata.occupied) !== String(p.occupied) && 
+                  {p.occupied !== undefined && String(element.tdata.occupied) !== String(p.occupied) && !isDMZ(p) &&
                     <Sprite tint={'red'} pointerdown={()=>moves.invasion(p)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={1} alpha={.85}/>}
                 </>}
                 {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) => {

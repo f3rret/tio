@@ -718,6 +718,52 @@ export const loadUnitsOnRetreat = (G, playerID) => {
   
 }
 
+export const loadUnitsBackToSpace = (G, playerID, planet) => {
+  
+  const activeTile = G.tiles.find(t => t.active === true);
+  const fleet = activeTile.tdata.fleet;//load fighters, infantry and mech if capacity
+  
+  Object.keys(fleet).forEach(tag => {
+
+    const technology = G.races[playerID].technologies.find(t => t.id === tag.toUpperCase());
+
+    if(technology && technology.capacity){
+      fleet[tag].forEach((car, c) => {
+        if(!car.payload) car.payload=[];
+        
+        for(var i=0; i<technology.capacity; i++){
+            if(car.payload.length < i) car.payload.push({});
+            const place = car.payload[i];
+
+            if(!place || !place.id){
+              if(planet.units.fighter && planet.units.fighter.length){
+                car.payload.push({...planet.units.fighter[0], id: 'fighter'});
+                planet.units.fighter.splice(0,1);
+                if(planet.units.fighter.length === 0) delete planet.units['fighter'];
+              }
+              else if(planet.units.mech && planet.units.mech.length){
+                car.payload.push({...planet.units.mech[0], id: 'mech'});
+                planet.units.mech.splice(0,1);
+                if(planet.units.mech.length === 0) delete planet.units['mech']
+              } 
+              else if(planet.units.infantry && planet.units.infantry.length){
+                car.payload.push({...planet.units.infantry[0], id: 'infantry'});
+                planet.units.infantry.splice(0,1);
+                if(planet.units.infantry.length === 0) delete planet.units['infantry']
+              }
+            }
+
+            car.payload = car.payload.filter( p => p.id);
+        }
+        
+      });
+    }
+
+  });
+  
+  
+}
+
 export const checkTacticalActionCard = ({G, events, playerID, atype}) => {
   const players={};
 
@@ -793,4 +839,33 @@ export const spliceCombatAC = (race, cardid) => {
     return true;
   }
   return false;
+}
+
+export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
+  const planet = getPlanetByName(G.tiles, pname);
+  const explore = G.explorationDecks[planet.trait].pop();
+
+  if(explore.id.indexOf('Relic Fragment') > -1){
+    G.races[playerID].fragments[planet.trait[0]]++;
+  }
+  else if(explore.type === 'ATTACH'){
+    if(!planet.attach || !planet.attach.length){
+      planet.attach = [];
+    }
+    planet.attach.push(explore.id);
+  }
+
+  if(explore.id === 'Demilitarized Zone'){
+    const ukeys = Object.keys(planet.units || {});
+    if(planet.units && ukeys.length){
+      loadUnitsBackToSpace(G, playerID, planet);
+    }
+    delete planet.units;
+  }
+
+  G.races[playerID].exploration.push(explore);
+
+  if(exhaustedCards && exhaustedCards.indexOf('SCANLINK_DRONE_NETWORK') > -1){
+    G.races[playerID].exhaustedCards.push('SCANLINK_DRONE_NETWORK');
+  }
 }
