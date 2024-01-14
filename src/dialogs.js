@@ -1241,7 +1241,10 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
                     <Col xs='7'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/legendary_complete.png'}/>:'' } 
                                 {p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1 ? 
                                     <img alt='dmz' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/dmz.png'}/>:'' } 
-                                {p.name}</Col>
+                                {p.name}
+                                {p.attach && p.attach.length && <><Badge style={{margin: '0 .2rem', padding: '.3rem .5rem'}} color='success' pill id={p.name + '_attach_badge'}>+</Badge>
+                                <UncontrolledTooltip target={'#' + p.name + '_attach_badge'}>{p.attach.join(',')}</UncontrolledTooltip></>}
+                    </Col>
                     <Col xs='1' onClick={(e)=>specClick(e, p)} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
                     <Col xs='1' style={{padding: 0}}>{trait}</Col>
                     {variant !== 'small' && <>
@@ -1540,6 +1543,14 @@ export const ProducingPanel = (args) => {
         }
     }
 
+    const freelancers = useMemo(() => {
+        const planet = PLANETS.find(p => p.name === pname);
+        
+        if(planet){
+            if(planet.exploration === 'Freelancers') return true;
+        }
+    }, [PLANETS, pname]);
+
     const maxDeployUnits = useMemo(() => {
         if(exhaustedCards.indexOf('SLING_RELAY')>-1){
             return 1;
@@ -1547,6 +1558,7 @@ export const ProducingPanel = (args) => {
         const planet = PLANETS.find(p => p.name === pname);
         
         if(planet){
+            if(freelancers) return 1;
             if(exhaustedCards.indexOf('INTEGRATED_ECONOMY')>-1){
                 if(!planet.units || !planet.units['spacedock'] || !planet.units['spacedock'].length){
                     return -planet.resources;
@@ -1563,9 +1575,7 @@ export const ProducingPanel = (args) => {
         }
 
         return 0;
-    }, [PLANETS, R_UNITS, pname, exhaustedCards]);
-
-    
+    }, [PLANETS, R_UNITS, pname, freelancers, exhaustedCards]);
 
     const tgClick = useCallback(() => {
     
@@ -1587,11 +1597,16 @@ export const ProducingPanel = (args) => {
         Object.keys(ex2).forEach(e =>{
             const planet = PLANETS.find(p => p.name === e)
             if(ex2[e]){
-                resources += planet.resources;
+                if(freelancers){
+                    resources += Math.max(planet.resources, planet.influence);
+                }
+                else{
+                    resources += planet.resources;
+                }
             }
         });
         setResult(resources + tg);
-    },[ex2, PLANETS, tg]);
+    },[ex2, PLANETS, tg, freelancers]);
 
     const onCancelClick = (finish) => {
         if(exhaustedCards.indexOf('SLING_RELAY')>-1){

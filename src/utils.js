@@ -296,6 +296,17 @@ export const getPlanetByName = (tiles, pname) => {
   return planet;
 }
 
+export const getTileByPlanetName = (tiles, pname) => {
+  
+  return tiles.find(t => {
+    if(t.tdata.planets){
+      return t.tdata.planets.find(p => p.name === pname);
+    }
+    return false;
+  })
+
+}
+
 export const getUnitsTechnologies = (keys, race) => {
   let result = {};
 
@@ -363,7 +374,7 @@ export const getMyNeighbors = (G, playerID) => {
 
 export const wormholesAreAdjacent = (G, wormhole1, wormhole2) => {
 
-  if(wormhole1 === wormhole2){
+  if(wormhole1 === wormhole2 || wormhole1 === 'gamma' || wormhole2 === 'gamma'){
     return true;
   }
   if(G.wormholesAdjacent){
@@ -862,6 +873,43 @@ export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
     }
     delete planet.units;
   }
+  else if(explore.id === 'Dyson Sphere'){
+    planet.resources = planet.resources+2;
+    planet.influence = planet.influence+1;
+  }
+  else if(explore.id === 'Paradise World'){
+    planet.influence = planet.influence+2;
+  }
+  else if(explore.id === 'Tomb of Emphidia'){
+    planet.influence = planet.influence+1;
+  }
+  else if(explore.id === 'Lazax Survivors'){
+    planet.resources = planet.resources+1;
+    planet.influence = planet.influence+2;
+  }
+  else if(explore.id === 'Mining World'){
+    planet.resources = planet.resources+2;
+  }
+  else if(explore.id === 'Rich World'){
+    planet.resources = planet.resources+1;
+  }
+  else if(explore.id === 'Freelancers'){
+    planet.exploration = 'Freelancers'
+  }
+  else if(explore.id === 'Gamma Wormhole'){
+    const tile = getTileByPlanetName(G.tiles, pname);
+    if(tile) tile.tdata.wormhole = 'gamma';
+  }
+  else if(explore.id === 'Mercenary Outfit'){
+    const units = getPlayerUnits(G.tiles, playerID);
+    if(units['infantry'] < UNITS_LIMIT['infantry']){
+      if(!planet.units) planet.units={};
+      if(!planet.units.infantry) planet.units.infantry=[];
+      
+      planet.units.infantry.push({id: 'infantry'});
+    }
+  }
+
 
   G.races[playerID].exploration.push(explore);
 

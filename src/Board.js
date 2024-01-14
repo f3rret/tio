@@ -707,6 +707,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     if(moveTint === 'red' && canMoveThatPath) moveTint = 'lightblue';
 
     return <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
+        {element.tdata.wormhole === 'gamma' && <Sprite x={-15} y={element.w/4 + 30} scale={.5} alpha={.9} image={'icons/gamma.png'}/>}
         {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier_bg.png'}/>}
         {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
             
@@ -714,6 +715,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={55} y={55} alpha={.85}></Sprite>
                   </Sprite>}
         )}
+        
         
         {element.tdata.planets.map((p,i) => {  
           return p.hitCenter && <Sprite image={'icons/empty.png'} scale={1} key={i} width={p.hitRadius * 2} height={p.hitRadius * 2} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}
@@ -920,6 +922,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           if(newOne){
             setJustOccupied(newOne.name);
             sendChatMessage('has occupied planet: ' + newOne.name);
+            if(newOne.exploration === 'Freelancers'){
+              setProducing(newOne.name);
+            }
           }
         }
       }

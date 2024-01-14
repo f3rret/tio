@@ -162,7 +162,7 @@ export const TIO = {
             G.actionsDeck = random.Shuffle(deck);
           }
 
-         if(!G.explorationDecks['cultural'].length){
+         if(!G.explorationDecks['cultural'].length){ //need purge GammaWormhole on deck reuse case
             
             Object.keys(cardData.exploration).forEach(k => {
               const deck = [];
@@ -307,6 +307,14 @@ export const TIO = {
                 return false;
               });
               myProds.forEach(t => t.tdata.producing_done = undefined);
+
+              G.tiles.forEach(t => {
+                if(t.tdata.planets){
+                  t.tdata.planets.forEach(p => {
+                    if(p.exploration) delete p['exploration'];
+                  });
+                }
+              });
             }
         },
         moves: {
@@ -458,6 +466,7 @@ export const TIO = {
             
             const planet = activeTile.tdata.planets.find(p => p.name === pname);
             if(planet.attach && planet.attach.length && planet.attach.indexOf('Demilitarized Zone')>-1) return;
+            if(planet.exploration === 'Freelancers') delete planet['exploration'];
             const ukeys = Object.keys(deploy);
 
             ukeys.forEach(uk => {
