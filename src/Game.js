@@ -373,6 +373,26 @@ export const TIO = {
               G.tiles[tile].tdata.planets[planet].units = undefined;
             }
           },
+          moveToReinforcements: ({G, playerID}, args) => {
+            const { tile, planet, unit } = args;
+            if(tile === undefined || planet === undefined || unit === undefined) return;
+
+            const p = G.tiles[tile].tdata.planets[planet];
+            if(!p.units || !p.units[unit] || !p.units[unit].length) return;
+            p.units[unit].pop();
+            
+            if(!p.units[unit].length){
+              delete p.units[unit];
+            }
+            if(!Object.keys(p.units).length){
+              delete p['units'];
+            }
+
+            if(p.exploration === 'Core Mine' && unit === 'infantry'){
+              G.races[playerID].tg++;
+              delete p['exploration'];
+            }
+          },
           explorePlanet: ({G, playerID}, pname, exhaustedCards) => {
             explorePlanetByName(G, playerID, pname, exhaustedCards);
           },

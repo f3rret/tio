@@ -866,7 +866,7 @@ export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
     planet.attach.push(explore.id);
   }
 
-  if(explore.id === 'Demilitarized Zone'){
+  if(explore.id === 'Demilitarized Zone'){ //cultural
     const ukeys = Object.keys(planet.units || {});
     if(planet.units && ukeys.length){
       loadUnitsBackToSpace(G, playerID, planet);
@@ -907,6 +907,16 @@ export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
       if(!planet.units.infantry) planet.units.infantry=[];
       
       planet.units.infantry.push({id: 'infantry'});
+    }
+  }
+  else if(explore.id === 'Core Mine'){ //hazardous
+    if(planet.units){
+      if(planet.units['mech'] && planet.units['mech'].length){
+        G.races[playerID].tg++;
+      }
+      else if(planet.units['infantry'] && planet.units['infantry'].length){
+        planet.exploration = 'Core Mine';
+      }
     }
   }
 

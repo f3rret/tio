@@ -38,6 +38,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [tradeVisible, setTradeVisible] = useState(false)
   const [planetsVisible, setPlanetsVisible] = useState(false);
   const [advUnitView, setAdvUnitView] = useState(undefined);
+  const [groundUnitSelected, setGroundUnitSelected] = useState({});
   const [payloadCursor, setPayloadCursor] = useState({i:0, j:0});
   const [tilesPng, setTilesPng] = useState(true);
   const [tilesTxt, setTilesTxt] = useState(false);
@@ -86,17 +87,28 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
     G.tiles.forEach( t => {
       if(t.tdata.occupied == playerID){
-        if(t.tdata.fleet){
-          Object.keys(t.tdata.fleet).forEach( k => {
+        if(t.tdata.fleet){ //todo: or invasion fleet
+          Object.keys(t.tdata.fleet).forEach( k => { 
             if(!units[k]) units[k] = 0;
             units[k] += t.tdata.fleet[k].length;
+            
+            t.tdata.fleet[k].forEach(ship => {
+              if(ship.payload && ship.payload.length){
+                ship.payload.forEach(pl => {
+                  if(pl.id){
+                    if(!units[pl.id]) units[pl.id] = 0;
+                    units[pl.id]++;
+                  }
+                });
+              }
+            });
           });
         }
       }
 
       if(t.tdata.planets && t.tdata.planets.length){
         t.tdata.planets.forEach(p => {
-          if(p.occupied == playerID){
+          if(p.occupied == playerID){ //todo: or attacker forces
             if(p.units){
               Object.keys(p.units).forEach( k => {
                 if(!units[k]) units[k] = 0;
@@ -350,9 +362,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   const tileClick = (e, index, planetIndex) => {
     e.preventDefault(); 
+    if(groundUnitSelected && groundUnitSelected.unit){
+      setGroundUnitSelected({});
+    }
     setSelectedTile(index);
     setSelectedPlanet(planetIndex);
   }
+
 
   const advUnitViewTechnology = useMemo(() => {
     if(race && advUnitView && advUnitView.unit){
@@ -399,6 +415,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [G.tiles, advUnitView, moves, payloadCursor, playerID]);
 
   const loadUnit = useCallback((args)=>{
+    const event = args.e;
+    if(event){
+      event.stopPropagation();
+      event.preventDefault();
+    }
 
     const tile = G.tiles[args.tile];
     if(String(tile.tdata.occupied) === String(playerID)){
@@ -422,10 +443,18 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           }
         }
       }
+      else if(['infantry', 'fighter', 'mech'].indexOf(args.unit) > -1){
+        if(groundUnitSelected.tile === args.tile && groundUnitSelected.unit === args.unit){
+          setGroundUnitSelected({});
+        }
+        else{
+          setGroundUnitSelected({tile: args.tile, unit: args.unit, planet: args.planet});
+        }
+      }
 
     }
 
-  },[G.tiles, advUnitView, advUnitViewTechnology, moves, payloadCursor, movePayloadCursor, playerID, exhaustedCards, race])
+  },[G.tiles, advUnitView, advUnitViewTechnology, moves, payloadCursor, groundUnitSelected, movePayloadCursor, playerID, exhaustedCards, race])
 
   const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
 
@@ -758,7 +787,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
               <Container x={50} y={100}>
               {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>{
-                return <Sprite x={-30 + ui*55} key={ui} alpha={.85} scale={.65} interactive={true} pointerdown={()=>loadUnit({tile: index, planet: i, unit: u})} image={'icons/unit_inf_bg.png'}>
+                const isSelected = groundUnitSelected && groundUnitSelected.tile === index && groundUnitSelected.unit === u;
+
+                return <Sprite tint={isSelected ? '#f44336':'0xFFFFFF'} x={-30 + ui*55} key={ui} alpha={.85} scale={.65} interactive={true} pointerdown={(e)=>loadUnit({tile: index, planet: i, unit: u, e})} image={'icons/unit_inf_bg.png'}>
                    <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-5} scale={.35} alpha={1}/>
                   <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={50} y={25} text={p.units[u].length}/>
                 </Sprite>}
@@ -868,6 +899,18 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       return activeTile.tid;
     }
   }, [activeTile]);
+
+  useEffect(() => {
+    if(groundUnitSelected.unit !== undefined){
+      const t = G.tiles[groundUnitSelected.tile];
+      if(t && t.tdata){
+        const p = t.tdata.planets[groundUnitSelected.planet];
+        if(!p || !p.units || !p.units[groundUnitSelected.unit]){
+          setGroundUnitSelected({});
+        }
+      }
+    }
+  }, [groundUnitSelected, G.tiles, race.reinforcement]);
 
   useEffect(()=>{
     //if(!activeTile || !advUnitView || !advUnitView.tile){
@@ -1401,14 +1444,26 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           color='warning' onClick={()=>{moves.purgeFragments(purgingFragments); setPurgingFragments({c:0,i:0,h:0,u:0})}}>Purge</Button>
                       </div>
                       </>}
-                      {midPanelInfo === 'reinforce' && <div style={{border: 'none', justifyContent: 'space-around', display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', padding: '1rem 0'}}>
-                          {R_UNITS.map((u,ui) => {
-                            return <div key={ui} style={{width: '4.25rem', marginRight: '.5rem', position: 'relative'}}>
-                              <img alt={u} src={'units/'+ u.id.toUpperCase() +'.png'} style={{width: '4rem'}}/>
-                              <div style={{fontSize: '30px', fontFamily: 'Handel Gothic', position: 'absolute', bottom: 0, right: 0, textShadow: '-2px 2px 3px black'}}>
-                                {UNITS_LIMIT[u.id.toLowerCase()] - (UNITS[u.id.toLowerCase()] || 0)}</div>
-                            </div>}
-                          )}
+                      {midPanelInfo === 'reinforce' && <div style={{padding: '0.5rem 0'}}>
+                          <div style={{border: 'none', justifyContent: 'space-around', display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start'}}>
+                            {R_UNITS.map((u,ui) => {
+                              return <div key={ui} style={{width: '4.25rem', marginRight: '.5rem', position: 'relative'}}>
+                                <img alt={u} src={'units/'+ u.id.toUpperCase() +'.png'} style={{width: '4rem'}}/>
+                                <div style={{fontSize: '30px', fontFamily: 'Handel Gothic', position: 'absolute', bottom: 0, right: 0, textShadow: '-2px 2px 3px black'}}>
+                                  {UNITS_LIMIT[u.id.toLowerCase()] - (UNITS[u.id.toLowerCase()] || 0)}</div>
+                              </div>}
+                            )}
+                          </div>
+                          <div style={{display: 'flex', height: '2rem', marginTop: '.5rem'}}>
+                            <Button disabled={!groundUnitSelected.unit} size='sm' color='danger' onClick={() => moves.moveToReinforcements(groundUnitSelected)}
+                              className='bi bi-backspace-reverse-fill'>&nbsp;remove selected from board</Button>
+                            {groundUnitSelected.unit && 
+                              <div style={{marginLeft: '1rem', display: 'flex'}}>
+                                <div style={{fontSize: '20px', fontFamily: 'Handel Gothic'}}>1 x </div>
+                                <img alt={groundUnitSelected.unit} src={'units/'+ groundUnitSelected.unit.toUpperCase() +'.png'} style={{width: '2rem'}}/>
+                              </div>
+                            }
+                          </div>
                       </div>}
                     </Card>
                     
