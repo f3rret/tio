@@ -948,7 +948,17 @@ export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
       planet.specialty = 'warfare';
     }
   }
-
+  else if(explore.id === 'Abandoned Warehouses'){ //industrial
+    G.races[playerID].explorationDialog = {
+      id: explore.id,
+      title: explore.id,
+      text: explore.effect,
+      options: [
+        {label: 'Gain commodities'},
+        {label: 'Convert to tg'}
+      ]
+    };
+  }
 
   G.races[playerID].exploration.push(explore);
 

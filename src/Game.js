@@ -402,6 +402,15 @@ export const TIO = {
             }
 
           },
+          choiceDialog : ({G, playerID}) => {
+            if(G.races[playerID].explorationDialog){
+              if(G.races[playerID].explorationDialog.id === 'Abandoned Warehouses'){
+
+              }
+
+              delete G.races[playerID]['explorationDialog'];
+            }
+          },
           explorePlanet: ({G, playerID}, pname, exhaustedCards) => {
             explorePlanetByName(G, playerID, pname, exhaustedCards);
           },

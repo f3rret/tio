@@ -4,7 +4,7 @@ import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip,/*UncontrolledAccordion, 
   AccordionItem, AccordionBody, AccordionHeader,*/ CardBody,
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont } from 'reactstrap';
-import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, /*getTechType,*/ ObjectivesList, TradePanel, ProducingPanel } from './dialogs';
+import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, /*getTechType,*/ ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog } from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
@@ -1173,6 +1173,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </CardBody>
             </Card>}
 
+            {race.explorationDialog && <ChoiceDialog args={race.explorationDialog} onSelect={(i)=>moves.choiceDialog(i)}/>}
             {!race.isSpectator && ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote} mini={actionCardStage}/>}
             
             {strategyStage && <StrategyDialog R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
