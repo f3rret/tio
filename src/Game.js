@@ -392,6 +392,15 @@ export const TIO = {
               G.races[playerID].tg++;
               delete p['exploration'];
             }
+            else if(p.exploration === 'Expedition' && unit === 'infantry'){
+              p.exhausted = false;
+              delete p['exploration'];
+            }
+            else if(p.exploration === 'Volatile Fuel Source' && unit === 'infantry'){
+              G.races[playerID].tokens.new++;
+              delete p['exploration'];
+            }
+
           },
           explorePlanet: ({G, playerID}, pname, exhaustedCards) => {
             explorePlanetByName(G, playerID, pname, exhaustedCards);
@@ -707,9 +716,11 @@ export const TIO = {
                   G.races[playerID].fragments[to.trait[0]]++;
                 }
                 G.races[playerID].exploration.push(explore);*/
+                to.exhausted = true;
+                to.occupied = playerID;
                 explorePlanetByName(G, playerID, to.name);
               }
-              if(to.occupied != playerID){
+              else if(to.occupied != playerID){
                 to.occupied = playerID;
                 to.exhausted = true;
               }

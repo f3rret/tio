@@ -919,6 +919,35 @@ export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
       }
     }
   }
+  else if(explore.id === 'Expedition'){
+    if(planet.exhausted && planet.units){
+      if(planet.units['mech'] && planet.units['mech'].length){
+        planet.exhausted = false;
+      }
+      else if(planet.units['infantry'] && planet.units['infantry'].length){
+        planet.exploration = 'Expedition';
+      }
+    }
+  }
+  else if(explore.id === 'Volatile Fuel Source'){
+    if(planet.units){
+      if(planet.units['mech'] && planet.units['mech'].length){
+        G.races[playerID].tokens.new++;
+      }
+      else if(planet.units['infantry'] && planet.units['infantry'].length){
+        planet.exploration = 'Volatile Fuel Source';
+      }
+    }
+  }
+  else if(explore.id === 'Warfare Research Facility'){
+    if(planet.specialty){
+      planet.resources = planet.resources+1;
+      planet.influence = planet.influence+1;
+    }
+    else{
+      planet.specialty = 'warfare';
+    }
+  }
 
 
   G.races[playerID].exploration.push(explore);
