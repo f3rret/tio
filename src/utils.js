@@ -31,7 +31,7 @@ export const getPlayerUnits = (tiles, playerID)=> {
         if(t.tdata.fleet){
           Object.keys(t.tdata.fleet).forEach( k => {
             if(!units[k]) units[k] = 0;
-            units[k] += t.tdata.fleet[k].length;
+            units[k] += t.tdata.fleet[k].length; //todo: also count payloaded units
           });
         }
       }
@@ -959,6 +959,59 @@ export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
       ]
     };
   }
+  else if(explore.id === 'Biotic Research Facility'){
+    if(planet.specialty){
+      planet.resources = planet.resources+1;
+      planet.influence = planet.influence+1;
+    }
+    else{
+      planet.specialty = 'biotic';
+    }
+  }
+  else if(explore.id === 'Cybernetic Research Facility'){
+    if(planet.specialty){
+      planet.resources = planet.resources+1;
+      planet.influence = planet.influence+1;
+    }
+    else{
+      planet.specialty = 'cybernetic';
+    }
+  }
+  else if(explore.id === 'Functioning Base'){
+    G.races[playerID].explorationDialog = {
+      id: explore.id,
+      title: explore.id,
+      text: explore.effect,
+      options: [
+        {label: 'Gain 1 commodity'},
+        {label: 'Spend 1 commodity'},
+        {label: 'Spend 1 tg'}
+      ]
+    };
+  }
+  else if(explore.id === 'Local Fabricators'){
+    G.races[playerID].explorationDialog = {
+      id: explore.id,
+      title: explore.id,
+      text: explore.effect,
+      pname,
+      options: [
+        {label: 'Gain 1 commodity'},
+        {label: 'Spend 1 commodity'},
+        {label: 'Spend 1 tg'}
+      ]
+    };
+  }
+  else if(explore.id === 'Propulsion Research Facility'){
+    if(planet.specialty){
+      planet.resources = planet.resources+1;
+      planet.influence = planet.influence+1;
+    }
+    else{
+      planet.specialty = 'propulsion';
+    }
+  }
+  
 
   G.races[playerID].exploration.push(explore);
 

@@ -8,7 +8,7 @@ import cardData from './cardData.json';
 import { ACTION_CARD_STAGE, ACTS_STAGES } from './gameStages';
 import { produce } from 'immer';
 import { NUM_PLAYERS, checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
- getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName } from './utils';
+ getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, getPlayerUnits, UNITS_LIMIT } from './utils';
 
 export const TIO = {
     
@@ -402,10 +402,41 @@ export const TIO = {
             }
 
           },
-          choiceDialog : ({G, playerID}) => {
+          choiceDialog : ({G, playerID}, cidx) => {
             if(G.races[playerID].explorationDialog){
               if(G.races[playerID].explorationDialog.id === 'Abandoned Warehouses'){
-
+                if(cidx === 0){
+                  G.races[playerID].commodity = Math.min(G.races[playerID].commodity + 2, G.races[playerID].commCap);
+                }
+                else if(cidx === 1){
+                  const c = Math.min(G.races[playerID].commodity, 2);
+                  G.races[playerID].commodity -= c;
+                  G.races[playerID].tg += c;
+                }
+              }
+              else if(G.races[playerID].explorationDialog.id === 'Functioning Base'){
+                if(cidx === 0){
+                  G.races[playerID].commodity = Math.min(G.races[playerID].commodity + 1, G.races[playerID].commCap);
+                }
+                else if((cidx === 1 && G.races[playerID].commodity > 0) || (cidx === 2 && G.races[playerID].tg > 0)){
+                  G.races[playerID][cidx === 1 ? 'commodity':'tg']--;
+                  G.races[playerID].actionCards.push(G.actionsDeck.pop());
+                }
+              }
+              else if(G.races[playerID].explorationDialog.id === 'Local Fabricators'){
+                if(cidx === 0){
+                  G.races[playerID].commodity = Math.min(G.races[playerID].commodity + 1, G.races[playerID].commCap);
+                }
+                else if((cidx === 1 && G.races[playerID].commodity > 0) || (cidx === 2 && G.races[playerID].tg > 0)){
+                  G.races[playerID][cidx === 1 ? 'commodity':'tg']--;
+                  const planet = getPlanetByName(G.tiles, G.races[playerID].explorationDialog.pname);
+                  const units = getPlayerUnits(G.tiles, playerID);
+                  if(!units['mech'] || units['mech'] < UNITS_LIMIT['mech']){
+                    if(!planet.units) planet.units = {};
+                    if(!planet.units.mech) planet.units.mech = [];
+                    planet.units.mech.push({id: 'mech'});
+                  }
+                }
               }
 
               delete G.races[playerID]['explorationDialog'];

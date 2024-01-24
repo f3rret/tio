@@ -208,15 +208,13 @@
             {"id": "Warfare Research Facility", "type": "ATTACH", "effect": "This planet has a red technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."}
         ],
         "industrial": [
-            
+            {"id": "Abandoned Warehouses", "count": 4, "effect": "You may gain 2 commodities, or you may convert up to 2 of your commodities to trade goods."},
             {"id": "Biotic Research Facility", "type": "ATTACH", "effect": "This planet has a green technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."},
             {"id": "Cybernetic Research Facility", "type": "ATTACH", "effect": "This planet has a yellow technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."},
             {"id": "Functioning Base", "count": 4, "effect": "You may gain 1 commodity, or you may spend 1 trade good or 1 commodity to draw 1 action card."},
             {"id": "Industrial Relic Fragment", "count": 5, "effect": "Purge 3 of your industrial relic fragments to gain 1 relic."},
             {"id": "Local Fabricators", "count": 4, "effect": "You may gain 1 commodity, or you may spend 1 trade good or 1 commodity to place 1 mech from your reinforcements on this planet."},
-            {"id": "Propulsion Research Facility", "type": "ATTACH", "effect": "This planet has a blue technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."},
-
-            {"id": "Abandoned Warehouses", "count": 4, "effect": "You may gain 2 commodities, or you may convert up to 2 of your commodities to trade goods."}
+            {"id": "Propulsion Research Facility", "type": "ATTACH", "effect": "This planet has a blue technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."}
         ],
         "frontier": [
             {"id": "Derelict Vessel", "count": 2, "effect": "Draw 1 secret objective."}, 

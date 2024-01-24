@@ -1741,7 +1741,7 @@ export const ChoiceDialog = ({args, onSelect}) => {
     return  <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', position: 'absolute', padding: '1rem', margin: '10rem', 
                             backgroundColor: 'rgba(33, 37, 41, 0.95)', width: '30rem'}}>
                 <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{args.title}</h6></CardTitle>
-                <div style={{display: 'flex', flexDirection: 'column', width: '100%', margin: '1rem'}}>
+                <div style={{display: 'flex', flexDirection: 'column', margin: '1rem'}}>
                     <CardText>{args.text}</CardText>
 
                     {args.options && args.options.map((o, i) => 
