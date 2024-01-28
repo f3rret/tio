@@ -1,7 +1,8 @@
 import { produce } from 'immer';
 import { INVALID_MOVE } from 'boardgame.io/core';
 import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveTechnology, getPlanetByName, 
-  completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits, spliceCombatAC } from './utils';
+  completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits, 
+  spliceCombatAC, checkIonStorm } from './utils';
 
 export const ACTION_CARD_STAGE = {
     moves: {
@@ -206,7 +207,7 @@ export const ACTION_CARD_STAGE = {
                   }
                   G.races[playerID].tg += tg;
                 }
-                else if(card.id === 'Plagiarize'){
+                else if(card.id === 'Plagiarize' || card.id === 'Enigmatic Device'){
                   G.races[ctx.currentPlayer].knownTechs.push(card.target.tech.id);
                   
                   if(card.target.exhausted){
@@ -316,6 +317,9 @@ export const ACTION_CARD_STAGE = {
                     if(!tile.tdata.fleet['cruiser']) tile.tdata.fleet.cruiser = [];
                     tile.tdata.fleet['cruiser'].push({});
                   }
+                }
+                else if(card.id === 'Enigmatic Device'){ //from frontier
+
                 }
               }
               else if(card.when === 'TACTICAL'){
@@ -1582,6 +1586,8 @@ export const ACTS_STAGES = {
                 forces[tag][elem] = undefined;
               });
             });
+
+            checkIonStorm(G, [activeTile, tile]);
 
             Object.keys(forces).forEach(tag => {
               forces[tag] = forces[tag].filter(e => e);

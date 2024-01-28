@@ -8,7 +8,8 @@ import cardData from './cardData.json';
 import { ACTION_CARD_STAGE, ACTS_STAGES } from './gameStages';
 import { produce } from 'immer';
 import { NUM_PLAYERS, checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
- getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, getPlayerUnits, UNITS_LIMIT } from './utils';
+ getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
+ getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm } from './utils';
 
 export const TIO = {
     
@@ -438,6 +439,23 @@ export const TIO = {
                   }
                 }
               }
+              else if(G.races[playerID].explorationDialog.id === 'Ion Storm'){
+                const side = cidx === 0 ? 'alpha':'beta';
+                const tile = G.tiles.find(t => t.tid === G.races[playerID].explorationDialog.tid);
+                if(tile && tile.tdata){
+                  tile.tdata.wormhole = side;
+                  tile.tdata.ionstorm = true;
+                }
+              }
+              else if(G.races[playerID].explorationDialog.id === 'Merchant Station'){
+                if(cidx === 0){
+                  G.races[playerID].commodity = G.races[playerID].commCap;
+                }
+                else if(cidx === 1){
+                  G.races[playerID].tg += G.races[playerID].commodity;
+                  G.races[playerID].commodity = 0;
+                }
+              }
 
               delete G.races[playerID]['explorationDialog'];
             }
@@ -809,12 +827,7 @@ export const TIO = {
             }
 
             if(tile.tdata.frontier && tile.tdata.occupied == playerID && G.races[playerID].knownTechs.indexOf('DARK_ENERGY_TAP') > -1){
-              const explore = G.explorationDecks['frontier'].pop();
-                if(explore.id.indexOf('Relic Fragment') > -1){
-                  G.races[playerID].fragments.u++;
-                }
-              race.exploration.push(explore);
-              tile.tdata.frontier = false;
+              exploreFrontier(G, playerID, tile);
             }
 
             let idx = race.exhaustedCards.indexOf('GRAVITY_DRIVE');
@@ -868,13 +881,13 @@ export const TIO = {
               }
             }
 
+            if(args.path && args.path.length){ //ion storm
+              const fullpath = [...args.path.map(p => G.tiles[p]), dst];
+              checkIonStorm(G, fullpath);
+            }
+
             if(dst.tdata.frontier && G.races[playerID].knownTechs.indexOf('DARK_ENERGY_TAP') > -1){
-              const explore = G.explorationDecks['frontier'].pop();
-                if(explore.id.indexOf('Relic Fragment') > -1){
-                  G.races[playerID].fragments.u++;
-                }
-              G.races[playerID].exploration.push(explore);
-              dst.tdata.frontier = false;
+              exploreFrontier(G, playerID, dst);
             }
 
             if(args.exhaustedCards){
@@ -882,6 +895,8 @@ export const TIO = {
                 G.races[playerID].exhaustedCards.push('GRAVITY_DRIVE');
               }
             }
+
+            
 
           },
           pass: ({ G, playerID, events }) => {

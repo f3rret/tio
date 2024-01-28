@@ -217,7 +217,7 @@
             {"id": "Propulsion Research Facility", "type": "ATTACH", "effect": "This planet has a blue technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."}
         ],
         "frontier": [
-            {"id": "Derelict Vessel", "count": 2, "effect": "Draw 1 secret objective."}, 
+            {"id": "Derelict Vessel", "count": 2, "effect": "Draw 1 secret objective."},
             {"id": "Enigmatic Device", "count": 2, "effect": "Place this card faceup in your play area. ACTION: You may spend 6 resources and purge this card to research 1 technology."},
             {"id": "Gamma Relay", "effect": "Place a gamma wormhole token in this system. Then, purge this card."},
             {"id": "Ion Storm", "effect": "Place the ion storm token in this system with either side faceup. Then, place this card in the common play area. At the end of the 'Move Ships' or 'Retreat' substep of a tactical action during which 1 or more of your ships use the ion storm wormhole, flip the ion storm token to its opposing side."},

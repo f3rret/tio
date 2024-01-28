@@ -39,7 +39,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     const cardOwner = useMemo(() => card.playerID !== undefined ? card.playerID : playerID, [card, playerID]);
 
     const requirements = useMemo(() => {
-        if(['Focused Research', 'Technology Rider'].indexOf(card.id) > -1 && selection){
+        if(['Focused Research', 'Technology Rider', 'Enigmatic Device'].indexOf(card.id) > -1 && selection){
             
             if(selection){ //technology
                 let adjSpec = [];
@@ -149,6 +149,19 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             
                             if(sum >= 5) result = {tech: selection, exhausted}
                         }
+                    }
+                }
+            }
+            else if(card.id === 'Enigmatic Device'){
+                if(selection){
+                    if(exhausted){
+                        let sum = 0;
+                        Object.keys(exhausted).forEach(pname => {
+                            const planet = getPlanetByName(G.tiles, pname);
+                            sum += planet.resources; //todo: need count tg also
+                        });
+                        
+                        if(sum >= 6) result = {tech: selection, exhausted}
                     }
                 }
             }
@@ -507,6 +520,12 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                                 <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} /></div>}
                             {['Insubordination', 'Spy', 'Forward Supply Base'].indexOf(card.id) > -1 && <PlayerSelect selected={selection} onSelect={setSelection}/>}
                             {['Lucky Shot'].indexOf(card.id) > -1 && <UnitInfo selectedUnit={selectedUnit} />}
+                            {card.id === 'Enigmatic Device' && <>
+                                <TechnologySelect onSelect={setSelection} races={[G.races[playerID]]}/>
+                                <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                                    <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} />
+                                </div>
+                                </>}
                             {card.id === 'Plagiarize' && <>
                                 <TechnologySelect onSelect={setSelection} races={myNeighbors.map(n => G.races[n])}/>
                                 {myNeighbors.length > 0 && <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
@@ -555,7 +574,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown', 'Unstable Planet', 'Uprising', 
                             'Experimental Battlestation'].indexOf(card.id) > -1 && <PlanetInfo tidx={card.target.tidx} pidx={card.target.pidx}/>}
                             {['Ghost Ship', 'Tactical Bombardment', 'Unexpected Action', 'War Effort', 'In The Silence Of Space', 'Skilled Retreat'].indexOf(card.id) > -1 && <TileInfo tidx={card.target.tidx}/>}
-                            {['Focused Research', 'Plagiarize'].indexOf(card.id) > -1 && <div style={{padding: '1rem'}}><OneTechLine technology={card.target.tech}/></div>}
+                            {['Focused Research', 'Plagiarize', 'Enigmatic Device'].indexOf(card.id) > -1 && <div style={{padding: '1rem'}}><OneTechLine technology={card.target.tech}/></div>}
                             {['Impersonation', 'Mining Initiative'].indexOf(card.id) > -1 && <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                 <PlanetsRows PLANETS={card.target.exhausted} /></div>}
                             {['Insubordination', 'Spy', 'Forward Supply Base'].indexOf(card.id) > -1 && <OneLinePlayerInfo race={G.races[card.target.playerID]}/>}

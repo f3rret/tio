@@ -635,7 +635,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           shipIdx = 0;
         }
         
-        moves.moveShip({...advUnitView, shipIdx, exhaustedCards})
+        moves.moveShip({...advUnitView, shipIdx, exhaustedCards, path: [advUnitView.tile, ...moveSteps]})
         setPayloadCursor({i: 0, j: 0});
 
         // change advUnitView after move!
@@ -645,7 +645,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
     }
 
-  }, [G.tiles, advUnitView, payloadCursor, moves, canMoveThatPath, exhaustedCards])
+  }, [G.tiles, advUnitView, payloadCursor, moves, canMoveThatPath, exhaustedCards, moveSteps])
 
   const purgeFragment = useCallback((tag) => {
     setPurgingFragments(produce(purgingFragments, draft => {
@@ -736,7 +736,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     if(moveTint === 'red' && canMoveThatPath) moveTint = 'lightblue';
 
     return <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
+        {element.tdata.mirage && <Sprite x={element.w/4} y={element.w/6} scale={.35} alpha={.9} image={'icons/mirage_token.webp'}/>}
         {element.tdata.wormhole === 'gamma' && <Sprite x={-15} y={element.w/4 + 30} scale={.5} alpha={.9} image={'icons/gamma.png'}/>}
+        {element.tdata.ionstorm && element.tdata.wormhole === 'alpha' && <Sprite x={-15} y={element.w/4 + 30} scale={1} alpha={.85} image={'icons/alpha.png'}/>}
+        {element.tdata.ionstorm && element.tdata.wormhole === 'beta' && <Sprite x={-15} y={element.w/4 + 30} scale={1} alpha={.85} image={'icons/beta.png'}/>}
         {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier_bg.png'}/>}
         {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
             

@@ -660,7 +660,7 @@
             "fleet": {"carrier": [{}], "cruiser": [{}], "destroyer": [{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "pds": [{}], "fighter": [{},{},{}]}
         },
-        "knownTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS"],
+        "knownTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS", "DARK_ENERGY_TAP"],
         "commCap": 3,
         "abilities": [
             {"id": "TELEPATHIC", "effect": "At the end of the strategy phase, place the Naalu '0' token on your strategy card; you are first in initiative order."},

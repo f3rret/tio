@@ -5,7 +5,7 @@ import { neighbors } from './Grid';
 import { Stage } from 'boardgame.io/core';
 import { createContext } from 'react';
 
-export const NUM_PLAYERS = 2;
+export const NUM_PLAYERS = 1;
 
 export const UNITS_LIMIT = {
   spacedock: 3,
@@ -852,6 +852,73 @@ export const spliceCombatAC = (race, cardid) => {
   return false;
 }
 
+export const exploreFrontier = (G, playerID, tile) => {
+  const explore = G.explorationDecks['frontier'].pop();
+
+  if(explore.id.indexOf('Relic Fragment') > -1){
+    G.races[playerID].fragments.u++;
+  }
+  else if(explore.id === 'Derelict Vessel'){
+    G.races[playerID].secretObjectives.push(G.secretObjDeck.pop());
+  }
+  else if(explore.id === 'Enigmatic Device'){
+    G.races[playerID].actionCards.push({
+      id: explore.id,
+      when: 'ACTION',
+      description: explore.effect
+    });
+  }
+  else if(explore.id === 'Gamma Relay'){
+    if(tile) tile.tdata.wormhole = 'gamma'; //todo: purge this card
+  }
+  else if(explore.id === 'Ion Storm'){
+    G.races[playerID].explorationDialog = {
+      id: explore.id,
+      title: explore.id,
+      text: explore.effect,
+      tid: tile.tid,
+      options: [
+        {label: 'Alpha'},
+        {label: 'Beta'}
+      ]
+    };
+  }
+  else if(explore.id === 'Lost Crew'){
+    G.races[playerID].actionCards.push(...G.actionsDeck.splice(-2));
+  }
+  else if(explore.id === 'Merchant Station'){
+    G.races[playerID].explorationDialog = {
+      id: explore.id,
+      title: explore.id,
+      text: explore.effect,
+      options: [
+        {label: 'Replenish'},
+        {label: 'Convert'}
+      ]
+    };
+  }
+  else if(explore.id === 'Mirage'){
+    if(tile && tile.tdata){
+      if(!tile.tdata.planets) tile.tdata.planets = [];
+      tile.tdata.mirage = true;
+      tile.tdata.planets.push({
+        "name": "Mirage",
+        "resources": 1,
+        "influence": 2,
+        "trait": "cultural",
+        "specialty": null,
+        "legendary": true,
+        "hitCenter": [180,150],
+        "hitRadius": [70],
+        "occupied": playerID
+      });
+    }
+  }
+
+  G.races[playerID].exploration.push(explore);
+  tile.tdata.frontier = false;
+}
+
 export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
   const planet = getPlanetByName(G.tiles, pname);
   const explore = G.explorationDecks[planet.trait].pop();
@@ -1018,4 +1085,33 @@ export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
   if(exhaustedCards && exhaustedCards.indexOf('SCANLINK_DRONE_NETWORK') > -1){
     G.races[playerID].exhaustedCards.push('SCANLINK_DRONE_NETWORK');
   }
+}
+
+export const checkIonStorm = (G, fullpath) => {
+  fullpath.some((t, idx) => {
+    let swap = false;
+    if(t && t.tdata){
+      if(t.tdata.ionstorm){
+        if(fullpath.length > idx+1){ //check if enter the storm
+          const t2 = fullpath[idx+1];
+          if(t2 && t2.tdata && wormholesAreAdjacent(G, t.tdata.wormhole, t2.tdata.wormhole)){
+            swap = true;
+          }
+        }
+        if(!swap && idx > 0){ //check if exit the storm
+          const t0 = fullpath[idx-1];
+          if(t0 && t0.tdata && wormholesAreAdjacent(G, t.tdata.wormhole, t0.tdata.wormhole)){
+            swap = true;
+          }
+        }
+
+        if(swap){
+          if(t.tdata.wormhole === 'alpha') t.tdata.wormhole = 'beta';
+          else if(t.tdata.wormhole === 'beta') t.tdata.wormhole = 'alpha';
+        }
+       
+      }
+    }
+    return swap;
+  });
 }
