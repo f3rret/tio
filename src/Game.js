@@ -112,6 +112,7 @@ export const TIO = {
           }
         },
         moves: {
+          dropActionCard: dropACard,
           playActionCard: ({G, playerID, events}, card) => {
             if(card.when === 'STRATEGY'){
               G.races[playerID].currentActionCard = {...card, reaction: {}, playerID};
@@ -142,9 +143,10 @@ export const TIO = {
         onBegin: ({ G, ctx, random, events }) => {
          
           if(!G.pubObjectives.length){
-            cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
-            G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-            //G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Amass Wealth'), players: []});
+            //cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
+            //G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+            //G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+            G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Rule Distant Lands'), players: []});
           }
 
           if(!G.actionsDeck.length){
@@ -178,8 +180,8 @@ export const TIO = {
                 }
               });
               //no shuffle for testing only!!
-              G.explorationDecks[k] = deck;
-              //G.explorationDecks[k] = random.Shuffle(deck); 
+              //G.explorationDecks[k] = deck;
+              G.explorationDecks[k] = random.Shuffle(deck); 
             });
 
           }
@@ -960,7 +962,8 @@ export const TIO = {
                 src.actionCards.splice(src.actionCards.findIndex(c => c.id === cid), 1);
               }
             }
-          }
+          },
+          dropActionCard: dropACard
         },
         onEnd: ({ G }) => {
           G.tiles.forEach( t => t.tdata.tokens = []);
@@ -1011,7 +1014,10 @@ export const TIO = {
           
          // events.setPhase('agenda'); //test only!
         },
-        onEnd: ({ G }) => {
+        onEnd: ({ G, random }) => {
+          if(G.pubObjectives && G.pubObjectives.length === 5){
+            cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 2 ));
+          }
           G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
           G.races.forEach( r => { 
             if(r.exhaustedCards.indexOf('Political Stability') === -1) r.strategy = []; 

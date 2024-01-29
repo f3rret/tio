@@ -1326,9 +1326,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       return <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                         <Button style={{width: '100%'}} onClick={()=> { 
                                   if(mustAction){moves.dropActionCard(pr.id)}
-                                  else if(!disabled){ moves.playActionCard(pr); setRightBottomVisible(null)}}} size='sm' color={disabled ? 'dark':'warning'} id={pr.id.replaceAll(' ', '_')} >
+                                  else if(!disabled){ moves.playActionCard(pr); setRightBottomVisible(null)}}} size='sm' color={disabled || mustAction ? 'dark':'warning'} id={pr.id.replaceAll(' ', '_')} >
+                          {mustAction && race.actionCards.length > 7 && 
+                            <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', left: '0', top: '0', position: 'absolute'}}>Drop</b>}
                           <b>{pr.id.toUpperCase()}</b>
-                          {mustAction && race.actionCards.length > 7 && <b className='bi bi-backspace-fill' style={{color: 'red', right: 0, position: 'absolute'}}/>}
                         </Button>
                         <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.description}</UncontrolledTooltip> 
                       </ListGroupItem>}

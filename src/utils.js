@@ -122,24 +122,24 @@ export const checkObjective = (G, playerID, oid) => {
 
     if(req.unit && Array.isArray(req.unit)){
         if(req.squadron){
-        let systems = G.tiles.filter( s => s.tdata.occupied == playerID && s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
+          let systems = G.tiles.filter( s => s.tdata.occupied == playerID && s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
 
-        const goal = systems.some( s => {
-            let sum = 0;
-            Object.keys(s.tdata.fleet).forEach( k => {
-            if(req.unit.indexOf(k) > -1) sum += s.tdata.fleet[k];
-            });
-            return sum >= req.squadron;
-        });
+          const goal = systems.some( s => {
+              let sum = 0;
+              Object.keys(s.tdata.fleet).forEach( k => {
+              if(req.unit.indexOf(k) > -1) sum += s.tdata.fleet[k];
+              });
+              return sum >= req.squadron;
+          });
 
-        if(goal == 0){
-            return;
-        }
+          if(goal == 0){
+              return;
+          }
         }
         else{
-        let sum = 0;
-        req.unit.forEach(u => { if(units[u]) { sum += units[u] } });
-        if(sum < req.count) return;
+          let sum = 0;
+          req.unit.forEach(u => { if(units[u]) { sum += units[u] } });
+          if(sum < req.count) return;
         }
     }
     else if(req.trait){
@@ -167,7 +167,7 @@ export const checkObjective = (G, playerID, oid) => {
     else if(req.attachment){
         let sum = 0;
         planets.forEach(p => {
-        if(p.attachment) sum++;
+          if(p.attach && p.attach.length) sum++;
         });
 
         if(sum < req.attachment){
@@ -193,43 +193,71 @@ export const checkObjective = (G, playerID, oid) => {
     else if(req.planet){
         let result = planets;
         if(req.nhs){
-        result = result.filter( p => p.tid != race.rid );
+          result = result.filter( p => p.tid != race.rid );
+        }
+        if(req.ohs){
+          result = result.filter( p => tileData.green.indexOf(p.tid) > -1 );
         }
         if(req.ground){
-        result = result.filter( p => p.units && Object.keys(p.units).some( key => req.ground.indexOf(key) > -1));
+          result = result.filter( p => p.units && Object.keys(p.units).some( key => req.ground.indexOf(key) > -1));
         }
 
+        if(req.ohsOrAdjacentDifferent){
+          result = result.map ( p => {
+            const hs = tileData.green.indexOf(p.tid);
+            if( hs > -1 && p.tid != race.rid) return hs;
+
+            const tile = G.tiles.find(t => t.tid === p.tid);
+
+            if(tile){
+              const neigh = neighbors([tile.q, tile.r]).toArray().map(n => n.tileId);
+              const ns = neigh.find(n => tileData.green.indexOf(n) > -1 && n != race.rid);
+              if(ns) return tileData.green.indexOf(ns);
+            }
+            return undefined;
+          });
+          result = result.filter((value, index, array) => value !== undefined && array.indexOf(value) === index);
+        }
         if(result.length < req.planet){
-        return;
+          return;
         }
     }
     else if(req.system){
         let systems = G.tiles.filter( t => t.tdata.occupied === playerID || (t.tdata.planets && t.tdata.planets.some( p => p.occupied === playerID)) );
-        if(req.fleet && req.ground){
-        systems = systems.filter( s => 
-            (s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0) || 
-            (s.tdata.planets && s.tdata.planets.length && s.tdata.planets.some( p => p.occupied === playerID && p.units && p.units.length ))
-        );
+        if(req.fleet && req.ground){ 
+          systems = systems.filter( s => 
+              (s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0) || 
+              (s.tdata.planets && s.tdata.planets.length && s.tdata.planets.some( p => p.occupied === playerID && p.units && p.units.length ))
+          );
         }
         else if(req.fleet){
-        systems = systems.filter( s => s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
+          systems = systems.filter( s => s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
+          if(Array.isArray(req.fleet) && req.fleet.length){
+            systems = systems.filter( s => Object.keys(s.tdata.fleet).some(k => req.fleet.indexOf(k) > -1) );
+          }
         }
 
         if(req.noPlanet){
-        systems = systems.filter( s => s.tdata.planets.length == 0);
+          systems = systems.filter( s => s.tdata.planets.length == 0);
         }
         if(req.adjacentMR){
-        systems = systems.filter( s => (s.q >= -1 && s.q <= 1) && (s.r >=-1 && s.q <= -1) && !(s.r == 0 && s.q == 0));
+          systems = systems.filter( s => (s.q >= -1 && s.q <= 1) && (s.r >=-1 && s.q <= -1) && !(s.r == 0 && s.q == 0));
         }
         if(req.MR && req.legendary && req.anomaly){
-        systems = systems.filter( s => s.tid == 18 || [65, 66, 82].indexOf(s.tid) > -1 || tileData.anomaly.indexOf(s.tid) > -1);
+          systems = systems.filter( s => s.tid == 18 || [65, 66, 82].indexOf(s.tid) > -1 || tileData.anomaly.indexOf(s.tid) > -1);
+        }
+        if(req.nhs){
+          systems = systems.filter( s => s.tid != race.rid );
+        }
+        if(req.MR && req.ohs){
+          systems = systems.filter( s => s.tid == 18 || tileData.green.indexOf(s.tid) > -1);
         }
         if(req.edge){
-        systems = systems.filter( s => neighbors([s.q, s.r]).toArray().length < 6);
+          systems = systems.filter( s => neighbors([s.q, s.r]).toArray().length < 6);
         }
 
         if(systems.length < req.system){
-        return;
+          return;
         }
     }
     else if(req.specialty){
