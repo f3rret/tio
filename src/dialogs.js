@@ -24,6 +24,9 @@ export function PaymentDialog(args) {
             else if(k === 'token'){
                 return payment[k] && payment[k].t + payment[k].s >= objective.req[k]
             }
+            else if(k === 'fragment'){
+                return payment[k] && payment[k].h + payment[k].i + payment[k].c + payment[k].u >= objective.req[k];
+            }
             else return false;
         })
     }, [payment, args, objective])
@@ -1070,8 +1073,12 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect}) => {
 
 }
 
-export const ObjectivesList = ({onSelect, selected}) => {
+export const ObjectivesList = ({onSelect, selected, mustSecObj}) => {
     const { G, playerID } = useContext(StateContext);
+    /*const mustSecObj = useMemo(() => {
+        if(G.races[playerID] && G.races[playerID].secretObjectives) return G.races[playerID].mustDropSecObj || G.races[playerID].secretObjectives.length > 3
+      }, [G.races, playerID]);*/
+
     if(!onSelect) onSelect = ()=>{}
 
     return <ListGroup style={{maxHeight: '30rem', overflowY: 'auto', border: 'none', width: '100%', paddingRight: '1rem'}}>
@@ -1082,7 +1089,9 @@ export const ObjectivesList = ({onSelect, selected}) => {
                     style={{cursor: completed ? 'default':'pointer', 
                       background: completed ? 'green': (selected === o.id ? 'rgba(255,193,7,.75)':'none'), 
                       color: completed || selected === o.id ? 'black':'white', border: 'solid 1px transparent' }} 
-                      key={i} onClick={() => {if(!completed) onSelect(o.id)}}>
+                      key={i} onClick={() => {
+                        if(!completed) onSelect(o.id)
+                        }}>
                     <CardImg style={{display: 'inline-block', width: '2rem', margin: '0 1rem .5rem 0', opacity: checkObjective(G, playerID, o.id) ? '1': '.5'}} 
                         src={o.vp === 2 ? 'icons/public_2.png': o.vp === 1 ? 'icons/public_1.png':'icons/secret_regular.png'} />
                     <b>{o.id}</b>
@@ -1092,6 +1101,8 @@ export const ObjectivesList = ({onSelect, selected}) => {
                         style={{display: 'inline-block', width: '1rem', marginRight: '.5rem'}}/>)}
                     </span>
                     <p style={{fontSize: '0.8rem'}}>{o.title}</p>
+                    {mustSecObj && !o.vp && (!o.players || !o.players.length) &&
+                            <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', right: '0', top: '0', position: 'absolute'}}>Drop</b>}
                   </ListGroupItem>})
         }
       
@@ -1100,10 +1111,13 @@ export const ObjectivesList = ({onSelect, selected}) => {
 
 const PaymentCard = (args) => {
 
-    const [payment, setPayment] = useState({ influence: { planets: [], tg: 0 }, resources: { planets: [], tg: 0 }, tg: 0, token: { s:0, t:0 } });
+    const [payment, setPayment] = useState({ influence: { planets: [], tg: 0 }, resources: { planets: [], tg: 0 }, 
+        tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0} });
     const [paid, setPaid] = useState({}); //exhausted
     const tg = useMemo(() => args.race.tg - payment.influence.tg - payment.resources.tg - payment.tg, [payment, args]);
     const tokens = useMemo(()=> ({ t: args.race.tokens.t - payment.token.t, s: args.race.tokens.s - payment.token.s}), [payment, args]);
+    const fragments = useMemo(() => ({h: args.race.fragments.h - payment.fragment.h, i: args.race.fragments.i - payment.fragment.i,
+        c: args.race.fragments.c - payment.fragment.c, u: args.race.fragments.u - payment.fragment.u}), [payment, args]);
 
     const payPlanet = useCallback((e, planet, type) => {
         e.preventDefault();
@@ -1147,7 +1161,18 @@ const PaymentCard = (args) => {
                 draft.token[tag]--;
             }
         }));
-    }, [payment, tokens])
+    }, [payment, tokens]);
+
+    const redistFrag = useCallback((tag, inc) => {
+        setPayment(produce(payment, draft => {
+            if(inc > 0 && fragments[tag] > 0){
+                draft.fragment[tag]++;
+            }
+            else /*if(inc < 0 && payment.fragment[tag]>0)*/{
+                draft.fragment[tag]=0;
+            }
+        }));
+    }, [payment, fragments])
     
     useEffect(()=>{
         if(args.onPayment){
@@ -1156,7 +1181,7 @@ const PaymentCard = (args) => {
     },[payment, args]);
 
     const objKeys = Object.keys(args.objective.req);
-    const TOKENS_STYLE = { cursor:'pointer', display: 'flex', textAlign: 'center', padding: 0, flexFlow: 'column', background: 'none', color: 'white'}
+    const TOKENS_STYLE = { cursor:'pointer', display: 'flex', textAlign: 'center', padding: 0, flexFlow: 'column', background: 'none', color: 'white', border: 'solid 1px transparent'}
 
     return <>
         {objKeys.indexOf('influence') + objKeys.indexOf('resources') > -2 && <div style={{width: '30rem', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
@@ -1179,6 +1204,30 @@ const PaymentCard = (args) => {
                 <Col xs='3' style={{...TOKENS_STYLE}}><Button onClick={()=>redistCt('s', +1)} color='dark' style={{ opacity: '.5', width:'3rem', padding: 0,fontSize: '30px'}}>-</Button></Col>
             </Row>
         </div>}
+        {objKeys.includes('fragment') && <div style={{margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+            <ListGroup horizontal style={{border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('c', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
+                    <img alt='fragment' src='icons/cultural_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                    <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.c}</h6>
+                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>cultural</b>
+                </ListGroupItem>
+                <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('h', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
+                    <img alt='fragment' src='icons/hazardous_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                    <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.h}</h6>
+                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>hazardous</b>
+                </ListGroupItem>
+                <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('i', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
+                    <img alt='fragment' src='icons/industrial_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                    <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.i}</h6>
+                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>industrial</b>
+                </ListGroupItem>
+                <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('u', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
+                    <img alt='fragment' src='icons/unknown_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                    <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.u}</h6>
+                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>unknown</b>
+                </ListGroupItem>
+            </ListGroup>
+        </div>}
         <div style={{width: '20rem', margin: '1rem', display: 'flex', flexDirection: 'column'}}>
             {objKeys.map((k, i) =>{
                 
@@ -1197,9 +1246,10 @@ const PaymentCard = (args) => {
                             <div style={{display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap'}}>
                                 <h6 style={{textAlign: 'end'}}>{'Total ' + k + ': '}
                                     {payment[k].planets && payment[k].planets.reduce((a,b) => b[k] + a, 0)}
-                                    {!payment[k].planets && k!=='token' && tg}
-                                    {k!=='token' && payment[k].tg > 0 && '+' + payment[k].tg + ' tg'}
+                                    {!payment[k].planets && k!=='token' && k!=='fragment' && tg}
+                                    {k!=='token' && k!=='fragment' && payment[k].tg > 0 && '+' + payment[k].tg + ' tg'}
                                     {k==='token' && payment[k].t + payment[k].s}
+                                    {k==='fragment' && payment[k].h + payment[k].i + payment[k].u + payment[k].c}
                                     {' / '}{args.objective.req[k]}
                                 </h6>
                             </div>

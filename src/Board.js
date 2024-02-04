@@ -216,7 +216,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   </div>;
 
   const completeObjective = (oid) => {
-    const objective = G.pubObjectives.find(o => o.id === oid);
+    let objective = G.pubObjectives.find(o => o.id === oid);
+    if(!objective) objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
     if(!objective) return;
 
     if(objective.type === 'SPEND'){
@@ -229,9 +230,22 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }
 
+  const dropSecretObjective = (oid) => {
+    const objective = race.secretObjectives.find(o => o.id === oid);
+    if(!objective) return;
+
+    if(!objective.players || !objective.players.length){
+      moves.dropSecretObjective(oid);
+    }
+  }
+
   const mustAction = useMemo(() => {
-    if(race) return race.actionCards.length > 7
-  }, [race])
+    if(race && race.actionCards && isMyTurn) return race.actionCards.length > 7
+  }, [race, isMyTurn]);
+
+  const mustSecObj = useMemo(() => {
+    if(race && race.secretObjectives && isMyTurn) return race.mustDropSecObj || race.secretObjectives.length > 3
+  }, [race, isMyTurn]);
 
   const promissorySwitch = useCallback(() => {
     setStratUnfold(0);
@@ -935,10 +949,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   },[stratUnfold, rightBottomVisible]);
 
   useEffect(()=>{
-    if(ctx.phase === 'stats' && !objVisible && !mustAction){
+    if(mustSecObj || (ctx.phase === 'stats' && !objVisible && !mustAction)){
       setObjVisible(true);
     }
-  }, [ctx.phase, objVisible, mustAction]);
+    
+  }, [ctx.phase, objVisible, mustAction, mustSecObj]);
 
   useEffect(()=>{
     if(race.exploration && race.exploration.length){
@@ -1110,7 +1125,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 {techVisible && <TechnologyDialog />}
                 {objVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                   <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Objectives <span style={{float: 'right'}}>{'You have ' + VP + ' VP'}</span></h6></CardTitle>
-                  <ObjectivesList onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective:()=>{}}/>
+                  <ObjectivesList mustSecObj={mustSecObj} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective: mustSecObj ? dropSecretObjective: ()=>{}}/>
                 </Card>}
                 {planetsVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                   <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Planets</h6></CardTitle>
@@ -1192,10 +1207,18 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             {race.mustChooseAndDestroy && <ChooseAndDestroy />}
 
             {mustAction && 
-            <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '30%', position: 'absolute', margin: '20rem'}}>
+            <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '30%', position: 'absolute', margin: '20rem 30rem'}}>
               <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>You must drop action card</h3></CardTitle>
               <CardBody style={{display: 'flex', color: 'black'}}>
                 You can't have more than 7 action cards.
+              </CardBody>
+            </Card>}
+
+            {mustSecObj && ctx.phase === 'acts' && 
+            <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '30%', position: 'absolute', margin: '20rem 30rem', zIndex: 1}}>
+              <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>You must drop secret objective</h3></CardTitle>
+              <CardBody style={{display: 'flex', color: 'black'}}>
+                Game starts with 1 secret objective. You can't have more than 3 secret objectives.
               </CardBody>
             </Card>}
 

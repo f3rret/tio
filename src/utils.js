@@ -175,20 +175,32 @@ export const checkObjective = (G, playerID, oid) => {
         }
     }
     else if(req.technology){
+      if(req.technology.color){
         const colors = {'biotic': 0, 'warfare': 0, 'cybernetic': 0, 'propulsion': 0};
         race.knownTechs.forEach(t => {
-        const tech = techData.find(td => td.id === t);
-        if(colors[tech.type] !== undefined){ colors[tech.type]++; }
+          const tech = techData.find(td => td.id === t);
+          if(tech.type !== 'unit' && colors[tech.type] !== undefined){ colors[tech.type]++; }
         });
 
         let goals = 0;
         Object.keys(colors).forEach(c => {
-        if(colors[c] >= parseInt(req.technology.count)) goals++;
+          if(colors[c] >= parseInt(req.technology.count)) goals++;
         });
 
         if(goals < parseInt(req.technology.color)){
-        return;
+          return;
         }
+      }
+      if(req.technology.faction){
+        let goals = 0;
+        race.knownTechs.forEach(t => {
+          const tech = race.technologies.find(td => td.id === t && (td.type !== 'unit' || td.upgrade === true));
+          if(tech) goals++;
+        });
+        if(goals < parseInt(req.technology.count)){
+          return;
+        }
+      }
     }
     else if(req.planet){
         let result = planets;
@@ -255,6 +267,26 @@ export const checkObjective = (G, playerID, oid) => {
         if(req.edge){
           systems = systems.filter( s => neighbors([s.q, s.r]).toArray().length < 6);
         }
+        if(req.wormholes && Array.isArray(req.wormholes)){
+          systems = systems.filter( s => s.tdata.wormhole && req.wormholes.indexOf(s.tdata.wormhole) > -1);
+          if(req.wormholes.find(w => !systems.find(s => s.tdata.wormhole === w))){ //we need each wh to be under control
+            return false;
+          }
+        }
+        if(req.enemyGround && Array.isArray(req.enemyGround)){
+          systems = systems.filter( s => {
+            if(s.tdata && s.tdata.planets && s.tdata.planets.length){
+              return s.tdata.planets.find( p => 
+                p.occupied !== undefined && p.occupied !== playerID && p.units && Object.keys(p.units) && 
+                Object.keys(p.units).some(key => req.enemyGround.includes(key) && p.units[key].length)
+              );
+            }
+            return false;
+          });
+        }
+        if(req.nexus){
+          systems = systems.filter( s => s.tid === 82);
+        }
 
         if(systems.length < req.system){
           return;
@@ -263,7 +295,7 @@ export const checkObjective = (G, playerID, oid) => {
     else if(req.specialty){
         let sum = 0;
         planets.forEach(p => {
-          if(p.specialty) sum++;
+          if(p.specialty && (!req.type || p.specialty === req.type)) sum++;
         });
 
         if(sum < req.specialty){
@@ -305,6 +337,18 @@ export const checkObjective = (G, playerID, oid) => {
         if(goals < req.neighbor){
         return;
         }
+    }
+    else if(req.influence){
+      let sum = 0 ;
+      planets.forEach(p => sum += p.influence);
+
+      if(sum < req.influence) return false;
+    }
+    else if(req.resources){
+      let sum = 0 ;
+      planets.forEach(p => sum += p.resources);
+
+      if(sum < req.resources) return false;
     }
 
     return true;
@@ -402,7 +446,7 @@ export const getMyNeighbors = (G, playerID) => {
 
 export const wormholesAreAdjacent = (G, wormhole1, wormhole2) => {
 
-  if(wormhole1 === wormhole2 || wormhole1 === 'gamma' || wormhole2 === 'gamma'){
+  if(wormhole1 === wormhole2 || wormhole1 === 'gamma' || wormhole2 === 'gamma' || wormhole1 === 'all' || wormhole2 === 'all'){
     return true;
   }
   if(G.wormholesAdjacent){
@@ -640,7 +684,8 @@ export const repairAllActiveTileUnits = (G, playerID) => {
 
 export const completeObjective = ({G, playerID, oid, payment}) => {
 
-  const objective = G.pubObjectives.find(o => o.id === oid);
+  let objective = G.pubObjectives.find(o => o.id === oid);
+  if(!objective) objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
   if(objective && objective.players.indexOf(playerID) === -1){
 
     const req = objective.req;
@@ -657,7 +702,10 @@ export const completeObjective = ({G, playerID, oid, payment}) => {
             return G.races[playerID].tg >= req[k]
         }
         else if(k === 'token'){
-            return payment[k] && payment[k].t + payment[k].s >= req[k]
+            return payment[k] && (payment[k].t + payment[k].s >= req[k])
+        }
+        else if(k === 'fragment'){
+          return payment[k] && (payment[k].h + payment[k].c + payment[k].i + payment[k].u >= req[k])
         }
         else return false;
       });
@@ -668,10 +716,18 @@ export const completeObjective = ({G, playerID, oid, payment}) => {
       }
 
       if(rkeys.indexOf('token') > -1){
-          if(race.tokens && payment.tokens){
-            race.tokens.t -= payment.tokens.t;
-            race.tokens.s -= payment.tokens.s;
-          }
+        if(race.tokens && payment.token){
+          race.tokens.t -= payment.token.t;
+          race.tokens.s -= payment.token.s;
+        }
+      }
+      else if(rkeys.indexOf('fragment') > -1){
+        if(race.fragments && payment.fragment){
+          race.fragments.h -= payment.fragment.h;
+          race.fragments.c -= payment.fragment.c;
+          race.fragments.i -= payment.fragment.i;
+          race.fragments.u -= payment.fragment.u;
+        }
       }
       else{
           if(req.influence && payment.influence){

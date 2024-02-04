@@ -18,7 +18,7 @@ export const TIO = {
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
                   .map( (r, idx) => ({...r, ...raceData[r.rid], pid: idx, destroyedUnits: [], commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
-                    exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []}) );
+                    exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 10, c: 10, h: 10, i: 10}, relics: []}) );
       
       const all_units = techData.filter((t) => t.type === 'unit');
       races.forEach( r => {
@@ -143,10 +143,10 @@ export const TIO = {
         onBegin: ({ G, ctx, random, events }) => {
          
           if(!G.pubObjectives.length){
-            //cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
-            //G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-            //G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-            G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Rule Distant Lands'), players: []});
+            cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
+            G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+            G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+            //G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Adapt New Strategies'), players: []});
           }
 
           if(!G.actionsDeck.length){
@@ -196,6 +196,11 @@ export const TIO = {
 
           if(!G.secretObjDeck.length){
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
+            G.races.forEach(r => {
+              //r.secretObjectives.push(...G.secretObjDeck.slice(-2)); //pop & players []
+              r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Establish Hegemony'), players: []});
+              //r.mustDropSecObj = true;
+            });
           }
 
           //events.endPhase(); //test only!
@@ -321,6 +326,12 @@ export const TIO = {
             }
         },
         moves: {
+          dropSecretObjective: ({G, playerID}, oid) => { //todo: return obj to deck and shuffle
+            if(G.races[playerID].secretObjectives){
+              G.races[playerID].secretObjectives = G.races[playerID].secretObjectives.filter(o => o.id !== oid);
+              delete G.races[playerID].mustDropSecObj;
+            }
+          },
           endTurn: ({G, events}) => {
             if(!G.currentTacticalActionCard){
               events.setActivePlayers({}); //to end tacticalActionCard stage
