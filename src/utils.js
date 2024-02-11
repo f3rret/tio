@@ -127,7 +127,7 @@ export const checkObjective = (G, playerID, oid) => {
           const goal = systems.some( s => {
               let sum = 0;
               Object.keys(s.tdata.fleet).forEach( k => {
-              if(req.unit.indexOf(k) > -1) sum += s.tdata.fleet[k];
+              if(req.unit.indexOf(k) > -1) sum += s.tdata.fleet[k].length;
               });
               return sum >= req.squadron;
           });
@@ -143,17 +143,24 @@ export const checkObjective = (G, playerID, oid) => {
         }
     }
     else if(req.trait){
-        const traits = {'industrial': 0, 'cultural': 0, 'hazardous': 0};
+      const traits = {'industrial': 0, 'cultural': 0, 'hazardous': 0};
 
-        planets.forEach(p => {
+      planets.forEach(p => {
         if(p.trait && traits[p.trait] !== undefined){
             traits[p.trait]++;
         }
-        });
+      });
 
+      if(isNumeric(req.trait)){
         if(traits['industrial'] < req.trait && traits['cultural'] < req.trait && traits['hazardous'] < req.trait){
-        return;
+          return;
         }
+      }
+      else if(req.count){
+        if(!traits[req.trait] || traits[req.trait] < req.count){
+          return;
+        }
+      }
     }
     else if(req.upgrade){
         const upgrades = race.knownTechs.filter(t => {
@@ -213,7 +220,26 @@ export const checkObjective = (G, playerID, oid) => {
         if(req.ground){
           result = result.filter( p => p.units && Object.keys(p.units).some( key => req.ground.indexOf(key) > -1));
         }
+        if(req.withoutUnit){
+          result = result.filter( p => !p.units || !Object.keys(p.units).find( key => req.withoutUnit.indexOf(key) > -1));
+        }
+        if(req.squadron){
+          const goal = result.some( s => {
+              let sum = 0;
 
+              if(s.units){
+                Object.keys(s.units).forEach( k => {
+                  if(req.ground.indexOf(k) > -1) sum += s.units[k].length;
+                });
+              }
+
+              return sum >= req.squadron;
+          });
+
+          if(goal == 0){
+              return;
+          }
+        }
         if(req.ohsOrAdjacentDifferent){
           result = result.map ( p => {
             const hs = tileData.green.indexOf(p.tid);
@@ -230,12 +256,17 @@ export const checkObjective = (G, playerID, oid) => {
           });
           result = result.filter((value, index, array) => value !== undefined && array.indexOf(value) === index);
         }
+        if(req.legendary){
+          result = result.filter( p => p.legendary);
+        }
         if(result.length < req.planet){
           return;
         }
     }
     else if(req.system){
+
         let systems = G.tiles.filter( t => t.tdata.occupied === playerID || (t.tdata.planets && t.tdata.planets.some( p => p.occupied === playerID)) );
+
         if(req.fleet && req.ground){ 
           systems = systems.filter( s => 
               (s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0) || 
@@ -255,14 +286,19 @@ export const checkObjective = (G, playerID, oid) => {
         if(req.adjacentMR){
           systems = systems.filter( s => (s.q >= -1 && s.q <= 1) && (s.r >=-1 && s.q <= -1) && !(s.r == 0 && s.q == 0));
         }
-        if(req.MR && req.legendary && req.anomaly){
-          systems = systems.filter( s => s.tid == 18 || [65, 66, 82].indexOf(s.tid) > -1 || tileData.anomaly.indexOf(s.tid) > -1);
-        }
         if(req.nhs){
           systems = systems.filter( s => s.tid != race.rid );
         }
-        if(req.MR && req.ohs){
-          systems = systems.filter( s => s.tid == 18 || tileData.green.indexOf(s.tid) > -1);
+        if(req.MR){
+          if(req.legendary && req.anomaly){
+            systems = systems.filter( s => s.tid == 18 || [65, 66, 82].indexOf(s.tid) > -1 || tileData.anomaly.indexOf(s.tid) > -1);
+          }
+          else if(req.ohs){
+            systems = systems.filter( s => s.tid == 18 || tileData.green.indexOf(s.tid) > -1);
+          }
+          else {
+            systems = systems.filter( s => s.tid == 18 && s.tdata.planets[0].occupied === playerID );
+          }
         }
         if(req.edge){
           systems = systems.filter( s => neighbors([s.q, s.r]).toArray().length < 6);
@@ -284,8 +320,73 @@ export const checkObjective = (G, playerID, oid) => {
             return false;
           });
         }
+        if(req.myPlanet && req.enemyPlanet){
+          systems = systems.filter( s => {
+            if(s.tdata.planets && s.tdata.planets.length > 1){
+              return s.tdata.planets.find( p => p.occupied === playerID) &&
+              s.tdata.planets.find( p => p.occupied !== undefined && p.occupied !== playerID)
+            }
+            return false;
+          });
+        }
         if(req.nexus){
           systems = systems.filter( s => s.tid === 82);
+        }
+        if(req.adjacentAnomaly){
+          systems = systems.filter( s => {
+            const neigh = neighbors([s.q, s.r]).toArray().map(n => n.tileId);
+            return neigh.find(n => tileData.anomaly.indexOf(n) > -1);
+          });
+        }
+        if(req.squadron){
+          let systems = G.tiles.filter( s => s.tdata.occupied == playerID && s.tdata.fleet && Object.keys(s.tdata.fleet).length > 0 );
+
+          const goal = systems.some( s => {
+              let sum = 0;
+              Object.keys(s.tdata.fleet).forEach( k => {
+                sum += s.tdata.fleet[k].length;
+              });
+              return sum >= req.squadron;
+          });
+
+          if(goal == 0){
+              return;
+          }
+        }
+        if(req.combinedUnitsProduction){
+          const technologies = getUnitsTechnologies(['spacedock', 'mech', 'infantry', 'pds'], race);
+
+          systems = systems.filter(s => {
+            let sum = 0;
+            if(s.tdata.fleet){
+              Object.keys(s.tdata.fleet).forEach(k => {
+                if(technologies[k] && technologies[k].production){
+                  sum += s.tdata.fleet[k].length * technologies[k].production;
+                }
+              });
+            }
+
+            if(s.tdata.planets){
+              s.tdata.planets.forEach(p => {
+                if(p.units){
+                  Object.keys(p.units).forEach(k => {
+                    if(technologies[k] && technologies[k].production){
+                      sum += p.units[k].length * technologies[k].production;
+                    }
+                  });
+                }
+              });
+            }
+
+            return sum >= req.combinedUnitsProduction;
+
+          });
+        }
+        if(req.adjacentOhs){
+          systems = systems.filter( s => {
+            const neigh = neighbors([s.q, s.r]).toArray().map(n => n.tileId);
+            return neigh.find(n => n != race.rid && tileData.green.indexOf(n) > -1);
+          });
         }
 
         if(systems.length < req.system){
@@ -349,6 +450,11 @@ export const checkObjective = (G, playerID, oid) => {
       planets.forEach(p => sum += p.resources);
 
       if(sum < req.resources) return false;
+    }
+    else if(req.promissory){
+
+      return race.promissory && race.promissory.find(p => p.owner !== undefined && String(p.owner) !== String(playerID));
+
     }
 
     return true;
@@ -1199,3 +1305,7 @@ export const checkIonStorm = (G, fullpath) => {
     return swap;
   });
 }
+
+export const isNumeric = function() {
+  return !isNaN(parseFloat(this)) && isFinite(this);
+};

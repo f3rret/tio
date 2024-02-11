@@ -42,10 +42,10 @@ export const TIO = {
           tiles[i].tdata = produce(tiles[i].tdata, draft => {
             const idx = races.findIndex(r => r.rid === t.tid);
             if(idx > -1){
-              draft.occupied = idx;
+              draft.occupied = String(idx);
 
               for( let j=0; j < draft.planets.length; j++ ){
-                draft.planets[j].occupied = idx;
+                draft.planets[j].occupied = String(idx);
               }
               if(races[idx].startingUnits){
                 draft.fleet = races[idx].startingUnits.fleet;
@@ -198,7 +198,7 @@ export const TIO = {
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
             G.races.forEach(r => {
               //r.secretObjectives.push(...G.secretObjDeck.slice(-2)); //pop & players []
-              r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Establish Hegemony'), players: []});
+              r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Threaten Enemies'), players: []});
               //r.mustDropSecObj = true;
             });
           }

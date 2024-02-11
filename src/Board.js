@@ -443,7 +443,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           moves.moveToTransit(args);
         }
       }
-      else if(advUnitView && advUnitViewTechnology && advUnitView.tile && advUnitView.tile === args.tile){
+      else if(advUnitView && advUnitViewTechnology && advUnitView.tile !== undefined && advUnitView.tile === args.tile){
         if(['infantry', 'fighter', 'mech'].indexOf(args.unit) > -1){
           if(tile && tile.tdata.fleet){
             const carrier = tile.tdata.fleet[advUnitView.unit];
@@ -508,7 +508,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   const getMovePath = useMemo(() => {
 
-    if(activeTile && advUnitView && advUnitView.tile){
+    if(activeTile && advUnitView && advUnitView.tile !== undefined){
       if(String(activeTile.tid) === String(G.tiles[advUnitView.tile].tid)) return [];
       let line;
 
@@ -896,7 +896,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           </Sprite>
         }
 
-        {activeTile && advUnitView && advUnitView.tile && pathIdx === -1 && selectedTile === index &&
+        {activeTile && advUnitView && advUnitView.tile !== undefined && pathIdx === -1 && selectedTile === index &&
           <Sprite interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} alpha={.5} image={'icons/move_step.png'}>
             <Text text={'+'} x={17} y={0} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
           </Sprite>
@@ -1632,13 +1632,16 @@ const getUnitsString = (units) => {
         s += 'F' + units[k].length;
         break;
       case 'warsun':
-        s += 'w' + units[k].length;
+        s += 'W' + units[k].length;
         break;
       case 'dreadnought':
-        s += 'd' + units[k].length;
+        s += 'D' + units[k].length;
         break;
       case 'carrier':
         s += 't' + units[k].length;
+        break;
+      case 'destroyer':
+        s += 'd' + units[k].length;
         break;
       case 'cruiser':
         s += 'c' + units[k].length;
