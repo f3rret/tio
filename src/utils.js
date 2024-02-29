@@ -5,7 +5,7 @@ import { neighbors } from './Grid';
 import { Stage } from 'boardgame.io/core';
 import { createContext } from 'react';
 
-export const NUM_PLAYERS = 1;
+export const NUM_PLAYERS = 2;
 
 export const UNITS_LIMIT = {
   spacedock: 3,
@@ -459,6 +459,36 @@ export const checkObjective = (G, playerID, oid) => {
 
     return true;
 };
+
+export const checkSecretObjective = (G, playerID, oid, param) => {
+
+  const objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
+  if(!objective) return;
+  if(objective.players && objective.players.length) return;
+
+  const makeDialog = () => {
+    G.races[playerID].secretObjectiveConfirm = {oid, text: 'SECRET OBJECTIVE: ' + oid + '. ' + objective.title, 
+    options: [{label: 'Do it immediately'}, {label : 'Next time'}]};
+  }
+
+  if(oid === 'Become a Martyr'){
+    makeDialog();
+    return true;
+  }
+  else if(oid === 'Betray a Friend'){
+    const prs = G.races[playerID].promissory;
+    if(prs && prs.length && !isNaN(parseInt(param))){
+      const enemy = G.races[parseInt(param)];
+
+      if(enemy && prs.find(p => String(p.owner) === String(enemy.rid))){
+        makeDialog();
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
 
 export const getPlanetByName = (tiles, pname) => {
   let planet;

@@ -1295,11 +1295,14 @@ export const Bombardment = () => {
 
     const defenderForces = useMemo(() => {
         const result = {};
-        Object.keys(activePlanet.units).forEach(k => {
-            if(['infantry', 'mech', 'pds'].indexOf(k) > -1){
-                result[k] = activePlanet.units[k];
-            }
-        });
+
+        if(activePlanet.units){
+            Object.keys(activePlanet.units).forEach(k => {
+                if(['infantry', 'mech', 'pds'].indexOf(k) > -1){
+                    result[k] = activePlanet.units[k];
+                }
+            });
+        }
         return result;
     },[activePlanet]);
 
@@ -1439,11 +1442,13 @@ export const Invasion = () => {
             if(G.races[ctx.currentPlayer].combatActionCards.indexOf('Disable')>-1){
                 possible = ['infantry', 'mech'];
             }
-            Object.keys(activePlanet.units).forEach(k => {
-                if(possible.indexOf(k) > -1){
-                    result[k] = activePlanet.units[k];
-                }
-            });
+            if(activePlanet.units){
+                Object.keys(activePlanet.units).forEach(k => {
+                    if(possible.indexOf(k) > -1){
+                        result[k] = activePlanet.units[k];
+                    }
+                });
+            }
         }
 
         return result;

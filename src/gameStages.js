@@ -2,7 +2,23 @@ import { produce } from 'immer';
 import { INVALID_MOVE } from 'boardgame.io/core';
 import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveTechnology, getPlanetByName, 
   completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits, 
-  spliceCombatAC, checkIonStorm } from './utils';
+  spliceCombatAC, checkIonStorm, checkSecretObjective } from './utils';
+
+  
+export const secretObjectiveConfirm = ({G, playerID, events}, oid, y) => {
+  
+  delete G.races[playerID].secretObjectiveConfirm;
+  const objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
+
+  if(!objective) return;
+  if(objective.players && objective.players.length) return;
+
+  if(y === 0){
+    objective.players.push(playerID);
+  }
+
+  if(['Become a Martyr', 'Betray a Friend'].includes(oid)){ events.endStage() }
+}
 
 export const ACTION_CARD_STAGE = {
     moves: {
@@ -1468,11 +1484,12 @@ export const ACTS_STAGES = {
       actionCardPass: ACTION_CARD_STAGE.moves.pass,
       actionCardDone: ACTION_CARD_STAGE.moves.done,
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
-
+      secretObjectiveConfirm,
       chooseAndDestroy: chooseAndDestroyMove,
       endBattle: ({G, events, playerID, ctx}) => {
         const activeTile = G.tiles.find(t => t.active === true);
         let looser;
+        let endLater = false;
 
         if(activeTile.tdata.fleet && !Object.keys(activeTile.tdata.fleet).length && 
         activeTile.tdata.attacker && !Object.keys(activeTile.tdata.attacker).length){ //draft
@@ -1487,6 +1504,8 @@ export const ACTS_STAGES = {
             activeTile.tdata.fleet = {...activeTile.tdata.attacker};
             delete activeTile.tdata.attacker;
             looser = activeTile.tdata.occupied;
+            
+            if(checkSecretObjective(G, playerID, 'Betray a Friend', activeTile.tdata.occupied)){ endLater = true; }
             activeTile.tdata.occupied = playerID;
           }
         }
@@ -1504,7 +1523,7 @@ export const ACTS_STAGES = {
           }
         }
 
-        events.endStage();
+        if(!endLater) { events.endStage(); }
       }
     }
   },
@@ -1845,10 +1864,12 @@ export const ACTS_STAGES = {
       actionCardPass: ACTION_CARD_STAGE.moves.pass,
       actionCardDone: ACTION_CARD_STAGE.moves.done,
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
-
+      secretObjectiveConfirm,
       endBattle: ({G, events, playerID, ctx}) => {
         const activeTile = G.tiles.find(t => t.active === true);
         const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+        let defendersDied = false;
+        let endLater = false;
 
         if(activePlanet){
           const defenderForces = () => {
@@ -1861,7 +1882,9 @@ export const ACTS_STAGES = {
             return result;
           }
 
-          if(!Object.keys(defenderForces()).length && activePlanet.invasion.troops && Object.keys(activePlanet.invasion.troops).length){
+          defendersDied = !Object.keys(defenderForces()).length && activePlanet.invasion.troops && Object.keys(activePlanet.invasion.troops).length;
+
+          if(defendersDied){
             if(ctx.currentPlayer === playerID){
               if(G.races[playerID].combatActionCards && G.races[playerID].combatActionCards.indexOf('Infiltrate')>-1){
                 if(activePlanet.units && activePlanet.units.pds && activePlanet.units.pds.length){
@@ -1877,6 +1900,7 @@ export const ACTS_STAGES = {
 
               if(activePlanet.occupied !== undefined && String(activePlanet.occupied) !== String(playerID)){
                 checkTacticalActionCard({G, events, playerID: String(activePlanet.occupied), atype: 'PLANET_OCCUPIED'});
+                if(checkSecretObjective(G, playerID, 'Betray a Friend', activePlanet.occupied)){ endLater = true; }
               }
               activePlanet.occupied = playerID;
               if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
@@ -1894,7 +1918,13 @@ export const ACTS_STAGES = {
           }
         }
 
-        events.endStage();
+        if(String(ctx.currentPlayer) !== String(playerID)){
+          if(!activePlanet || (String(activePlanet.occupied) === String(ctx.currentPlayer) || defendersDied)){
+            if(checkSecretObjective(G, playerID, 'Become a Martyr')){ endLater = true; }
+          }
+        }
+
+        if(!endLater){events.endStage();}
       },
 
       landTroops: ({G, ctx, events, playerID}, troops) => {

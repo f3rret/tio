@@ -5,11 +5,11 @@ import tileData from './tileData.json';
 import raceData from './raceData.json';
 import techData from './techData.json';
 import cardData from './cardData.json';
-import { ACTION_CARD_STAGE, ACTS_STAGES } from './gameStages';
+import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm } from './gameStages';
 import { produce } from 'immer';
 import { NUM_PLAYERS, checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
- getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm } from './utils';
+ getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective } from './utils';
 
 export const TIO = {
     
@@ -198,7 +198,7 @@ export const TIO = {
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
             G.races.forEach(r => {
               //r.secretObjectives.push(...G.secretObjDeck.slice(-2)); //pop & players []
-              r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Threaten Enemies'), players: []});
+              r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Betray a Friend'), players: []});
               //r.mustDropSecObj = true;
             });
           }
@@ -326,6 +326,7 @@ export const TIO = {
             }
         },
         moves: {
+          secretObjectiveConfirm,
           dropSecretObjective: ({G, playerID}, oid) => { //todo: return obj to deck and shuffle
             if(G.races[playerID].secretObjectives){
               G.races[playerID].secretObjectives = G.races[playerID].secretObjectives.filter(o => o.id !== oid);
@@ -602,9 +603,11 @@ export const TIO = {
             const activePlanet = activeTile.tdata.planets.find(p => p.name === planet.name);
             if(activePlanet.attach && activePlanet.attach.length && activePlanet.attach.indexOf('Demilitarized Zone')>-1) return;
 
+            if(!activePlanet.units) activePlanet.units = {};
+
             const defUnits = Object.keys(activePlanet.units);
-            
             const defTechs = getUnitsTechnologies(defUnits, G.races[planet.occupied]);
+
             G.races[planet.occupied].combatActionCards = [];
             if(defUnits.find(u => defTechs[u] && defTechs[u].planetaryShield)){
               G.races[planet.occupied].combatActionCards.push('PLANETARY SHIELD');
@@ -792,6 +795,7 @@ export const TIO = {
                 explorePlanetByName(G, playerID, to.name);
               }
               else if(to.occupied != playerID){
+                checkSecretObjective(G, to.occupied, 'Become a Martyr');
                 to.occupied = playerID;
                 to.exhausted = true;
               }

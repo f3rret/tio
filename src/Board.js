@@ -1191,6 +1191,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </CardBody>
             </Card>}
 
+            {race.secretObjectiveConfirm && <ChoiceDialog args={race.secretObjectiveConfirm} onSelect={(i)=>moves.secretObjectiveConfirm(race.secretObjectiveConfirm.oid, i)}/>}
             {race.explorationDialog && <ChoiceDialog args={race.explorationDialog} onSelect={(i)=>moves.choiceDialog(i)}/>}
             {!race.isSpectator && ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote} mini={actionCardStage}/>}
             
@@ -1198,13 +1199,15 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}
             {actionCardStage && <ActionCardDialog selectedTile={selectedTile} selectedPlanet={selectedPlanet} selectedUnit={advUnitView}/> }
             
-            {spaceCannonAttack && <SpaceCannonAttack />}
-            {antiFighterBarrage && <AntiFighterBarrage selectedTile={selectedTile}/>}
-            {spaceCombat && <SpaceCombat prevStages={prevStages} selectedTile={selectedTile}/>}
-            {combatRetreat && <CombatRetreat selectedTile={selectedTile}/>}
-            {bombardment && <Bombardment />}
-            {invasion && <Invasion />}
-            {race.mustChooseAndDestroy && <ChooseAndDestroy />}
+            {!race.secretObjectiveConfirm && <>
+              {spaceCannonAttack && <SpaceCannonAttack />}
+              {antiFighterBarrage && <AntiFighterBarrage selectedTile={selectedTile}/>}
+              {spaceCombat && <SpaceCombat prevStages={prevStages} selectedTile={selectedTile}/>}
+              {combatRetreat && <CombatRetreat selectedTile={selectedTile}/>}
+              {bombardment && <Bombardment />}
+              {invasion && <Invasion />}
+              {race.mustChooseAndDestroy && <ChooseAndDestroy />}
+            </>}
 
             {mustAction && 
             <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '30%', position: 'absolute', margin: '20rem 30rem'}}>
