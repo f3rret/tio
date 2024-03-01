@@ -198,7 +198,7 @@ export const TIO = {
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
             G.races.forEach(r => {
               //r.secretObjectives.push(...G.secretObjDeck.slice(-2)); //pop & players []
-              r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Betray a Friend'), players: []});
+              r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Demonstrate Your Power'), players: []});
               //r.mustDropSecObj = true;
             });
           }

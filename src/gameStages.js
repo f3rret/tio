@@ -17,7 +17,7 @@ export const secretObjectiveConfirm = ({G, playerID, events}, oid, y) => {
     objective.players.push(playerID);
   }
 
-  if(['Become a Martyr', 'Betray a Friend'].includes(oid)){ events.endStage() }
+  if(['Become a Martyr', 'Betray a Friend', 'Brave the Void', 'Darken the Skies', 'Demonstrate Your Power'].includes(oid)){ events.endStage() }
 }
 
 export const ACTION_CARD_STAGE = {
@@ -1505,12 +1505,19 @@ export const ACTS_STAGES = {
             delete activeTile.tdata.attacker;
             looser = activeTile.tdata.occupied;
             
-            if(checkSecretObjective(G, playerID, 'Betray a Friend', activeTile.tdata.occupied)){ endLater = true; }
+            if(checkSecretObjective(G, playerID, 'Betray a Friend', activeTile.tdata.occupied)){ endLater = true; } //todo: some objs can be done at same time
+            else if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
+            else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
+            else if(checkSecretObjective(G, playerID, 'Demonstrate Your Power', activeTile.tdata.fleet)){ endLater = true; }
+
             activeTile.tdata.occupied = playerID;
           }
         }
         else if(String(activeTile.tdata.occupied) === String(playerID)){
           looser = ctx.currentPlayer;
+          if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
+          else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
+          else if(checkSecretObjective(G, playerID, 'Demonstrate Your Power', activeTile.tdata.fleet)){ endLater = true; }
           delete activeTile.tdata.attacker;
         }
         G.races[playerID].retreat = undefined;
@@ -1901,8 +1908,12 @@ export const ACTS_STAGES = {
               if(activePlanet.occupied !== undefined && String(activePlanet.occupied) !== String(playerID)){
                 checkTacticalActionCard({G, events, playerID: String(activePlanet.occupied), atype: 'PLANET_OCCUPIED'});
                 if(checkSecretObjective(G, playerID, 'Betray a Friend', activePlanet.occupied)){ endLater = true; }
+                else if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
+                else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
               }
+
               activePlanet.occupied = playerID;
+
               if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
                 if(!activePlanet.units['infantry']) activePlanet.units['infantry']=[];
                 activePlanet.units['infantry'].push({id: 'infantry'});
@@ -1915,6 +1926,8 @@ export const ACTS_STAGES = {
               if(!activePlanet.units['infantry']) activePlanet.units['infantry']=[];
               activePlanet.units['infantry'].push({id: 'infantry'});
             }
+            if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
+            else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
           }
         }
 

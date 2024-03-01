@@ -486,6 +486,35 @@ export const checkSecretObjective = (G, playerID, oid, param) => {
       }
     }
   }
+  else if(oid === 'Brave the Void'){
+    if(!isNaN(param) && tileData.anomaly.includes(param)){
+      makeDialog();
+      return true;
+    }
+  }
+  else if(oid === 'Darken the Skies'){
+    if(!isNaN(param) && tileData.green.includes(param) && param !== G.races[playerID].rid){
+      makeDialog();
+      return true;
+    }
+  }
+  else if(oid === 'Demonstrate Your Power'){
+    if(param && Object.keys(param) && Object.keys(param).length){
+      let ships = 0;
+      Object.keys(param).forEach(key => {
+        if(key !== 'fighter'){
+          if(param[key] && Array.isArray(param[key]) && param[key].length){
+            ships += param[key].length;
+          }
+        }
+      });
+
+      if(ships > 2){
+        makeDialog();
+        return true;
+      }
+    }
+  }
 
   return false;
 }
