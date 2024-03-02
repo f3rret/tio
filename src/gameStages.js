@@ -1191,6 +1191,7 @@ export const ACTS_STAGES = {
       actionCardPass: ACTION_CARD_STAGE.moves.pass,
       actionCardDone: ACTION_CARD_STAGE.moves.done,
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
+      secretObjectiveConfirm,
 
       rollDice: ({G, playerID, random}, unit, count) => {
         const dice = random.D10(count || 1);
@@ -1200,19 +1201,20 @@ export const ACTS_STAGES = {
       },
       nextStep: ({G, events, ctx, playerID}) => {
         spliceCombatAC(G.races[playerID], 'Scramble Frequency');
-
+        let enemyId;
         let hits = {};
         Object.keys(ctx.activePlayers).forEach(pid => {
-            let h = 0;
-            if(G.dice[pid]){
-                Object.keys(G.dice[pid]).forEach(unit => {
-                    const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
-                    if(technology && technology.barrage){
-                        h += G.dice[pid][unit].dice.filter(d => d >= technology.barrage.value).length;
-                    }
-                });
-            }
-            hits[pid] = h;
+          if(String(playerID) !== String(pid)){ enemyId = pid; }
+          let h = 0;
+          if(G.dice[pid]){
+              Object.keys(G.dice[pid]).forEach(unit => {
+                  const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                  if(technology && technology.barrage){
+                      h += G.dice[pid][unit].dice.filter(d => d >= technology.barrage.value).length;
+                  }
+              });
+          }
+          hits[pid] = h;
         });
         
         const activeTile = G.tiles.find(t => t.active === true);
@@ -1242,13 +1244,20 @@ export const ACTS_STAGES = {
               fleet[tag] = fleet[tag].filter(car => car);
             }
           });
+
         }
 
         if(playerID !== ctx.currentPlayer){
           makeHit(activeTile.tdata.attacker, defenderHits);
+          if(defenderHits > 0 && enemyId !== undefined){
+            checkSecretObjective(G, playerID, 'Fight with Precision', activeTile.tdata.attacker);
+          }
         }
         else{
           makeHit(activeTile.tdata.fleet, attackerHits);
+          if(attackerHits > 0 && enemyId !== undefined){
+            checkSecretObjective(G, playerID, 'Fight with Precision', activeTile.tdata.fleet);
+          }
         }
 
         /*if(Object.keys(ctx.activePlayers).filter(k => ctx.activePlayers[k] === 'antiFighterBarrage').length === 1){
@@ -1355,13 +1364,14 @@ export const ACTS_STAGES = {
      actionCardPass: ACTION_CARD_STAGE.moves.pass,
      actionCardDone: ACTION_CARD_STAGE.moves.done,
      actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
+     secretObjectiveConfirm,
 
      chooseAndDestroy: chooseAndDestroyMove,
      nextStep: ({G, playerID, ctx, events}, hits, assaultCannon) => {
       let fleet;
       const activeTile = G.tiles.find(t => t.active === true);
        
-      if(playerID === ctx.currentPlayer){
+      if(String(playerID) === String(ctx.currentPlayer)){
         fleet = activeTile.tdata.attacker;
       }
       else{
@@ -1406,6 +1416,11 @@ export const ACTS_STAGES = {
           if(car.hit > 1 || (car.hit === 1 && !technologies[f].sustain)){
             G.races[playerID].destroyedUnits.push(f); //remember destroyed units
             delete fleet[f][i];
+
+            if(['flagship', 'warsun'].includes(f) && ctx.activePlayers && Object.keys(ctx.activePlayers).length){ //todo: make this check for any kind of destruction
+              const enemyId = Object.keys(ctx.activePlayers).find(a => String(a)!== String(playerID));
+              if(!isNaN(enemyId)) checkSecretObjective(G, parseInt(enemyId), 'Destroy Their Greatest Ship');
+            }
           }
           else if(car.payload && car.payload.length){
             car.payload.forEach((p, idx) => {

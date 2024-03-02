@@ -471,7 +471,7 @@ export const checkSecretObjective = (G, playerID, oid, param) => {
     options: [{label: 'Do it immediately'}, {label : 'Next time'}]};
   }
 
-  if(oid === 'Become a Martyr'){
+  if(oid === 'Become a Martyr' || oid === 'Destroy Their Greatest Ship'){
     makeDialog();
     return true;
   }
@@ -514,6 +514,16 @@ export const checkSecretObjective = (G, playerID, oid, param) => {
         return true;
       }
     }
+  }
+  else if(oid === 'Fight with Precision'){
+    if(param && Object.keys(param)){
+      if(Object.keys(param).find(key => {
+        if(key === 'fighter' && Array.isArray(param[key]) && param[key].length) return true;
+        return param[key].find(car => car.payload && car.payload.find(p => p.id === 'fighter')); 
+      })){ return false; }
+    }
+    makeDialog();
+    return true;
   }
 
   return false;

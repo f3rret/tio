@@ -657,7 +657,7 @@
         "commanderUnlock": "Have 12 fighters on the game board.",
         "heroAbility": "At the end of the status phase: You may force each other player to give you 1 promissory note from their hand. If you do, purge this card.",
         "startingUnits": {
-            "fleet": {"carrier": [{}], "cruiser": [{}], "destroyer": [{}]},
+            "fleet": {"carrier": [{}], "cruiser": [{}], "destroyer": [{},{},{},{},{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "pds": [{}], "fighter": [{},{},{}]}
         },
         "knownTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS", "DARK_ENERGY_TAP"],
