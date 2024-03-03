@@ -188,6 +188,7 @@ export const TIO = {
 
           if(!G.agendaDeck.length){
             G.agendaDeck = random.Shuffle(cardData.agenda);
+            //G.agendaDeck.push({...cardData.agenda.find(a => a.elect === 'Planet')});
           }
 
           if(!G.relicsDeck.length){
@@ -198,7 +199,7 @@ export const TIO = {
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
             G.races.forEach(r => {
               //r.secretObjectives.push(...G.secretObjDeck.slice(-2)); //pop & players []
-              r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Fight with Precision'), players: []});
+              r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Drive the Debate'), players: []});
               //r.mustDropSecObj = true;
             });
           }
@@ -917,10 +918,24 @@ export const TIO = {
 
           },
           pass: ({ G, playerID, events }) => {
+            let endLater = false;
+
             if(G.passedPlayers.indexOf(playerID) === -1){
-              G.passedPlayers.push(playerID);
+              
+              if(G.passedPlayers.length === NUM_PLAYERS - 1){
+                if(checkSecretObjective(G, playerID, 'Prove Endurance')){ 
+                  endLater = true; 
+                }
+                else{
+                  G.passedPlayers.push(playerID);
+                }
+              }
+              else{
+                G.passedPlayers.push(playerID);
+              }
             }
-            events.endTurn();
+
+            if(!endLater){ events.endTurn();}
           },
           trade: ({G, playerID}, args) => {
             const src = G.races[playerID];
@@ -991,7 +1006,7 @@ export const TIO = {
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       },
       stats: {
-        next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
+        next: ({G}) => 'agenda',//G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
         turn: {
           order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
           stages: {
@@ -1134,6 +1149,7 @@ export const TIO = {
         },
 
         moves: {
+          secretObjectiveConfirm,
           vote: ({G, ctx, playerID, events}, result) => {
             let votes = 0;
             const exhaustPlanet = (exhausted, revert) => {
@@ -1172,6 +1188,28 @@ export const TIO = {
 
             if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
               votingProcessDone({G, agendaNumber, playerID, events});
+              
+              if(G['vote' + agendaNumber].type === 'LAW' && G['vote' + agendaNumber].decision.toUpperCase() !== 'AGAINST'){
+                G.laws.push(G['vote' + agendaNumber]);
+              }
+
+              if(G.laws && G.laws.length > 0){
+                G.races.forEach((r, i) => {
+                  checkSecretObjective(G, i, 'Dictate Policy');
+                });
+              }
+
+              if(G['vote' + agendaNumber].elect === 'Player'){
+                const electedRace = G.races.findIndex(r => r.name === G['vote' + agendaNumber].decision);
+                if(electedRace > -1) checkSecretObjective(G, electedRace, 'Drive the Debate');
+              }
+
+              if(G['vote' + agendaNumber].elect.indexOf('Planet') > -1){
+                const planet = getPlanetByName(G.tiles, G['vote' + agendaNumber].decision);
+                if(planet && planet.occupied !== undefined){
+                  checkSecretObjective(G, planet.occupied, 'Drive the Debate');
+                }
+              }
             }
             else if(G.vote2){
               if(G.passedPlayers.indexOf(playerID) === -1){
@@ -1184,6 +1222,10 @@ export const TIO = {
               events.endTurn();
             }
             
+          },
+          endVote: ({G, playerID, events}) => {
+            G.passedPlayers.push(playerID);
+            events.endTurn();
           },
           pass: ({G, playerID, events}) => {
             G.races[playerID].actions.push('PASS');
@@ -1226,15 +1268,20 @@ export const TIO = {
 
           G.passedPlayers = [];
           G.predict = []; //vote prediction by agenda action card
+          if(G.laws && G.laws.length > 2){
+            G.races.forEach((r, i) => {
+              checkSecretObjective(G, i, 'Dictate Policy');
+            });
+          }
         },
 
         onEnd: ({ G, ctx }) => {
           
-          for(var i=1; i<=2; i++){
+          /*for(var i=1; i<=2; i++){
             if(G['vote' + i].type === 'LAW' && G['vote' + i].decision.toUpperCase() !== 'AGAINST'){
               G.laws.push(G['vote' + i]);
             }
-          }
+          }*/
 
           G.vote1 = undefined;
           G.vote2 = undefined;
@@ -1259,7 +1306,7 @@ export const TIO = {
           G.TURN_ORDER = order; //speaker at the begin
         },
 
-        endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
+        endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers * 2
       }
     },
     

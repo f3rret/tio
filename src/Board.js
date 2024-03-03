@@ -1191,9 +1191,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </CardBody>
             </Card>}
 
-            {race.secretObjectiveConfirm && <ChoiceDialog args={race.secretObjectiveConfirm} onSelect={(i)=>moves.secretObjectiveConfirm(race.secretObjectiveConfirm.oid, i)}/>}
             {race.explorationDialog && <ChoiceDialog args={race.explorationDialog} onSelect={(i)=>moves.choiceDialog(i)}/>}
             {!race.isSpectator && ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote} mini={actionCardStage}/>}
+            {race.secretObjectiveConfirm && (ctx.phase !== 'agenda' || isMyTurn) && <ChoiceDialog args={race.secretObjectiveConfirm} onSelect={(i)=>moves.secretObjectiveConfirm(race.secretObjectiveConfirm.oid, i)}/>}
             
             {strategyStage && <StrategyDialog R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
                   onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}

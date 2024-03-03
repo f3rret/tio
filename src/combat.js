@@ -243,7 +243,8 @@ export const SpaceCannonAttack = () => {
                 <span style={{fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>{hits + ' hits '}</span>
             </>}
             {ctx.activePlayers[playerID] === 'spaceCannonAttack_step2' && <>
-                <Button color='warning' disabled= {playerID === ctx.currentPlayer && !allHitsAssigned}  onClick={()=>moves.nextStep(ahits)}>Next</Button>
+                <Button color='warning' disabled= {(playerID === ctx.currentPlayer && !allHitsAssigned) || 
+                    (playerID !== ctx.currentPlayer && ctx.activePlayers[ctx.currentPlayer])}  onClick={()=>moves.nextStep(ahits)}>Next</Button>
                 <span style={{fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
                     {playerID === ctx.currentPlayer ? assigned + ' / ' + hits + ' hits assigned ' + (nonFighterHits ? ' (' + nonFighterHits + ' non-fighter)':''): hits + ' hits '}
                 </span>

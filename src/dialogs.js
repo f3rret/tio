@@ -116,6 +116,9 @@ export const AgendaDialog = ({ onConfirm, mini }) => {
      }, [ctx.activePlayers]);
 
     const myTurn = useMemo(() => String(ctx.currentPlayer) === String(playerID), [ctx.currentPlayer, playerID]);
+    const iAmFinished = useMemo(() => 
+        G.passedPlayers.lastIndexOf(playerID) > G.passedPlayers.indexOf(playerID), [G.passedPlayers, playerID]
+    );
 
     const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
     const a = useMemo(() => G['vote' + agendaNumber], [agendaNumber, G]);
@@ -199,6 +202,8 @@ G.races[playerID].actions.length === agendaNumber &&
 
                 {!afterVoteStage && !actionCardStage && G.vote2 && !G.vote2.decision && agendaNumber < 2 && 
                     <Button color='success' onClick={()=>setAgendaNumber(agendaNumber + 1)} style={{marginTop: '2rem'}}>{'Next'}</Button>}
+                {myTurn && !afterVoteStage && !actionCardStage && G.vote2 && G.vote2.decision && agendaNumber === 2 && !iAmFinished &&
+                    <Button color='success' onClick={()=>moves.endVote()} style={{marginTop: '2rem'}}>{'End'}</Button>}
             </div>
             {!mini && <div style={{width: '50%', overflowY: 'auto', maxHeight: '30rem', marginLeft: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                 <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>

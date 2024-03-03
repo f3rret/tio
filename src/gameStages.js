@@ -17,7 +17,15 @@ export const secretObjectiveConfirm = ({G, playerID, events}, oid, y) => {
     objective.players.push(playerID);
   }
 
-  if(['Become a Martyr', 'Betray a Friend', 'Brave the Void', 'Darken the Skies', 'Demonstrate Your Power'].includes(oid)){ events.endStage() }
+  if(['Become a Martyr', 'Betray a Friend', 'Brave the Void', 'Darken the Skies', 'Demonstrate Your Power', 
+      'Spark a Rebellion', 'Turn Their Fleets to Dust', 'Unveil Flagship'].includes(oid)){ 
+        events.endStage(); 
+  }
+  if(oid === 'Prove Endurance'){ 
+    G.passedPlayers.push(playerID);
+    events.endTurn(); 
+  }
+
 }
 
 export const ACTION_CARD_STAGE = {
@@ -1104,9 +1112,11 @@ export const ACTS_STAGES = {
     actionCardPass: ACTION_CARD_STAGE.moves.pass,
     actionCardDone: ACTION_CARD_STAGE.moves.done,
     actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
+    secretObjectiveConfirm,
 
     nextStep: ({G, playerID, ctx, events}, hits) => {
       let fleet;
+      let endLater = false;
       const activeTile = G.tiles.find(t => t.active === true);
       if(!activeTile.tdata.spaceCannons_done) activeTile.tdata.spaceCannons_done = true;
        
@@ -1168,18 +1178,21 @@ export const ACTS_STAGES = {
         if(!Object.keys(fleet).length){
           if((activeTile.tdata.occupied !== ctx.currentPlayer) && activeTile.tdata.attacker){
             delete activeTile.tdata.attacker;
+            if(checkSecretObjective(G, activeTile.tdata.occupied, 'Turn Their Fleets to Dust')){ endLater = true; }
           }
           else{
             delete activeTile.tdata.fleet;
             delete activeTile.tdata.occupied;
+            if(checkSecretObjective(G, ctx.currentPlayer, 'Turn Their Fleets to Dust')){ endLater = true; }
           }
+          
         }
 
         delete G['spaceCannons'];
       }
      
-      events.endStage();
-     } 
+      if(!endLater){ events.endStage(); }
+    } 
 
     },
   },
@@ -1524,15 +1537,21 @@ export const ACTS_STAGES = {
             else if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
             else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
             else if(checkSecretObjective(G, playerID, 'Demonstrate Your Power', activeTile.tdata.fleet)){ endLater = true; }
+            else if(checkSecretObjective(G, playerID, 'Spark a Rebellion', looser)) { endLater = true; }
+            else if(checkSecretObjective(G, playerID, 'Unveil Flagship', activeTile.tdata.fleet)) { endLater = true; }
 
             activeTile.tdata.occupied = playerID;
           }
         }
         else if(String(activeTile.tdata.occupied) === String(playerID)){
           looser = ctx.currentPlayer;
+
           if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
           else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
           else if(checkSecretObjective(G, playerID, 'Demonstrate Your Power', activeTile.tdata.fleet)){ endLater = true; }
+          else if(checkSecretObjective(G, playerID, 'Spark a Rebellion', looser)) { endLater = true; }
+          else if(checkSecretObjective(G, playerID, 'Unveil Flagship', activeTile.tdata.fleet)) { endLater = true; }
+
           delete activeTile.tdata.attacker;
         }
         G.races[playerID].retreat = undefined;
@@ -1664,7 +1683,7 @@ export const ACTS_STAGES = {
       actionCardPass: ACTION_CARD_STAGE.moves.pass,
       actionCardDone: ACTION_CARD_STAGE.moves.done,
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
-
+      secretObjectiveConfirm,
       rollDice: ({G, playerID, random}, unit, count) => {
         const dice = random.D10(count || 1);
         G.dice = produce(G.dice, draft => {
@@ -1846,6 +1865,12 @@ export const ACTS_STAGES = {
         const defs = defenderForces();
         if(!(activePlanet.invasion.troops && Object.keys(activePlanet.invasion.troops).length) ||
           !(defs && Object.keys(defs).length)){
+          if(prevStages.length === 2 && prevStages[0] === 'bombardment'){
+            if(playerID !== ctx.currentPlayer && Object.keys(ctx.activePlayers)){
+              const enemyId = Object.keys(ctx.activePlayers).find(k => k!== playerID);
+              if(enemyId !== undefined) checkSecretObjective(G, enemyId, 'Make an Example of Their World');
+            }
+          }
           events.setStage('invasion_await'); //end ground battle
         }
         else{
@@ -1925,6 +1950,7 @@ export const ACTS_STAGES = {
                 if(checkSecretObjective(G, playerID, 'Betray a Friend', activePlanet.occupied)){ endLater = true; }
                 else if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
                 else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
+                else if(checkSecretObjective(G, playerID, 'Spark a Rebellion', activePlanet.occupied)) { endLater = true; }
               }
 
               activePlanet.occupied = playerID;
@@ -1943,6 +1969,7 @@ export const ACTS_STAGES = {
             }
             if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
             else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
+            else if(checkSecretObjective(G, playerID, 'Spark a Rebellion', ctx.currentPlayer)) { endLater = true; }
           }
         }
 

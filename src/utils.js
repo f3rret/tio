@@ -463,6 +463,7 @@ export const checkObjective = (G, playerID, oid) => {
 export const checkSecretObjective = (G, playerID, oid, param) => {
 
   const objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
+console.log(oid, objective);
   if(!objective) return;
   if(objective.players && objective.players.length) return;
 
@@ -471,7 +472,8 @@ export const checkSecretObjective = (G, playerID, oid, param) => {
     options: [{label: 'Do it immediately'}, {label : 'Next time'}]};
   }
 
-  if(oid === 'Become a Martyr' || oid === 'Destroy Their Greatest Ship'){
+  if(['Become a Martyr', 'Destroy Their Greatest Ship', 'Make an Example of Their World', 
+  'Prove Endurance', 'Turn Their Fleets to Dust', 'Dictate Policy', 'Drive the Debate'].includes(oid)){
     makeDialog();
     return true;
   }
@@ -524,6 +526,21 @@ export const checkSecretObjective = (G, playerID, oid, param) => {
     }
     makeDialog();
     return true;
+  }
+  else if(oid === 'Spark a Rebellion'){
+    if(param && !isNaN(param) && G.races[param]){
+      const enemyVP = getVP(G, parseInt(param));
+      if(!G.races.find((r,i) => getVP(G,i) > enemyVP)){
+        makeDialog();
+        return true;
+      }
+    }
+  }
+  else if(oid === 'Unveil Flagship'){
+    if(param && param['flagship'] && param['flagship'].length){
+      makeDialog();
+      return true;
+    }
   }
 
   return false;
@@ -1378,3 +1395,20 @@ export const checkIonStorm = (G, fullpath) => {
 export const isNumeric = function() {
   return !isNaN(parseFloat(this)) && isFinite(this);
 };
+
+export const getVP = function(G, playerID) {
+  let result = 0;
+  const race = G.races[playerID];
+
+  if(race){
+    race.secretObjectives.concat(G.pubObjectives).forEach(o => {
+      if(o && o.players && o.players.length > 0){
+        if(o.players.indexOf(playerID) > -1) result += (o.vp ? o.vp : 1);
+      }
+    });
+
+    result += race.vp;
+  }
+
+  return result;
+}
