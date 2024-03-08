@@ -13,7 +13,7 @@ import { NUM_PLAYERS, checkTacticalActionCard, getUnitsTechnologies, haveTechnol
 
 export const TIO = {
     
-    setup: () => {
+    setup: (setupData) => {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
@@ -77,6 +77,7 @@ export const TIO = {
       }
 
       return {
+        matchName: setupData.matchName || 'New game',
         speaker: races[0].rid, 
         tiles,
         pubObjectives: [],
@@ -93,6 +94,9 @@ export const TIO = {
       }
     },
 
+    minPlayers: 1,
+    maxPlayers: 8,
+    
     phases: {
       strat: {
         start: true,

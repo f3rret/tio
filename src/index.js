@@ -1,15 +1,21 @@
 import React from 'react';
+import { Lobby } from './lobby';
 import ReactDOM from 'react-dom/client';
-//import './index.css';
-import {App, AppLocal} from './App';
+//import {App, AppLocal} from './App';
+
+/*import { TIO } from './Game';
+import { TIOBoard } from './Board';/*
+
+
 //import reportWebVitals from './reportWebVitals';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-
-const url = new URL(window.location.href);
-const params = url.searchParams;
+//import './index.css';
 //<React.StrictMode>
 //</React.StrictMode>
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+/*const url = new URL(window.location.href);
+const params = url.searchParams;
+
 const pid = params.get('playerID') == null ? '0' : params.get('playerID');
 
 if(!params.get('multiplayer')){
@@ -21,7 +27,10 @@ else{
   root.render( 
     <App playerID={pid}/>
   )
-}
+}*/
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Lobby/>);
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

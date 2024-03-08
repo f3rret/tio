@@ -1346,7 +1346,7 @@ export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
             if(race.knownTechs.indexOf(t.id) > -1) color = 'success';
             if(selected.indexOf(t.id) > -1) color = 'warning';
             
-            return <ListGroupItem onClick={()=>ItemOnClick(t)} key={i} style={{opacity: race.exhaustedCards.indexOf(t.id)>-1 ? .35:1, background: 'none', padding: '.25rem', color: 'white', borderBottom: 'solid 1px rgba(255,255,255,.15)'}} >
+            return <ListGroupItem onClick={()=>ItemOnClick(t)} key={i} style={{opacity: race.exhaustedCards.indexOf(t.id)>-1 ? .35:1, background: 'none', padding: '.25rem', color: 'white', border: 'none', borderBottom: 'solid 1px rgba(255,255,255,.15)'}} >
                 <Button size='sm' color={color} id={t.id} style={{width: '100%', fontSize: '.7rem', textAlign: 'left'}}>
                 {t.id.replaceAll('_', ' ').replaceAll('2', ' II')}
                 {t.racial && <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.6rem'}} src={'race/icons/'+ race.rid +'.png'}/>}

@@ -1168,7 +1168,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         <div style={{width: 'auto'}}>
                           {r && r!== true && <div style={{position: 'absolute', left: '0', width: '100%'}}>
                                   <img alt='race icon' src={'race/icons/'+r.rid+'.png'} style={{marginTop: '-.5rem', float: 'left', width: '3rem'}}/>
-                                  <h5 style={{marginLeft: '4rem'}}>{r.name}</h5>
+                                  <h5 style={{marginLeft: '4rem', color: 'black'}}>{r.name}</h5>
                                 </div>}
                         </div>
                         <Button className='btn_hoverable' onMouseEnter={()=>setStrategyHover(key)} disabled = {r !== undefined} onClick={() => moves.pickStrategy(key)} size='sm' color='dark' 

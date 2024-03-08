@@ -22,3 +22,4 @@ export const AppLocal = Client({
   multiplayer: Local(),
   debug: { impl: Debug, collapseOnLoad: true }
 });
+
