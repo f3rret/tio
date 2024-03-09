@@ -12,8 +12,11 @@ import { NUM_PLAYERS, checkTacticalActionCard, getUnitsTechnologies, haveTechnol
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective } from './utils';
 
 export const TIO = {
-    
-    setup: (setupData) => {
+    name: 'TIO',
+    validateSetupData: (setupData, numPlayers) => {
+      //console.log(setupData, numPlayers)
+    },
+    setup: ({ctx}, setupData) => {
       const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
       const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
                   .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
@@ -28,10 +31,11 @@ export const TIO = {
             r.technologies.push(t);
           }
           else{
-            tch.racial = true;
+            console.log(r.name, tch.id)
+            //tch.racial = true;
           }
         });
-        r.promissory.forEach(r => r.racial = true);
+        //r.promissory.forEach(r => r.racial = true);
         r.promissory.push(...cardData.promissory);
 
         //r.actionCards.push(...cardData.actions.slice(70, 76)); //test only

@@ -330,10 +330,10 @@
     },
 
     "promissory": [
-        {"id": "TRADE_AGREEMENT", "effect": "When the [color of card] player replenishes commodities: The [color of card] player gives you all of his commodities. Then, return this card to the [color of card] player."},
-        {"id": "POLITICAL_SECRET", "effect": "When an agenda is revealed: The [color of card] player cannot vote, play action cards, or use faction abilities until after that agenda is resolved. Then, return this card to the [color of card] player."},
-        {"id": "CEASEFIRE", "effect": "After the [color of card] player activates a system that contains 1 or more of your units: The [color of card] player cannot move units into the active system. Then, return this card to the [color of card] player."},
-        {"id": "SUPPORT_FOR_THE_THRONE", "effect": "When you receive this card, if you are not the [color of card] player, you must place it faceup in your play area and gain 1 victory point. If you activate a system that contains 1 or more of the [color of card] player's units, or if the [color of card] player is eliminated, lose 1 victory point and return this card to the [color of card] player."},
-        {"id": "ALLIANCE", "effect": "When you receive this card, if you are not the (color) player, you must place it face up in your play area. While this card is in your play area, you can use the (color) player's commander ability, if it is unlocked. If you activate a system that contains 1 or more of the (color) player's units, return this card to the (color) player"}
+        {"id": "TRADE_AGREEMENT", "racial": false, "effect": "When the [color of card] player replenishes commodities: The [color of card] player gives you all of his commodities. Then, return this card to the [color of card] player."},
+        {"id": "POLITICAL_SECRET", "racial": false, "effect": "When an agenda is revealed: The [color of card] player cannot vote, play action cards, or use faction abilities until after that agenda is resolved. Then, return this card to the [color of card] player."},
+        {"id": "CEASEFIRE", "racial": false, "effect": "After the [color of card] player activates a system that contains 1 or more of your units: The [color of card] player cannot move units into the active system. Then, return this card to the [color of card] player."},
+        {"id": "SUPPORT_FOR_THE_THRONE", "racial": false, "effect": "When you receive this card, if you are not the [color of card] player, you must place it faceup in your play area and gain 1 victory point. If you activate a system that contains 1 or more of the [color of card] player's units, or if the [color of card] player is eliminated, lose 1 victory point and return this card to the [color of card] player."},
+        {"id": "ALLIANCE", "racial": false, "effect": "When you receive this card, if you are not the (color) player, you must place it face up in your play area. While this card is in your play area, you can use the (color) player's commander ability, if it is unlocked. If you activate a system that contains 1 or more of the (color) player's units, return this card to the (color) player"}
     ]
 }

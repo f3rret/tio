@@ -19,6 +19,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
+                "racial": true,
                 "type": "unit",
                 "description": "GENESIS",
                 "prereq": {  },
@@ -33,6 +34,7 @@
             },
             {
                 "id": "MECH",
+                "racial": true,
                 "type": "unit",
                 "description": "ZS THUNDERBOLT M2",
                 "prereq": { },
@@ -44,6 +46,7 @@
             },
             {
                 "id": "CARRIER",
+                "racial": true,
                 "type": "unit",
                 "description": "ADVANCED CARRIER I",
                 "prereq": { },
@@ -58,6 +61,7 @@
             },
             {
                 "id": "INFANTRY",
+                "racial": true,
                 "type": "unit",
                 "description": "SPEC OPS I",
                 "prereq": { },
@@ -68,6 +72,7 @@
             },
             {
                 "id": "CARRIER2",
+                "racial": true,
                 "type": "unit",
                 "upgrade": true,
                 "description": "ADVANCED CARRIER II",
@@ -83,6 +88,7 @@
             },
             {
                 "id": "INFANTRY2",
+                "racial": true,
                 "type": "unit",
                 "upgrade": true,
                 "description": "SPEC OPS II",
@@ -97,6 +103,7 @@
         "promissory": [
             {
                 "id": "MILITARY_SUPPORT",
+                "racial": true,
                 "when": "ACT_TURN",
                 "effect": "At the start of the Sol player’s turn: Remove 1 token from the Sol player’s strategy pool, if able, and return it to his reinforcements. Then, you may place 2 infantry from your reinforcements on any planet you control." 
             }
@@ -121,6 +128,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
+                "racial": true,
                 "type": "unit",
                 "description": "FOURTH MOON",
                 "prereq": {  },
@@ -136,6 +144,7 @@
             },
             {
                 "id": "MECH",
+                "racial": true,
                 "type": "unit",
                 "description": "MOLL TERMINUS",
                 "prereq": { },
@@ -165,6 +174,7 @@
         "promissory": [
             {
                 "id": "PROMISE_OF_PROTECTION",
+                "racial": true,
                 "type": "ACTION",
                 "effect": "Place this card faceup in your play area. While this card is in your play area, the Mentak player cannot use his PILLAGE faction ability against you. If you activate a system that contains 1 or more of the Mentak player’s units, return this card." 
             }
@@ -190,6 +200,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
+                "racial": true,
                 "type": "unit",
                 "description": "VAN HAUGE",
                 "prereq": {  },
@@ -205,6 +216,7 @@
             },
             {
                 "id": "MECH",
+                "racial": true,
                 "type": "unit",
                 "description": "MOYIN’S ASHES",
                 "prereq": { },
@@ -234,6 +246,7 @@
         "promissory": [
             {
                 "id": "GREYFIRE_MUTAGEN",
+                "racial": true,
                 "when": "COMBAT",
                 "effect": "At the start of a ground combat against 2 or more ground forces that are not controlled by the Yin player: Replace 1 of your opponent’s infantry with 1 infantry from your reinforcements. Then, return this card to the Yin player." 
             }
@@ -260,6 +273,7 @@
             {
                 "id": "FLAGSHIP",
                 "type": "unit",
+                "racial": true,
                 "description": "THE INFERNO",
                 "prereq": {  },
                 "cost": 8,
@@ -275,6 +289,7 @@
             {
                 "id": "MECH",
                 "type": "unit",
+                "racial": true,
                 "description": "EMBER COLOSSUS",
                 "prereq": { },
                 "cost": 2,
@@ -286,6 +301,7 @@
             {
                 "id": "WARSUN",
                 "type": "unit",
+                "racial": true,
                 "description": "PROTOTYPE WAR SUN I",
                 "prereq": { },
                 "cost": 12,
@@ -309,6 +325,7 @@
             {
                 "id": "WARSUN2",
                 "type": "unit",
+                "racial": true,
                 "upgrade": true,
                 "description": "PROTOTYPE WAR SUN II",
                 "prereq": { },
@@ -326,6 +343,7 @@
         "promissory": [
             {
                 "id": "FIRES_OF_GASHLAI",
+                "racial": true,
                 "type": "ACTION",
                 "effect": "Remove 1 token from the Muaat player’s fleet pool and return it to his reinforcements. Then, gain your war sun unit upgrade technology card. Then, return this card to the Muaat player." 
             }
@@ -352,6 +370,7 @@
             {
                 "id": "FLAGSHIP",
                 "type": "unit",
+                "racial": true,
                 "description": "DUHA MENAIMON",
                 "prereq": {  },
                 "cost": 8,
@@ -367,6 +386,7 @@
             {
                 "id": "INFANTRY",
                 "type": "unit",
+                "racial": true,
                 "description": "LETANI WARRIOR I",
                 "prereq": { },
                 "cost": 0.5,
@@ -378,6 +398,7 @@
             {
                 "id": "MECH",
                 "type": "unit",
+                "racial": true,
                 "description": "LETANI BEHEMOTH",
                 "prereq": { },
                 "cost": 2,
@@ -399,6 +420,7 @@
             {
                 "id": "INFANTRY2",
                 "type": "unit",
+                "racial": true,
                 "upgrade": true,
                 "description": "LETANI WARRIOR II",
                 "prereq": { },
@@ -413,6 +435,7 @@
         "promissory": [
             {
                 "id": "STYMIE",
+                "racial": true,
                 "when": "AFTER_MOVE",
                 "effect": "After another player moves ships into a system that contains 1 or more of your units: You may place 1 command token from that player’s reinforcements in any non-home system. Then, return this card to the Arborec player." 
             }
@@ -439,6 +462,7 @@
             {
                 "id": "FLAGSHIP",
                 "type": "unit",
+                "racial": true,
                 "description": "0.0.1",
                 "prereq": {  },
                 "cost": 8,
@@ -454,6 +478,7 @@
             {
                 "id": "MECH",
                 "type": "unit",
+                "racial": true,
                 "description": "ANNIHILATOR",
                 "prereq": { },
                 "cost": 2,
@@ -466,6 +491,7 @@
             {
                 "id": "DREADNOUGHT",
                 "type": "unit",
+                "racial": true,
                 "description": "SUPER-DREADNOUGHT I",
                 "prereq": { },
                 "cost": 4,
@@ -488,6 +514,7 @@
             {
                 "id": "DREADNOUGHT2",
                 "type": "unit",
+                "racial": true,
                 "upgrade": true,
                 "description": "SUPER-DREADNOUGHT II",
                 "prereq": { "propulsion": 2, "cybernetic": 1},
@@ -506,6 +533,7 @@
         "promissory": [
             {
                 "id": "CYBERNETIC_ENHANCEMENTS",
+                "racial": true,
                 "when": "STAT_TURN",
                 "effect": "When you gain command tokens during the status phase: Gain 1 additional command token. Then, return this card to the L1Z1X player." 
             }
@@ -533,6 +561,7 @@
             {
                 "id": "FLAGSHIP",
                 "type": "unit",
+                "racial": true,
                 "description": "SALAI SAI CORIAN",
                 "prereq": {  },
                 "cost": 8,
@@ -547,6 +576,7 @@
             {
                 "id": "MECH",
                 "type": "unit",
+                "racial": true,
                 "description": "RECLAIMER",
                 "prereq": { },
                 "cost": 2,
@@ -575,6 +605,7 @@
         "promissory": [
             {
                 "id": "ACQUIESCENCE",
+                "racial": true,
                 "when": "ACT_STRAT",
                 "effect": "When the Winnu player resolves a strategic action: You do not have to spend or place a command token to resolve the secondary ability of that strategy card. Then, return this card to the Winnu player." 
             }
@@ -602,6 +633,7 @@
             {
                 "id": "FLAGSHIP",
                 "type": "unit",
+                "racial": true,
                 "description": "THE ALASTOR",
                 "prereq": {  },
                 "cost": 8,
@@ -645,6 +677,7 @@
         "promissory": [
             {
                 "id": "ANTI-VIRUS",
+                "racial": true,
                 "when": "COMBAT",
                 "effect": "At the start of a combat: Place this card faceup in your play area. While this card is in your play area, the Nekro player cannot use his TECHNOLOGICAL SINGULARITY ability against you." 
             }
@@ -669,7 +702,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "MATRIARCH",
                 "prereq": {  },
                 "cost": 8,
@@ -684,7 +717,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "ICONOCLAST",
                 "prereq": { },
                 "cost": 2,
@@ -695,7 +728,7 @@
             },
             {
                 "id": "FIGHTER",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "HYBRID CRYSTAL FIGHTER I",
                 "prereq": { },
                 "cost": 0.5,
@@ -717,7 +750,7 @@
             },
             {
                 "id": "FIGHTER2",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "upgrade": true,
                 "description": "HYBRID CRYSTAL FIGHTER II",
                 "prereq": { "biotic": 1, "propulsion": 1 },
@@ -736,6 +769,7 @@
         "promissory": [
             {
                 "id": "GIFT_OF_PRESCIENCE",
+                "racial": true,
                 "when": "STRAT_TURN",
                 "effect": "At the end of the strategy phase: Place this card faceup in your play area and place the Naalu '0' token on your strategy card; you are first in initiative order." 
             }
@@ -761,7 +795,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "ARC SECUNDUS",
                 "prereq": {  },
                 "cost": 8,
@@ -776,7 +810,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "DUNLAIN REAPER",
                 "prereq": { },
                 "cost": 2,
@@ -805,6 +839,7 @@
         "promissory": [
             {
                 "id": "WAR_FUNDING",
+                "racial": true,
                 "when": "COMBAT",
                 "effect": "After you and your opponent roll dice during space combat: You may reroll all of your opponent’s dice. You may reroll any number of your dice. Then, return this card to the Letnev player." 
             }
@@ -830,7 +865,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "SON OF RAGH",
                 "prereq": {  },
                 "cost": 8,
@@ -844,7 +879,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "SCAVENGER ZETA",
                 "prereq": { },
                 "cost": 2,
@@ -855,7 +890,7 @@
             },
             {
                 "id": "SPACEDOCK",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "FLOATING FACTORY I",
                 "prereq": { },
                 "move": 1,
@@ -873,7 +908,7 @@
             },
             {
                 "id": "SPACEDOCK2",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "upgrade": true,
                 "description": "FLOATING FACTORY II",
                 "prereq": { "cybernetic": 2 },
@@ -886,6 +921,7 @@
         "promissory": [
             {
                 "id": "RAGHS_CALL",
+                "racial": true,
                 "when": "COMBAT",
                 "effect": "After you commit 1 or more of your units to land on a planet: Remove all of the Saar player’s ground forces from that planet and place them on a planet controlled by the Saar player." 
             }
@@ -913,7 +949,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "J.N.S. HYLARIM",
                 "prereq": {  },
                 "cost": 8,
@@ -928,7 +964,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "SHIELD PALING",
                 "prereq": { },
                 "cost": 2,
@@ -957,6 +993,7 @@
         "promissory": [
             {
                 "id": "RESEARCH_AGREEMENT",
+                "racial": true,
                 "when": "RESEARCH",
                 "effect": "After the Jol-Nar player researches a technology that is not a faction technology: Gain that technology. Then, return this card to the Jol-Nar player." 
             }
@@ -980,7 +1017,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "C'MORRAN N'ORR",
                 "prereq": {  },
                 "cost": 8,
@@ -995,7 +1032,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "VALKYRIE EXOSKELETON",
                 "prereq": { },
                 "cost": 2,
@@ -1006,7 +1043,7 @@
             },
             {
                 "id": "DREADNOUGHT",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "EXOTRIREME I",
                 "prereq": { },
                 "cost": 4,
@@ -1028,7 +1065,7 @@
             },
             {
                 "id": "DREADNOUGHT2",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "upgrade": true,
                 "description": "EXOTRIREME II",
                 "prereq": { "propulsion": 2, "cybernetic": 1 },
@@ -1047,6 +1084,7 @@
         "promissory": [
             {
                 "id": "TEKKLAR_LEGION",
+                "racial": true,
                 "when": "COMBAT",
                 "effect": "At the start of an invasion combat: Apply +1 to the result of each of your unit’s combat rolls during this combat. If your opponent is the N’orr player, apply -1 to the result of each of his unit’s combat rolls during this combat." 
             }
@@ -1073,7 +1111,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "LONCARA SSODU",
                 "prereq": {  },
                 "cost": 8,
@@ -1089,7 +1127,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "INDOMITUS",
                 "prereq": { },
                 "cost": 2,
@@ -1119,6 +1157,7 @@
         "promissory": [
             {
                 "id": "POLITICAL_FAVOR",
+                "racial": true,
                 "when": "AGENDA",
                 "effect": "When an agenda is revealed: Remove 1 token from the Xxcha player’s strategy pool and return it to his reinforcements. Then, discard the revealed agenda and reveal 1 agenda from the top of the deck. Players vote on this agenda instead." 
             }
@@ -1145,7 +1184,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "Y’SIA Y’SSRILA",
                 "prereq": {  },
                 "cost": 8,
@@ -1160,7 +1199,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "BLACKSHADE INFILTRATOR",
                 "prereq": { },
                 "cost": 2,
@@ -1189,6 +1228,7 @@
         "promissory": [
             {
                 "id": "SPY_NET",
+                "racial": true,
                 "when": "ACT_TURN",
                 "effect": "At the start of your turn: Look at the Yssaril player’s hand of action cards. Choose 1 of those cards and add it to your hand. Then, return this card to the Yssaril player." 
             }
@@ -1214,7 +1254,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "WRATH OF KENARA",
                 "prereq": {  },
                 "cost": 8,
@@ -1229,7 +1269,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "PRIDE OF KENARA",
                 "prereq": { },
                 "cost": 2,
@@ -1258,6 +1298,7 @@
         "promissory": [
             {
                 "id": "TRADE_CONVOYS",
+                "racial": true,
                 "type": "ACTION",
                 "effect": "Place this card faceup in your play area. While this card is in your play area, you may negotiate transactions with players who are not your neighbor. If you activate a system that contains 1 or more of the Hacan player’s units, return this card to the Hacan player." 
             }
@@ -1284,7 +1325,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "HIL COLISH",
                 "prereq": {  },
                 "cost": 8,
@@ -1299,7 +1340,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "ICARUS DRIVE",
                 "prereq": { },
                 "cost": 2,
@@ -1328,6 +1369,7 @@
         "promissory": [
             {
                 "id": "CREUSS_IFF",
+                "racial": true,
                 "when": "ACT_TURN",
                 "effect": "At the start of your turn during the action phase: Place or move a Creuss wormhole token into either a system that contains a planet you control or a non-home system that does not contain another player’s ships." 
             }
@@ -1354,7 +1396,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "ARVICON REX",
                 "prereq": {  },
                 "cost": 8,
@@ -1369,7 +1411,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "STARLANCER",
                 "prereq": { },
                 "cost": 2,
@@ -1380,7 +1422,7 @@
             },
             {
                 "id": "INFANTRY",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "CRIMSON LEGIONNAIRE I",
                 "prereq": { },
                 "cost": 0.5,
@@ -1399,7 +1441,7 @@
             },
             {
                 "id": "INFANTRY2",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "upgrade": true,
                 "description": "CRIMSON LEGIONNAIRE II",
                 "prereq": { },
@@ -1413,6 +1455,7 @@
         "promissory": [
             {
                 "id": "SCEPTER_OF_DOMINION",
+                "racial": true,
                 "when": "STRAT_TURN",
                 "effect": "At the start of the strategy phase: Choose 1 non-home system that contains your units; each other player who has a token on the Mahact command sheet places a token from their reinforcements into that system." 
             }
@@ -1442,7 +1485,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "MEMORIA I",
                 "prereq": {  },
                 "cost": 8,
@@ -1457,7 +1500,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "QUANTUM MANIPULATOR",
                 "prereq": { },
                 "cost": 2,
@@ -1476,7 +1519,7 @@
             },
             {
                 "id": "FLAGSHIP2",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "upgrade": true,
                 "description": "MEMORIA II",
                 "prereq": { "biotic": 1, "propulsion": 1, "cybernetic": 1 },
@@ -1494,6 +1537,7 @@
         "promissory": [
             {
                 "id": "THE_CAVALRY",
+                "racial": true,
                 "when": "COMBAT",
                 "effect": "At the start of a space combat against a player other than the Nomad: During this combat, treat 1 of your non-fighter ships as if it has the SUSTAIN DAMAGE ability, combat value, and ANTI-FIGHTER BARRAGE values of the Nomad’s flagship. Return this card to the Nomad player at the end of the combat." 
             }
@@ -1520,7 +1564,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "THE TERROR BETWEEN",
                 "prereq": {  },
                 "cost": 8,
@@ -1534,7 +1578,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "REANIMATOR",
                 "prereq": { },
                 "cost": 2,
@@ -1545,7 +1589,7 @@
             },
             {
                 "id": "SPACEDOCK",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "DIMENSIONAL TEAR I",
                 "prereq": { },
                 "production": 5,
@@ -1554,7 +1598,7 @@
             },
             {
                 "id": "SPACEDOCK2",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "upgrade": true,
                 "description": "DIMENSIONAL TEAR II",
                 "prereq": { "cybernetic": 2 },
@@ -1574,6 +1618,7 @@
         "promissory": [
             {
                 "id": "CRUCIBLE",
+                "racial": true,
                 "when": "ACT_TURN",
                 "effect": "After you activate a system: Your ships do not roll for gravity rifts during this movement; apply an additional +1 to the move values of your ships that would move out of or through a gravity rift instead." 
             }
@@ -1599,7 +1644,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "OURANOS",
                 "prereq": {  },
                 "cost": 8,
@@ -1613,7 +1658,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "HECATONCHEIRES",
                 "prereq": { },
                 "cost": 2,
@@ -1624,7 +1669,7 @@
             },
             {
                 "id": "CRUISER",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "SATURN ENGINE I",
                 "prereq": { },
                 "cost": 2,
@@ -1638,7 +1683,7 @@
             },
             {
                 "id": "PDS",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "HEL-TITAN I",
                 "prereq": { },
                 "combat": 7,
@@ -1650,7 +1695,7 @@
             },
             {
                 "id": "CRUISER2",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "upgrade": true,
                 "description": "SATURN ENGINE II",
                 "prereq": { "biotic": 1, "cybernetic": 1, "warfare": 1 },
@@ -1665,7 +1710,7 @@
             },
             {
                 "id": "PDS2",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "upgrade": true,
                 "description": "HEL-TITAN II",
                 "prereq": { "cybernetic": 1, "warfare": 1 },
@@ -1680,6 +1725,7 @@
         "promissory": [
             {
                 "id": "TERRAFORM",
+                "racial": true,
                 "type": "ACTION",
                 "effect": "Attach this card to a non-home planet you control other than Mecatol Rex. Its resource and influence values are each increased by 1, and it is treated as having all 3 planet traits." 
             }
@@ -1706,7 +1752,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "DYNAMO",
                 "prereq": {  },
                 "cost": 8,
@@ -1721,7 +1767,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "WATCHER",
                 "prereq": { },
                 "cost": 2,
@@ -1750,11 +1796,13 @@
         "promissory": [
             {
                 "id": "BLOOD_PACT",
+                "racial": true,
                 "type": "ACTION",
                 "effect": "Place this card faceup in your play area. When you and the Empyrean player cast votes for the same outcome, cast 4 additional votes for that outcome. If you activate a system that contains 1 or more of the Empyrean player’s units, return this card to the Empyrean player." 
             },
             {
                 "id": "DARK_PACT",
+                "racial": true,
                 "type": "ACTION",
                 "effect": "Place this card faceup in your play area. When you give a number of commodities to the Empyrean player equal to your maximum commodity value, you each gain 1 trade good.  If you activate a system that contains 1 or more of the Empyrean player’s units, return this card to the Empyrean player." 
             }
@@ -1780,7 +1828,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "VISZ EL VIR",
                 "prereq": {  },
                 "cost": 8,
@@ -1795,7 +1843,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "EIDOLON",
                 "prereq": { },
                 "cost": 2,
@@ -1806,7 +1854,7 @@
             },
             {
                 "id": "MECH Z-GRAV",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "Z-GRAV EIDOLON",
                 "prereq": { },
                 "cost": 2,
@@ -1835,6 +1883,7 @@
         "promissory": [
             {
                 "id": "BLACK_MARKET_FORGERY",
+                "racial": true,
                 "type": "ACTION",
                 "effect": "Purge 2 of your relic fragments of the same type to gain 1 relic. Then, return this card to the Naaz-Rokha player." 
             }
@@ -1861,7 +1910,7 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "QUETZECOATL",
                 "prereq": {  },
                 "cost": 8,
@@ -1876,7 +1925,7 @@
             },
             {
                 "id": "MECH",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "AERIE SENTINEL",
                 "prereq": { },
                 "cost": 2,
@@ -1887,7 +1936,7 @@
             },
             {
                 "id": "DESTROYER",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "description": "STRIKE WING ALPHA I",
                 "prereq": { },
                 "cost": 1,
@@ -1907,7 +1956,7 @@
             },
             {
                 "id": "DESTROYER2",
-                "type": "unit",
+                "type": "unit", "racial": true,
                 "upgrade": true,
                 "description": "STRIKE WING ALPHA II",
                 "prereq": { "warfare": 2 },
@@ -1922,6 +1971,7 @@
         "promissory": [
             {
                 "id": "STRIKE_WING_AMBUSCADE",
+                "racial": true,
                 "when": "ROLL",
                 "effect": "When 1 or more of your units make a roll for a unit ability: Choose 1 of those units to roll 1 additional die. Then, return this card to the Argent player." 
             }
