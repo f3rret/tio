@@ -13,6 +13,7 @@ export const Lobby = ()=> {
     const [prematchInfo, setPrematchInfo] = useState();
     const [prematchID, setPrematchID] = useState();
     const [playerCreds, setPlayerCreds] = useState();
+    const [playerID, setPlayerID] = useState();
     const [playerName, setPlayerName] = useState(playerNames[0]);
     
     const lobbyClient = useMemo(() => new LobbyClient({ server: 'http://localhost:8000' }), []);
@@ -34,13 +35,34 @@ export const Lobby = ()=> {
         })
     }, []);
 
+    const getPrematch = useCallback(() => {
+        lobbyClient.getMatch('prematch', prematchID)
+        .then(data => {
+            data.setupData && setPrematchInfo(data);
+        })
+        .catch(console.err);
+    }, [lobbyClient, prematchID]);
+
     const joinPrematch = useCallback(() => {
         lobbyClient.joinMatch('prematch', prematchID, {
             playerName: playerNames[0]
         })
-        .then(data => {data.playerCredentials && setPlayerCreds(data.playerCredentials)})
+        .then(data => {
+            data.playerCredentials && setPlayerCreds(data.playerCredentials);
+            data.playerID !== undefined && setPlayerID(data.playerID)})
         .catch(console.err);
     }, [prematchID, playerNames, lobbyClient]);
+
+    const leavePrematch = useCallback(() => {
+        lobbyClient.leaveMatch('prematch', prematchID, {
+            playerID, 
+            credentials: playerCreds 
+        })
+        .then(() => {
+            setPlayerID(null); 
+            setPlayerCreds(null)})
+        .catch(console.err)
+    }, [prematchID, playerID, playerCreds, lobbyClient]);
 
     const createPrematch = useCallback(() => {
         lobbyClient.createMatch('prematch', prematchInfo)
@@ -56,11 +78,30 @@ export const Lobby = ()=> {
         }));
     }, [prematchInfo]);
 
+    const rowClick = useCallback((mid) => {
+        if(mid){
+            if(mid !== prematchID){
+                setPrematchID(mid);
+            }
+            else{
+                setPrematchID(null);
+            }
+        }
+    }, [prematchID]);
+
     useEffect(() => {
         if(prematchID){
-            joinPrematch();
+            getPrematch();
         }
-    }, [prematchID, joinPrematch]);
+        else{
+            setPrematchInfo(null);
+        }
+    }, [prematchID, joinPrematch, getPrematch]);
+
+    useEffect(() => {
+        refreshMatchList();
+        // eslint-disable-next-line
+    }, []);
 
     return <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '100%', 
                         padding: '2rem', fontFamily:'Handel Gothic'}}>  
@@ -70,13 +111,16 @@ export const Lobby = ()=> {
                         <Button className='bi-repeat' onClick={refreshMatchList}/>
                         <Button color='warning' onClick={newPrematch}>Create new</Button>
                     </CardTitle>
-                    <CardBody style={{paddingTop: '5rem'}}>
-                        <Container style={{overflowY: 'auto', fontSize: '90%'}}>
+                    <CardBody style={{paddingTop: '5rem', overflowY: 'auto'}}>
+                        <Container style={{fontSize: '80%'}}>
                             {gameList && [...gameList].reverse().map( (g, i) => 
-                            <Row key={i}>
-                                <Col xs='4'>{g.createdAt && (new Date(g.createdAt)).toLocaleString()}</Col>
-                                <Col xs='7'>{g.setupData && g.setupData.matchName}</Col>
-                                <Col xs='1'>{g.players && g.players.length}</Col>
+                            <Row key={i} matchid={g.matchID} className={'hoverable ' + (prematchID && prematchID === g.matchID ? 'selectedMatch': '')} 
+                                style={{padding: '.25rem 0', borderRadius: '0'}} onClick={() => rowClick(g.matchID)}>
+                                <Col xs='4' style={{paddingRight: 0}}>{g.createdAt && (new Date(g.createdAt)).toLocaleString()}</Col>
+                                <Col xs='3'>{g.setupData && g.setupData.matchName}</Col>
+                                <Col xs='1'>{g.setupData && g.setupData.edition}</Col>
+                                <Col xs='2'>{g.setupData && g.setupData.map}</Col>
+                                <Col xs='2'>{g.players && g.players.filter(p => p.name).length + ' / ' + g.players.length}</Col>
                             </Row>
                             )}
                         </Container>
@@ -84,13 +128,13 @@ export const Lobby = ()=> {
                 </Card>}
                 {prematchInfo && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
                     <CardTitle>
-                        {!playerCreds && <>
+                        {!playerCreds && !prematchInfo.players && <>
                             <Input valid placeholder={prematchInfo.setupData.matchName} onChange={(e) => changeOption('matchName', e.target)}/>
                             <FormFeedback valid>that name acceptable</FormFeedback>
                         </>}
-                        {playerCreds && <h3>{prematchInfo.setupData.matchName}</h3>}
+                        {(playerCreds || prematchInfo.players) && <h3>{prematchInfo.setupData.matchName}</h3>}
                     </CardTitle>
-                    {!playerCreds && <CardBody>
+                    {!playerCreds && !prematchInfo.players && <CardBody>
                         <FormGroup>
                             <Input type='select' name='edition'><option>Prophecy of Kings</option></Input>
                         </FormGroup>
@@ -122,12 +166,13 @@ export const Lobby = ()=> {
                             </FormGroup>
                         </div>
                     </CardBody>}
-                    {playerCreds && <CardBody>
+                    {(playerCreds || prematchInfo.players) && <CardBody>
                         <CardText>{prematchInfo.setupData.edition + ' / ' + prematchInfo.setupData.map
-                                    + ' / ' + prematchInfo.numPlayers + ' players'}</CardText>
+                                    + ' / ' + prematchInfo.players.length + ' players'}</CardText>
                     </CardBody>}
                     <CardFooter style={{display: 'flex', justifyContent: 'flex-end'}}>
-                        {!playerCreds && <Button color='success' onClick={createPrematch}>Create match <b className='bi-forward-fill' ></b></Button>}
+                        {!playerCreds && !prematchInfo.players && <Button color='success' onClick={createPrematch}>Create match <b className='bi-forward-fill' ></b></Button>}
+                        {playerCreds && <Button color='danger' onClick={leavePrematch}>Leave match <b className='bi-backward-fill' ></b></Button>}
                     </CardFooter>
                 </Card>}
                 {playerCreds && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
