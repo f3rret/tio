@@ -5,16 +5,19 @@ import { Card, CardBody, CardTitle, CardFooter, CardText, Container, Row, Col,
 import { produce } from 'immer';
 import './scss/custom.scss';
 
+let interval;
+
 export const Lobby = ()=> {
 
     const playerNames = useMemo(() => ['Alice', 'Bob', 'Cecil', 'David', 'Eva', 'Frank', 'Gregory', 'Heilen'], []);
+    const colors = useMemo(() => ['red', 'green', 'blue', 'yellow', 'gray', 'pink', 'black', 'violet'], []);
 
     const [gameList, setGameList] = useState();
     const [prematchInfo, setPrematchInfo] = useState();
     const [prematchID, setPrematchID] = useState();
     const [playerCreds, setPlayerCreds] = useState();
     const [playerID, setPlayerID] = useState();
-    const [playerName, setPlayerName] = useState(playerNames[0]);
+    //const [playerName, setPlayerName] = useState(playerNames[0]);
     
     const lobbyClient = useMemo(() => new LobbyClient({ server: 'http://localhost:8000' }), []);
 
@@ -59,16 +62,22 @@ export const Lobby = ()=> {
             credentials: playerCreds 
         })
         .then(() => {
-            setPlayerID(null); 
-            setPlayerCreds(null)})
+            /*setPlayerID(null); 
+            setPlayerCreds(null)*/
+            setPrematchID(null);
+            refreshMatchList();
+        })
         .catch(console.err)
-    }, [prematchID, playerID, playerCreds, lobbyClient]);
+    }, [prematchID, playerID, playerCreds, lobbyClient, refreshMatchList]);
 
     const createPrematch = useCallback(() => {
         lobbyClient.createMatch('prematch', prematchInfo)
-        .then(data => {data.matchID && setPrematchID(data.matchID)})
+        .then(data => {
+            if(data.matchID) {setPrematchID(data.matchID)}
+            refreshMatchList()
+        })
         .catch(console.err);
-    }, [prematchInfo, lobbyClient]);
+    }, [prematchInfo, lobbyClient, refreshMatchList]);
 
     const changeOption = useCallback((optName, input) => {
         setPrematchInfo(produce(prematchInfo, draft => {
@@ -92,11 +101,15 @@ export const Lobby = ()=> {
     useEffect(() => {
         if(prematchID){
             getPrematch();
+            //if(!interval) interval = setInterval(() => getPrematch(), 1000);
         }
         else{
             setPrematchInfo(null);
+            setPlayerID(null); 
+            setPlayerCreds(null);
+            //if(interval) clearInterval(interval);
         }
-    }, [prematchID, joinPrematch, getPrematch]);
+    }, [prematchID, getPrematch]);
 
     useEffect(() => {
         refreshMatchList();
@@ -105,7 +118,7 @@ export const Lobby = ()=> {
 
     return <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '100%', 
                         padding: '2rem', fontFamily:'Handel Gothic'}}>  
-                {!playerCreds && <Card style={{flex: 'auto', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
+                {(!playerCreds || !prematchID) && <Card style={{flex: 'auto', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
                     <CardTitle style={{display: 'flex'}}>
                         <h3 style={{flex: 'auto'}}>Macthes list</h3>
                         <Button className='bi-repeat' onClick={refreshMatchList}/>
@@ -169,10 +182,20 @@ export const Lobby = ()=> {
                     {(playerCreds || prematchInfo.players) && <CardBody>
                         <CardText>{prematchInfo.setupData.edition + ' / ' + prematchInfo.setupData.map
                                     + ' / ' + prematchInfo.players.length + ' players'}</CardText>
+                        <Container>{prematchInfo.players.map((p, i) => <Row key={i}>
+                            <Col xs='1' style={{backgroundColor: colors[i]}}></Col>
+                            <Col xs='4'>{p.name}</Col>
+                            <Col xs='7'>
+                                <Input type='select'>
+                                    <option>race info...</option>
+                                </Input>
+                            </Col>
+                        </Row>)}</Container>
                     </CardBody>}
                     <CardFooter style={{display: 'flex', justifyContent: 'flex-end'}}>
-                        {!playerCreds && !prematchInfo.players && <Button color='success' onClick={createPrematch}>Create match <b className='bi-forward-fill' ></b></Button>}
-                        {playerCreds && <Button color='danger' onClick={leavePrematch}>Leave match <b className='bi-backward-fill' ></b></Button>}
+                        {!playerCreds && !prematchInfo.players && <Button color='success' onClick={createPrematch}>Create game <b className='bi-caret-right-square-fill' ></b></Button>}
+                        {!playerCreds && !playerID && prematchInfo && prematchInfo.players && <Button color='success' onClick={joinPrematch}>Join game <b className='bi-caret-right-square-fill' ></b></Button>}
+                        {playerCreds && <Button color='danger' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> Leave game</Button>}
                     </CardFooter>
                 </Card>}
                 {playerCreds && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
