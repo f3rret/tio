@@ -1,5 +1,5 @@
 import React from "react";
-import Modal from "react-bootstrap/Modal";
+import {Modal} from "reactstrap";
 
 class HelpModal extends React.Component {
     render() {

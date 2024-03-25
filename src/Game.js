@@ -11,27 +11,32 @@ import { NUM_PLAYERS, checkTacticalActionCard, getUnitsTechnologies, haveTechnol
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective } from './utils';
 
+ const getTiles = (setupData) => HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
+ const getRaces = (setupData) => HexGrid.toArray().map( h => ({ rid: h.tileId }))
+             .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
+             .map( (r, idx) => ({...r, ...raceData[r.rid], pid: idx, destroyedUnits: [], commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
+               exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 10, c: 10, h: 10, i: 10}, relics: []}) );
+ 
 export const TIO = {
     name: 'TIO',
     validateSetupData: (setupData, numPlayers) => {
       //console.log(setupData, numPlayers)
     },
     setup: ({ctx}, setupData) => {
-      const tiles = HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
-      const races = HexGrid.toArray().map( h => ({ rid: h.tileId }))
-                  .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
-                  .map( (r, idx) => ({...r, ...raceData[r.rid], pid: idx, destroyedUnits: [], commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
-                    exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 10, c: 10, h: 10, i: 10}, relics: []}) );
-      
+      console.log(setupData);
       const all_units = techData.filter((t) => t.type === 'unit');
+
+      const races = getRaces(setupData);
+      const tiles = getTiles(setupData);
+
       races.forEach( r => {
+        console.log(r);
         all_units.forEach( t => {
           const tch = r.technologies.find( f => f.id === t.id);
           if(!tch){
             r.technologies.push(t);
           }
           else{
-            console.log(r.name, tch.id)
             //tch.racial = true;
           }
         });

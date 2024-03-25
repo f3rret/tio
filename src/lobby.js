@@ -3,6 +3,7 @@ import { useCallback, useState, useMemo, useEffect } from 'react';
 import { Card, CardBody, CardTitle, CardFooter, CardText, Container, Row, Col, 
     Input, Button, FormFeedback, FormGroup, Label } from 'reactstrap';
 import { produce } from 'immer';
+import MapOptions from './map generator/options/MapOptions';
 import './scss/custom.scss';
 
 let interval = null;
@@ -10,13 +11,15 @@ let interval = null;
 export const Lobby = ()=> {
 
     const playerNames = useMemo(() => ['Alice', 'Bob', 'Cecil', 'David', 'Eva', 'Frank', 'Gregory', 'Heilen'], []);
-    const colors = useMemo(() => ['red', 'green', 'blue', 'yellow', 'gray', 'pink', 'black', 'violet'], []);
+    const colors = useMemo(() => ['red', 'green', 'blue', 'yellow', 'gray', 'pink', 'orange', 'violet'], []);
 
     const [gameList, setGameList] = useState();
     const [prematchInfo, setPrematchInfo] = useState();
     const [prematchID, setPrematchID] = useState();
     const [playerCreds, setPlayerCreds] = useState();
     const [playerID, setPlayerID] = useState();
+    const [playerName, setPlayerName] = useState();
+    const [matchID, setMatchID] = useState();
     //const [playerName, setPlayerName] = useState(playerNames[0]);
     
     const lobbyClient = useMemo(() => new LobbyClient({ server: 'http://localhost:8000' }), []);
@@ -35,7 +38,8 @@ export const Lobby = ()=> {
             setupData: {
                 matchName: 'New Game',
                 edition: 'PoK',
-                map: 'random'
+                map: 'random',
+                races: new Array(8)
             }
         });
 
@@ -58,14 +62,19 @@ export const Lobby = ()=> {
         if(prematchInfo && prematchInfo.players && prematchInfo.players.length){
             nameId = prematchInfo.players.filter(p => p.name).length;
         }
+
         lobbyClient.joinMatch('prematch', param || prematchID, {
-            playerName: playerNames[nameId]
+            playerName: playerName || playerNames[nameId]
         })
         .then(data => {
             data.playerCredentials && setPlayerCreds(data.playerCredentials);
-            data.playerID !== undefined && setPlayerID(data.playerID)})
+            if(data.playerID !== undefined){
+                setPlayerID(data.playerID);
+                setPlayerName(playerNames[nameId]);
+            }
+        })
         .catch(console.err);
-    }, [prematchID, prematchInfo, playerNames, lobbyClient]);
+    }, [prematchID, prematchInfo, playerNames, lobbyClient, playerName]);
 
     const leavePrematch = useCallback(() => {
         lobbyClient.leaveMatch('prematch', prematchID, {
@@ -112,6 +121,30 @@ export const Lobby = ()=> {
             }
         }
     }, [prematchID]);
+
+    const runGame = useCallback(() => {
+        lobbyClient.createMatch('TIO', {numPlayers: prematchInfo.players.length, setupData: prematchInfo.setupData})
+        .then(data => {
+            if(data.matchID) {
+                setMatchID(data.matchID);
+                lobbyClient.joinMatch('TIO', data.matchID, {
+                    playerName,
+                    playerID
+                })
+                .then(data => {
+                    data.playerCredentials && setPlayerCreds(data.playerCredentials);
+                    /*data.playerID !== undefined && setPlayerID(data.playerID)*/})
+                .catch(console.err);
+            }
+        })
+        .catch(console.err);
+    }, [lobbyClient, prematchInfo, playerName, playerID]);
+
+    useEffect(() => {
+        if(matchID){
+            clearInterval(interval);
+        }
+    }, [matchID]);
 
     useEffect(() => {
         if(prematchID){
@@ -211,15 +244,16 @@ export const Lobby = ()=> {
                         </Row>)}
                         </Container>}
                     </CardBody>
-                    <CardFooter style={{display: 'flex', justifyContent: 'flex-end'}}>
+                    <CardFooter style={{display: 'flex', justifyContent: 'space-between'}}>
                         {!playerCreds && !prematchInfo.players && <Button color='success' onClick={createPrematch}>Create game <b className='bi-caret-right-square-fill' ></b></Button>}
                         {!playerCreds && !playerID && prematchInfo && prematchInfo.players && 
                             <Button color='success' disabled={!prematchInfo.players.find(p => !p.name)} onClick={()=>joinPrematch()}>Join game <b className='bi-caret-right-square-fill' ></b></Button>}
-                        {playerCreds && <Button color='danger' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> Leave game</Button>}
+                        {playerCreds && <Button color='danger' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> Leave</Button>}
+                        {playerCreds && <Button color='success' onClick={runGame}>Start game <b className='bi-check-square-fill' ></b></Button>}
                     </CardFooter>
                 </Card>}
                 {playerCreds && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
-                    
+                    <MapOptions visible={true} useProphecyOfKings={true}/>
                 </Card>}
             </div>;
 }

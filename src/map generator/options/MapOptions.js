@@ -5,8 +5,7 @@ import tileData from "../data/tileData.json";
 import raceData from "../data/raceData.json";
 import adjacencyData from "../data/adjacencyData.json";
 import HelpModal from "./HelpModal";
-import SetPlayerNameModal from "./SetPlayerNameModal";
-import SetRacesModal from "./SetRacesModal";
+import {CardTitle, CardBody, CardText, FormGroup} from 'reactstrap';
 
 
 class MapOptions extends React.Component {
@@ -1323,55 +1322,47 @@ class MapOptions extends React.Component {
             ensureRacialAnomaliesHelp: !this.state.ensureRacialAnomaliesHelp
         })
     }
-
+//<form id="generateForm" onSubmit={this.generateBoard} style={{padding: '2rem'}}>
     render() {
         return (
-            <div id="options" className={this.props.visible ? "" : "d-none"}>
-                <div className="title">
-                    <h4 className="text-center">Generation Options</h4>
-                </div>
-                <form id="generateForm" onSubmit={this.generateBoard}>
-
-                    <div className="custom-control custom-checkbox mb-3">
-                        <input type="checkbox" className="custom-control-input" id="pokExpansion" name="useProphecyOfKings" checked={this.props.useProphecyOfKings} onChange={this.updatePok} />
+            <>
+                <CardTitle>
+                    <h3 className="text-center">Random map options</h3>
+                </CardTitle>
+                <CardBody>
+                    <CardText>
+                        <input disabled={true} type="checkbox" className="custom-control-input" id="pokExpansion" name="useProphecyOfKings" checked={this.props.useProphecyOfKings} onChange={this.updatePok} />
                         <label className="custom-control-label" htmlFor="pokExpansion">Use Prophecy of Kings Expansion</label>
-                    </div>
+                    </CardText>
 
-                    <div className="form-group">
-                        <label htmlFor="playerCount">Number of Players</label>
-                        <select className="form-control" id="playerCount" name="currentNumberOfPlayers" value={this.state.currentNumberOfPlayers} onChange={this.updatePlayerCount}>
-                            {this.state.currentNumberOfPlayersOptions.map((x) => <option key={x} value={x}>{x}</option>)}
-                        </select>
-                    </div>
-
-                    <div className="form-group">
+                    <FormGroup>
                         <label htmlFor="boardStyle" className="d-flex">Board Style
                             <QuestionCircle className="icon" onClick={this.toggleBoardStyleHelp} />
                         </label>
                         <select className="form-control" id="boardStyle" name="currentBoardStyle" value={this.state.currentBoardStyle} onChange={this.updateBoardStyle}>
                             {this.state.currentBoardStyleOptions.map((x) => <option key={x} value={x}>{this.capitalize(x)}</option>)}
                         </select>
-                    </div>
+                    </FormGroup>
 
-                    <div className="form-group">
+                    <FormGroup>
                         <label htmlFor="placementStyle" className="d-flex">Placement Style
                             <QuestionCircle className="icon" onClick={this.togglePlacementStyleHelp} />
                         </label>
                         <select className="form-control" id="placementStyle" name="currentPlacementStyle" value={this.state.currentPlacementStyle} onChange={this.handleInputChange}>
                             {this.state.optionsPossible.placementStyles.map((x) => <option key={x} value={x}>{this.capitalize(x)}</option>)}
                         </select>
-                    </div>
+                    </FormGroup>
 
-                    <div className="form-group">
+                    <FormGroup>
                         <label htmlFor="pickStyle" className="d-flex">System Weighting
                             <QuestionCircle className="icon" onClick={this.togglePickStyleHelp} />
                         </label>
                         <select className="form-control" id="pickStyle" name="currentPickStyle" value={this.state.currentPickStyle} onChange={this.handleInputChange}>
                             {this.state.optionsPossible.pickStyles.map((x) => <option key={x} value={x}>{this.capitalize(x)}</option>)}
                         </select>
-                    </div>
+                    </FormGroup>
 
-                    <div className={"ml-2 collapse " + (this.state.currentPickStyle === "custom" ? "show" : "")} id="customPickStyle">
+                    <FormGroup className={"ml-2 collapse " + (this.state.currentPickStyle === "custom" ? "show" : "")} id="customPickStyle">
                         <div className="card card-body">
                             <label htmlFor="customResource">Resource</label>
                             <input type="range" className="custom-range" name="resourceWeight" value={this.state.resourceWeight} onChange={this.handleInputChange} />
@@ -1391,32 +1382,13 @@ class MapOptions extends React.Component {
                             <label htmlFor="customWormhole">Wormhole</label>
                             <input type="range" className="custom-range" name="wormholeWeight" value={this.state.wormholeWeight} onChange={this.handleInputChange} />
                         </div>
-                    </div>
+                    </FormGroup>
 
-
-                    <div className="form-group">
-                        <label htmlFor="seed">Specific Seed</label>
-                        <input className="form-control" id="seed" name="updateSeed" type="text" placeholder="Enter a number to seed generation..." value={this.state.currentSeed} onChange={this.updateSeed} />
-                    </div>
-
-                    <div className="custom-control custom-checkbox mb-3 d-flex">
-                        <input type="checkbox" className="custom-control-input" id="pickRaces" name="pickRaces" checked={this.state.pickRaces} onChange={this.handleInputChange} />
-                        <label className="custom-control-label" htmlFor="pickRaces">Pick Races for Players</label>
-                        <QuestionCircle className="icon" onClick={this.togglePickRacesHelp} />
-                    </div>
-                    <div className={"ml-2 mb-2 collapse " + (this.state.pickRaces ? "show" : "")} id="pickRacesCollapse">
-                        <div className="card card-body">
-                            <button type="button" className="btn btn-outline-primary mb-2" onClick={this.toggleSetRacesHelp}>Set Included Races</button>
-
-                            <button type="button" className="btn btn-outline-primary mb-2" onClick={this.toggleSetPlayerNamesHelp}>Set Player Names</button>
-                            
-                            <div className="custom-control custom-checkbox d-flex">
-                                <input type="checkbox" className="custom-control-input" id="ensureRacialAnomalies" name="ensureRacialAnomalies" checked={this.state.ensureRacialAnomalies} onChange={this.handleInputChange} />
-                                <label className="custom-control-label" htmlFor="ensureRacialAnomalies">Ensure Racial Anomalies</label>
-                                <QuestionCircle className="icon" onClick={this.toggleEnsureRacialAnomaliesHelp} />
-                            </div>
-                        </div>
-                    </div>
+                    <FormGroup>
+                        <input type="checkbox" className="custom-control-input" id="ensureRacialAnomalies" name="ensureRacialAnomalies" checked={this.state.ensureRacialAnomalies} onChange={this.handleInputChange} />
+                        <label className="custom-control-label" htmlFor="ensureRacialAnomalies">Ensure Racial Anomalies</label>
+                        <QuestionCircle className="icon" onClick={this.toggleEnsureRacialAnomaliesHelp} />
+                    </FormGroup>
 
                     <div className="custom-control custom-checkbox mb-3 d-flex">
                         <input type="checkbox" className="custom-control-input" id="shuffleBoards" name="shuffleBoards" checked={this.state.shuffleBoards} onChange={this.handleInputChange} />
@@ -1429,15 +1401,6 @@ class MapOptions extends React.Component {
                         <label className="custom-control-label" htmlFor="reversePlacementOrder">Reverse Placement Order</label>
                         <QuestionCircle className="icon" onClick={this.toggleReversePlacementOrderHelp} />
                     </div>
-
-                    <SetPlayerNameModal visible={this.state.setPlayerNamesHelp} currentPlayerNames={this.props.currentPlayerNames}
-                                        hideModal={this.toggleSetPlayerNamesHelp} handleNameChange={this.handleNameChange}
-                    />
-                    <SetRacesModal visible={this.state.setRacesHelp} races={this.state.optionsPossible.races}
-                                   pokRaces={this.state.optionsPossible.pokRaces} useProphecyOfKings={this.props.useProphecyOfKings}
-                                   currentRaces={this.props.currentRaces}
-                                   hideModal={this.toggleSetRacesHelp} handleRacesChange={this.handleRacesChange}
-                    />
 
                     <HelpModal key={"help-board"} visible={this.state.boardStyleHelp} hideModal={this.toggleBoardStyleHelp} title={"About Board Style"}
                          content='<p>
@@ -1514,9 +1477,8 @@ class MapOptions extends React.Component {
                          </p>"
                     />
             
-                    <button type="submit" className="btn btn-primary">Generate</button>
-                </form>
-            </div>
+                </CardBody>
+            </>
         );
     }
 }
