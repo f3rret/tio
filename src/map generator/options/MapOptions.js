@@ -1,11 +1,9 @@
 import React from "react";
-import {QuestionCircle} from "react-bootstrap-icons";
 import boardData from "../data/boardData.json";
 import tileData from "../data/tileData.json";
 import raceData from "../data/raceData.json";
 import adjacencyData from "../data/adjacencyData.json";
-import HelpModal from "./HelpModal";
-import {CardTitle, CardBody, CardText, FormGroup} from 'reactstrap';
+import {CardTitle, CardBody, CardText, FormGroup, UncontrolledTooltip, Input, Label} from 'reactstrap';
 
 
 class MapOptions extends React.Component {
@@ -1330,36 +1328,37 @@ class MapOptions extends React.Component {
                     <h3 className="text-center">Random map options</h3>
                 </CardTitle>
                 <CardBody>
-                    <CardText>
-                        <input disabled={true} type="checkbox" className="custom-control-input" id="pokExpansion" name="useProphecyOfKings" checked={this.props.useProphecyOfKings} onChange={this.updatePok} />
-                        <label className="custom-control-label" htmlFor="pokExpansion">Use Prophecy of Kings Expansion</label>
-                    </CardText>
+                    <FormGroup>
+                        <Input disabled={true} type="checkbox" className="custom-control-input" id="pokExpansion" name="useProphecyOfKings" checked={this.props.useProphecyOfKings} onChange={this.updatePok} />
+                        <Label className="custom-control-label" for="pokExpansion">Use Prophecy of Kings Expansion</Label>
+                    </FormGroup>
 
                     <FormGroup>
-                        <label htmlFor="boardStyle" className="d-flex">Board Style
-                            <QuestionCircle className="icon" onClick={this.toggleBoardStyleHelp} />
-                        </label>
-                        <select className="form-control" id="boardStyle" name="currentBoardStyle" value={this.state.currentBoardStyle} onChange={this.updateBoardStyle}>
+                        <Label for="boardStyle" className="d-flex">Board Style
+                        &nbsp;<b className="bi-question-circle" id="boardStyleHelp" />
+                        </Label>
+                        
+                        <Input type='select' className="form-control" id="boardStyle" name="currentBoardStyle" value={this.state.currentBoardStyle} onChange={this.updateBoardStyle}>
                             {this.state.currentBoardStyleOptions.map((x) => <option key={x} value={x}>{this.capitalize(x)}</option>)}
-                        </select>
+                        </Input>
                     </FormGroup>
 
                     <FormGroup>
-                        <label htmlFor="placementStyle" className="d-flex">Placement Style
-                            <QuestionCircle className="icon" onClick={this.togglePlacementStyleHelp} />
-                        </label>
-                        <select className="form-control" id="placementStyle" name="currentPlacementStyle" value={this.state.currentPlacementStyle} onChange={this.handleInputChange}>
+                        <Label for="placementStyle" className="d-flex">Placement Style
+                            &nbsp;<b className="bi-question-circle" id="placementStyleHelp" />
+                        </Label>
+                        <Input type='select' className="form-control" id="placementStyle" name="currentPlacementStyle" value={this.state.currentPlacementStyle} onChange={this.handleInputChange}>
                             {this.state.optionsPossible.placementStyles.map((x) => <option key={x} value={x}>{this.capitalize(x)}</option>)}
-                        </select>
+                        </Input>
                     </FormGroup>
 
                     <FormGroup>
-                        <label htmlFor="pickStyle" className="d-flex">System Weighting
-                            <QuestionCircle className="icon" onClick={this.togglePickStyleHelp} />
-                        </label>
-                        <select className="form-control" id="pickStyle" name="currentPickStyle" value={this.state.currentPickStyle} onChange={this.handleInputChange}>
+                        <Label for="pickStyle" className="d-flex">System Weighting
+                            &nbsp;<b className="bi-question-circle" id="systemWeightingHelp" />
+                        </Label>
+                        <Input type='select' className="form-control" id="pickStyle" name="currentPickStyle" value={this.state.currentPickStyle} onChange={this.handleInputChange}>
                             {this.state.optionsPossible.pickStyles.map((x) => <option key={x} value={x}>{this.capitalize(x)}</option>)}
-                        </select>
+                        </Input>
                     </FormGroup>
 
                     <FormGroup className={"ml-2 collapse " + (this.state.currentPickStyle === "custom" ? "show" : "")} id="customPickStyle">
@@ -1385,97 +1384,79 @@ class MapOptions extends React.Component {
                     </FormGroup>
 
                     <FormGroup>
-                        <input type="checkbox" className="custom-control-input" id="ensureRacialAnomalies" name="ensureRacialAnomalies" checked={this.state.ensureRacialAnomalies} onChange={this.handleInputChange} />
-                        <label className="custom-control-label" htmlFor="ensureRacialAnomalies">Ensure Racial Anomalies</label>
-                        <QuestionCircle className="icon" onClick={this.toggleEnsureRacialAnomaliesHelp} />
+                        <Input type="checkbox" className="custom-control-input" id="ensureRacialAnomalies" name="ensureRacialAnomalies" checked={this.state.ensureRacialAnomalies} onChange={this.handleInputChange} />
+                        <Label className="custom-control-label" for="ensureRacialAnomalies">Ensure Racial Anomalies</Label>
+                        &nbsp;<b className="bi-question-circle" id="ensureAnomaliesHelp" />
                     </FormGroup>
 
-                    <div className="custom-control custom-checkbox mb-3 d-flex">
-                        <input type="checkbox" className="custom-control-input" id="shuffleBoards" name="shuffleBoards" checked={this.state.shuffleBoards} onChange={this.handleInputChange} />
-                        <label className="custom-control-label" htmlFor="shuffleBoards">Randomize Priorities Before Placement</label>
-                        <QuestionCircle className="icon" onClick={this.toggleShufflePriorityHelp} />
-                    </div>
+                    <FormGroup>
+                        <Input type="checkbox" className="custom-control-input" id="shuffleBoards" name="shuffleBoards" checked={this.state.shuffleBoards} onChange={this.handleInputChange} />
+                        <Label className="custom-control-label" for="shuffleBoards">Randomize Priorities Before Placement</Label>
+                        &nbsp;<b className="bi-question-circle" id="shuffleBoardsHelp" />
+                    </FormGroup>
 
-                    <div className="custom-control custom-checkbox mb-3 d-flex">
-                        <input type="checkbox" className="custom-control-input" id="reversePlacementOrder" name="reversePlacementOrder" checked={this.state.reversePlacementOrder} onChange={this.handleInputChange} />
-                        <label className="custom-control-label" htmlFor="reversePlacementOrder">Reverse Placement Order</label>
-                        <QuestionCircle className="icon" onClick={this.toggleReversePlacementOrderHelp} />
-                    </div>
+                    <FormGroup>
+                        <Input type="checkbox" className="custom-control-input" id="reversePlacementOrder" name="reversePlacementOrder" checked={this.state.reversePlacementOrder} onChange={this.handleInputChange} />
+                        <Label className="custom-control-label" for="reversePlacementOrder">Reverse Placement Order</Label>
+                        &nbsp;<b className="bi-question-circle" id="reversePlacementHelp" />
+                    </FormGroup>
 
-                    <HelpModal key={"help-board"} visible={this.state.boardStyleHelp} hideModal={this.toggleBoardStyleHelp} title={"About Board Style"}
-                         content='<p>
-                         Board style changes how the tiles are actually laid out on a newly generated map.
-                         <br>
-                         <br>
+                    <UncontrolledTooltip target="boardStyleHelp" placement="right" trigger="hover">
+                         <p style={{color: 'white', textAlign: 'justify'}}>
+                         Board style changes how the tiles are actually laid out on a newly generated map.<br/><br/>
                          Changing this would cause you to expect different hex layouts, such as different patterns of tiles, usage of hyperlanes, or unorthodox placement of home worlds.
-                         </p>'
-                    />
-                    <HelpModal key={"help-placement"} visible={this.state.placementStyleHelp} hideModal={this.togglePlacementStyleHelp} title={"About Placement Style"}
-                         content='<p>
+                         </p>
+                    </UncontrolledTooltip>
+                    <UncontrolledTooltip target="placementStyleHelp" placement="right" trigger="hover">
+                         <p style={{color: 'white', textAlign: 'justify'}}>
                          Placement style dictates where important tiles are placed. Most revolve around having at least one tile near the home system with good resources.
-                         <br>
-                         <br>
-                         <br><b>Slice:</b> Places tiles like a normal player would. Prioritizes a good pathway to mecatol, and filling in the area around the home system with good tiles.
-                         <br><b>Initial:</b> Only guarantees a good tile right in front of the home system (on the way to mecatol). Everything else is random.
-                         <br><b>Home:</b> Prioritizes all of the adjacent tiles to the home system and everything else is random.
-                         <br><b>Random:</b> Shuffles the priority levels completely. No favoritism to tiles near the home system.
-                         </p>'
-                    />
-                    <HelpModal key={"help-pick"} visible={this.state.pickStyleHelp} hideModal={this.togglePickStyleHelp} title={"About Pick Style"}
-                               content='<p>
-                         Pick Style is used to determine how tiles are weighted for when they are placed on the board. A higher weighted tile means that the hex is more important, and so (depending on the placement style) it is put closer to home worlds to facilitate available assets.
-                         <br>
-                         <br><b>Balanced:</b> A custom weight which favors resources and planet count more than anomalies. This more accurately factors in tech specialties and influence as trade-offs to the "Resource" pick.
-                         <br><b>Resource:</b> Tiles are ordered primarily by their resource values. Higher resource planets are more coveted, and so are more important.
-                         <br><b>Influence:</b> Similar to "Resource", tiles are ordered primarily by their influence values.
-                         <br><b>Random:</b> Tiles are completely randomly ordered. Expect chaotic and unbalanced maps.
-                         <br><b>Custom:</b> Enter your own values in for balancing tradeoffs between various tile qualities.
-                         </p>'
-
-                    />
-                    <HelpModal key={"help-races"} visible={this.state.pickRacesHelp} hideModal={this.togglePickRacesHelp} title={"About Picking Races"}
-                         content="<p>
-                         Automatically assigns races to the players on the boards.
-                         <br>
-                         <br>
-                         From the set of races, turning this on will assign every player a random race (designated by assigning them the homeworld tile of that race). You should pick which player sits at a certain position before turning this on.
-                         </p>"
-                    />
-                    <HelpModal key={"help-multiple"} visible={this.state.pickMultipleRacesHelp} hideModal={this.togglePickMultipleRacesHelp} title={"About Picking Multiple Races"}
-                         content="<p>
-                         Divides all the races evenly up amongst the players in the game (with no overflow), so that they can choose from a selection instead of being specifically assigned one race.
-                         <br>
-                         <br>
-                         Some groups prefer to have a draft, where every player is given a few races to pick between. This lets them pick the races that they want to play, but not have any conflicts with other players about playing a certain race.
-                         </p>"
-                    />
-                    <HelpModal key={"help-priority"} visible={this.state.shufflePriorityHelp} hideModal={this.toggleShufflePriorityHelp} title={"About Shuffling Priority"}
-                         content='<p>
-                         Randomizes the priority picks for each picking round.
-                         <br>
-                         <br>
-                         Normally when placing tiles, this tool attempts to place the tiles so player 1 does not always get the best tiles. To do this, it follows the game setup rules and (in a 6 player game) player 1 gets to place tile 1 and 12, while player 6 gets to place tile 6 and 7.
-                         <br>
-                         <br>
-                         Turning this on stops this from happening, and instead completely randomizes the placement order.
-                         </p>'
-                    />
-                    <HelpModal key={"help-reverse"} visible={this.state.reversePlacementOrderHelp} hideModal={this.toggleReversePlacementOrderHelp} title={"About Reverse Placement Order"}
-                         content='<p>
-                         Reverses which tiles are placed first in placement order.
-                         <br>
-                         <br>
-                         Tiles are normally placed in priority (see randomize priority help). This reverses the order, so that the last picks are first, which generally has the effect of pushing the more valuable tiles towards the center of the galaxy.
-                         </p>'
-                    />
-                    <HelpModal key={"help-racial-anomalies"} visible={this.state.ensureRacialAnomaliesHelp} hideModal={this.toggleEnsureRacialAnomaliesHelp} title={"About Ensure Racial Anomalies"}
-                         content="<p>
+                         <br/>
+                         <br/>
+                         <br/><b>Slice:</b> Places tiles like a normal player would. Prioritizes a good pathway to mecatol, and filling in the area around the home system with good tiles.
+                         <br/><b>Initial:</b> Only guarantees a good tile right in front of the home system (on the way to mecatol). Everything else is random.
+                         <br/><b>Home:</b> Prioritizes all of the adjacent tiles to the home system and everything else is random.
+                         <br/><b>Random:</b> Shuffles the priority levels completely. No favoritism to tiles near the home system.
+                         </p>
+                    </UncontrolledTooltip>
+                    <UncontrolledTooltip target="ensureAnomaliesHelp" placement="right" trigger="hover">
+                         <p style={{color: 'white', textAlign: 'justify'}}>
                          Ensures that races get their beneficial anomalies
-                         <br>
-                         <br>
+                         <br/>
+                         <br/>
                          This option makes it so that Muaat will always receive a supernova, Saar will always receive an asteroid field, Empyrean will always receive a nebulae and Vuil'Raith will always receive a gravity rift.
-                         </p>"
-                    />
+                         </p>
+                    </UncontrolledTooltip>
+                    <UncontrolledTooltip target="systemWeightingHelp" placement="right" trigger="hover">
+                         <p style={{color: 'white', textAlign: 'justify'}}>
+                         Pick Style is used to determine how tiles are weighted for when they are placed on the board. A higher weighted tile means that the hex is more important, and so (depending on the placement style) it is put closer to home worlds to facilitate available assets.
+                         <br/>
+                         <br/><b>Balanced:</b> A custom weight which favors resources and planet count more than anomalies. This more accurately factors in tech specialties and influence as trade-offs to the "Resource" pick.
+                         <br/><b>Resource:</b> Tiles are ordered primarily by their resource values. Higher resource planets are more coveted, and so are more important.
+                         <br/><b>Influence:</b> Similar to "Resource", tiles are ordered primarily by their influence values.
+                         <br/><b>Random:</b> Tiles are completely randomly ordered. Expect chaotic and unbalanced maps.
+                         <br/><b>Custom:</b> Enter your own values in for balancing tradeoffs between various tile qualities.
+                         </p>
+                    </UncontrolledTooltip>
+                    <UncontrolledTooltip target="shuffleBoardsHelp" placement="right" trigger="hover">
+                         <p style={{color: 'white', textAlign: 'justify'}}>
+                         Randomizes the priority picks for each picking round.
+                         <br/>
+                         <br/>
+                         Normally when placing tiles, this tool attempts to place the tiles so player 1 does not always get the best tiles. To do this, it follows the game setup rules and (in a 6 player game) player 1 gets to place tile 1 and 12, while player 6 gets to place tile 6 and 7.
+                         <br/>
+                         <br/>
+                         Turning this on stops this from happening, and instead completely randomizes the placement order.
+                         </p>
+                    </UncontrolledTooltip>
+                    <UncontrolledTooltip target="reversePlacementHelp" placement="right" trigger="hover">
+                         <p style={{color: 'white', textAlign: 'justify'}}>
+                         Reverses which tiles are placed first in placement order.
+                         <br/>
+                         <br/>
+                         Tiles are normally placed in priority (see randomize priority help). This reverses the order, so that the last picks are first, which generally has the effect of pushing the more valuable tiles towards the center of the galaxy.
+                         </p>
+                    </UncontrolledTooltip>
+                    
             
                 </CardBody>
             </>
