@@ -5,7 +5,7 @@ import { neighbors } from './Grid';
 import { Stage } from 'boardgame.io/core';
 import { createContext } from 'react';
 
-export const NUM_PLAYERS = 2;
+//export const NUM_PLAYERS = 2;
 
 export const UNITS_LIMIT = {
   spacedock: 3,
@@ -463,7 +463,6 @@ export const checkObjective = (G, playerID, oid) => {
 export const checkSecretObjective = (G, playerID, oid, param) => {
 
   const objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
-console.log(oid, objective);
   if(!objective) return;
   if(objective.players && objective.players.length) return;
 

@@ -1,21 +1,15 @@
 /* eslint eqeqeq: 0 */
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
-import { HexGrid, neighbors } from './Grid';
+import { getHexGrid, neighbors } from './Grid';
 import tileData from './tileData.json';
 import raceData from './raceData.json';
 import techData from './techData.json';
 import cardData from './cardData.json';
 import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm } from './gameStages';
 import { produce } from 'immer';
-import { NUM_PLAYERS, checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
+import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective } from './utils';
-
- const getTiles = (setupData) => HexGrid.toArray().map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
- const getRaces = (setupData) => HexGrid.toArray().map( h => ({ rid: h.tileId }))
-             .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, NUM_PLAYERS)
-             .map( (r, idx) => ({...r, ...raceData[r.rid], pid: idx, destroyedUnits: [], commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
-               exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 10, c: 10, h: 10, i: 10}, relics: []}) );
  
 export const TIO = {
     name: 'TIO',
@@ -23,14 +17,24 @@ export const TIO = {
       //console.log(setupData, numPlayers)
     },
     setup: ({ctx}, setupData) => {
-      console.log(setupData);
+console.log('------------------------');
+console.log(setupData);
+console.log(ctx)
       const all_units = techData.filter((t) => t.type === 'unit');
+      let hexGrid = getHexGrid(setupData.mapArray).toArray();
+let races = new Array(ctx.numPlayers);
+console.log(hexGrid);
+console.log('races init', races);
+      races = hexGrid.map( h => ({ rid: h.tileId }))
+        .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, ctx.numPlayers)
+        .map( (r, idx) => ({...r, ...raceData[r.rid], pid: idx, destroyedUnits: [], commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
+          exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 10, c: 10, h: 10, i: 10}, relics: []}) );
 
-      const races = getRaces(setupData);
-      const tiles = getTiles(setupData);
+console.log('race now', races);
+      let tiles = hexGrid.map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
 
       races.forEach( r => {
-        console.log(r);
+        console.log(r.name);
         all_units.forEach( t => {
           const tch = r.technologies.find( f => f.id === t.id);
           if(!tch){
@@ -60,7 +64,9 @@ export const TIO = {
                 draft.fleet = races[idx].startingUnits.fleet;
                 
                 //if(draft.planets.length < 2){
-                  draft.planets[0].units = {...races[idx].startingUnits.ground};
+                  if(draft.planets && draft.planets.length){
+                    draft.planets[0].units = {...races[idx].startingUnits.ground};
+                  }
                 /*}
                 else{
                   draft.planets[0].units = {...races[idx].startingUnits.ground};
@@ -81,13 +87,14 @@ export const TIO = {
 
       const explorationDecks = {cultural:[], hazardous:[], industrial:[], frontier:[]};
       const dice= {};
-      for(let i=0; i<NUM_PLAYERS; i++){
+      for(let i=0; i<ctx.numPlayers; i++){
         dice[i] = {};
       }
 
       return {
         matchName: setupData.matchName || 'New game',
-        speaker: races[0].rid, 
+        speaker: races[0].rid,
+        mapArray: setupData.mapArray, 
         tiles,
         pubObjectives: [],
         secretObjDeck: [],
@@ -930,12 +937,12 @@ export const TIO = {
             
 
           },
-          pass: ({ G, playerID, events }) => {
+          pass: ({ G, playerID, events, ctx }) => {
             let endLater = false;
 
             if(G.passedPlayers.indexOf(playerID) === -1){
               
-              if(G.passedPlayers.length === NUM_PLAYERS - 1){
+              if(G.passedPlayers.length === ctx.numPlayers - 1){
                 if(checkSecretObjective(G, playerID, 'Prove Endurance')){ 
                   endLater = true; 
                 }

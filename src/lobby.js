@@ -4,6 +4,7 @@ import { Card, CardBody, CardTitle, CardFooter, CardText, Container, Row, Col,
     Input, Button, FormFeedback, FormGroup, Label } from 'reactstrap';
 import { produce } from 'immer';
 import MapOptions from './map generator/options/MapOptions';
+import raceData from './map generator/data/raceData.json';
 import './scss/custom.scss';
 
 let interval = null;
@@ -12,6 +13,7 @@ export const Lobby = ()=> {
 
     const playerNames = useMemo(() => ['Alice', 'Bob', 'Cecil', 'David', 'Eva', 'Frank', 'Gregory', 'Heilen'], []);
     const colors = useMemo(() => ['red', 'green', 'blue', 'yellow', 'gray', 'pink', 'orange', 'violet'], []);
+    const races = useMemo(() => [...raceData.races, ...raceData.pokRaces], []);
 
     const [gameList, setGameList] = useState();
     const [prematchInfo, setPrematchInfo] = useState();
@@ -122,10 +124,15 @@ export const Lobby = ()=> {
         }
     }, [prematchID]);
 
-    const runGame = useCallback(() => {
-        lobbyClient.createMatch('TIO', {numPlayers: prematchInfo.players.length, setupData: prematchInfo.setupData})
+    const readyToPlay = useCallback(() => {}, []);
+
+    const runGame = useCallback((tiles) => {
+        console.log(tiles);
+        
+        lobbyClient.createMatch('TIO', {numPlayers: prematchInfo.players.length, setupData: {...prematchInfo.setupData, mapArray: tiles}})
         .then(data => {
             if(data.matchID) {
+                clearInterval(interval);
                 setMatchID(data.matchID);
                 lobbyClient.joinMatch('TIO', data.matchID, {
                     playerName,
@@ -133,7 +140,7 @@ export const Lobby = ()=> {
                 })
                 .then(data => {
                     data.playerCredentials && setPlayerCreds(data.playerCredentials);
-                    /*data.playerID !== undefined && setPlayerID(data.playerID)*/})
+                    })
                 .catch(console.err);
             }
         })
@@ -247,13 +254,15 @@ export const Lobby = ()=> {
                     <CardFooter style={{display: 'flex', justifyContent: 'space-between'}}>
                         {!playerCreds && !prematchInfo.players && <Button color='success' onClick={createPrematch}>Create game <b className='bi-caret-right-square-fill' ></b></Button>}
                         {!playerCreds && !playerID && prematchInfo && prematchInfo.players && 
-                            <Button color='success' disabled={!prematchInfo.players.find(p => !p.name)} onClick={()=>joinPrematch()}>Join game <b className='bi-caret-right-square-fill' ></b></Button>}
+                            <Button color='success' disabled={!prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>Join game <b className='bi-caret-right-square-fill' ></b></Button>}
                         {playerCreds && <Button color='danger' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> Leave</Button>}
-                        {playerCreds && <Button color='success' onClick={runGame}>Start game <b className='bi-check-square-fill' ></b></Button>}
+                        {playerCreds && <Button color='warning' onClick={readyToPlay}>Ready to play <b className='bi-check-square-fill' ></b></Button>}
                     </CardFooter>
                 </Card>}
-                {playerCreds && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
-                    <MapOptions visible={true} useProphecyOfKings={true}/>
+                {playerCreds && prematchInfo && prematchInfo.players && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
+                    <MapOptions visible={true} useProphecyOfKings={true} currentRaces={races} excludedTiles={[]} includedTiles={[]} lockedTiles={[]}
+                    numberOfPlayers={prematchInfo.players.length} updateTiles={runGame} updateRaces={()=>{}} toggleProphecyOfKings={()=>{}}
+                    currentPlayerNames={[]} updatePlayerNames={()=>{}}/>
                 </Card>}
             </div>;
 }

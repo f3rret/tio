@@ -3,7 +3,7 @@ import boardData from "../data/boardData.json";
 import tileData from "../data/tileData.json";
 import raceData from "../data/raceData.json";
 import adjacencyData from "../data/adjacencyData.json";
-import {CardTitle, CardBody, CardText, FormGroup, UncontrolledTooltip, Input, Label} from 'reactstrap';
+import {CardTitle, CardBody, CardFooter, Button, FormGroup, UncontrolledTooltip, Input, Label} from 'reactstrap';
 
 
 class MapOptions extends React.Component {
@@ -28,7 +28,7 @@ class MapOptions extends React.Component {
                 7: Object.keys(boardData.styles["7"]).map((key) => key),
                 8: Object.keys(boardData.styles["8"]).map((key) => key),
             },
-            pickStyles: ["balanced", "random", "resource", "influence", "custom"],
+            pickStyles: ["balanced", "random", "resource", "influence"/*, "custom"*/],
             placementStyles: ["slice", "initial", "home", "random"],
             races: [...raceData["races"]],
             pokRaces: [...raceData["pokRaces"]],
@@ -39,7 +39,7 @@ class MapOptions extends React.Component {
 
         this.state = {
             optionsPossible: startingValues,
-            currentNumberOfPlayers: startingPlayers,
+            currentNumberOfPlayers: this.props.numberOfPlayers,//startingPlayers,
             currentNumberOfPlayersOptions: startingValues["numberOfPlayers"],
             currentBoardStyleOptions: startingValues["boardStyles"][startingPlayers],
             currentBoardStyle: startingValues["boardStyles"][startingPlayers][0],
@@ -47,7 +47,7 @@ class MapOptions extends React.Component {
             currentPlacementStyle: startingValues["placementStyles"][0],
             currentSeed: "",
             userSetSeed: false,
-            pickRaces: false,
+            pickRaces: true,
             pickMultipleRaces: false,
             shuffleBoards: false,
             reversePlacementOrder: false,
@@ -151,9 +151,10 @@ class MapOptions extends React.Component {
 
     updatePok(event) {
         let boardOptions = this.state.optionsPossible.boardStyles;
-        if (event.target.checked) {
+        if (this.props.useProphecyOfKings/*event.target.checked*/) {
             boardOptions = this.state.optionsPossible.boardStylesPok;
             this.setState({
+                //currentNumberOfPlayers: this.props.numberOfPlayers, //my
                 currentNumberOfPlayersOptions: this.state.optionsPossible.numberOfPlayers.concat(this.state.optionsPossible.pokNumberOfPlayers),
                 currentBoardStyle: boardOptions[this.state.currentNumberOfPlayers][0],
                 currentBoardStyleOptions: boardOptions[this.state.currentNumberOfPlayers],
@@ -176,7 +177,7 @@ class MapOptions extends React.Component {
 
     updatePlayerCount(event) {
         this.setState({
-            currentNumberOfPlayers: parseInt(event.target.value),
+            currentNumberOfPlayers: this.props.numberOfPlayers,//parseInt(event.target.value),
         }, () => {
             this.updateBoardStyleOptions(event)
         });
@@ -193,16 +194,18 @@ class MapOptions extends React.Component {
     }
 
     updateBoardStyleOptions(event) {
+
         let boardOptions = this.state.optionsPossible.boardStyles;
         if (this.props.useProphecyOfKings) {
             boardOptions = this.state.optionsPossible.boardStylesPok;
         }
+        
         this.setState({
             currentBoardStyleOptions: boardOptions[this.state.currentNumberOfPlayers],
             currentBoardStyle: boardOptions[this.state.currentNumberOfPlayers][0],
         }, () => {
             if (this.state.generated) {
-                this.generateBoard(event)
+                //this.generateBoard(event)
             }
         });
     }
@@ -429,6 +432,9 @@ class MapOptions extends React.Component {
             event.preventDefault();
         }
 
+        if(this.props.useProphecyOfKings) this.updatePok(event);
+        this.updatePlayerCount(event);
+
         // Create a random seed to use unless the user has specified one
         let currentSeed = this.state.currentSeed
         if (!this.state.userSetSeed) {
@@ -456,11 +462,13 @@ class MapOptions extends React.Component {
         let systemIndexes = this.getNewTilesToPlace()
 
         // Get current races for placing races, and shuffle them around
+
         if (currentRaces === undefined) {
             currentRaces = [...this.props.currentRaces]
         } else {
             currentRaces = [...currentRaces]
         }
+  
         this.shuffle(currentRaces)
         currentRaces = currentRaces.slice(0, this.state.currentNumberOfPlayers)
 
@@ -1330,12 +1338,12 @@ class MapOptions extends React.Component {
                 <CardBody>
                     <FormGroup>
                         <Input disabled={true} type="checkbox" className="custom-control-input" id="pokExpansion" name="useProphecyOfKings" checked={this.props.useProphecyOfKings} onChange={this.updatePok} />
-                        <Label className="custom-control-label" for="pokExpansion">Use Prophecy of Kings Expansion</Label>
+                        <Label style={{marginLeft: '.5rem'}} className="custom-control-label" for="pokExpansion">Use Prophecy of Kings Expansion</Label>
                     </FormGroup>
 
                     <FormGroup>
                         <Label for="boardStyle" className="d-flex">Board Style
-                        &nbsp;<b className="bi-question-circle" id="boardStyleHelp" />
+                        <b style={{marginLeft: '.5rem'}} className="bi-question-circle" id="boardStyleHelp" />
                         </Label>
                         
                         <Input type='select' className="form-control" id="boardStyle" name="currentBoardStyle" value={this.state.currentBoardStyle} onChange={this.updateBoardStyle}>
@@ -1345,7 +1353,7 @@ class MapOptions extends React.Component {
 
                     <FormGroup>
                         <Label for="placementStyle" className="d-flex">Placement Style
-                            &nbsp;<b className="bi-question-circle" id="placementStyleHelp" />
+                            <b style={{marginLeft: '.5rem'}} className="bi-question-circle" id="placementStyleHelp" />
                         </Label>
                         <Input type='select' className="form-control" id="placementStyle" name="currentPlacementStyle" value={this.state.currentPlacementStyle} onChange={this.handleInputChange}>
                             {this.state.optionsPossible.placementStyles.map((x) => <option key={x} value={x}>{this.capitalize(x)}</option>)}
@@ -1354,7 +1362,7 @@ class MapOptions extends React.Component {
 
                     <FormGroup>
                         <Label for="pickStyle" className="d-flex">System Weighting
-                            &nbsp;<b className="bi-question-circle" id="systemWeightingHelp" />
+                            <b style={{marginLeft: '.5rem'}} className="bi-question-circle" id="systemWeightingHelp" />
                         </Label>
                         <Input type='select' className="form-control" id="pickStyle" name="currentPickStyle" value={this.state.currentPickStyle} onChange={this.handleInputChange}>
                             {this.state.optionsPossible.pickStyles.map((x) => <option key={x} value={x}>{this.capitalize(x)}</option>)}
@@ -1385,20 +1393,20 @@ class MapOptions extends React.Component {
 
                     <FormGroup>
                         <Input type="checkbox" className="custom-control-input" id="ensureRacialAnomalies" name="ensureRacialAnomalies" checked={this.state.ensureRacialAnomalies} onChange={this.handleInputChange} />
-                        <Label className="custom-control-label" for="ensureRacialAnomalies">Ensure Racial Anomalies</Label>
-                        &nbsp;<b className="bi-question-circle" id="ensureAnomaliesHelp" />
+                        <Label style={{marginLeft: '.5rem'}} className="custom-control-label" for="ensureRacialAnomalies">Ensure Racial Anomalies</Label>
+                        <b style={{marginLeft: '.5rem'}} className="bi-question-circle" id="ensureAnomaliesHelp" />
                     </FormGroup>
 
                     <FormGroup>
                         <Input type="checkbox" className="custom-control-input" id="shuffleBoards" name="shuffleBoards" checked={this.state.shuffleBoards} onChange={this.handleInputChange} />
-                        <Label className="custom-control-label" for="shuffleBoards">Randomize Priorities Before Placement</Label>
-                        &nbsp;<b className="bi-question-circle" id="shuffleBoardsHelp" />
+                        <Label style={{marginLeft: '.5rem'}} className="custom-control-label" for="shuffleBoards">Randomize Priorities Before Placement</Label>
+                        <b style={{marginLeft: '.5rem'}} className="bi-question-circle" id="shuffleBoardsHelp" />
                     </FormGroup>
 
                     <FormGroup>
                         <Input type="checkbox" className="custom-control-input" id="reversePlacementOrder" name="reversePlacementOrder" checked={this.state.reversePlacementOrder} onChange={this.handleInputChange} />
-                        <Label className="custom-control-label" for="reversePlacementOrder">Reverse Placement Order</Label>
-                        &nbsp;<b className="bi-question-circle" id="reversePlacementHelp" />
+                        <Label style={{marginLeft: '.5rem'}} className="custom-control-label" for="reversePlacementOrder">Reverse Placement Order</Label>
+                        <b style={{marginLeft: '.5rem'}} className="bi-question-circle" id="reversePlacementHelp" />
                     </FormGroup>
 
                     <UncontrolledTooltip target="boardStyleHelp" placement="right" trigger="hover">
@@ -1457,8 +1465,10 @@ class MapOptions extends React.Component {
                          </p>
                     </UncontrolledTooltip>
                     
-            
                 </CardBody>
+                <CardFooter style={{display: 'flex', justifyContent: 'right'}}>
+                    <Button color='success' onClick={this.generateBoard}>Start game <b className='bi-caret-right-square-fill' ></b></Button>
+                </CardFooter>
             </>
         );
     }
