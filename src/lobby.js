@@ -134,14 +134,15 @@ export const Lobby = ()=> {
             if(data.matchID) {
                 clearInterval(interval);
                 setMatchID(data.matchID);
-                lobbyClient.joinMatch('TIO', data.matchID, {
+                console.log('data.matchID', data.matchID);
+                /*lobbyClient.joinMatch('TIO', data.matchID, {
                     playerName,
                     playerID
                 })
                 .then(data => {
                     data.playerCredentials && setPlayerCreds(data.playerCredentials);
                     })
-                .catch(console.err);
+                .catch(console.err);*/
             }
         })
         .catch(console.err);

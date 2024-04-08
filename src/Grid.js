@@ -16,7 +16,7 @@ export const getHexGrid = (arr) => {
     mapArr.reverse();
     
     console.log('mapArr:', mapArr);
-    let HexGrid = new Grid(Hex, spiral({ start: [0, 0], radius: 3 }));
+    let HexGrid = new Grid(Hex, spiral({ start: [0, 0], radius: 4 }));
     HexGrid.forEach(hex => hex.tileId = mapArr.pop());
     return HexGrid;
 }

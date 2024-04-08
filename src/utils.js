@@ -1,11 +1,102 @@
 /* eslint eqeqeq: 0 */
 import tileData from './tileData.json';
 import techData from './techData.json';
+import raceData from './raceData.json';
+import cardData from './cardData.json';
+
 import { neighbors } from './Grid';
 import { Stage } from 'boardgame.io/core';
 import { createContext } from 'react';
+import { produce } from 'immer';
 
 //export const NUM_PLAYERS = 2;
+export const getInitOrder = (hexGrid, numPlayers) => {
+  return hexGrid.map( h => ({ rid: h.tileId }))
+    .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, numPlayers).map((r,i)=>i)
+}
+
+export const getInitSpeaker = (hexGrid) => {
+  return hexGrid.map( h => ({ rid: h.tileId }))
+    .find( i => tileData.green.indexOf(i.rid) > -1 ).rid;
+}
+
+export const getInitRaces = (hexGrid, numPlayers) => {
+  const all_units = techData.filter((t) => t.type === 'unit');
+  let races = hexGrid.map( h => ({ rid: h.tileId }))
+    .filter( i => tileData.green.indexOf(i.rid) > -1 );
+
+   races = races.slice(0, numPlayers);
+   races = races.map( (r, idx) => {
+      const rd = JSON.parse(JSON.stringify(raceData[r.rid]));
+      return {rid: r.rid, ...rd, pid: idx, destroyedUnits: [], commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
+      exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 10, c: 10, h: 10, i: 10}, relics: []}
+    });
+
+  races.forEach( r => {
+
+    all_units.forEach( t => {
+      const tch = r.technologies.find( f => f.id === t.id);
+      if(!tch){
+        r.technologies.push(t);
+      }
+      else{
+        //tch.racial = true;
+      }
+    });
+    //r.promissory.forEach(r => r.racial = true);
+    r.promissory.push(...cardData.promissory);
+
+    //r.actionCards.push(...cardData.actions.slice(70, 76)); //test only
+  });
+
+  return races;
+}
+
+export const getInitTiles = (hexGrid, numPlayers) => {
+  let tiles = hexGrid.map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
+  const races = hexGrid.map( h => ({ rid: h.tileId }))
+    .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, numPlayers)
+    .map( (r, idx) => ({...r, ...raceData[r.rid], pid: idx, destroyedUnits: [], commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
+      exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 10, c: 10, h: 10, i: 10}, relics: []}) );
+
+
+  tiles.forEach( (t, i) => {
+    if( t.tdata.type === 'green' ){
+      tiles[i].tdata = produce(tiles[i].tdata, draft => {
+        const idx = races.findIndex(r => r.rid === t.tid);
+        if(idx > -1){
+          draft.occupied = String(idx);
+
+          for( let j=0; j < draft.planets.length; j++ ){
+            draft.planets[j].occupied = String(idx);
+          }
+          if(races[idx].startingUnits){
+            draft.fleet = races[idx].startingUnits.fleet;
+            
+            //if(draft.planets.length < 2){
+              if(draft.planets && draft.planets.length){
+                draft.planets[0].units = {...races[idx].startingUnits.ground};
+              }
+            /*}
+            else{
+              draft.planets[0].units = {...races[idx].startingUnits.ground};
+              delete draft.planets[0].units.pds;
+
+              draft.planets[1].units = {pds: races[idx].startingUnits.ground.pds};
+            }*/
+          }
+        }
+      });
+    }
+    else{
+      if(t.tdata.type !== 'hyperlane' && (!t.tdata.planets || !t.tdata.planets.length)){
+        t.tdata.frontier = true;
+      }
+    }
+  });
+
+  return tiles;
+}
 
 export const UNITS_LIMIT = {
   spacedock: 3,
