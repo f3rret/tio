@@ -1,37 +1,27 @@
 /* eslint eqeqeq: 0 */
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
-import { getHexGrid, neighbors } from './Grid';
-
 import cardData from './cardData.json';
+import { getHexGrid, neighbors } from './Grid';
 import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm } from './gameStages';
-/*import { produce } from 'immer';*/
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
- getInitSpeaker, getInitRaces, getInitOrder, getInitTiles } from './utils';
+ getInitRaces, getInitTiles } from './utils';
  
 export const TIO = {
     name: 'TIO',
-    validateSetupData: (setupData, numPlayers) => {
-      //console.log(setupData, numPlayers)
-    },
+    validateSetupData: (setupData, numPlayers) => {},
     setup: ({ctx}, setupData) => {
-console.log('------------------------------------------------------------------------------------------------');
+console.log('--------------------------------------------------');
 console.log(setupData);
-console.log(ctx)
-      
       let hexGrid = getHexGrid(setupData.mapArray).toArray().filter(a => a);
+      const races = getInitRaces(hexGrid, ctx.numPlayers);
       
-      /*const dice= {};
-      for(let i=0; i<ctx.numPlayers; i++){
-        dice[i] = {};
-      }*/
-
       return {
         matchName: setupData.matchName || 'New game',
-        speaker: getInitSpeaker(hexGrid),
+        speaker: races[0],
         mapArray: setupData.mapArray, 
-        tiles: getInitTiles(hexGrid, ctx.numPlayers),
+        tiles: getInitTiles(hexGrid, races),
         pubObjectives: [],
         secretObjDeck: [],
         actionsDeck: [],
@@ -40,13 +30,13 @@ console.log(ctx)
         relicsDeck: [],
         passedPlayers: [],
         laws: [],
-        TURN_ORDER: getInitOrder(hexGrid, ctx.numPlayers),
-        races: getInitRaces(hexGrid, ctx.numPlayers),
+        TURN_ORDER: races.map((r,i)=>i),
+        races,
         dice: (new Array(ctx.numPlayers)).map(a => { return {}})
       }
     },
 
-    minPlayers: 1,
+    minPlayers: 2,
     maxPlayers: 8,
     
     phases: {

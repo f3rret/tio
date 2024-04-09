@@ -9,17 +9,6 @@ import { Stage } from 'boardgame.io/core';
 import { createContext } from 'react';
 import { produce } from 'immer';
 
-//export const NUM_PLAYERS = 2;
-export const getInitOrder = (hexGrid, numPlayers) => {
-  return hexGrid.map( h => ({ rid: h.tileId }))
-    .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, numPlayers).map((r,i)=>i)
-}
-
-export const getInitSpeaker = (hexGrid) => {
-  return hexGrid.map( h => ({ rid: h.tileId }))
-    .find( i => tileData.green.indexOf(i.rid) > -1 ).rid;
-}
-
 export const getInitRaces = (hexGrid, numPlayers) => {
   const all_units = techData.filter((t) => t.type === 'unit');
   let races = hexGrid.map( h => ({ rid: h.tileId }))
@@ -52,13 +41,8 @@ export const getInitRaces = (hexGrid, numPlayers) => {
   return races;
 }
 
-export const getInitTiles = (hexGrid, numPlayers) => {
+export const getInitTiles = (hexGrid, races) => {
   let tiles = hexGrid.map( h => ({ tid: h.tileId, /*blocked: [],*/ tdata: {...tileData.all[h.tileId], tokens: []}, q: h.q, r: h.r, w: h.width, corners: h.corners}) );
-  const races = hexGrid.map( h => ({ rid: h.tileId }))
-    .filter( i => tileData.green.indexOf(i.rid) > -1 ).slice(0, numPlayers)
-    .map( (r, idx) => ({...r, ...raceData[r.rid], pid: idx, destroyedUnits: [], commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
-      exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 10, c: 10, h: 10, i: 10}, relics: []}) );
-
 
   tiles.forEach( (t, i) => {
     if( t.tdata.type === 'green' ){

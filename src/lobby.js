@@ -5,6 +5,7 @@ import { Card, CardBody, CardTitle, CardFooter, CardText, Container, Row, Col,
 import { produce } from 'immer';
 import MapOptions from './map generator/options/MapOptions';
 import raceData from './map generator/data/raceData.json';
+import { App } from './App';
 import './scss/custom.scss';
 
 let interval = null;
@@ -41,7 +42,7 @@ export const Lobby = ()=> {
                 matchName: 'New Game',
                 edition: 'PoK',
                 map: 'random',
-                races: new Array(8)
+                //races: new Array(8)
             }
         });
 
@@ -127,22 +128,21 @@ export const Lobby = ()=> {
     const readyToPlay = useCallback(() => {}, []);
 
     const runGame = useCallback((tiles) => {
-        console.log(tiles);
         
         lobbyClient.createMatch('TIO', {numPlayers: prematchInfo.players.length, setupData: {...prematchInfo.setupData, mapArray: tiles}})
         .then(data => {
             if(data.matchID) {
                 clearInterval(interval);
                 setMatchID(data.matchID);
-                console.log('data.matchID', data.matchID);
-                /*lobbyClient.joinMatch('TIO', data.matchID, {
+               
+                lobbyClient.joinMatch('TIO', data.matchID, {
                     playerName,
                     playerID
                 })
                 .then(data => {
                     data.playerCredentials && setPlayerCreds(data.playerCredentials);
                     })
-                .catch(console.err);*/
+                .catch(console.err);
             }
         })
         .catch(console.err);
@@ -173,7 +173,9 @@ export const Lobby = ()=> {
         // eslint-disable-next-line
     }, []);
 
-    return <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '100%', 
+    return <>
+            {playerID && matchID && playerCreds && <App playerID={playerID} matchID={matchID} credentials={playerCreds}/>}
+            {(!playerID || !matchID || !playerCreds) && <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '100%', 
                         padding: '2rem', fontFamily:'Handel Gothic'}}>  
                 {(!playerCreds || !prematchID) && <Card style={{flex: 'auto', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
                     <CardTitle style={{display: 'flex'}}>
@@ -257,7 +259,7 @@ export const Lobby = ()=> {
                         {!playerCreds && !playerID && prematchInfo && prematchInfo.players && 
                             <Button color='success' disabled={!prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>Join game <b className='bi-caret-right-square-fill' ></b></Button>}
                         {playerCreds && <Button color='danger' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> Leave</Button>}
-                        {playerCreds && <Button color='warning' onClick={readyToPlay}>Ready to play <b className='bi-check-square-fill' ></b></Button>}
+                        {false && <Button color='warning' onClick={readyToPlay}>Ready to play <b className='bi-check-square-fill' ></b></Button>}
                     </CardFooter>
                 </Card>}
                 {playerCreds && prematchInfo && prematchInfo.players && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
@@ -265,5 +267,6 @@ export const Lobby = ()=> {
                     numberOfPlayers={prematchInfo.players.length} updateTiles={runGame} updateRaces={()=>{}} toggleProphecyOfKings={()=>{}}
                     currentPlayerNames={[]} updatePlayerNames={()=>{}}/>
                 </Card>}
-            </div>;
+            </div>}
+        </>;
 }

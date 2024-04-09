@@ -15,7 +15,6 @@ export const getHexGrid = (arr) => {
     let mapArr = removeTrailing([...arr]);
     mapArr.reverse();
     
-    console.log('mapArr:', mapArr);
     let HexGrid = new Grid(Hex, spiral({ start: [0, 0], radius: 4 }));
     HexGrid.forEach(hex => hex.tileId = mapArr.pop());
     return HexGrid;

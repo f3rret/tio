@@ -755,7 +755,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         {element.tdata.ionstorm && element.tdata.wormhole === 'alpha' && <Sprite x={-15} y={element.w/4 + 30} scale={1} alpha={.85} image={'icons/alpha.png'}/>}
         {element.tdata.ionstorm && element.tdata.wormhole === 'beta' && <Sprite x={-15} y={element.w/4 + 30} scale={1} alpha={.85} image={'icons/beta.png'}/>}
         {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier_bg.png'}/>}
-        {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
+        {element.tdata.tokens !== undefined && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
             
             return <Sprite alpha={1} key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={.3} image={'icons/ct.png'}>
                     <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={55} y={55} alpha={.85}></Sprite>
