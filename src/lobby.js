@@ -41,8 +41,7 @@ export const Lobby = ()=> {
             setupData: {
                 matchName: 'New Game',
                 edition: 'PoK',
-                map: 'random',
-                //races: new Array(8)
+                map: 'random'
             }
         });
 
@@ -129,7 +128,8 @@ export const Lobby = ()=> {
 
     const runGame = useCallback((tiles) => {
         
-        lobbyClient.createMatch('TIO', {numPlayers: prematchInfo.players.length, setupData: {...prematchInfo.setupData, mapArray: tiles}})
+        lobbyClient.createMatch('TIO', {numPlayers: prematchInfo.players.filter(p => p.name).length, 
+            setupData: {...prematchInfo.setupData, mapArray: tiles}})
         .then(data => {
             if(data.matchID) {
                 clearInterval(interval);
@@ -169,6 +169,7 @@ export const Lobby = ()=> {
     }, [prematchID, getPrematch]);
 
     useEffect(() => {
+        clearInterval(interval);
         refreshMatchList();
         // eslint-disable-next-line
     }, []);

@@ -1584,7 +1584,7 @@ export const ACTS_STAGES = {
         const activeTile = G.tiles.find(t => t.active === true);
 
         if(selectedTile > -1 && Object.keys(escFleet).length){
-          /*const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
+          /*const neighs = neighbors(G.HexGrid,[activeTile.q, activeTile.r]).toArray();
           const possible = neighs.filter(n => {
               const tile = G.tiles.find(t => t.tid === n.tileId);
 

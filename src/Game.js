@@ -12,16 +12,16 @@ export const TIO = {
     name: 'TIO',
     validateSetupData: (setupData, numPlayers) => {},
     setup: ({ctx}, setupData) => {
-console.log('--------------------------------------------------');
-console.log(setupData);
-      let hexGrid = getHexGrid(setupData.mapArray).toArray().filter(a => a);
-      const races = getInitRaces(hexGrid, ctx.numPlayers);
+
+      const HexGrid = getHexGrid(setupData.mapArray);
+      const hg = HexGrid.toArray().filter(a => a);
+      const races = getInitRaces(hg, ctx.numPlayers);
       
       return {
         matchName: setupData.matchName || 'New game',
         speaker: races[0],
         mapArray: setupData.mapArray, 
-        tiles: getInitTiles(hexGrid, races),
+        tiles: getInitTiles(hg, races),
         pubObjectives: [],
         secretObjDeck: [],
         actionsDeck: [],
@@ -32,11 +32,12 @@ console.log(setupData);
         laws: [],
         TURN_ORDER: races.map((r,i)=>i),
         races,
-        dice: (new Array(ctx.numPlayers)).map(a => { return {}})
+        dice: (new Array(ctx.numPlayers)).map(a => { return {}}),
+        HexGrid: JSON.stringify(HexGrid)
       }
     },
 
-    minPlayers: 2,
+    minPlayers: 1,
     maxPlayers: 8,
     
     phases: {
@@ -215,7 +216,7 @@ console.log(setupData);
 
                     //cannon in adjacent systems
                     const races = G.races.filter((r, i) => i != ctx.currentPlayer && r.technologies.find(t => t.id === 'PDS').spaceCannon.range > 1).map(r => r.rid);
-                    const neighs = neighbors([activeTile.q, activeTile.r]).toArray();
+                    const neighs = neighbors(G.HexGrid, [activeTile.q, activeTile.r]).toArray();
 
                     neighs.forEach(nei => {
                       const n = G.tiles.find(t => t.tid === nei.tileId);
