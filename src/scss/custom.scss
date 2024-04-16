@@ -96,6 +96,9 @@ li.list-group-item{
     color: red;
 }
 
+#lobbyMain select[disabled] {
+    background-color: transparent;
+}
 
 @import "../../node_modules/bootstrap/scss/bootstrap";
 

@@ -1261,6 +1261,7 @@ export const TIO = {
         if (IsVictory(G, ctx)) {
           return { winner: ctx.currentPlayer };
         }
+        
     },
 };
 

@@ -114,6 +114,10 @@ class MapOptions extends React.Component {
         this.setState({
             [name]: value
         });
+
+        this.props.updateMapOptionsCallback({
+            [name]: value
+        });
     }
 
     handleNameChange(event) {
@@ -173,6 +177,10 @@ class MapOptions extends React.Component {
                 this.props.toggleProphecyOfKings(event);
             });
         }
+
+        this.props.updateMapOptionsCallback({
+            useProphecyOfKings: event.target.checked
+        });
     }
 
     updatePlayerCount(event) {
@@ -190,6 +198,10 @@ class MapOptions extends React.Component {
             if (this.state.generated) {
                 this.generateBoard(event)
             }
+        });
+
+        this.props.updateMapOptionsCallback({
+            currentBoardStyle: event.target.value
         });
     }
 
@@ -1466,9 +1478,9 @@ class MapOptions extends React.Component {
                     </UncontrolledTooltip>
                     
                 </CardBody>
-                <CardFooter style={{display: 'flex', justifyContent: 'right'}}>
+                {this.props.playerID === '0' && <CardFooter style={{display: 'flex', justifyContent: 'right'}}>
                     <Button color='success' onClick={this.generateBoard}>Start game <b className='bi-caret-right-square-fill' ></b></Button>
-                </CardFooter>
+                </CardFooter>}
             </>
         );
     }

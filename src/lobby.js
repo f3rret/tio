@@ -4,6 +4,7 @@ import { Card, CardBody, CardTitle, CardFooter, CardText, Container, Row, Col,
     Input, Button, FormFeedback, FormGroup, Label } from 'reactstrap';
 import { produce } from 'immer';
 import MapOptions from './map generator/options/MapOptions';
+import MapOptionsRO from './map generator/options/MapOptionsRO';
 import raceData from './map generator/data/raceData.json';
 import { App } from './App';
 import './scss/custom.scss';
@@ -26,6 +27,16 @@ export const Lobby = ()=> {
     //const [playerName, setPlayerName] = useState(playerNames[0]);
     
     const lobbyClient = useMemo(() => new LobbyClient({ server: 'http://localhost:8000' }), []);
+
+    const iAmReady = useMemo(() => {
+        if(!playerID) return false;
+        if(playerID === '0') return false;
+        if(!prematchInfo) return false;
+        if(!prematchInfo.players || !prematchInfo.players.length) return false;
+        if(!prematchInfo.players[playerID]) return false;
+
+        return prematchInfo.players[playerID].data && prematchInfo.players[playerID].data.ready;
+    }, [prematchInfo, playerID]);
 
     const refreshMatchList = useCallback(() => {
         lobbyClient.listMatches('prematch')
@@ -66,7 +77,8 @@ export const Lobby = ()=> {
         }
 
         lobbyClient.joinMatch('prematch', param || prematchID, {
-            playerName: playerName || playerNames[nameId]
+            playerName: playerName || playerNames[nameId],
+            data: {ready: false}
         })
         .then(data => {
             data.playerCredentials && setPlayerCreds(data.playerCredentials);
@@ -124,7 +136,19 @@ export const Lobby = ()=> {
         }
     }, [prematchID]);
 
-    const readyToPlay = useCallback(() => {}, []);
+    const readyToPlay = useCallback(() => {
+        lobbyClient.updatePlayer('prematch', prematchID, {
+            playerID: playerID,
+            credentials: playerCreds,
+            data: {
+                ready: true
+            }
+        })
+        .then(data => {
+            console.log(data);
+        })
+        .catch(console.err);
+    }, [lobbyClient, playerID, playerCreds, prematchID]);
 
     const runGame = useCallback((tiles) => {
         
@@ -147,6 +171,39 @@ export const Lobby = ()=> {
         })
         .catch(console.err);
     }, [lobbyClient, prematchInfo, playerName, playerID]);
+
+
+    const updateMapOptionsCallback = useCallback((payload) => {
+        let prevData = {};
+        let mapOptions = {};
+
+        if(prematchInfo.players[playerID] && prematchInfo.players[0].data){
+            prevData = prematchInfo.players[playerID].data;
+        }
+
+        if(prevData.mapOptions){
+            mapOptions = prevData.mapOptions;
+        }
+
+        mapOptions = {...mapOptions, ...payload};
+
+        lobbyClient.updatePlayer('prematch', prematchID, {
+            playerID: playerID,
+            credentials: playerCreds,
+            data: {
+                ...prevData,
+                mapOptions
+            }
+        })
+        .then(data => {
+            if(data === undefined){ //for rapid change local copy of this data
+                setPrematchInfo(produce(prematchInfo, draft => {
+                    draft.players[playerID].data = {...prevData, mapOptions}
+                }));
+            }
+        })
+        .catch(console.err);
+    }, [playerID, prematchID, lobbyClient, playerCreds, prematchInfo]);
 
     useEffect(() => {
         if(matchID){
@@ -176,7 +233,7 @@ export const Lobby = ()=> {
 
     return <>
             {playerID && matchID && playerCreds && <App playerID={playerID} matchID={matchID} credentials={playerCreds}/>}
-            {(!playerID || !matchID || !playerCreds) && <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '100%', 
+            {(!playerID || !matchID || !playerCreds) && <div id='lobbyMain' style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '100%', 
                         padding: '2rem', fontFamily:'Handel Gothic'}}>  
                 {(!playerCreds || !prematchID) && <Card style={{flex: 'auto', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
                     <CardTitle style={{display: 'flex'}}>
@@ -246,12 +303,15 @@ export const Lobby = ()=> {
                         <Container>{prematchInfo.players.map((p, i) => 
                         <Row key={i} style={{marginTop: '.25rem'}}>
                             <Col xs='1'><div style={{backgroundColor: colors[i], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
-                            <Col xs='4' style={{alignSelf: 'center'}}>{p.name}</Col>
-                            <Col xs='7'>
-                                <Input type='select'>
+                            {p.name && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
+                            {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ open ]'}</Col>}
+                            {p.name && <Col xs='7'>
+                                {String(playerID) === String(p.id) && <Input disabled={p.data && p.data.ready} type='select'>
                                     <option>random race</option>
-                                </Input>
-                            </Col>
+                                </Input>}
+                                {String(playerID) !== String(p.id) && <div style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem .75rem'}}>random race</div>}
+                            </Col>}
+                            {!p.name && <Col xs='7' style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem 1.5rem'}}></Col>}
                         </Row>)}
                         </Container>}
                     </CardBody>
@@ -260,13 +320,15 @@ export const Lobby = ()=> {
                         {!playerCreds && !playerID && prematchInfo && prematchInfo.players && 
                             <Button color='success' disabled={!prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>Join game <b className='bi-caret-right-square-fill' ></b></Button>}
                         {playerCreds && <Button color='danger' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> Leave</Button>}
-                        {false && <Button color='warning' onClick={readyToPlay}>Ready to play <b className='bi-check-square-fill' ></b></Button>}
+                        {playerID && playerID !== '0' && !iAmReady && <Button color='success' onClick={readyToPlay}>Ready to play <b className='bi-check-square-fill' ></b></Button>}
                     </CardFooter>
                 </Card>}
                 {playerCreds && prematchInfo && prematchInfo.players && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
-                    <MapOptions visible={true} useProphecyOfKings={true} currentRaces={races} excludedTiles={[]} includedTiles={[]} lockedTiles={[]}
-                    numberOfPlayers={prematchInfo.players.length} updateTiles={runGame} updateRaces={()=>{}} toggleProphecyOfKings={()=>{}}
-                    currentPlayerNames={[]} updatePlayerNames={()=>{}}/>
+                    {playerID === '0' && <MapOptions visible={true} useProphecyOfKings={true} currentRaces={races} excludedTiles={[]} includedTiles={[]} lockedTiles={[]}
+                        numberOfPlayers={prematchInfo.players.length} updateTiles={runGame} updateRaces={()=>{}} toggleProphecyOfKings={()=>{}}
+                        currentPlayerNames={[]} updatePlayerNames={()=>{}} playerID={playerID} updateMapOptionsCallback={updateMapOptionsCallback}/>}
+                    {playerID && playerID !== '0' && prematchInfo.players[0] && prematchInfo.players[0].data && 
+                        <MapOptionsRO {...prematchInfo.players[0].data.mapOptions}/>}
                 </Card>}
             </div>}
         </>;
