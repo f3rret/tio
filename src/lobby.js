@@ -72,13 +72,14 @@ export const Lobby = ()=> {
 
     const joinPrematch = useCallback((param) => {
         let nameId = 0;
-
+ 
         if(prematchInfo && prematchInfo.players && prematchInfo.players.length){
-            nameId = prematchInfo.players.filter(p => p.name).length;
+            nameId = prematchInfo.players.findIndex(p => !p.name);
         }
 
         lobbyClient.joinMatch('prematch', param || prematchID, {
             playerName: playerName || playerNames[nameId],
+            playerID: '' + nameId,
             data: {ready: false}
         })
         .then(data => {
@@ -151,6 +152,35 @@ export const Lobby = ()=> {
         .catch(console.err);
     }, [lobbyClient, playerID, playerCreds, prematchID]);
 
+    const joinMatch = useCallback((mid) => {
+
+        lobbyClient.joinMatch('TIO', mid, {
+            playerName,
+            playerID
+        })
+        .then(data => {
+            if(prematchInfo.players[playerID] && prematchInfo.players[0].data){ //set signal that I already start the game
+                const prevData = prematchInfo.players[playerID].data;
+            
+                lobbyClient.updatePlayer('prematch', prematchID, {
+                    playerID: playerID,
+                    credentials: playerCreds,
+                    data: {
+                        ...prevData,
+                        matchID: mid
+                    }
+                })
+                .then(resp => {
+                    
+                })
+                .catch(console.err);
+            }
+            data.playerCredentials && setPlayerCreds(data.playerCredentials); //change creds from prematch to match 
+        })
+        .catch(console.err);
+
+    }, [lobbyClient, prematchInfo, playerID, playerCreds, prematchID, playerName]);
+
     const runGame = useCallback((tiles) => {
         
         lobbyClient.createMatch('TIO', {numPlayers: prematchInfo.players.filter(p => p.name).length, 
@@ -159,19 +189,14 @@ export const Lobby = ()=> {
             if(data.matchID) {
                 clearInterval(interval);
                 setMatchID(data.matchID);
-               
-                lobbyClient.joinMatch('TIO', data.matchID, {
-                    playerName,
-                    playerID
-                })
-                .then(data => {
-                    data.playerCredentials && setPlayerCreds(data.playerCredentials);
-                    })
-                .catch(console.err);
+
+                if(prematchInfo.players[playerID].data.matchID !== data.matchID){
+                    joinMatch(data.matchID);
+                }
             }
         })
         .catch(console.err);
-    }, [lobbyClient, prematchInfo, playerName, playerID]);
+    }, [lobbyClient, prematchInfo, playerID, joinMatch]);
 
 
     const updateMapOptionsCallback = useCallback((payload) => {
@@ -205,6 +230,22 @@ export const Lobby = ()=> {
         })
         .catch(console.err);
     }, [playerID, prematchID, lobbyClient, playerCreds, prematchInfo]);
+
+    useEffect(() => {
+        if(!matchID && prematchInfo && prematchInfo.players && prematchInfo.players.length){
+            if(prematchInfo.players[playerID] && prematchInfo.players[playerID].data && !prematchInfo.players[playerID].data.matchID){
+                const cp = prematchInfo.players.find(p => p.name && p.data && p.data.matchID);
+                if(cp){
+                    clearInterval(interval);
+                    setMatchID(cp.data.matchID);
+
+                    if(prematchInfo.players[playerID].data.matchID !== cp.data.matchID){
+                        joinMatch(cp.data.matchID);
+                    }
+                }
+            }
+        }
+    }, [prematchInfo, matchID, playerID, joinMatch])
 
     useEffect(() => {
         if(matchID){
@@ -305,10 +346,11 @@ export const Lobby = ()=> {
                             <Container>{prematchInfo.players.map((p, i) => 
                             <Row key={i} style={{marginTop: '.25rem', minHeight: '2.5rem'}}>
                                 <Col xs='1' style={{padding: 0}}><div style={{backgroundColor: colors[i], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
-                                {p.name && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
+                                {p.name && p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
+                                {p.name && !p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ connecting... ]'}</Col>}
                                 {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ open ]'}</Col>}
-                                {p.name && <Col xs='7'>
-                                    {String(playerID) === String(p.id) && <Input disabled={p.data && p.data.ready} type='select'>
+                                {p.name && <Col xs='7' style={{color: p.data && p.data.ready ? 'lime' : 'none'}}>
+                                    {String(playerID) === String(p.id) && <Input style={{color: 'inherit'}} disabled={p.data && p.data.ready} type='select'>
                                         <option>random race</option>
                                     </Input>}
                                     {String(playerID) !== String(p.id) && <div style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem .75rem'}}>random race</div>}
