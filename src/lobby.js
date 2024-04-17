@@ -7,6 +7,7 @@ import MapOptions from './map generator/options/MapOptions';
 import MapOptionsRO from './map generator/options/MapOptionsRO';
 import raceData from './map generator/data/raceData.json';
 import { App } from './App';
+import { PrematchApp } from './prematch/prematchApp';
 import './scss/custom.scss';
 
 let interval = null;
@@ -262,7 +263,7 @@ export const Lobby = ()=> {
                             <Input valid placeholder={prematchInfo.setupData.matchName} onChange={(e) => changeOption('matchName', e.target)}/>
                             <FormFeedback valid>that name acceptable</FormFeedback>
                         </>}
-                        {(playerCreds || prematchInfo.players) && <h3>{prematchInfo.setupData.matchName}</h3>}
+                        {(playerCreds || prematchInfo.players) && <h3 className="text-center">{prematchInfo.setupData.matchName}</h3>}
                     </CardTitle>
                     {!playerCreds && !prematchInfo.players && <CardBody>
                         <FormGroup>
@@ -296,24 +297,27 @@ export const Lobby = ()=> {
                             </FormGroup>
                         </div>
                     </CardBody>}
-                    <CardBody>
-                        {prematchInfo.players && <CardText>{prematchInfo.setupData.edition + ' / ' + prematchInfo.setupData.map
-                                    + ' map / ' + prematchInfo.players.length + ' players'}</CardText>}
-                        {prematchInfo.players && 
-                        <Container>{prematchInfo.players.map((p, i) => 
-                        <Row key={i} style={{marginTop: '.25rem'}}>
-                            <Col xs='1'><div style={{backgroundColor: colors[i], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
-                            {p.name && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
-                            {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ open ]'}</Col>}
-                            {p.name && <Col xs='7'>
-                                {String(playerID) === String(p.id) && <Input disabled={p.data && p.data.ready} type='select'>
-                                    <option>random race</option>
-                                </Input>}
-                                {String(playerID) !== String(p.id) && <div style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem .75rem'}}>random race</div>}
-                            </Col>}
-                            {!p.name && <Col xs='7' style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem 1.5rem'}}></Col>}
-                        </Row>)}
-                        </Container>}
+                    <CardBody style={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
+                        <div>
+                            {prematchInfo.players && <CardText style={{marginBottom: '3rem'}}>{prematchInfo.setupData.edition + ' / ' + prematchInfo.setupData.map
+                                        + ' map / ' + prematchInfo.players.length + ' players'}</CardText>}
+                            {prematchInfo.players && 
+                            <Container>{prematchInfo.players.map((p, i) => 
+                            <Row key={i} style={{marginTop: '.25rem', minHeight: '2.5rem'}}>
+                                <Col xs='1' style={{padding: 0}}><div style={{backgroundColor: colors[i], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
+                                {p.name && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
+                                {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ open ]'}</Col>}
+                                {p.name && <Col xs='7'>
+                                    {String(playerID) === String(p.id) && <Input disabled={p.data && p.data.ready} type='select'>
+                                        <option>random race</option>
+                                    </Input>}
+                                    {String(playerID) !== String(p.id) && <div style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem .75rem'}}>random race</div>}
+                                </Col>}
+                                {!p.name && <Col xs='7' style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem 1.5rem'}}></Col>}
+                            </Row>)}
+                            </Container>}
+                        </div>
+                        {playerCreds && <PrematchApp playerID={playerID} matchID={prematchID} credentials={playerCreds}/>}
                     </CardBody>
                     <CardFooter style={{display: 'flex', justifyContent: 'space-between'}}>
                         {!playerCreds && !prematchInfo.players && <Button color='success' onClick={createPrematch}>Create game <b className='bi-caret-right-square-fill' ></b></Button>}

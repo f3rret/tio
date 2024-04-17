@@ -1,6 +1,6 @@
 import { Server, Origins } from 'boardgame.io/server';
 import { TIO } from './Game';
-import { prematch } from './prematch';
+import { prematch } from './prematch/prematch';
 
 /*const lobbyConfig = {
     apiPort: 8080,
