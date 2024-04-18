@@ -3,6 +3,7 @@ import { useCallback, useState, useMemo, useEffect } from 'react';
 import { Card, CardBody, CardTitle, CardFooter, CardText, Container, Row, Col, 
     Input, Button, FormFeedback, FormGroup, Label } from 'reactstrap';
 import { produce } from 'immer';
+import { useCookies } from 'react-cookie';
 import MapOptions from './map generator/options/MapOptions';
 import MapOptionsRO from './map generator/options/MapOptionsRO';
 import raceData from './map generator/data/raceData.json';
@@ -25,6 +26,7 @@ export const Lobby = ()=> {
     const [playerID, setPlayerID] = useState();
     const [playerName, setPlayerName] = useState();
     const [matchID, setMatchID] = useState();
+    const [cookie, setCookie] = useCookies(['matchID', 'playerID', 'playerCreds']);
     //const [playerName, setPlayerName] = useState(playerNames[0]);
     
     const lobbyClient = useMemo(() => new LobbyClient({ server: 'http://localhost:8000' }), []);
@@ -41,7 +43,23 @@ export const Lobby = ()=> {
 
     const refreshMatchList = useCallback(() => {
         lobbyClient.listMatches('prematch')
-        .then(data => data.matches && setGameList(data.matches))
+        .then(data => {
+            let matches = [];
+
+            if(data.matches){
+                matches = [...data.matches];
+            }
+
+            lobbyClient.listMatches('TIO')
+            .then(dt => {
+                if(dt.matches){
+                    matches = [...dt.matches, ...matches];
+                }
+
+                setGameList(matches.filter(m => m.players && m.players.length && m.players.find(p => p.isConnected)));
+            })
+            .catch(console.error)
+        })
         .catch(console.error)
     }, [lobbyClient]);
 
@@ -54,7 +72,8 @@ export const Lobby = ()=> {
                 matchName: 'New Game',
                 edition: 'PoK',
                 map: 'random'
-            }
+            },
+            gameName: 'prematch'
         });
 
         setPrematchID(null);
@@ -77,7 +96,7 @@ export const Lobby = ()=> {
             nameId = prematchInfo.players.findIndex(p => !p.name);
         }
 
-        lobbyClient.joinMatch('prematch', param || prematchID, {
+        lobbyClient.joinMatch(prematchInfo.gameName, param || prematchID, {
             playerName: playerName || playerNames[nameId],
             playerID: '' + nameId,
             data: {ready: false}
@@ -87,10 +106,15 @@ export const Lobby = ()=> {
             if(data.playerID !== undefined){
                 setPlayerID(data.playerID);
                 setPlayerName(playerNames[nameId]);
+
+                setCookie('matchID', param || prematchID);
+                setCookie('playerID', data.playerID);
+                setCookie('playerCreds', data.playerCredentials);
+                setCookie('playerName', playerName || playerNames[nameId]);
             }
         })
         .catch(console.err);
-    }, [prematchID, prematchInfo, playerNames, lobbyClient, playerName]);
+    }, [prematchID, prematchInfo, playerNames, lobbyClient, playerName, setCookie]);
 
     const leavePrematch = useCallback(() => {
         lobbyClient.leaveMatch('prematch', prematchID, {
@@ -155,31 +179,48 @@ export const Lobby = ()=> {
     const joinMatch = useCallback((mid) => {
 
         lobbyClient.joinMatch('TIO', mid, {
-            playerName,
-            playerID
+            playerName: playerName,
+            playerID: playerID
         })
         .then(data => {
-            if(prematchInfo.players[playerID] && prematchInfo.players[0].data){ //set signal that I already start the game
-                const prevData = prematchInfo.players[playerID].data;
-            
-                lobbyClient.updatePlayer('prematch', prematchID, {
-                    playerID: playerID,
-                    credentials: playerCreds,
-                    data: {
-                        ...prevData,
-                        matchID: mid
-                    }
-                })
-                .then(resp => {
-                    
-                })
-                .catch(console.err);
+            if(prematchInfo.gameName === 'prematch'){
+                if(prematchInfo.players[playerID] && prematchInfo.players[0].data){ //set signal that I already start the game
+                    const prevData = prematchInfo.players[playerID].data;
+                
+                    lobbyClient.updatePlayer('prematch', prematchID, {
+                        playerID: playerID,
+                        credentials: playerCreds,
+                        data: {
+                            ...prevData,
+                            matchID: mid
+                        }
+                    })
+                    .then(resp => {
+                        
+                    })
+                    .catch(console.err);
+                }
+                data.playerCredentials && setPlayerCreds(data.playerCredentials); //change creds from prematch to match 
+
+                setCookie('matchID', mid);
+                setCookie('playerID', playerID);
+                setCookie('playerCreds', data.playerCredentials);
+                setCookie('playerName', playerName);
             }
-            data.playerCredentials && setPlayerCreds(data.playerCredentials); //change creds from prematch to match 
         })
         .catch(console.err);
 
-    }, [lobbyClient, prematchInfo, playerID, playerCreds, prematchID, playerName]);
+    }, [lobbyClient, prematchInfo, playerID, playerCreds, prematchID, playerName, setCookie]);
+
+    const reconnect = useCallback(() => {
+        setPlayerCreds(cookie.playerCreds);
+        setPlayerID('' + cookie.playerID);
+        setPlayerName(cookie.playerName);
+
+        if(prematchInfo.gameName === 'TIO'){
+            setMatchID(prematchInfo.matchID);
+        }
+    }, [cookie, prematchInfo]);
 
     const runGame = useCallback((tiles) => {
         
@@ -232,7 +273,7 @@ export const Lobby = ()=> {
     }, [playerID, prematchID, lobbyClient, playerCreds, prematchInfo]);
 
     useEffect(() => {
-        if(!matchID && prematchInfo && prematchInfo.players && prematchInfo.players.length){
+        if(!matchID && prematchInfo && prematchInfo.players && prematchInfo.players.length && prematchInfo.gameName === 'prematch'){
             if(prematchInfo.players[playerID] && prematchInfo.players[playerID].data && !prematchInfo.players[playerID].data.matchID){
                 const cp = prematchInfo.players.find(p => p.name && p.data && p.data.matchID);
                 if(cp){
@@ -286,7 +327,7 @@ export const Lobby = ()=> {
                     <CardBody style={{paddingTop: '5rem', overflowY: 'auto'}}>
                         <Container style={{fontSize: '80%'}}>
                             {gameList && [...gameList].reverse().map( (g, i) => 
-                            <Row key={i} matchid={g.matchID} className={'hoverable ' + (prematchID && prematchID === g.matchID ? 'selectedMatch': '')} 
+                            <Row key={i} matchid={g.matchID} className={'hoverable ' + (prematchID && prematchID === g.matchID ? 'selectedMatch ': '') + g.gameName + 'Lobby'} 
                                 style={{padding: '.25rem 0', borderRadius: '0'}} onClick={() => rowClick(g.matchID)}>
                                 <Col xs='4' style={{paddingRight: 0}}>{g.createdAt && (new Date(g.createdAt)).toLocaleString()}</Col>
                                 <Col xs='3'>{g.setupData && g.setupData.matchName}</Col>
@@ -363,8 +404,10 @@ export const Lobby = ()=> {
                     </CardBody>
                     <CardFooter style={{display: 'flex', justifyContent: 'space-between'}}>
                         {!playerCreds && !prematchInfo.players && <Button color='success' onClick={createPrematch}>Create game <b className='bi-caret-right-square-fill' ></b></Button>}
-                        {!playerCreds && !playerID && prematchInfo && prematchInfo.players && 
-                            <Button color='success' disabled={!prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>Join game <b className='bi-caret-right-square-fill' ></b></Button>}
+                        {!playerCreds && !playerID && prematchInfo && prematchInfo.players && cookie.matchID === prematchID &&
+                            <Button color='success' onClick={()=>reconnect()}>Reconnect <b className='bi-caret-right-square-fill' ></b></Button>}
+                        {!playerCreds && !playerID && prematchInfo && prematchInfo.players &&
+                            <Button color='success' disabled={prematchInfo.gameName !== 'prematch' || !prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>Join game <b className='bi-caret-right-square-fill' ></b></Button>}
                         {playerCreds && <Button color='danger' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> Leave</Button>}
                         {playerID && playerID !== '0' && !iAmReady && <Button color='success' onClick={readyToPlay}>Ready to play <b className='bi-check-square-fill' ></b></Button>}
                     </CardFooter>

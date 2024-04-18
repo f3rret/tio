@@ -45,12 +45,19 @@ li.list-group-item{
     background-color: rgba(255, 255, 255, 0.15)!important;
     transition: all .25s;
 }
-.selectedMatch{
+.selectedMatch.prematchLobby{
     background-color: rgba(255, 255, 0, 0.65)!important;
     color: black;
     transition: all .25s;
 }
-
+.TIOLobby{
+    color: green;
+}
+.selectedMatch.TIOLobby{
+    background-color: rgba(0, 128, 0, 0.65)!important;
+    color: black;
+    transition: all .25s;
+}
 .btn_hoverable{
     transition: all .25s;
     box-shadow: rgba(0,0,0,.15) -1px 1px 3px 3px!important;
