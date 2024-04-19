@@ -515,7 +515,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       if(moveSteps && moveSteps.length){
         let ar = [advUnitView.tile, ...moveSteps].map(t => ({q: G.tiles[t].q, r: G.tiles[t].r, wormhole: G.tiles[t].tdata.wormhole}));
         ar = [...ar, {q: activeTile.q, r: activeTile.r, wormhole: activeTile.tdata.wormhole}];
-        line = pathFromCoordinates(ar).toArray();
+        line = pathFromCoordinates(G.HexGrid, ar);
 
         let first = line[0];
         let result = [];
@@ -524,7 +524,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           result.push(first);
 
           if(!ar[i-1].wormhole || !wormholesAreAdjacent(G, ar[i-1].wormhole, ar[i].wormhole)){
-            const segment = lineTo({start: [first.q, first.r], stop: [line[i].q, line[i].r]}).toArray();
+            const segment = lineTo(G.HexGrid, [first.q, first.r], [line[i].q, line[i].r]);
             if(segment.length > 1){
               result = [...result, ...segment.splice(1, segment.length-2)];
             }
@@ -539,7 +539,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         return [activeTile.tid, G.tiles[advUnitView.tile].tid];
       }
       else{
-        line = lineTo({ start: [G.tiles[advUnitView.tile].q, G.tiles[advUnitView.tile].r], stop: [activeTile.q, activeTile.r] }).toArray();
+        line = lineTo(G.HexGrid, [G.tiles[advUnitView.tile].q, G.tiles[advUnitView.tile].r], [activeTile.q, activeTile.r]);
         return line;
       }
     }

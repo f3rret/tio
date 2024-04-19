@@ -325,7 +325,7 @@ export const checkObjective = (G, playerID, oid) => {
             const tile = G.tiles.find(t => t.tid === p.tid);
 
             if(tile){
-              const neigh = neighbors(G.HexGrid, [tile.q, tile.r]).toArray().map(n => n.tileId);
+              const neigh = neighbors(G.HexGrid, [tile.q, tile.r]).map(n => n.tileId);
               const ns = neigh.find(n => tileData.green.indexOf(n) > -1 && n != race.rid);
               if(ns) return tileData.green.indexOf(ns);
             }
@@ -378,7 +378,7 @@ export const checkObjective = (G, playerID, oid) => {
           }
         }
         if(req.edge){
-          systems = systems.filter( s => neighbors(G.HexGrid, [s.q, s.r]).toArray().length < 6);
+          systems = systems.filter( s => neighbors(G.HexGrid, [s.q, s.r]).length < 6);
         }
         if(req.wormholes && Array.isArray(req.wormholes)){
           systems = systems.filter( s => s.tdata.wormhole && req.wormholes.indexOf(s.tdata.wormhole) > -1);
@@ -411,7 +411,7 @@ export const checkObjective = (G, playerID, oid) => {
         }
         if(req.adjacentAnomaly){
           systems = systems.filter( s => {
-            const neigh = neighbors(G.HexGrid, [s.q, s.r]).toArray().map(n => n.tileId);
+            const neigh = neighbors(G.HexGrid, [s.q, s.r]).map(n => n.tileId);
             return neigh.find(n => tileData.anomaly.indexOf(n) > -1);
           });
         }
@@ -461,7 +461,7 @@ export const checkObjective = (G, playerID, oid) => {
         }
         if(req.adjacentOhs){
           systems = systems.filter( s => {
-            const neigh = neighbors(G.HexGrid, [s.q, s.r]).toArray().map(n => n.tileId);
+            const neigh = neighbors(G.HexGrid, [s.q, s.r]).map(n => n.tileId);
             return neigh.find(n => n != race.rid && tileData.green.indexOf(n) > -1);
           });
         }
@@ -1146,7 +1146,7 @@ export const checkTacticalActionCard = ({G, events, playerID, atype}) => {
 
       //Experimental Battlestation
       cardOwners = G.races.filter(r => r.actionCards.find(a => a.id === 'Experimental Battlestation')).map(r => String(r.rid));
-      const neigh = neighbors(G.HexGrid, [activeTile.q, activeTile.r]).toArray().map(n => n.tileId);
+      const neigh = neighbors(G.HexGrid, [activeTile.q, activeTile.r]).map(n => n.tileId);
       const tids = [activeTile.tid, ...neigh];
 
       tids.forEach(tid => {

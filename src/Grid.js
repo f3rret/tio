@@ -26,19 +26,21 @@ export const getHexGrid = (arr) => {
     HexGrid.forEach(hex => hex.tileId = mapArr.pop());
     return HexGrid;
 }
+
 export const neighbors = (HexGrid, c) => {
     const ringTraverser = ring({ center: c, radius: 1, bail: true });
     const hg = Grid.fromJSON(JSON.parse(HexGrid), ({ q, r, tileId }) => CustomHex.create([q, r], tileId));
-
-    return hg.traverse(ringTraverser);
+    return hg.traverse(ringTraverser).toArray().filter(t => t.tileId !== -1);
 }
 
-export const lineTo = (HexGrid, {start, stop}) => {
-    const lineBetween = line({ start, stop })
-    return HexGrid.traverse(lineBetween);
+export const lineTo = (HexGrid, start, stop) => {
+    const lineBetween = line({ start, stop });
+    const hg = Grid.fromJSON(JSON.parse(HexGrid), ({ q, r, tileId }) => CustomHex.create([q, r], tileId));
+    return hg.traverse(lineBetween).toArray();
 }
 
 export const pathFromCoordinates = (HexGrid, coords) => {
-    const lineBetween = fromCoordinates(...coords)
-    return HexGrid.traverse(lineBetween);
+    const lineBetween = fromCoordinates(...coords);
+    const hg = Grid.fromJSON(JSON.parse(HexGrid), ({ q, r, tileId }) => CustomHex.create([q, r], tileId));
+    return hg.traverse(lineBetween).toArray();
 }

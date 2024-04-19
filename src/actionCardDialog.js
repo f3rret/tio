@@ -199,7 +199,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                     }
                     else{
                         const neigh = neighbors(G.HexGrid, [tile.q, tile.r]);
-                        neigh.toArray().find( n => {
+                        neigh.find( n => {
                             const t = G.tiles.find(tl => tl.tid === n.tileId);
                             if(String(t.tdata.occupied) === String(cardOwner) && t.tdata.fleet && Object.keys(t.tdata.fleet).length > 0){
                                 accept = true;
@@ -371,7 +371,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                         if(tile && (tile.tdata.occupied === undefined || String(tile.tdata.occupied) === String(playerID))){
                             const activeTile = G.tiles.find(t => t.active === true);
                             const neigh = neighbors(G.HexGrid, [activeTile.q, activeTile.r]);
-                            const isAdjacent = neigh.toArray().find( n => {
+                            const isAdjacent = neigh.find( n => {
                                 return n.tileId === G.tiles[selectedTile].tid;
                             });
 

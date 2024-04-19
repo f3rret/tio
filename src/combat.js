@@ -33,7 +33,7 @@ export const SpaceCannonAttack = () => {
         const races = G.races.filter((r, i) => i !== ctx.currentPlayer && r.technologies.find(t => t.id === 'PDS').spaceCannon.range > 1).map(r => r.rid);
 
         //if(races.length > 0){
-            const neighs = neighbors(G.HexGrid, [activeTile.q, activeTile.r]).toArray();
+            const neighs = neighbors(G.HexGrid, [activeTile.q, activeTile.r]);
             neighs.forEach(nei => {
                 const n = G.tiles.find(t => t.tid === nei.tileId);
                 if(n.tdata.planets){
@@ -1029,7 +1029,7 @@ export const CombatRetreat = (args) => {
     const [escGround, setEscGround] = useState({});
 
     const possibleTiles = useMemo(() => {
-        const neighs = neighbors(G.HexGrid, [activeTile.q, activeTile.r]).toArray();
+        const neighs = neighbors(G.HexGrid, [activeTile.q, activeTile.r]);
         if(activeTile.tdata.wormhole){
             const wormholes = G.tiles.filter(t => t.tid !== activeTile.tid && t.tdata.wormhole && wormholesAreAdjacent(G, activeTile.tdata.wormhole, t.tdata.wormhole));
             if(wormholes.length) neighs.push(...wormholes.map(w => ({tileId: w.tid})));

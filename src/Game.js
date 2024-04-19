@@ -216,7 +216,7 @@ export const TIO = {
 
                     //cannon in adjacent systems
                     const races = G.races.filter((r, i) => i != ctx.currentPlayer && r.technologies.find(t => t.id === 'PDS').spaceCannon.range > 1).map(r => r.rid);
-                    const neighs = neighbors(G.HexGrid, [activeTile.q, activeTile.r]).toArray();
+                    const neighs = neighbors(G.HexGrid, [activeTile.q, activeTile.r]);
 
                     neighs.forEach(nei => {
                       const n = G.tiles.find(t => t.tid === nei.tileId);
@@ -953,7 +953,7 @@ export const TIO = {
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       },
       stats: {
-        next: ({G}) => 'agenda',//G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
+        next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
         turn: {
           order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
           stages: {
