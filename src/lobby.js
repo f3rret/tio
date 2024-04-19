@@ -16,7 +16,17 @@ let interval = null;
 export const Lobby = ()=> {
 
     const playerNames = useMemo(() => ['Alice', 'Bob', 'Cecil', 'David', 'Eva', 'Frank', 'Gregory', 'Heilen'], []);
-    const colors = useMemo(() => ['red', 'green', 'blue', 'yellow', 'gray', 'pink', 'orange', 'violet'], []);
+    const colors = useMemo(() => ['red', 'green', 'blue', 'cyan', 'gray', 'pink', 'orange', 'violet'], []);
+    const trueColors = useMemo(() => {return {
+        red: ['rgba(220, 53, 69, 1)', 'rgba(220, 53, 69, .25)'],
+        green: ['rgba(25, 135, 84, 1)', 'rgba(25, 135, 84, .25)'], 
+        blue: ['rgba(13, 110, 253, 1)', 'rgba(13, 110, 253, .25)'], 
+        cyan: ['rgba(13, 202, 240, 1)', 'rgba(13, 202, 240, .35)'], 
+        gray: ['rgba(108, 117, 125, 1)', 'rgba(108, 117, 125, .25)'], 
+        pink: ['rgba(214, 51, 132, 1)', 'rgba(214, 51, 132, .25)'], 
+        orange: ['rgba(253, 126, 20, 1)', 'rgba(253, 126, 20, .25)'], 
+        violet: ['rgba(111, 66, 193, 1)', 'rgba(111, 66, 193, .25)']
+    }}, []);
     const races = useMemo(() => [...raceData.races, ...raceData.pokRaces], []);
 
     const [gameList, setGameList] = useState();
@@ -71,13 +81,14 @@ export const Lobby = ()=> {
             setupData: {
                 matchName: 'New Game',
                 edition: 'PoK',
-                map: 'random'
+                map: 'random',
+                colors
             },
             gameName: 'prematch'
         });
 
         setPrematchID(null);
-    }, []);
+    }, [colors]);
 
     const getPrematch = useCallback(() => {
         lobbyClient.getMatch('prematch', prematchID)
@@ -386,7 +397,7 @@ export const Lobby = ()=> {
                             {prematchInfo.players && 
                             <Container>{prematchInfo.players.map((p, i) => 
                             <Row key={i} style={{marginTop: '.25rem', minHeight: '2.5rem'}}>
-                                <Col xs='1' style={{padding: 0}}><div style={{backgroundColor: colors[i], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
+                                <Col xs='1' style={{padding: 0}}><div style={{backgroundColor: trueColors[colors[i]][0], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
                                 {p.name && p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
                                 {p.name && !p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ connecting... ]'}</Col>}
                                 {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ open ]'}</Col>}

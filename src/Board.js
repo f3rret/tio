@@ -20,14 +20,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   const stagew = window.innerWidth;
   const stageh = window.innerHeight;
-  const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
-  const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
+  const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(255, 255, 255, 0.2)', padding: '1rem', marginBottom: '1rem'}
+  const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(255, 255, 255, 0.42)', color: 'white'}
 
   const race = useMemo(() => {
     if(playerID !== null){
       return G.races[playerID];
     }
-    else return {isSpectator: true, knownTechs: [], technologies:[], abilities:[], strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
+    else return {isSpectator: true, color: ['white', 'white'], knownTechs: [], technologies:[], abilities:[], strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
       exploration:[], vp: 0, tg: 0, tokens: { t: 0, f: 0, s: 0, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []};
   }, [G.races, playerID]);
 
@@ -95,7 +95,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             t.tdata.fleet[k].forEach(ship => {
               if(ship.payload && ship.payload.length){
                 ship.payload.forEach(pl => {
-                  if(pl.id){
+                  if(pl && pl.id){
                     if(!units[pl.id]) units[pl.id] = 0;
                     units[pl.id]++;
                   }
@@ -180,7 +180,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             </NavItem>
           </Nav>
           <Nav>
-            <NavItem onClick={()=>setTradeVisible(!tradeVisible)} style={{cursor: 'pointer'}}>
+            <NavItem onClick={()=>{ if(G.races.length > 1) setTradeVisible(!tradeVisible) }} style={{cursor: 'pointer'}}>
               <h5>Trade</h5>
             </NavItem>
           </Nav>
@@ -451,8 +451,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               setPayloadCursor({i:0, j:0});
             }
 
-            moves.loadUnit({src: args, dst: {...advUnitView, ...payloadCursor}});
-
+            moves.loadUnit({src: {...args, e: undefined}, dst: {...advUnitView, ...payloadCursor}});
             movePayloadCursor();
           }
         }
@@ -741,6 +740,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);
   const isDMZ = useCallback((p) => p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1, []);
 
+  const getColorByRid = useCallback((rid) => {
+    const r = G.races.find(rc => rc.rid === rid);
+    if(r){
+      return r.color;
+    }
+    else{
+      return ['white', 'white']
+    }
+  }, [G.races]);
+  
   const TileContent = ({element, index}) => {
 
     const pathIdx = getPureMovePath.indexOf(String(element.tid));
@@ -757,7 +766,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier_bg.png'}/>}
         {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
             
-            return <Sprite alpha={1} key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={.3} image={'icons/ct.png'}>
+            return <Sprite tint={getColorByRid(t)[0]} alpha={1} key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={.3} image={'icons/ct.png'}>
                     <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={55} y={55} alpha={.85}></Sprite>
                   </Sprite>}
         )}
@@ -781,7 +790,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 </>}
                 {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) => {
                   return <Sprite zIndex={u === 'spacedock' ? 3:1} key={ui} x={40 + ui*55} y={-10} scale={1} anchor={0} image={'icons/unit_ground_bg.png'}>
-                      <Sprite image={'units/' + u.toUpperCase() + '.png'} x={-5} y={-5} scale={.4} alpha={1}/>
+                      <Sprite tint={G.races[p.occupied].color[0]} image={'units/' + u.toUpperCase() + '.png'} x={-5} y={-5} scale={.4} alpha={1}/>
                       {p.units[u].length > 1 && <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
                       x={40} y={25} text={p.units[u].length}/>}
                       {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
@@ -807,7 +816,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 const isSelected = groundUnitSelected && groundUnitSelected.tile === index && groundUnitSelected.unit === u;
 
                 return <Sprite tint={isSelected ? '#f44336':'0xFFFFFF'} x={-30 + ui*55} key={ui} alpha={.85} scale={.65} interactive={true} pointerdown={(e)=>loadUnit({tile: index, planet: i, unit: u, e})} image={'icons/unit_inf_bg.png'}>
-                   <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-5} scale={.35} alpha={1}/>
+                   <Sprite tint={G.races[p.occupied].color[0]} image={'units/' + u.toUpperCase() + '.png'} x={0} y={-5} scale={.35} alpha={1}/>
                   <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={50} y={25} text={p.units[u].length}/>
                 </Sprite>}
               )}
@@ -856,7 +865,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               interactive={true} key={i} x={element.w/4 - 50 + i*65} y={0} scale={{ x: 1, y: 1}} anchor={0}
               pointerdown={()=>isCurrentAdvUnit ? setAdvUnitView({}):setAdvUnitView({tile: index, unit: f})}  image={'icons/unit_bg.png'}>
                 <Text text={f.replace('nought', '...')} x={10} y={5} style={{fontSize: 12, fill: 'white'}}/>
-                <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={1}/>
+                <Sprite tint={G.races[element.tdata.occupied].color[0]} image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={1}/>
                 <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
                   x={35} y={25} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
             </Sprite>
@@ -871,7 +880,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             for(let j=0; j<cap; j++){
               row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? '#f44336':'0xFFFFFF'} 
                   pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*25} y={-i*30} scale={{ x: .4, y: .4}} anchor={0} image={'icons/unit_bg.png'}>
-                    {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite image={'units/' + ship.payload[j].id.toUpperCase() + '.png'} 
+                    {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite tint={G.races[element.tdata.occupied].color[0]} image={'units/' + ship.payload[j].id.toUpperCase() + '.png'} 
                     x={0} y={0} scale={{ x: .4, y: .4}} alpha={.85}/>}
               </Sprite>);
             }
@@ -1116,6 +1125,56 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </UncontrolledTooltip>
             </ListGroupItem>
   }
+
+  const AttackerForce = useCallback((args) => {
+    const {w, fleet} = args;
+    const payload = {infantry: [], fighter: [], mech: []}
+  
+    Object.keys(fleet).forEach(tag => {
+      fleet[tag].forEach(ship => {
+        ship.payload && ship.payload.forEach(p => {
+          if(p && p.id) payload[p.id].push({});
+        });
+      })
+    });
+  
+    Object.keys(payload).forEach(k => {if(!payload[k].length) delete payload[k]});
+  
+    return [...Object.keys(fleet), ...Object.keys(payload)].map((f, i) => {
+      const rowLength = 5;
+      const y = ( i<rowLength ? 0:70 );
+      const x = ( i<rowLength ? w/4 - 50 + i*65 : w/4 - 50 + (i-rowLength)*65);
+      let text = fleet[f] ? fleet[f].length : payload[f].length;
+      if(text === 1) text = ' 1';
+  
+      return <Sprite key={i} x={x} y={y} anchor={0} image={fleet[f] ? 'icons/unit_bg.png':'icons/unit_inf_bg.png'}>
+          {fleet[f] && <Text text={f.replace('nought', '...')} x={10} y={5} style={{fontSize: 12, fill: 'white'}}/>}
+          <Sprite tint={G.races[ctx.currentPlayer].color[0]} image={'units/' + f.toUpperCase() + '.png'} x={5} y={fleet[f] ? 10:0} scale={{x: .3, y: .3}} alpha={1}/>
+          <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
+            x={35} y={25} text={text}/>
+      </Sprite>
+    })
+  }, [G.races, ctx.currentPlayer]);
+  
+  const InvasionForce = useCallback((args) => {
+    const {w, fleet} = args;
+  
+    if(fleet){
+      return Object.keys(fleet).map((f, i) => {
+        const rowLength = 5;
+        const y = ( i<rowLength ? 0:70 );
+        const x = ( i<rowLength ? w/4 - 50 + i*65 : w/4 - 50 + (i-rowLength)*65);
+        let text = fleet[f].length;
+        if(text === 1) text = ' 1';
+  
+        return <Sprite key={i} x={x} y={y} anchor={0} image='icons/unit_inf_bg.png'>
+                  <Sprite tint={G.races[ctx.currentPlayer].color[0]} image={'units/' + f.toUpperCase() + '.png'} x={5} y={0} scale={{x: .3, y: .3}} alpha={1}/>
+                  <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
+                    x={45} y={25} text={text}/>
+              </Sprite>
+      })
+    }
+  }, [G.races, ctx.currentPlayer]);
 
   return (
           <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>      
@@ -1401,7 +1460,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
               <CardColumns style={{marginRight: '1rem', display: 'flex', height: 'max-content', width: '100%', flexDirection: 'column', justifyContent: 'flex-end' }}>
                   
-                  {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
+                  {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1]}}>
 
                       {midPanelInfo === 'tokens' && <>
                       {<h6 style={{textAlign: 'right'}}>{race.tokens.new + tempCt.new || 0} unused</h6>}
@@ -1415,7 +1474,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                             {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'t'}/>}
                             {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'t'}/>}
                           </>}
-                          <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>tactic</b>
+                          <b style={{backgroundColor: race.color[1], width: '100%'}}>tactic</b>
                         </ListGroupItem>
                         <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE}>
                           <h6 style={{fontSize: 50}}>{race.tokens.f + tempCt.f}</h6>
@@ -1423,7 +1482,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                             {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'f'}/>}
                             {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'f'}/>}
                           </>}
-                          <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>fleet</b>
+                          <b style={{backgroundColor: race.color[1], width: '100%'}}>fleet</b>
                         </ListGroupItem>
                         <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE}>
                           <h6 style={{fontSize: 50}}>{race.tokens.s + tempCt.s}</h6>
@@ -1431,7 +1490,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                             {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'s'}/>}
                             {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'s'}/>}
                           </>}
-                          <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>strategic</b>
+                          <b style={{backgroundColor: race.color[1], width: '100%'}}>strategic</b>
                           </ListGroupItem>
                       </ListGroup>
                       
@@ -1442,22 +1501,22 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('c')} style={{...TOKENS_STYLE, width: '22%'}}>
                           <img alt='fragment' src='icons/cultural_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                           <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.c - purgingFragments.c}</h6>
-                          <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>cultural</b>
+                          <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>cultural</b>
                         </ListGroupItem>
                         <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('h')} style={{...TOKENS_STYLE, width: '22%'}}>
                           <img alt='fragment' src='icons/hazardous_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                           <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.h - purgingFragments.h}</h6>
-                          <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>hazardous</b>
+                          <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>hazardous</b>
                         </ListGroupItem>
                         <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('i')} style={{...TOKENS_STYLE, width: '22%'}}>
                           <img alt='fragment' src='icons/industrial_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                           <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.i - purgingFragments.i}</h6>
-                          <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>industrial</b>
+                          <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>industrial</b>
                         </ListGroupItem>
                         <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('u')} style={{...TOKENS_STYLE, width: '22%'}}>
                           <img alt='fragment' src='icons/unknown_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                           <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.u - purgingFragments.u}</h6>
-                          <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>unknown</b>
+                          <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>unknown</b>
                         </ListGroupItem>
                       </ListGroup>
                       <div style={{alignSelf: 'flex-end', margin: '0 1rem'}}>
@@ -1504,7 +1563,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       <Button size='sm' onClick={()=>setMidPanelInfo('reinforce')} color={midPanelInfo === 'reinforce' ? 'light':'dark'} style={{flexBasis: 1}}>REINFORCE</Button>
                     </ButtonGroup>
                     </>}
-                  {race && subcardVisible === 'persons' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)', display: 'flex', fontSize: '.8rem'}}>
+                  {race && subcardVisible === 'persons' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
                       {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
                         <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
                         <div><CardText>{race.agentAbility}</CardText>
@@ -1527,7 +1586,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         <Button size='sm' onClick={()=>setAgentVisible('hero')} color={agentVisible === 'hero' ? 'light':'dark'} style={{flexBasis: 1}}>HERO</Button>
                     </ButtonGroup>
                   </>}
-                  {race && subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: 'rgba(74, 111, 144, 0.42)', display: 'flex', fontSize: '.8rem'}}>
+                  {race && subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
                       {race.abilities.map((a, i) => 
                         <CardText key={i} style={{margin:'1rem 0 0 0', minHeight: '3rem', fontSize: '.8rem', display: abilVisible === i ? 'unset':'none'}}>
                           {a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}
@@ -1547,11 +1606,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     <Button size='sm' className='bi bi-lightning-fill' onClick={()=>setSubcardVisible('abilities')} color={subcardVisible === 'abilities' ? 'light':'dark'} style={{}}></Button>
                   </ButtonGroup>}
 
-                  {race && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(74, 111, 144, 0.42)'}}>
+                  {race && <Card style={{...CARD_STYLE, backgroundColor: race.color[1]}}>
                     <div style={{display: 'flex'}}>
                       <div style={{display: 'flex', flexFlow: 'column'}}>
-                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.commodity || 0 + '/' + race.commCap}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>commodity</b></Button>
-                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}}>trade goods</b></Button>
+                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.commodity || 0 + '/' + race.commCap}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>commodity</b></Button>
+                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>trade goods</b></Button>
                         {G.speaker === race.rid && <SpeakerToken />}
                       </div>
                       <CardImg src={'race/'+race.rid+'.png'} style={{width: '205px'}}/>
@@ -1569,55 +1628,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           </StateContext.Provider>)
 }
 
-const AttackerForce = (args) => {
-  const {w, fleet} = args;
-  const payload = {infantry: [], fighter: [], mech: []}
 
-  Object.keys(fleet).forEach(tag => {
-    fleet[tag].forEach(ship => {
-      ship.payload && ship.payload.forEach(p => {
-        payload[p.id].push({});
-      });
-    })
-  });
-
-  Object.keys(payload).forEach(k => {if(!payload[k].length) delete payload[k]});
-
-  return [...Object.keys(fleet), ...Object.keys(payload)].map((f, i) => {
-    const rowLength = 5;
-    const y = ( i<rowLength ? 0:70 );
-    const x = ( i<rowLength ? w/4 - 50 + i*65 : w/4 - 50 + (i-rowLength)*65);
-    let text = fleet[f] ? fleet[f].length : payload[f].length;
-    if(text === 1) text = ' 1';
-
-    return <Sprite key={i} x={x} y={y} anchor={0} image={fleet[f] ? 'icons/unit_bg.png':'icons/unit_inf_bg.png'}>
-        {fleet[f] && <Text text={f.replace('nought', '...')} x={10} y={5} style={{fontSize: 12, fill: 'white'}}/>}
-        <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={fleet[f] ? 10:0} scale={{x: .3, y: .3}} alpha={1}/>
-        <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
-          x={35} y={25} text={text}/>
-    </Sprite>
-  })
-}
-
-const InvasionForce = (args) => {
-  const {w, fleet} = args;
-
-  if(fleet){
-    return Object.keys(fleet).map((f, i) => {
-      const rowLength = 5;
-      const y = ( i<rowLength ? 0:70 );
-      const x = ( i<rowLength ? w/4 - 50 + i*65 : w/4 - 50 + (i-rowLength)*65);
-      let text = fleet[f].length;
-      if(text === 1) text = ' 1';
-
-      return <Sprite key={i} x={x} y={y} anchor={0} image='icons/unit_inf_bg.png'>
-                <Sprite image={'units/' + f.toUpperCase() + '.png'} x={5} y={0} scale={{x: .3, y: .3}} alpha={1}/>
-                <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
-                  x={45} y={25} text={text}/>
-            </Sprite>
-    })
-  }
-}
 
 const SpeakerToken = () => {
   return <span style={{width: '10rem', borderRadius:'10px', backgroundColor: 'rgba(33, 37, 41, 0.95)', margin: '2rem .5rem',

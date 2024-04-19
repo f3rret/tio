@@ -10,12 +10,16 @@ import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology,
  
 export const TIO = {
     name: 'TIO',
-    validateSetupData: (setupData, numPlayers) => {},
+    validateSetupData: (setupData, numPlayers) => {
+      if(!setupData || !setupData.mapArray){
+        return 'setup data not valid';
+      }
+    },
     setup: ({ctx}, setupData) => {
 
       const HexGrid = getHexGrid(setupData.mapArray);
       const hg = HexGrid.toArray().filter(a => a);
-      const races = getInitRaces(hg, ctx.numPlayers);
+      const races = getInitRaces(hg, ctx.numPlayers, setupData.colors);
       
       return {
         matchName: setupData.matchName || 'New game',
