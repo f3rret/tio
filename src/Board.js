@@ -41,7 +41,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [groundUnitSelected, setGroundUnitSelected] = useState({});
   const [payloadCursor, setPayloadCursor] = useState({i:0, j:0});
   const [tilesPng, setTilesPng] = useState(true);
-  const [tilesTxt, setTilesTxt] = useState(false);
+  const [tilesTxt, setTilesTxt] = useState(true);
   const [unitsVisible, setUnitsVisible] = useState(false);
   const [abilVisible, setAbilVisible] = useState(0);
   const [agentVisible, setAgentVisible] = useState('agent');
@@ -192,13 +192,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         {isMyTurn ? 'You turn' : G.races[ctx.currentPlayer].name + ' turns '}
       </h4>
     </Nav>
-    <Nav style={{}}>
-      <NavItem style={{marginRight: '1rem'}}>
+    <Nav style={{paddingRight: '5em'}}>
+      {false && <><NavItem style={{marginRight: '1rem'}}>
         <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
       </NavItem>
       <NavItem style={{marginRight: '1rem'}}>
         <Button color='light' outline={!tilesTxt} onClick={()=>setTilesTxt(!tilesTxt)}>Text</Button>
-      </NavItem>
+      </NavItem></>}
     {isMyTurn &&
       <NavItem style={{marginRight: '1rem'}}>
         {ctx.phase === 'acts' && <>
@@ -831,7 +831,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               }
               </Container>
 
-              {p.occupied !== undefined && (!p.units || Object.keys(p.units).length === 0) && <Sprite x={50} y={50} scale={.3} image={'icons/control_token.png'}>
+              {p.occupied !== undefined && (!p.units || Object.keys(p.units).length === 0) && 
+              <Sprite tint={G.races[p.occupied].color[0]} x={50} y={50} scale={.3} image={'icons/control_token.png'}>
                 <Sprite alpha={.85} x={50} y={20} image={'race/icons/'+G.races[p.occupied].rid+'.png'}/>
               </Sprite>}
   
@@ -861,12 +862,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
           {Object.keys(element.tdata.fleet).map((f, i) => {
             const isCurrentAdvUnit = advUnitView && advUnitView.tile === index && advUnitView.unit === f;
-            return <Sprite tint={isCurrentAdvUnit ? '#f44336':'0xFFFFFF'} 
+            return <Sprite tint={isCurrentAdvUnit ? 'gold':'0xFFFFFF'} 
               interactive={true} key={i} x={element.w/4 - 50 + i*65} y={0} scale={{ x: 1, y: 1}} anchor={0}
               pointerdown={()=>isCurrentAdvUnit ? setAdvUnitView({}):setAdvUnitView({tile: index, unit: f})}  image={'icons/unit_bg.png'}>
-                <Text text={f.replace('nought', '...')} x={10} y={5} style={{fontSize: 12, fill: 'white'}}/>
+                
                 <Sprite tint={G.races[element.tdata.occupied].color[0]} image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={1}/>
-                <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
+                <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: '#4e7172', dropShadow: true, dropShadowDistance: 1}} 
                   x={35} y={25} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
             </Sprite>
           })}
@@ -878,7 +879,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             const row = [];
 
             for(let j=0; j<cap; j++){
-              row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? '#f44336':'0xFFFFFF'} 
+              row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? 'gold':'0xFFFFFF'} 
                   pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*25} y={-i*30} scale={{ x: .4, y: .4}} anchor={0} image={'icons/unit_bg.png'}>
                     {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite tint={G.races[element.tdata.occupied].color[0]} image={'units/' + ship.payload[j].id.toUpperCase() + '.png'} 
                     x={0} y={0} scale={{ x: .4, y: .4}} alpha={.85}/>}
@@ -1148,7 +1149,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       if(text === 1) text = ' 1';
   
       return <Sprite key={i} x={x} y={y} anchor={0} image={fleet[f] ? 'icons/unit_bg.png':'icons/unit_inf_bg.png'}>
-          {fleet[f] && <Text text={f.replace('nought', '...')} x={10} y={5} style={{fontSize: 12, fill: 'white'}}/>}
           <Sprite tint={G.races[ctx.currentPlayer].color[0]} image={'units/' + f.toUpperCase() + '.png'} x={5} y={fleet[f] ? 10:0} scale={{x: .3, y: .3}} alpha={1}/>
           <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
             x={35} y={25} text={text}/>
@@ -1285,7 +1285,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             </Card>}
 
             <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
-              <PixiViewport>
+              <PixiViewport home={G.tiles.find(t => t.tid === G.races[playerID].rid)}>
                 
                 {G.tiles.map((element, index) => {
                     const [firstCorner] = element.corners;

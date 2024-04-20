@@ -10,8 +10,10 @@ const WORLD_HEIGHT = window.innerHeight;
 
 const PixiViewportComponent = PixiComponent("Viewport", {
   create(props) {
-    const { app, ...viewportProps } = props;
-
+    const { app, home, ...viewportProps } = props;
+console.log(home);
+const [firstCorner] = home.corners;
+console.log(firstCorner, WORLD_WIDTH, WORLD_HEIGHT)
     const viewport = new Viewport({
       screenWidth: WORLD_WIDTH,
       screenHeight: WORLD_HEIGHT,
@@ -35,9 +37,17 @@ const PixiViewportComponent = PixiComponent("Viewport", {
     .wheel()
     //.decelerate();
 
+    let deltaX = firstCorner.x;
+    deltaX -= (home.q * 50);
+    if(home.q <= 0) deltaX += 200;
+
+    let deltaY = firstCorner.y;
+    deltaY -= (home.r * 100);
+    if(home.r >= 0) deltaY += 300;
+
     viewport.fit();
-    viewport.moveCenter( WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
-    viewport.setZoom(.5, true);
+    viewport.moveCenter((WORLD_WIDTH / 2) + deltaX, (WORLD_HEIGHT / 2) + deltaY);
+    viewport.setZoom(1, true);
 
     return viewport;
   },
