@@ -1,7 +1,7 @@
 import { LobbyClient } from 'boardgame.io/client';
-import { useCallback, useState, useMemo, useEffect } from 'react';
+import { useCallback, useState, useMemo, useEffect, useContext } from 'react';
 import { Card, CardBody, CardTitle, CardFooter, CardText, Container, Row, Col, 
-    Input, Button, FormFeedback, FormGroup, Label } from 'reactstrap';
+    Input, ButtonGroup, Button, FormFeedback, FormGroup, Label } from 'reactstrap';
 import { produce } from 'immer';
 import { useCookies } from 'react-cookie';
 import MapOptions from './map generator/options/MapOptions';
@@ -9,12 +9,15 @@ import MapOptionsRO from './map generator/options/MapOptionsRO';
 import raceData from './map generator/data/raceData.json';
 import { App } from './App';
 import { PrematchApp } from './prematch/prematchApp';
+import { LocalizationContext } from './utils';
+
 import './scss/custom.scss';
 
 let interval = null;
 
 export const Lobby = ()=> {
 
+    const { t, locale, setLocale } = useContext(LocalizationContext);
     const playerNames = useMemo(() => ['Alice', 'Bob', 'Cecil', 'David', 'Eva', 'Frank', 'Gregory', 'Heilen'], []);
     const colors = useMemo(() => ['red', 'green', 'blue', 'cyan', 'gray', 'pink', 'orange', 'violet'], []);
     const trueColors = useMemo(() => {return {
@@ -79,7 +82,7 @@ export const Lobby = ()=> {
         setPrematchInfo({
             numPlayers: 2,
             setupData: {
-                matchName: 'New Game',
+                matchName: t('lobby.new_game'),
                 edition: 'PoK',
                 map: 'random',
                 colors
@@ -88,7 +91,7 @@ export const Lobby = ()=> {
         });
 
         setPrematchID(null);
-    }, [colors]);
+    }, [colors, t]);
 
     const getPrematch = useCallback(() => {
         lobbyClient.getMatch('prematch', prematchID)
@@ -327,13 +330,21 @@ export const Lobby = ()=> {
 
     return <>
             {playerID && matchID && playerCreds && <App playerID={playerID} matchID={matchID} credentials={playerCreds}/>}
-            {(!playerID || !matchID || !playerCreds) && <div id='lobbyMain' style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '100%', 
-                        padding: '2rem', fontFamily:'Handel Gothic'}}>  
+            {(!playerID || !matchID || !playerCreds) && <>
+                <div id='topPanel' style={{width: '100%', padding: '0 2rem .5rem 0', display: 'flex', flexFlow: 'row-reverse'}}>
+                    <ButtonGroup>
+                        <Button color={locale === 'en' ? 'secondary':''} onClick={() => setLocale('en')}>EN</Button>
+                        <Button color={locale === 'ru' ? 'secondary':''} onClick={() => setLocale('ru')}>RU</Button>
+                    </ButtonGroup>
+                </div>
+                <div id='lobbyMain' style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: 'calc(100% - 3rem)', 
+                        padding: '0 2rem 2rem 2rem', fontFamily:'Handel Gothic'}}>
+                
                 {(!playerCreds || !prematchID) && <Card style={{flex: 'auto', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
                     <CardTitle style={{display: 'flex'}}>
-                        <h3 style={{flex: 'auto'}}>Macthes list</h3>
+                        <h3 style={{flex: 'auto'}}>{t('lobby.matches_list_label')}</h3>
                         <Button className='bi-repeat' style={{backgroundColor: 'transparent', marginRight: '.25rem'}} onClick={refreshMatchList}/>
-                        <Button color='warning' onClick={newPrematch}>Create new</Button>
+                        <Button color='warning' onClick={newPrematch}>{t('lobby.create_new')}</Button>
                     </CardTitle>
                     <CardBody style={{paddingTop: '5rem', overflowY: 'auto'}}>
                         <Container style={{fontSize: '80%'}}>
@@ -354,19 +365,19 @@ export const Lobby = ()=> {
                     <CardTitle>
                         {!playerCreds && !prematchInfo.players && <>
                             <Input valid placeholder={prematchInfo.setupData.matchName} onChange={(e) => changeOption('matchName', e.target)}/>
-                            <FormFeedback valid>that name acceptable</FormFeedback>
+                            <FormFeedback valid>{t('lobby.name_acceptable')}</FormFeedback>
                         </>}
                         {(playerCreds || prematchInfo.players) && <h3 className="text-center">{prematchInfo.setupData.matchName}</h3>}
                     </CardTitle>
                     {!playerCreds && !prematchInfo.players && <CardBody>
                         <FormGroup>
-                            <Input type='select' name='edition'><option>Prophecy of Kings</option></Input>
+                            <Input type='select' name='edition'><option value="pok">{t('lobby.prophecy_of_kings')}</option></Input>
                         </FormGroup>
                         <FormGroup>
-                            <Input type='select' name='map'><option>random map</option></Input>
+                            <Input type='select' name='map'><option value="random">{t('lobby.random_map')}</option></Input>
                         </FormGroup>
                         <div style={{display: 'flex', marginTop: '2rem'}}>
-                            Players:
+                            {t('lobby.players')}:
                             <FormGroup check style={{marginLeft: '1rem'}}>
                                 <Input type='radio' onClick={() => setPrematchInfo({...prematchInfo, numPlayers: 2})} name='numPlayers' id='numPlayers2' defaultChecked/><Label for='numPlayers2' check>2</Label>
                             </FormGroup>
@@ -399,13 +410,13 @@ export const Lobby = ()=> {
                             <Row key={i} style={{marginTop: '.25rem', minHeight: '2.5rem'}}>
                                 <Col xs='1' style={{padding: 0}}><div style={{backgroundColor: trueColors[colors[i]][0], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
                                 {p.name && p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
-                                {p.name && !p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ connecting... ]'}</Col>}
-                                {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ open ]'}</Col>}
+                                {p.name && !p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
+                                {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ ' + t('lobby.open') + ' ]'}</Col>}
                                 {p.name && <Col xs='7' style={{color: p.data && p.data.ready ? 'lime' : 'none'}}>
                                     {String(playerID) === String(p.id) && <Input style={{color: 'inherit'}} disabled={p.data && p.data.ready} type='select'>
-                                        <option>random race</option>
+                                        <option value='random'>{t('lobby.random_race')}</option>
                                     </Input>}
-                                    {String(playerID) !== String(p.id) && <div style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem .75rem'}}>random race</div>}
+                                    {String(playerID) !== String(p.id) && <div style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem .75rem'}}>{t('lobby.random_race')}</div>}
                                 </Col>}
                                 {!p.name && <Col xs='7' style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem 1.5rem'}}></Col>}
                             </Row>)}
@@ -414,13 +425,13 @@ export const Lobby = ()=> {
                         {playerCreds && <PrematchApp playerID={playerID} matchID={prematchID} credentials={playerCreds}/>}
                     </CardBody>
                     <CardFooter style={{display: 'flex', justifyContent: 'space-between'}}>
-                        {!playerCreds && !prematchInfo.players && <Button color='success' onClick={createPrematch}>Create game <b className='bi-caret-right-square-fill' ></b></Button>}
+                        {!playerCreds && !prematchInfo.players && <Button color='success' onClick={createPrematch}>{t('lobby.create_game')} <b className='bi-caret-right-square-fill' ></b></Button>}
                         {!playerCreds && !playerID && prematchInfo && prematchInfo.players && cookie.matchID === prematchID &&
-                            <Button color='success' onClick={()=>reconnect()}>Reconnect <b className='bi-caret-right-square-fill' ></b></Button>}
+                            <Button color='success' onClick={()=>reconnect()}>{t('lobby.reconnect')} <b className='bi-caret-right-square-fill' ></b></Button>}
                         {!playerCreds && !playerID && prematchInfo && prematchInfo.players &&
-                            <Button color='success' disabled={prematchInfo.gameName !== 'prematch' || !prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>Join game <b className='bi-caret-right-square-fill' ></b></Button>}
-                        {playerCreds && <Button color='danger' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> Leave</Button>}
-                        {playerID && playerID !== '0' && !iAmReady && <Button color='success' onClick={readyToPlay}>Ready to play <b className='bi-check-square-fill' ></b></Button>}
+                            <Button color='success' disabled={prematchInfo.gameName !== 'prematch' || !prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>{t('lobby.join_game')} <b className='bi-caret-right-square-fill' ></b></Button>}
+                        {playerCreds && <Button color='danger' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> {t('lobby.leave')}</Button>}
+                        {playerID && playerID !== '0' && !iAmReady && <Button color='success' onClick={readyToPlay}>{t('lobby.ready_to_play')} <b className='bi-check-square-fill' ></b></Button>}
                     </CardFooter>
                 </Card>}
                 {playerCreds && prematchInfo && prematchInfo.players && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
@@ -430,6 +441,7 @@ export const Lobby = ()=> {
                     {playerID && playerID !== '0' && prematchInfo.players[0] && prematchInfo.players[0].data && 
                         <MapOptionsRO {...prematchInfo.players[0].data.mapOptions}/>}
                 </Card>}
-            </div>}
+            </div>
+            </>}
         </>;
 }

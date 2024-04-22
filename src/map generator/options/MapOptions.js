@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useContext } from "react";
 import boardData from "../data/boardData.json";
 import tileData from "../data/tileData.json";
 import raceData from "../data/raceData.json";
 import adjacencyData from "../data/adjacencyData.json";
 import {CardTitle, CardBody, CardFooter, Button, FormGroup, UncontrolledTooltip, Input, Label} from 'reactstrap';
+import { LocalizationContext } from "../../utils";
 
 
 class MapOptions extends React.Component {
@@ -1342,10 +1343,11 @@ class MapOptions extends React.Component {
     }
 //<form id="generateForm" onSubmit={this.generateBoard} style={{padding: '2rem'}}>
     render() {
+        const t = this.props.t;
         return (
             <>
                 <CardTitle>
-                    <h3 className="text-center">Random map options</h3>
+                    <h3 className="text-center">{t('lobby.random_map_options')}</h3>
                 </CardTitle>
                 <CardBody>
                     <FormGroup>
@@ -1485,4 +1487,12 @@ class MapOptions extends React.Component {
         );
     }
 }
-export default MapOptions;
+
+function MapOptionsWithHook(Component) {
+    return function WrappedComponent(props) {
+      const { t } = useContext(LocalizationContext);
+      return <Component {...props} t={t} />;
+    }
+}
+
+export default MapOptionsWithHook(MapOptions);

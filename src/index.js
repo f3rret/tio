@@ -1,7 +1,39 @@
 import React from 'react';
-//import { Lobby } from 'boardgame.io/react';
 import { Lobby } from './lobby';
 import ReactDOM from 'react-dom/client';
+
+import { I18n } from 'i18n-js';
+import ru from "./i18n/ru.json";
+import en from "./i18n/en.json";
+import { LocalizationContext } from './utils';
+
+const i18n = new I18n({...en, ...ru});
+i18n.defaultLocale = 'ru';
+i18n.locale = 'ru';
+i18n.enableFallback = true;
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+const LangWrapper = () => {
+  const [locale, setLocale] = React.useState('ru');
+  const localizationContext = React.useMemo(
+    () => ({
+      t: (scope, options) => i18n.t(scope, { locale, ...options }),
+      locale,
+      setLocale,
+    }),
+    [locale]
+  );
+
+  return (
+    <LocalizationContext.Provider value={localizationContext}>
+      <Lobby />
+    </LocalizationContext.Provider>
+  );
+}
+
+root.render(<LangWrapper/>);
+
+//import { Lobby } from 'boardgame.io/react';
 //import {App, AppLocal} from './App';
 
 /*import { TIO } from './Game';
@@ -30,8 +62,7 @@ else{
   )
 }*/
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<Lobby/>);
+
 /*root.render(<Lobby
   gameServer={`http://${window.location.hostname}:8000`}
   lobbyServer={`http://${window.location.hostname}:8000`}

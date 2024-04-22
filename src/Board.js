@@ -41,7 +41,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [groundUnitSelected, setGroundUnitSelected] = useState({});
   const [payloadCursor, setPayloadCursor] = useState({i:0, j:0});
   const [tilesPng, setTilesPng] = useState(true);
-  const [tilesTxt, setTilesTxt] = useState(true);
+  const [tilesTxt, setTilesTxt] = useState(false);
   const [unitsVisible, setUnitsVisible] = useState(false);
   const [abilVisible, setAbilVisible] = useState(0);
   const [agentVisible, setAgentVisible] = useState('agent');
@@ -1458,7 +1458,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   </ButtonGroup>
               </CardColumns>
 
-              <CardColumns style={{marginRight: '1rem', display: 'flex', height: 'max-content', width: '100%', flexDirection: 'column', justifyContent: 'flex-end' }}>
+              <CardColumns style={{marginRight: '1rem', display: 'flex', backgroundColor: 'rgba(0, 0, 0, .75)', height: 'max-content', 
+                          width: '100%', flexDirection: 'column', justifyContent: 'flex-end' }}>
                   
                   {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1]}}>
 

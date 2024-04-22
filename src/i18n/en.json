@@ -1,0 +1,25 @@
+{   
+    "en": {
+        "lobby": {
+            "matches_list_label": "Matches list",
+            "create_new": "Create new",
+            "new_game": "New Game",
+            "prophecy_of_kings": "Prophecy of Kings",
+            "name_acceptable": "this name acceptable",
+            "random_map": "random map",
+            "players": "Players",
+            "create_game": "Create game",
+            "leave": "Leave",
+            "start": "Start game",
+            "random_race": "random race",
+            "open": "open",
+            "connecting": "connecting",
+            "reconnect": "Reconnect",
+            "join_game": "Join game",
+            "ready_to_play": "Ready to play",
+            "type_your_message": "type your message here",
+            "fate": "The fate of the Galaxy is in our hands",
+            "random_map_options": "Random map options"
+        }
+    }
+}

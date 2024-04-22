@@ -1,0 +1,25 @@
+{
+    "ru": {
+        "lobby": {
+            "matches_list_label": "Список матчей",
+            "create_new": "Создать",
+            "new_game": "Новая игра",
+            "prophecy_of_kings": "Пророчество королей",
+            "name_acceptable": "допустимое название",
+            "random_map": "случайная карта",
+            "players": "Игроки",
+            "create_game": "Создать игру",
+            "leave": "Покинуть",
+            "start": "Старт",
+            "random_race": "случайная раса",
+            "open": "открыто",
+            "connecting": "соединение",
+            "reconnect": "Реконнект",
+            "join_game": "Присоединиться",
+            "ready_to_play": "Готов к игре",
+            "type_your_message": "введите сообщение",
+            "fate": "Судьба Галактики в наших руках",
+            "random_map_options": "Настройки случайной карты"
+        }
+    }
+}

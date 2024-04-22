@@ -1,8 +1,10 @@
 import { Card, CardBody, CardFooter, Input } from 'reactstrap';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { LocalizationContext } from '../utils';
 
 export const PrematchChat = ({sendChatMessage, chatMessages}) => {
 
+    const { t } = useContext(LocalizationContext);
     const [msg, setMsg] = useState('');
     const onKeyDown = useCallback((e)=> {
         if(e.keyCode === 13){ 
@@ -28,7 +30,7 @@ export const PrematchChat = ({sendChatMessage, chatMessages}) => {
 
     const messages = useMemo(()=>{
         return [...chatMessages].slice(-20).reverse().map((m, i) => <p key={i} style={{margin: 0, color: trueColors[colors[m.sender]][0]}}><b>{'> '}</b>{m.payload}</p>)
-    }, [chatMessages, colors]);
+    }, [chatMessages, colors, trueColors]);
 
     return (<Card style={{border: 'solid 1px rgba(255,255,255,.25)', width: '100%', height: '15rem'}}>
                 <CardBody style={{overflowY: 'auto'}}>
@@ -36,7 +38,7 @@ export const PrematchChat = ({sendChatMessage, chatMessages}) => {
                 </CardBody>
                 <CardFooter style={{borderTop: 'solid 1px rgba(255,255,255,.0)'}}>
                 <Input type='text' value={msg} onChange={onChange}
-                    placeholder='type your message here' 
+                    placeholder={t('lobby.type_your_message')} 
                     style={{opacity: 0.5, backgroundColor: 'transparent', borderColor: 'transparent'}} 
                     onKeyDown={onKeyDown}/>
                 </CardFooter>
@@ -45,8 +47,9 @@ export const PrematchChat = ({sendChatMessage, chatMessages}) => {
 }
 
 export function PrematchBoard ({G, ctx, sendChatMessage, chatMessages}) {
+    const { t } = useContext(LocalizationContext);
     useEffect(() => {
-        sendChatMessage('The fate of the Galaxy is in our hands');
+        sendChatMessage(t('lobby.fate'));
          // eslint-disable-next-line
     }, []);
     return (<PrematchChat sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>);

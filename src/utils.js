@@ -116,6 +116,7 @@ export const UNITS_LIMIT = {
 };
 
 export const StateContext = createContext(null);
+export const LocalizationContext = createContext(null);
 
 export const getPlayerUnits = (tiles, playerID)=> {
     const units = [];

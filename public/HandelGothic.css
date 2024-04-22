@@ -1,4 +1,4 @@
 @font-face {
   font-family: "Handel Gothic";
-  src: url("fonts/HandelGothic/font.woff2") format("woff2"), url("fonts/HandelGothic/font.woff") format("woff");
+  src: url("fonts/HandelGothic/tl.ttf") format("truetype"), url("fonts/HandelGothic/font.woff2") format("woff2"), url("fonts/HandelGothic/font.woff") format("woff");
 }
