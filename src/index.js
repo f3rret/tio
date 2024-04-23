@@ -8,7 +8,7 @@ import en from "./i18n/en.json";
 import { LocalizationContext } from './utils';
 
 const i18n = new I18n({...en, ...ru});
-i18n.defaultLocale = 'ru';
+i18n.defaultLocale = 'en';
 i18n.locale = 'ru';
 i18n.enableFallback = true;
 

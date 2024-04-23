@@ -10,7 +10,7 @@
             "players": "Players",
             "create_game": "Create game",
             "leave": "Leave",
-            "start": "Start game",
+            "start_game": "Start game",
             "random_race": "random race",
             "open": "open",
             "connecting": "connecting",
@@ -19,7 +19,32 @@
             "ready_to_play": "Ready to play",
             "type_your_message": "type your message here",
             "fate": "The fate of the Galaxy is in our hands",
-            "random_map_options": "Random map options"
+
+            "random_map_options": "Random map options",
+            "use_pok": "Use Prophecy of Kings Expansion",
+            "board_style": "Board style",
+            "board_style_normal": "Normal",
+            "board_style_spiral": "Spiral",
+            "placement_style": "Placement style",
+            "placement_style_slice": "Slice",
+            "placement_style_initial": "Initial",
+            "placement_style_home": "Home",
+            "placement_style_random": "Random",
+            "system_weighting": "System weighting",
+            "system_weighting_random": "Random",
+            "system_weighting_balanced": "Balanced",
+            "system_weighting_resource": "Resource",
+            "system_weighting_influence": "Influence",
+            "ensure_racial_anomalies": "Ensure racial anomalies",
+            "randomize_priorities": "Randomize priorities before placement",
+            "reverse_placement_order": "Reverse placement order",
+            "board_style_help": "Board style changes how the tiles are actually laid out on a newly generated map.\n***\nChanging this would cause you to expect different hex layouts, such as different patterns of tiles, usage of hyperlanes, or unorthodox placement of home worlds.",
+            "placement_style_help": "Placement style dictates where important tiles are placed. Most revolve around having at least one tile near the home system with good resources.\n***\n**Slice:** Places tiles like a normal player would. Prioritizes a good pathway to Mecatol, and filling in the area around the home system with good tiles.\n***\n**Initial:** Only guarantees a good tile right in front of the home system (on the way to mecatol). Everything else is random.\n***\n**Home:** Prioritizes all of the adjacent tiles to the home system and everything else is random.\n***\n**Random:** Shuffles the priority levels completely. No favoritism to tiles near the home system.",
+            "system_weighting_help": "Pick Style is used to determine how tiles are weighted for when they are placed on the board. A higher weighted tile means that the hex is more important, and so (depending on the placement style) it is put closer to home worlds to facilitate available assets.\n***\n**Balanced:** A custom weight which favors resources and planet count more than anomalies. This more accurately factors in tech specialties and influence as trade-offs to the 'Resource' pick.\n***\n**Resource:** Tiles are ordered primarily by their resource values. Higher resource planets are more coveted, and so are more important.\n***\n**Influence:** Similar to 'Resource', tiles are ordered primarily by their influence values.\n***\n**Random:** Tiles are completely randomly ordered. Expect chaotic and unbalanced maps.",
+            "ensure_anomalies_help": "Ensures that races get their beneficial anomalies\n***\nThis option makes it so that Muaat will always receive a supernova, Saar will always receive an asteroid field, Empyrean will always receive a nebulae and Vuil'Raith will always receive a gravity rift.",
+            "randomize_priorities_help": "Randomizes the priority picks for each picking round.\n***\nNormally when placing tiles, this tool attempts to place the tiles so player 1 does not always get the best tiles. To do this, it follows the game setup rules and (in a 6 player game) player 1 gets to place tile 1 and 12, while player 6 gets to place tile 6 and 7.\n***\nTurning this on stops this from happening, and instead completely randomizes the placement order.",
+            "reverse_placement_help": "Reverses which tiles are placed first in placement order.\n***\nTiles are normally placed in priority (see randomize priority help). This reverses the order, so that the last picks are first, which generally has the effect of pushing the more valuable tiles towards the center of the galaxy."
+
         }
     }
 }
