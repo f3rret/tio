@@ -47,7 +47,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [agentVisible, setAgentVisible] = useState('agent');
   const [subcardVisible, setSubcardVisible] = useState('stuff');
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
-  const [stratUnfold, setStratUnfold] = useState(0);
+  //const [stratUnfold, setStratUnfold] = useState(0);
   const [rightBottomVisible, setRightBottomVisible] = useState(null);
   const [rightBottomSubVisible, setRightBottomSubVisible] = useState(null);
   const [selectedTile, setSelectedTile] = useState(-1);
@@ -248,7 +248,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [race, isMyTurn]);
 
   const promissorySwitch = useCallback(() => {
-    setStratUnfold(0);
+    //setStratUnfold(0);
     if(rightBottomVisible === 'promissory'){
       setRightBottomVisible(null);
     }
@@ -258,7 +258,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   },[rightBottomVisible]);
 
   const contextSwitch = useCallback(() => {
-    setStratUnfold(0);
+    //setStratUnfold(0);
     if(rightBottomVisible === 'context'){
       setRightBottomVisible(null);
     }
@@ -268,7 +268,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [rightBottomVisible]);
 
   const actionsSwitch = useCallback(() => {
-    setStratUnfold(0);
+    //setStratUnfold(0);
     if(rightBottomVisible === 'actions'){
       setRightBottomVisible(null);
     }
@@ -278,7 +278,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [rightBottomVisible]);
 
   const relicsSwitch = useCallback(() => {
-    setStratUnfold(0);
+    //setStratUnfold(0);
     if(rightBottomVisible === 'relics'){
       setRightBottomVisible(null);
     }
@@ -288,7 +288,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [rightBottomVisible]);
 
   const lawsSwitch = useCallback(() => {
-    setStratUnfold(0);
+    //setStratUnfold(0);
     if(rightBottomVisible === 'agenda'){
       setRightBottomVisible(null);
     }
@@ -298,23 +298,30 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [rightBottomVisible]);
 
   const StrategyCard = ({card, idx, style}) => {
-    const i = idx + 1;
-
-    return <Card onClick={()=>setStratUnfold((stratUnfold & i) === i ? stratUnfold - i:stratUnfold + i)} 
-              style={{...style, opacity: card.exhausted ? '.5':'.95', border: 'none', background: 'none', position: 'relative', 
-              marginTop: idx > 0 ? '0.5rem':'0rem', alignItems: 'end'}}>
-      <CardImg src={'strategy/'+ card.id + '.png'} style={{position: 'relative', cursor: 'pointer'}}></CardImg>
-      <div style={{width:'95%', borderRadius: '3px', padding: '.7rem', background: 'rgba(33, 37, 41, 0.65)', marginRight: '.5rem', marginTop: '-2rem', border: 'solid 1px ' + getStratColor(card.id, '.6'), fontSize: '.8rem'}}>
-        {(stratUnfold & i) === i && <div>
+    //const i = idx + 1;
+ /**onClick={()=>setStratUnfold((stratUnfold & i) === i ? stratUnfold - i:stratUnfold + i)}  
+  * {(stratUnfold & i) === i && <div>
           <h6 style={{marginTop: '.5rem'}}>Primary:</h6>
           <CardText>{cardData.strategy[card.id].primary}</CardText>
           <h6>Secondary:</h6>
           <CardText>{cardData.strategy[card.id].secondary}</CardText>
-          {!card.exhausted && <Button size='sm' color='warning' onClick={(e)=>{e.stopPropagation(); moves.useStrategy(idx)}}>Activate</Button>}
         </div>}
-      </div>
-      
-    </Card>
+ */
+    return <Card style={{...style, opacity: '.95', border: 'none', background: 'none', position: 'relative', 
+              marginTop: idx > 0 ? '0.5rem':'0rem', alignItems: 'end'}}>
+              <CardImg id={'strategyCard_'+card.id} src={'strategy/'+ card.id + '.png'} style={{position: 'relative', cursor: 'default', width: '50%'}}></CardImg>
+              <div style={{width:'50%', borderRadius: '3px', paddingTop: '2rem', background: 'rgba(33, 37, 41, 0.65)', 
+                          marginRight: '.7rem', marginTop: '-2.8rem', border: 'solid 1px ' + getStratColor(card.id, '.6')}}>
+                <Button disabled={card.exhausted} style={{opacity: card.exhausted ? 0:1, backgroundColor: getStratColor(card.id, '.6'), width: '100%', fontFamily: 'Handel gothic'}} 
+                  onClick={(e)=>{e.stopPropagation(); moves.useStrategy(idx)}}>Activate</Button>
+              </div>
+            <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#strategyCard_' + card.id}>
+              <h6 style={{marginTop: '.5rem'}}>Primary:</h6>
+              <CardText>{cardData.strategy[card.id].primary}</CardText>
+              <h6>Secondary:</h6>
+              <CardText>{cardData.strategy[card.id].secondary}</CardText>
+            </UncontrolledTooltip>
+          </Card>
   }
 
   const strategyStage = useMemo(()=> {
@@ -952,11 +959,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     flushTempCt();
   },[race.exhaustedCards, flushTempCt]);
 
-  useEffect(()=> {
+  /*useEffect(()=> {
     if(stratUnfold > 0 && rightBottomVisible){
       setRightBottomVisible(null)
     }
-  },[stratUnfold, rightBottomVisible]);
+  },[stratUnfold, rightBottomVisible]);*/
 
   useEffect(()=>{
     if(mustSecObj || (ctx.phase === 'stats' && !objVisible && !mustAction)){
@@ -1324,10 +1331,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                                                 alignItems: 'flex-end', right: 0, bottom: 0, width: '27.5%' }}>
               <CardColumns style={{minWidth: '13rem', width:'13rem', height: 'fit-content', position: 'absolute', left: '-13rem', display:'flex', 
               flexDirection: 'column', justifyContent: 'space-between', alignSelf: 'flex-start'}}>
-                <div>
-                  {race && race.strategy.length > 0 && ctx.phase !== 'strat' &&
-                    race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
-                </div>
+
                 <div style={{display: 'flex', flexDirection: 'column', position: 'fixed', bottom: '4rem', width: '13rem'}}>
                   {rightBottomVisible === 'context' && <>
                     <ListGroup style={{background: 'none', margin: '2rem 0'}}>
@@ -1455,170 +1459,176 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     <Button id='contextSwitch' size='sm' className='hoverable' tag='img' onClick={()=>contextSwitch()} 
                       style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.6rem 1.5rem', width: '5rem'}} src='icons/codex_white.png'/>
                     <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#contextSwitch'}>Context</UncontrolledTooltip>
-                  </ButtonGroup>
+                </ButtonGroup>
               </CardColumns>
 
-              <CardColumns style={{marginRight: '1rem', display: 'flex', backgroundColor: 'rgba(0, 0, 0, .75)', height: 'max-content', 
+              <CardColumns style={{marginRight: '1rem', display: 'flex', height: 'max-content', 
                           width: '100%', flexDirection: 'column', justifyContent: 'flex-end' }}>
                   
-                  {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1]}}>
+                  {race && race.strategy.length > 0 && ctx.phase !== 'strat' && <div style={{marginBottom: '1rem'}}>
+                    {race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
+                  </div>}
+                  <div style={{backgroundColor: 'rgba(0, 0, 0, .75)', display: 'flex', height: 'max-content', 
+                          width: '100%', flexDirection: 'column', justifyContent: 'flex-end', marginBottom: '1rem'}}>
+                    {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1]}}>
 
-                      {midPanelInfo === 'tokens' && <>
-                      {<h6 style={{textAlign: 'right'}}>{race.tokens.new + tempCt.new || 0} unused</h6>}
-                      {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && 
-                        <Button size='sm' color='success' style={{position: 'absolute', top: '0', right: '0'}} 
-                          onClick={() => moves.redistTokens(tempCt, exhaustedCards)}>Confirm changes</Button>}
-                      <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
-                        <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE} >
-                          <h6 style={{fontSize: 50}}>{race.tokens.t + tempCt.t}</h6>
-                          {ctx.phase === 'acts' && <>
-                            {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'t'}/>}
-                            {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'t'}/>}
-                          </>}
-                          <b style={{backgroundColor: race.color[1], width: '100%'}}>tactic</b>
-                        </ListGroupItem>
-                        <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE}>
-                          <h6 style={{fontSize: 50}}>{race.tokens.f + tempCt.f}</h6>
-                          {ctx.phase === 'acts' && <>
-                            {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'f'}/>}
-                            {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'f'}/>}
-                          </>}
-                          <b style={{backgroundColor: race.color[1], width: '100%'}}>fleet</b>
-                        </ListGroupItem>
-                        <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE}>
-                          <h6 style={{fontSize: 50}}>{race.tokens.s + tempCt.s}</h6>
-                          {ctx.phase === 'acts' && <>
-                            {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'s'}/>}
-                            {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'s'}/>}
-                          </>}
-                          <b style={{backgroundColor: race.color[1], width: '100%'}}>strategic</b>
+                        {midPanelInfo === 'tokens' && <>
+                        {<h6 style={{textAlign: 'right'}}>{race.tokens.new + tempCt.new || 0} unused</h6>}
+                        {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && 
+                          <Button size='sm' color='success' style={{position: 'absolute', top: '0', right: '0'}} 
+                            onClick={() => moves.redistTokens(tempCt, exhaustedCards)}>Confirm changes</Button>}
+                        <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
+                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE} >
+                            <h6 style={{fontSize: 50}}>{race.tokens.t + tempCt.t}</h6>
+                            {ctx.phase === 'acts' && <>
+                              {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'t'}/>}
+                              {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'t'}/>}
+                            </>}
+                            <b style={{backgroundColor: race.color[1], width: '100%'}}>tactic</b>
                           </ListGroupItem>
-                      </ListGroup>
+                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE}>
+                            <h6 style={{fontSize: 50}}>{race.tokens.f + tempCt.f}</h6>
+                            {ctx.phase === 'acts' && <>
+                              {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'f'}/>}
+                              {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'f'}/>}
+                            </>}
+                            <b style={{backgroundColor: race.color[1], width: '100%'}}>fleet</b>
+                          </ListGroupItem>
+                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE}>
+                            <h6 style={{fontSize: 50}}>{race.tokens.s + tempCt.s}</h6>
+                            {ctx.phase === 'acts' && <>
+                              {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'s'}/>}
+                              {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'s'}/>}
+                            </>}
+                            <b style={{backgroundColor: race.color[1], width: '100%'}}>strategic</b>
+                            </ListGroupItem>
+                        </ListGroup>
+                        
+                        </>}
+                        {midPanelInfo === 'fragments' && <>
+                        
+                        <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
+                          <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('c')} style={{...TOKENS_STYLE, width: '22%'}}>
+                            <img alt='fragment' src='icons/cultural_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                            <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.c - purgingFragments.c}</h6>
+                            <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>cultural</b>
+                          </ListGroupItem>
+                          <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('h')} style={{...TOKENS_STYLE, width: '22%'}}>
+                            <img alt='fragment' src='icons/hazardous_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                            <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.h - purgingFragments.h}</h6>
+                            <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>hazardous</b>
+                          </ListGroupItem>
+                          <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('i')} style={{...TOKENS_STYLE, width: '22%'}}>
+                            <img alt='fragment' src='icons/industrial_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                            <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.i - purgingFragments.i}</h6>
+                            <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>industrial</b>
+                          </ListGroupItem>
+                          <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('u')} style={{...TOKENS_STYLE, width: '22%'}}>
+                            <img alt='fragment' src='icons/unknown_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                            <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.u - purgingFragments.u}</h6>
+                            <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>unknown</b>
+                          </ListGroupItem>
+                        </ListGroup>
+                        <div style={{alignSelf: 'flex-end', margin: '0 1rem'}}>
+                          <span style={{padding: '0 1rem'}}>
+                            {Object.keys(purgingFragments).map(k => {
+                              const result = [];
+                              for(var i=0; i<purgingFragments[k]; i++){
+                                const type = k === 'c' ? 'cultural': k === 'i' ? 'industrial': k === 'h' ? 'hazardous': 'unknown';
+                                result.push(<img key={k+i} alt='fragment' src={'icons/' + type + '_fragment.png'} style={{width: '1.5rem'}}/>);
+                              }
+                              return result;
+                            })}
+                          </span>
+                          <Button size='sm' disabled={purgingFragments.c + purgingFragments.i + purgingFragments.h + purgingFragments.u < 3} style={{maxWidth: 'fit-content'}}
+                            color='warning' onClick={()=>{moves.purgeFragments(purgingFragments); setPurgingFragments({c:0,i:0,h:0,u:0})}}>Purge</Button>
+                        </div>
+                        </>}
+                        {midPanelInfo === 'reinforce' && <div style={{padding: '0.5rem 0'}}>
+                            <div style={{border: 'none', justifyContent: 'space-around', display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start'}}>
+                              {R_UNITS.map((u,ui) => {
+                                return <div key={ui} style={{width: '4.25rem', marginRight: '.5rem', position: 'relative'}}>
+                                  <img alt={u} src={'units/'+ u.id.toUpperCase() +'.png'} style={{width: '4rem'}}/>
+                                  <div style={{fontSize: '30px', fontFamily: 'Handel Gothic', position: 'absolute', bottom: 0, right: 0, textShadow: '-2px 2px 3px black'}}>
+                                    {UNITS_LIMIT[u.id.toLowerCase()] - (UNITS[u.id.toLowerCase()] || 0)}</div>
+                                </div>}
+                              )}
+                            </div>
+                            <div style={{display: 'flex', height: '2rem', marginTop: '.5rem'}}>
+                              <Button disabled={!groundUnitSelected.unit} size='sm' color='danger' onClick={() => moves.moveToReinforcements(groundUnitSelected)}
+                                className='bi bi-backspace-reverse-fill'>&nbsp;remove selected from board</Button>
+                              {groundUnitSelected.unit && 
+                                <div style={{marginLeft: '1rem', display: 'flex'}}>
+                                  <div style={{fontSize: '20px', fontFamily: 'Handel Gothic'}}>1 x </div>
+                                  <img alt={groundUnitSelected.unit} src={'units/'+ groundUnitSelected.unit.toUpperCase() +'.png'} style={{width: '2rem'}}/>
+                                </div>
+                              }
+                            </div>
+                        </div>}
+                      </Card>
                       
+                      <ButtonGroup >
+                        <Button size='sm' onClick={()=>setMidPanelInfo('tokens')} color={midPanelInfo === 'tokens' ? 'light':'dark'} style={{flexBasis: 1}}>TOKENS</Button>
+                        <Button size='sm' onClick={()=>setMidPanelInfo('fragments')} color={midPanelInfo === 'fragments' ? 'light':'dark'} style={{flexBasis: 1}}>FRAGMENTS</Button>
+                        <Button size='sm' onClick={()=>setMidPanelInfo('reinforce')} color={midPanelInfo === 'reinforce' ? 'light':'dark'} style={{flexBasis: 1}}>REINFORCE</Button>
+                      </ButtonGroup>
                       </>}
-                      {midPanelInfo === 'fragments' && <>
-                      
-                      <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
-                        <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('c')} style={{...TOKENS_STYLE, width: '22%'}}>
-                          <img alt='fragment' src='icons/cultural_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
-                          <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.c - purgingFragments.c}</h6>
-                          <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>cultural</b>
-                        </ListGroupItem>
-                        <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('h')} style={{...TOKENS_STYLE, width: '22%'}}>
-                          <img alt='fragment' src='icons/hazardous_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
-                          <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.h - purgingFragments.h}</h6>
-                          <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>hazardous</b>
-                        </ListGroupItem>
-                        <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('i')} style={{...TOKENS_STYLE, width: '22%'}}>
-                          <img alt='fragment' src='icons/industrial_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
-                          <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.i - purgingFragments.i}</h6>
-                          <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>industrial</b>
-                        </ListGroupItem>
-                        <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('u')} style={{...TOKENS_STYLE, width: '22%'}}>
-                          <img alt='fragment' src='icons/unknown_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
-                          <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.u - purgingFragments.u}</h6>
-                          <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>unknown</b>
-                        </ListGroupItem>
-                      </ListGroup>
-                      <div style={{alignSelf: 'flex-end', margin: '0 1rem'}}>
-                        <span style={{padding: '0 1rem'}}>
-                          {Object.keys(purgingFragments).map(k => {
-                            const result = [];
-                            for(var i=0; i<purgingFragments[k]; i++){
-                              const type = k === 'c' ? 'cultural': k === 'i' ? 'industrial': k === 'h' ? 'hazardous': 'unknown';
-                              result.push(<img key={k+i} alt='fragment' src={'icons/' + type + '_fragment.png'} style={{width: '1.5rem'}}/>);
-                            }
-                            return result;
-                          })}
-                        </span>
-                        <Button size='sm' disabled={purgingFragments.c + purgingFragments.i + purgingFragments.h + purgingFragments.u < 3} style={{maxWidth: 'fit-content'}}
-                          color='warning' onClick={()=>{moves.purgeFragments(purgingFragments); setPurgingFragments({c:0,i:0,h:0,u:0})}}>Purge</Button>
-                      </div>
-                      </>}
-                      {midPanelInfo === 'reinforce' && <div style={{padding: '0.5rem 0'}}>
-                          <div style={{border: 'none', justifyContent: 'space-around', display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start'}}>
-                            {R_UNITS.map((u,ui) => {
-                              return <div key={ui} style={{width: '4.25rem', marginRight: '.5rem', position: 'relative'}}>
-                                <img alt={u} src={'units/'+ u.id.toUpperCase() +'.png'} style={{width: '4rem'}}/>
-                                <div style={{fontSize: '30px', fontFamily: 'Handel Gothic', position: 'absolute', bottom: 0, right: 0, textShadow: '-2px 2px 3px black'}}>
-                                  {UNITS_LIMIT[u.id.toLowerCase()] - (UNITS[u.id.toLowerCase()] || 0)}</div>
-                              </div>}
-                            )}
-                          </div>
-                          <div style={{display: 'flex', height: '2rem', marginTop: '.5rem'}}>
-                            <Button disabled={!groundUnitSelected.unit} size='sm' color='danger' onClick={() => moves.moveToReinforcements(groundUnitSelected)}
-                              className='bi bi-backspace-reverse-fill'>&nbsp;remove selected from board</Button>
-                            {groundUnitSelected.unit && 
-                              <div style={{marginLeft: '1rem', display: 'flex'}}>
-                                <div style={{fontSize: '20px', fontFamily: 'Handel Gothic'}}>1 x </div>
-                                <img alt={groundUnitSelected.unit} src={'units/'+ groundUnitSelected.unit.toUpperCase() +'.png'} style={{width: '2rem'}}/>
-                              </div>
-                            }
-                          </div>
-                      </div>}
-                    </Card>
-                    
-                    <ButtonGroup >
-                      <Button size='sm' onClick={()=>setMidPanelInfo('tokens')} color={midPanelInfo === 'tokens' ? 'light':'dark'} style={{flexBasis: 1}}>TOKENS</Button>
-                      <Button size='sm' onClick={()=>setMidPanelInfo('fragments')} color={midPanelInfo === 'fragments' ? 'light':'dark'} style={{flexBasis: 1}}>FRAGMENTS</Button>
-                      <Button size='sm' onClick={()=>setMidPanelInfo('reinforce')} color={midPanelInfo === 'reinforce' ? 'light':'dark'} style={{flexBasis: 1}}>REINFORCE</Button>
-                    </ButtonGroup>
+                    {race && subcardVisible === 'persons' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
+                        {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
+                          <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
+                          <div><CardText>{race.agentAbility}</CardText>
+                          <CardText><b>{'Ready'}</b></CardText></div>
+                        </Card>}
+                        {agentVisible === 'commander' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
+                          <CardImg src={'race/commander/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
+                          <div><CardText>{race.commanderAbility}</CardText>
+                          <CardText><b>{'Unlock: '}</b> {race.commanderUnlock}</CardText></div>
+                        </Card>}
+                        {agentVisible === 'hero' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
+                          <CardImg src={'race/hero/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
+                          <div><CardText><b>{race.heroAbilityType}</b>{' ' + race.heroAbility}</CardText>
+                          <CardText><b>{'Unlock: '}</b> {'complete 3 objectives.'}</CardText></div>
+                        </Card>}
+                      </Card>
+                      <ButtonGroup>
+                          <Button size='sm' onClick={()=>setAgentVisible('agent')} color={agentVisible === 'agent' ? 'light':'dark'} style={{flexBasis: 1}}>AGENT</Button>
+                          <Button size='sm' onClick={()=>setAgentVisible('commander')} color={agentVisible === 'commander' ? 'light':'dark'} style={{flexBasis: 1}}>COMMANDER</Button>
+                          <Button size='sm' onClick={()=>setAgentVisible('hero')} color={agentVisible === 'hero' ? 'light':'dark'} style={{flexBasis: 1}}>HERO</Button>
+                      </ButtonGroup>
                     </>}
-                  {race && subcardVisible === 'persons' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
-                      {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
-                        <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
-                        <div><CardText>{race.agentAbility}</CardText>
-                        <CardText><b>{'Ready'}</b></CardText></div>
-                      </Card>}
-                      {agentVisible === 'commander' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
-                        <CardImg src={'race/commander/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
-                        <div><CardText>{race.commanderAbility}</CardText>
-                        <CardText><b>{'Unlock: '}</b> {race.commanderUnlock}</CardText></div>
-                      </Card>}
-                      {agentVisible === 'hero' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
-                        <CardImg src={'race/hero/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
-                        <div><CardText><b>{race.heroAbilityType}</b>{' ' + race.heroAbility}</CardText>
-                        <CardText><b>{'Unlock: '}</b> {'complete 3 objectives.'}</CardText></div>
-                      </Card>}
-                    </Card>
-                    <ButtonGroup>
-                        <Button size='sm' onClick={()=>setAgentVisible('agent')} color={agentVisible === 'agent' ? 'light':'dark'} style={{flexBasis: 1}}>AGENT</Button>
-                        <Button size='sm' onClick={()=>setAgentVisible('commander')} color={agentVisible === 'commander' ? 'light':'dark'} style={{flexBasis: 1}}>COMMANDER</Button>
-                        <Button size='sm' onClick={()=>setAgentVisible('hero')} color={agentVisible === 'hero' ? 'light':'dark'} style={{flexBasis: 1}}>HERO</Button>
-                    </ButtonGroup>
-                  </>}
-                  {race && subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
-                      {race.abilities.map((a, i) => 
-                        <CardText key={i} style={{margin:'1rem 0 0 0', minHeight: '3rem', fontSize: '.8rem', display: abilVisible === i ? 'unset':'none'}}>
-                          {a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}
-                        </CardText>
-                      )}
-                    </Card>
-                    <ButtonGroup style={{}}>
+                    {race && subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
                         {race.abilities.map((a, i) => 
-                            <Button key={i} size='sm' onClick={()=>setAbilVisible(i)} color={abilVisible === i ? 'light':'dark'} style={{flexBasis: 1}}>{a.id.replaceAll('_', ' ')}</Button>
-                          )}
-                    </ButtonGroup>
-                  </>}
+                          <CardText key={i} style={{margin:'1rem 0 0 0', minHeight: '3rem', fontSize: '.8rem', display: abilVisible === i ? 'unset':'none'}}>
+                            {a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}
+                          </CardText>
+                        )}
+                      </Card>
+                      <ButtonGroup style={{}}>
+                          {race.abilities.map((a, i) => 
+                              <Button key={i} size='sm' onClick={()=>setAbilVisible(i)} color={abilVisible === i ? 'light':'dark'} style={{flexBasis: 1}}>{a.id.replaceAll('_', ' ')}</Button>
+                            )}
+                      </ButtonGroup>
+                    </>}
 
-                  {race && <ButtonGroup style={{marginTop: '1rem'}}>
-                    <Button size='sm' className='bi bi-stack' onClick={()=>setSubcardVisible('stuff')} color={subcardVisible === 'stuff' ? 'light':'dark'} style={{}}></Button>
-                    <Button size='sm' className='bi bi-people-fill' onClick={()=>setSubcardVisible('persons')} color={subcardVisible === 'persons' ? 'light':'dark'} style={{}}></Button>
-                    <Button size='sm' className='bi bi-lightning-fill' onClick={()=>setSubcardVisible('abilities')} color={subcardVisible === 'abilities' ? 'light':'dark'} style={{}}></Button>
-                  </ButtonGroup>}
+                    {race && <ButtonGroup style={{marginTop: '1rem'}}>
+                      <Button size='sm' className='bi bi-stack' onClick={()=>setSubcardVisible('stuff')} color={subcardVisible === 'stuff' ? 'light':'dark'} style={{}}></Button>
+                      <Button size='sm' className='bi bi-people-fill' onClick={()=>setSubcardVisible('persons')} color={subcardVisible === 'persons' ? 'light':'dark'} style={{}}></Button>
+                      <Button size='sm' className='bi bi-lightning-fill' onClick={()=>setSubcardVisible('abilities')} color={subcardVisible === 'abilities' ? 'light':'dark'} style={{}}></Button>
+                    </ButtonGroup>}
 
-                  {race && <Card style={{...CARD_STYLE, backgroundColor: race.color[1]}}>
-                    <div style={{display: 'flex'}}>
-                      <div style={{display: 'flex', flexFlow: 'column'}}>
-                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.commodity || 0 + '/' + race.commCap}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>commodity</b></Button>
-                        <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>trade goods</b></Button>
-                        {G.speaker === race.rid && <SpeakerToken />}
+                    {race && <Card style={{...CARD_STYLE, backgroundColor: race.color[1], margin: 0}}>
+                      <div style={{display: 'flex'}}>
+                        <div style={{display: 'flex', flexFlow: 'column'}}>
+                          <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.commodity || 0 + '/' + race.commCap}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>commodity</b></Button>
+                          <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>trade goods</b></Button>
+                          {G.speaker === race.rid && <SpeakerToken />}
+                        </div>
+                        <CardImg src={'race/'+race.rid+'.png'} style={{width: '205px'}}/>
+                        
                       </div>
-                      <CardImg src={'race/'+race.rid+'.png'} style={{width: '205px'}}/>
                       
-                    </div>
-                    
-                  </Card>}
+                    </Card>}
+                  </div>
                   
               </CardColumns>
             </div>}
