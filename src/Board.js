@@ -48,7 +48,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [subcardVisible, setSubcardVisible] = useState('stuff');
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
   //const [stratUnfold, setStratUnfold] = useState(0);
-  const [rightBottomVisible, setRightBottomVisible] = useState(null);
+  const [rightBottomVisible, setRightBottomVisible] = useState([]);
   const [rightBottomSubVisible, setRightBottomSubVisible] = useState(null);
   const [selectedTile, setSelectedTile] = useState(-1);
   const [selectedPlanet, setSelectedPlanet] = useState(-1);
@@ -247,53 +247,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     if(race && race.secretObjectives && isMyTurn) return race.mustDropSecObj || race.secretObjectives.length > 3
   }, [race, isMyTurn]);
 
-  const promissorySwitch = useCallback(() => {
-    //setStratUnfold(0);
-    if(rightBottomVisible === 'promissory'){
-      setRightBottomVisible(null);
+  const rightBottomSwitch = useCallback((val) => {
+    if(rightBottomVisible.includes(val)){
+      setRightBottomVisible(rightBottomVisible.filter(v => v !== val))
     }
     else{
-      setRightBottomVisible('promissory');
-    }
-  },[rightBottomVisible]);
-
-  const contextSwitch = useCallback(() => {
-    //setStratUnfold(0);
-    if(rightBottomVisible === 'context'){
-      setRightBottomVisible(null);
-    }
-    else{
-      setRightBottomVisible('context');
-    }
-  }, [rightBottomVisible]);
-
-  const actionsSwitch = useCallback(() => {
-    //setStratUnfold(0);
-    if(rightBottomVisible === 'actions'){
-      setRightBottomVisible(null);
-    }
-    else{
-      setRightBottomVisible('actions');
-    }
-  }, [rightBottomVisible]);
-
-  const relicsSwitch = useCallback(() => {
-    //setStratUnfold(0);
-    if(rightBottomVisible === 'relics'){
-      setRightBottomVisible(null);
-    }
-    else{
-      setRightBottomVisible('relics');
-    }
-  }, [rightBottomVisible]);
-
-  const lawsSwitch = useCallback(() => {
-    //setStratUnfold(0);
-    if(rightBottomVisible === 'agenda'){
-      setRightBottomVisible(null);
-    }
-    else{
-      setRightBottomVisible('agenda');
+      setRightBottomVisible([...rightBottomVisible, val]);
     }
   }, [rightBottomVisible]);
 
@@ -309,10 +268,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
  */
     return <Card style={{...style, opacity: '.95', border: 'none', background: 'none', position: 'relative', 
               marginTop: idx > 0 ? '0.5rem':'0rem', alignItems: 'end'}}>
-              <CardImg id={'strategyCard_'+card.id} src={'strategy/'+ card.id + '.png'} style={{position: 'relative', cursor: 'default', width: '50%'}}></CardImg>
-              <div style={{width:'50%', borderRadius: '3px', paddingTop: '2rem', background: 'rgba(33, 37, 41, 0.65)', 
-                          marginRight: '.7rem', marginTop: '-2.8rem', border: 'solid 1px ' + getStratColor(card.id, '.6')}}>
-                <Button disabled={card.exhausted} style={{opacity: card.exhausted ? 0:1, backgroundColor: getStratColor(card.id, '.6'), width: '100%', fontFamily: 'Handel gothic'}} 
+              <CardImg id={'strategyCard_'+card.id} src={'strategy/'+ card.id + '.png'} style={{position: 'relative', cursor: 'default', width: '40%'}}></CardImg>
+              <div style={{width:'40%', borderRadius: '3px', paddingTop: '2rem', background: 'rgba(33, 37, 41, 0.65)', 
+                          marginRight: '.5rem', marginTop: '-2.3rem', border: 'solid 1px ' + getStratColor(card.id, '.6')}}>
+                <Button disabled={card.exhausted} size='sm' style={{opacity: card.exhausted ? 0:1, backgroundColor: getStratColor(card.id, '.6'), width: '100%', fontFamily: 'Handel gothic'}} 
                   onClick={(e)=>{e.stopPropagation(); moves.useStrategy(idx)}}>Activate</Button>
               </div>
             <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#strategyCard_' + card.id}>
@@ -1329,12 +1288,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             
             {!race.isSpectator && <div style={{ display:'flex', flexDirection: 'row', justifyContent: 'flex-end', position:'fixed', 
                                                 alignItems: 'flex-end', right: 0, bottom: 0, width: '27.5%' }}>
-              <CardColumns style={{minWidth: '13rem', width:'13rem', height: 'fit-content', position: 'absolute', left: '-13rem', display:'flex', 
+              <CardColumns style={{minWidth: '13rem', width:'13rem', height: 'fit-content', position: 'absolute', left: '-14rem', display:'flex', 
               flexDirection: 'column', justifyContent: 'space-between', alignSelf: 'flex-start'}}>
 
                 <div style={{display: 'flex', flexDirection: 'column', position: 'fixed', bottom: '4rem', width: '13rem'}}>
-                  {rightBottomVisible === 'context' && <>
-                    <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                  {rightBottomVisible.includes('context') && <>
+                    <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
                       {haveTechnology(race, 'GRAVITY_DRIVE') && <TechAction techId='GRAVITY_DRIVE'/>}
                       {haveTechnology(race, 'SLING_RELAY') && <TechAction techId='SLING_RELAY'/>}
                       {haveTechnology(race, 'BIO_STIMS') && <TechAction techId='BIO_STIMS'/>}
@@ -1373,7 +1332,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       })}
                     </ListGroup>}
                   </>}
-                  {rightBottomVisible === 'promissory' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                  {rightBottomVisible.includes('promissory') && race.promissory.length > 0 && <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
                     {race.promissory.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                       <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id}>
                         {pr.sold ? <img alt='to other player' style={{width: '1rem', position: 'absolute', left: '.5rem', top: '.4rem'}} src={'race/icons/' + pr.sold + '.png'} />:''}
@@ -1385,7 +1344,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </ListGroupItem>)}
                   </ListGroup>}
 
-                  {(rightBottomVisible === 'actions' || race.actionCards.length > 7) && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                  {((rightBottomVisible.includes('actions') && race.actionCards.length > 0) || race.actionCards.length > 7) && <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
                     {race.actionCards.map((pr, i) => {
                       let disabled = !mustAction && !(pr.when === 'ACTION' && ctx.phase === 'acts' && ctx.currentPlayer === playerID) && 
                                                       !(pr.when === 'AGENDA' && ctx.phase === 'agenda') &&
@@ -1425,7 +1384,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     )}
                   </ListGroup>}
 
-                  {rightBottomVisible === 'relics' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                  {rightBottomVisible.includes('relics') && race.relics.length > 0 && <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
                     {race.relics.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                       <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
                         <b>{pr.id.toUpperCase()}</b>
@@ -1434,7 +1393,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </ListGroupItem>)}
                   </ListGroup>}
 
-                  {rightBottomVisible === 'agenda' && <ListGroup style={{background: 'none', margin: '2rem 0'}}>
+                  {rightBottomVisible.includes('agenda') && G.laws.length > 0 && <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
                     {G.laws.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                       <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_').replaceAll(':', '_')}>
                         <b>{pr.id.toUpperCase()}</b>
@@ -1443,22 +1402,17 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </ListGroupItem>)}
                   </ListGroup>}
                 </div>
-                <ButtonGroup style={{alignSelf: 'flex-end', height: '4rem', marginBottom: '1rem', position: 'fixed', bottom: 0}}>
-                    <Button id='promissorySwitch' size='sm' className='hoverable' tag='img' onClick={()=>promissorySwitch()} 
-                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.75rem'}} src='icons/promissory_white.png'/>
-                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#promissorySwitch'}>Promissory</UncontrolledTooltip>
-                    <Button id='relicsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>relicsSwitch()} 
-                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/relic_white.png'/>
-                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#relicsSwitch'}>Relics</UncontrolledTooltip>
-                    <Button id='lawsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>lawsSwitch()} 
-                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.6rem 1.2rem', width: '5rem'}} src='icons/agenda_white.png'/>
-                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#lawsSwitch'}>Agenda</UncontrolledTooltip>
-                    <Button id='actionsSwitch' size='sm' className='hoverable' tag='img' onClick={()=>actionsSwitch()} 
-                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.5rem 1.2rem', width: '5rem'}} src='icons/action_card_white.png'/>
-                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#actionsSwitch'}>Actions</UncontrolledTooltip>
-                    <Button id='contextSwitch' size='sm' className='hoverable' tag='img' onClick={()=>contextSwitch()} 
-                      style={{borderRadius: '5px', background:'none', borderColor: 'transparent', padding: '0.6rem 1.5rem', width: '5rem'}} src='icons/codex_white.png'/>
-                    <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='top' target={'#contextSwitch'}>Context</UncontrolledTooltip>
+                <ButtonGroup style={{alignSelf: 'flex-end', fontFamily:'Handel Gothic', marginBottom: '1rem', position: 'fixed', bottom: 0}}>
+                    <Button color={rightBottomVisible.includes('promissory') ? 'light':'dark'} onClick={()=>rightBottomSwitch('promissory')} 
+                      style={{width: '7rem'}}>promissory</Button>
+                    <Button color={rightBottomVisible.includes('relics') ? 'light':'dark'} onClick={()=>rightBottomSwitch('relics')} 
+                      style={{width: '7rem'}}>relics</Button> 
+                    <Button color={rightBottomVisible.includes('agenda') ? 'light':'dark'} onClick={()=>rightBottomSwitch('agenda')} 
+                      style={{width: '7rem'}}>agenda</Button>
+                    <Button color={rightBottomVisible.includes('actions') ? 'light':'dark'} onClick={()=>rightBottomSwitch('actions')} 
+                      style={{width: '7rem'}}>actions</Button>
+                    <Button color={rightBottomVisible.includes('context') ? 'light':'dark'} onClick={()=>rightBottomSwitch('context')} 
+                      style={{width: '7rem'}}>context</Button>
                 </ButtonGroup>
               </CardColumns>
 
