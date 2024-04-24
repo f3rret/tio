@@ -10,6 +10,7 @@ import raceData from './map generator/data/raceData.json';
 import { App } from './App';
 import { PrematchApp } from './prematch/prematchApp';
 import { LocalizationContext } from './utils';
+import { colors, trueColors } from './colors';
 
 import './scss/custom.scss';
 
@@ -19,17 +20,6 @@ export const Lobby = ()=> {
 
     const { t, locale, setLocale } = useContext(LocalizationContext);
     const playerNames = useMemo(() => ['Alice', 'Bob', 'Cecil', 'David', 'Eva', 'Frank', 'Gregory', 'Heilen'], []);
-    const colors = useMemo(() => ['red', 'green', 'blue', 'cyan', 'gray', 'pink', 'orange', 'violet'], []);
-    const trueColors = useMemo(() => {return {
-        red: ['rgba(220, 53, 69, 1)', 'rgba(220, 53, 69, .25)'],
-        green: ['rgba(25, 135, 84, 1)', 'rgba(25, 135, 84, .25)'], 
-        blue: ['rgba(13, 110, 253, 1)', 'rgba(13, 110, 253, .25)'], 
-        cyan: ['rgba(13, 202, 240, 1)', 'rgba(13, 202, 240, .35)'], 
-        gray: ['rgba(108, 117, 125, 1)', 'rgba(108, 117, 125, .25)'], 
-        pink: ['rgba(214, 51, 132, 1)', 'rgba(214, 51, 132, .25)'], 
-        orange: ['rgba(253, 126, 20, 1)', 'rgba(253, 126, 20, .25)'], 
-        violet: ['rgba(111, 66, 193, 1)', 'rgba(111, 66, 193, .25)']
-    }}, []);
     const races = useMemo(() => [...raceData.races, ...raceData.pokRaces], []);
 
     const [gameList, setGameList] = useState();
@@ -91,7 +81,7 @@ export const Lobby = ()=> {
         });
 
         setPrematchID(null);
-    }, [colors, t]);
+    }, [t]);
 
     const getPrematch = useCallback(() => {
         lobbyClient.getMatch('prematch', prematchID)
@@ -353,8 +343,8 @@ export const Lobby = ()=> {
                                 style={{padding: '.25rem 0', borderRadius: '0'}} onClick={() => rowClick(g.matchID)}>
                                 <Col xs='4' style={{paddingRight: 0}}>{g.createdAt && (new Date(g.createdAt)).toLocaleString()}</Col>
                                 <Col xs='3'>{g.setupData && g.setupData.matchName}</Col>
-                                <Col xs='1'>{g.setupData && g.setupData.edition}</Col>
-                                <Col xs='2'>{g.setupData && g.setupData.map}</Col>
+                                <Col xs='1'>{g.setupData && t('lobby.edition_' + g.setupData.edition)}</Col>
+                                <Col xs='2'>{g.setupData && t('lobby.map_type_' + g.setupData.map)}</Col>
                                 <Col xs='2'>{g.players && g.players.filter(p => p.name).length + ' / ' + g.players.length}</Col>
                             </Row>
                             )}
@@ -403,23 +393,24 @@ export const Lobby = ()=> {
                     </CardBody>}
                     <CardBody style={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
                         <div>
-                            {prematchInfo.players && <CardText style={{marginBottom: '3rem'}}>{prematchInfo.setupData.edition + ' / ' + prematchInfo.setupData.map
-                                        + ' map / ' + prematchInfo.players.length + ' players'}</CardText>}
+                            {prematchInfo.players && <CardText style={{marginBottom: '3rem'}}>
+                                {t('lobby.edition_' + prematchInfo.setupData.edition) + ' / ' + t('lobby.map_type_' + prematchInfo.setupData.map)
+                                        + ' / ' + prematchInfo.players.length}</CardText>}
                             {prematchInfo.players && 
-                            <Container>{prematchInfo.players.map((p, i) => 
-                            <Row key={i} style={{marginTop: '.25rem', minHeight: '2.5rem'}}>
-                                <Col xs='1' style={{padding: 0}}><div style={{backgroundColor: trueColors[colors[i]][0], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
-                                {p.name && p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
-                                {p.name && !p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
-                                {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ ' + t('lobby.open') + ' ]'}</Col>}
-                                {p.name && <Col xs='7' style={{color: p.data && p.data.ready ? 'lime' : 'none'}}>
-                                    {String(playerID) === String(p.id) && <Input style={{color: 'inherit'}} disabled={p.data && p.data.ready} type='select'>
-                                        <option value='random'>{t('lobby.random_race')}</option>
-                                    </Input>}
-                                    {String(playerID) !== String(p.id) && <div style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem .75rem'}}>{t('lobby.random_race')}</div>}
-                                </Col>}
-                                {!p.name && <Col xs='7' style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem 1.5rem'}}></Col>}
-                            </Row>)}
+                            <Container>{prematchInfo.players.map((p, i) =>
+                                <Row key={i} style={{marginTop: '.25rem', minHeight: '2.5rem'}}>
+                                    <Col xs='1' style={{padding: 0}}><div style={{backgroundColor: trueColors[colors[i]][0], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
+                                    {p.name && p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
+                                    {p.name && !p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
+                                    {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ ' + t('lobby.open') + ' ]'}</Col>}
+                                    {p.name && <Col xs='7' style={{color: p.data && p.data.ready ? 'lime' : 'none'}}>
+                                        {String(playerID) === String(p.id) && <Input style={{color: 'inherit'}} disabled={p.data && p.data.ready} type='select'>
+                                            <option value='random'>{t('lobby.random_race')}</option>
+                                        </Input>}
+                                        {String(playerID) !== String(p.id) && <div style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem .75rem'}}>{t('lobby.random_race')}</div>}
+                                    </Col>}
+                                    {!p.name && <Col xs='7' style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem 1.5rem'}}></Col>}
+                                </Row>)}
                             </Container>}
                         </div>
                         {playerCreds && <PrematchApp playerID={playerID} matchID={prematchID} credentials={playerCreds}/>}

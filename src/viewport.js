@@ -11,9 +11,7 @@ const WORLD_HEIGHT = window.innerHeight;
 const PixiViewportComponent = PixiComponent("Viewport", {
   create(props) {
     const { app, home, ...viewportProps } = props;
-console.log(home);
-const [firstCorner] = home.corners;
-console.log(firstCorner, WORLD_WIDTH, WORLD_HEIGHT)
+    const [firstCorner] = home.corners;
     const viewport = new Viewport({
       screenWidth: WORLD_WIDTH,
       screenHeight: WORLD_HEIGHT,
