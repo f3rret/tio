@@ -250,7 +250,7 @@ export const checkObjective = (G, playerID, oid) => {
     else if(req.upgrade){
         const upgrades = race.knownTechs.filter(t => {
         const tech = techData.find(td => td.id === t);
-        return tech.type === 'unit' && tech.upgrade === true
+        return tech && tech.type === 'unit' && tech.upgrade === true
         });
         if(upgrades.length < req.upgrade){
         return;

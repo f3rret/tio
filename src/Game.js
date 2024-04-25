@@ -173,7 +173,7 @@ export const TIO = {
           });
         },
         endIf: ({ G, ctx }) => {
-          const cardsCount = ctx.numPlayers > 1 ? 1 : 2; // more than 4!
+          const cardsCount = ctx.numPlayers > 4 ? 1 : 2; // more than 4!
           return ctx.playOrder.every( r => G.races[r].strategy.length === cardsCount );
         }
       },

@@ -3,7 +3,11 @@ import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
 import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip,/*UncontrolledAccordion, 
   AccordionItem, AccordionBody, AccordionHeader,*/ CardBody,
-  CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont } from 'reactstrap';
+  CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont, Row, Col, 
+  UncontrolledAccordion,
+  AccordionItem,
+  AccordionHeader,
+  AccordionBody} from 'reactstrap';
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, /*getTechType,*/ ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog } from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
 import { PixiViewport } from './viewport';
@@ -188,9 +192,32 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       </div>
 
     <Nav>
-      <h4 style={{backgroundColor: ( isMyTurn ? 'rgba(45,255,0,.75)':'rgba(255,255,0,.75)'), color: 'black', padding: '1rem'}}>
-        {isMyTurn ? 'You turn' : G.races[ctx.currentPlayer].name + ' turns '}
-      </h4>
+      <UncontrolledAccordion open='' id='turnLine' style={{minWidth: '30rem'}}>
+        <AccordionItem style={{border: 'solid 1px rgba(255,255,255,.2)', backgroundColor: 'rgba(0,0,0,.75)'}}>
+          <AccordionHeader style={{}} targetId='1'>
+            <span style={{display: 'flex', width: '100%', padding: '1rem', backgroundColor: G.races[ctx.currentPlayer].color[1]}}>
+              <CardImg style={{width: '2rem', maxHeight: '2rem', marginRight: '1rem'}} src={'race/icons/'+G.races[ctx.currentPlayer].rid+'.png'} />
+              <h5 style={{margin: 0, alignSelf: 'center', flex: 'auto'}}>{G.races[ctx.currentPlayer].name + ' turns'}</h5>
+            </span>
+          </AccordionHeader>
+          <AccordionBody style={{padding: '0', overflow: 'hidden'}} accordionId='1'>
+            {[...ctx.playOrder.slice(ctx.playOrderPos+1), ...ctx.playOrder.slice(0, ctx.playOrderPos)].map((pid, idx) => 
+              <Row key={idx} style={{backgroundColor: G.races[pid].color[1]}}>
+                <Col xs='1' style={{}}>
+                  <CardImg style={{width: '2rem', maxHeight: '2rem', margin: '.5rem'}} src={'race/icons/'+G.races[pid].rid+'.png'} />
+                </Col>
+                <Col xs='8' style={{padding: '1rem 1rem 0 2rem', fontFamily: 'Handel Gothic', textDecoration: G.passedPlayers.includes(''+pid) ? 'line-through':''}}>
+                  {G.races[pid].name}</Col>
+                <Col xs='3' style={{padding: '.5rem 0'}}>
+                  {G.races[pid].strategy.map((s, i) => 
+                    <p key={i} style={{fontSize: '75%', margin: 0, textDecoration: s.exhausted ? 'line-through':''}}>
+                      {s.id + ' [' + (s.init+1) + ']'}</p>)}
+                </Col>
+              </Row>
+            )}
+          </AccordionBody>
+        </AccordionItem>
+      </UncontrolledAccordion>
     </Nav>
     <Nav style={{paddingRight: '5em'}}>
       {false && <><NavItem style={{marginRight: '1rem'}}>

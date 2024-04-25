@@ -13,6 +13,8 @@ $body-bg: #141b24;
 $modal-content-bg: rgba(74, 111, 144, 0.95);
 $tooltip-color: white;
 $tooltip-max-width: 300px;
+$nav-link-color: none;
+$accordion-btn-focus-box-shadow: none;
 
 #root{
     width: 100%;
@@ -107,6 +109,22 @@ li.list-group-item{
 
 #lobbyMain select[disabled] {
     background-color: transparent;
+}
+#turnLine .accordion-body{
+    padding: 0;
+}
+#turnLine button {
+    padding: 0;
+}
+#turnLine button::after{
+    display:none;
+}
+#turnLine button:focus{
+    box-shadow:none;
+}
+#turnLine button:not(.collapsed){
+    background-color: var(--bs-accordion-btn-bg);
+    color: var(--bs-accordion-btn-color);
 }
 
 @import "../../node_modules/bootstrap/scss/bootstrap";
