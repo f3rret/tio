@@ -26,6 +26,7 @@ export const TIO = {
         speaker: races[0],
         mapArray: setupData.mapArray, 
         tiles: getInitTiles(hg, races),
+        pubObjDeck: [],
         pubObjectives: [],
         secretObjDeck: [],
         actionsDeck: [],
@@ -93,10 +94,10 @@ export const TIO = {
         },
         onBegin: ({ G, ctx, random, events }) => {
          
-          if(!G.pubObjectives.length){
-            cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
-            G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
-            G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+          if(!G.pubObjDeck || !G.pubObjDeck.length){
+            G.pubObjDeck = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
+            G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
+            G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
             //G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Adapt New Strategies'), players: []});
           }
 
@@ -149,9 +150,9 @@ export const TIO = {
           if(!G.secretObjDeck.length){
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
             G.races.forEach(r => {
-              //r.secretObjectives.push(...G.secretObjDeck.slice(-2)); //pop & players []
-              r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Drive the Debate'), players: []});
-              //r.mustDropSecObj = true;
+              r.secretObjectives.push(...G.secretObjDeck.slice(-2)); //pop & players []
+              //r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Drive the Debate'), players: []});
+              r.mustDropSecObj = true;
             });
           }
 
@@ -997,9 +998,9 @@ export const TIO = {
         },
         onEnd: ({ G, random }) => {
           if(G.pubObjectives && G.pubObjectives.length === 5){
-            cardData.objectives.public = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 2 ));
+            G.pubObjDeck = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 2 ));
           }
-          G.pubObjectives.push({...cardData.objectives.public.pop(), players: []});
+          G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
           G.races.forEach( r => { 
             if(r.exhaustedCards.indexOf('Political Stability') === -1) r.strategy = []; 
             r.initiative = undefined;

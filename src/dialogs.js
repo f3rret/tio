@@ -3,9 +3,9 @@ import { Card, CardImg,  CardTitle, CardBody, CardText, CardFooter, Button, Butt
     Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Input, Label, Badge } from 'reactstrap';
 import { useState, useMemo, useCallback, useEffect, useRef, useContext } from 'react';
 import { produce } from 'immer';
-import cardData from './cardData.json';
+//import cardData from './cardData.json';
 import techData from './techData.json';
-import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT } from './utils';
+import { checkObjective, StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT } from './utils';
 
 export function PaymentDialog(args) {
     
@@ -216,6 +216,7 @@ G.races[playerID].actions.length === agendaNumber &&
 export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, onDecline }) => {
 
     const {G, ctx, playerID, exhaustedCards, PLANETS, UNITS} = useContext(StateContext);
+    const {t} = useContext(LocalizationContext);
     const sid = G.strategy;
     const isMine = ctx.currentPlayer === playerID;
     let lastStep = 1;
@@ -732,7 +733,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
 
     return (
         <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute', margin: '5rem'}}>
-              <CardTitle style={{borderBottom: '1px solid ' + getStratColor(sid, '.6'), color: 'black'}}><h3>{sid}</h3></CardTitle>
+              <CardTitle style={{borderBottom: '1px solid ' + getStratColor(sid, '.6'), color: 'black'}}><h3>{t('cards.strategy.' + sid + '.label')}</h3></CardTitle>
               <CardBody style={{display: 'flex', color: 'black', width: sid === 'WARFARE' && step === 2 && !isMine ? '':'min-content'}}>
                     {step === 0 && <>
                         <div>
@@ -740,17 +741,17 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                         </div>
                         <div style={{padding: '1rem', minWidth: '30rem'}}>
                             <div style={isMine? MINE_STYLE : {opacity: .5, padding: '1rem'}}>
-                                <h5>Primary:</h5>
-                                <p>{cardData.strategy[sid].primary}</p>
+                                <h5>{t('board.primary')}:</h5>
+                                <p>{t('cards.strategy.' + sid + '.primary')}</p>
                             </div>
                             <div style={!isMine? MINE_STYLE : {opacity: .5, padding: '1rem'}}>
-                                <h5>Secondary:</h5>
-                                <p>{cardData.strategy[sid].secondary}</p>
+                                <h5>{t('board.secondary')}:</h5>
+                                <p>{t('cards.strategy.' + sid + '.secondary')}</p>
                             </div>
                         </div>
                     </>}
                     {step === 1 && <div style={{display: 'flex', flexDirection: 'column', width: 'min-content'}}>
-                        <p style={{margin: 0, minWidth: '40rem'}}>{isMine ? cardData.strategy[sid].primary : cardData.strategy[sid].secondary}</p>
+                        <p style={{margin: 0, minWidth: '40rem'}}>{isMine ? t('cards.strategy.' + sid + '.primary') : t('cards.strategy.' + sid + '.secondary')}</p>
                         {sid === 'LEADERSHIP' && <div style={{display: 'flex', width: '50rem', flexDirection: 'row'}}>
                             <div style={{width: '60%', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                 <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>
@@ -840,7 +841,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                         </div>}
                     </div>}
                     {step === 2 && lastStep > 1 && <div style={{width: '100%', display: 'flex', flexFlow: 'column'}}>
-                        <p style={{margin: 0, minWidth: '40rem'}}>{isMine ? cardData.strategy[sid].primary : cardData.strategy[sid].secondary}</p>
+                        <p style={{margin: 0, minWidth: '40rem'}}>{isMine ? t('cards.strategy.' + sid + '.primary') : t('cards.strategy.' + sid + '.secondary')}</p>
                         {sid === 'DIPLOMACY' && <div style={{width: '70%', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                             {<PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>}
                         </div>}
@@ -943,7 +944,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                         </>}
                     </div>}
                     {step === 3 && lastStep > 2 && <div>
-                        <p style={{margin: 0, minWidth: '40rem'}}>{isMine ? cardData.strategy[sid].primary : cardData.strategy[sid].secondary}</p>
+                        <p style={{margin: 0, minWidth: '40rem'}}>{isMine ? t('cards.strategy.' + sid + '.primary') : t('cards.strategy.' + sid + '.secondary')}</p>
                         {sid === 'POLITICS' && <div style={{display: 'flex', padding: '1rem', flexDirection: 'column', fontSize: '.8rem'}}>
                             {agendaCards.map((a, i) => 
                                 <div key={i} style={{border: 'solid 1px', position: 'relative', padding: '1rem', marginBottom: '1rem', borderRadius: '5px'}}>
@@ -980,10 +981,10 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                     </div>}
               </CardBody>
               {step <= lastStep && <CardFooter style={{background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid ' + getStratColor(sid, '.6'),}}>
-                  {step === 0 && <Button color='danger' disabled={isMine} onClick={()=>{onDecline(); setStep(lastStep+1)}}>Decline</Button> }
-                  {step > 0 && step <= lastStep && <Button onClick={backButtonClick}>Back</Button>}
-                  {step < lastStep && <Button disabled={cantNext} color='success' onClick={nextButtonClick}>{step === 0 && !isMine ? 'Accept':'Next'}</Button>}
-                  {step === lastStep && <Button disabled={cantNext} color='success' onClick={doneButtonClick}>Done</Button>}
+                  {step === 0 && <Button color='danger' disabled={isMine} onClick={()=>{onDecline(); setStep(lastStep+1)}}>{t('board.decline')}</Button> }
+                  {step > 0 && step <= lastStep && <Button onClick={backButtonClick}>{t('board.back')}</Button>}
+                  {step < lastStep && <Button disabled={cantNext} color='success' onClick={nextButtonClick}>{step === 0 && !isMine ? t('board.accept'):t('board.next')}</Button>}
+                  {step === lastStep && <Button disabled={cantNext} color='success' onClick={doneButtonClick}>{t('board.done')}</Button>}
               </CardFooter>}
         </Card>
     );  

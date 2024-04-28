@@ -1,6 +1,6 @@
 /* eslint eqeqeq: 0 */
 import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
-import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
+import { useMemo, useCallback, useState, useEffect, useRef, useContext } from 'react';
 import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip,/*UncontrolledAccordion, 
   AccordionItem, AccordionBody, AccordionHeader,*/ CardBody,
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont, Row, Col, 
@@ -12,7 +12,7 @@ import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
-import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT, wormholesAreAdjacent } from './utils';
+import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT, wormholesAreAdjacent, LocalizationContext } from './utils';
 import { lineTo, pathFromCoordinates } from './Grid';
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion, ChooseAndDestroy } from './combat';
@@ -63,6 +63,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const prevStages = useRef(null);
   const [tempCt, setTempCt] = useState({t: 0, s: 0, f: 0, new: 0});
   const [justOccupied, setJustOccupied] = useState(null);
+  const { t } = useContext(LocalizationContext);
 
   const [payObj, setPayObj] = useState(null);
   const togglePaymentDialog = (payment) => {
@@ -159,13 +160,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return result;
   }, [race, G.pubObjectives, playerID]);
 
-  
-  const MyNavbar = () =>
-    <div style={{ position: 'fixed', height: 0, width: '100%', zIndex: '1', display: 'flex', justifyContent: 'space-between', padding: '1rem 1rem 0 1rem'}}>
+  /**
+   * 
         <div style={{display: 'flex'}}>
-          <Nav style={{marginRight: '2rem'}}>
+   * <Nav style={{marginRight: '2rem'}}>
+          
             <NavItem onClick={()=>setObjVisible(!objVisible)} style={{cursor: 'pointer'}}>
-              <Button style={{background: 'none', border: 'none', padding: 0}} tag='img' src='icons/secret_to_public.png'/>
+              <h5>Objectives</h5>
             </NavItem>
           </Nav>
           <Nav style={{marginRight: '2rem'}}>
@@ -189,58 +190,67 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             </NavItem>
           </Nav>
           <div className='mb-corner mb-right'></div>
-      </div>
+   */
+  const MyNavbar = () =>
+    <div style={{ position: 'fixed', height: 0, width: '100%', zIndex: '1', display: 'flex', justifyContent: 'space-between', padding: '1rem 1rem 0 1rem'}}>
+      <ButtonGroup style={{height: '2.5rem', opacity: '80%', fontFamily:'Handel Gothic'}}>
+        <Button color={objVisible ? 'light':'dark'} style={{width: '8rem'}} onClick={()=>setObjVisible(!objVisible)}>{t("board.nav.objectives")}</Button>
+        <Button color={planetsVisible ? 'light':'dark'} style={{width: '8rem'}} onClick={()=>setPlanetsVisible(!planetsVisible)}>{t("board.nav.planets")}</Button>
+        <Button color={unitsVisible ? 'light':'dark'} style={{width: '8rem'}} onClick={()=>setUnitsVisible(!unitsVisible)}>{t("board.nav.units")}</Button>
+        <Button color={techVisible ? 'light':'dark'} style={{width: '8rem'}} onClick={()=>setTechVisible(!techVisible)}>{t("board.nav.technologies")}</Button>
+        <Button color={tradeVisible ? 'light':'dark'} style={{width: '8rem'}} onClick={()=>{ if(G.races.length > 1) setTradeVisible(!tradeVisible) }}>{t("board.nav.trade")}</Button>
+      </ButtonGroup>
+    
+      <Nav style={{marginTop: '0'}}>
+        <UncontrolledAccordion open='0' defaultOpen='0' id='turnLine' style={{minWidth: '30rem', opacity: '.95'}}>
+          <AccordionItem style={{border: 'none', backgroundColor: 'rgba(0,0,0,.75)'}}>
+            <AccordionHeader style={{}} targetId='1'>
+              <span style={{display: 'flex', width: '100%', padding: '1rem', backgroundColor: G.races[ctx.currentPlayer].color[1]}}>
+                <CardImg style={{width: '2rem', maxHeight: '2rem', marginRight: '1rem'}} src={'race/icons/'+G.races[ctx.currentPlayer].rid+'.png'} />
+                <h5 style={{margin: 0, alignSelf: 'center', flex: 'auto'}}>{G.races[ctx.currentPlayer].name + ' turns'}</h5>
+              </span>
+            </AccordionHeader>
+            <AccordionBody style={{padding: '0', overflow: 'hidden'}} accordionId='1'>
+              {[...ctx.playOrder.slice(ctx.playOrderPos+1), ...ctx.playOrder.slice(0, ctx.playOrderPos)].map((pid, idx) => 
+                <Row key={idx} style={{backgroundColor: G.races[pid].color[1]}}>
+                  <Col xs='1' style={{}}>
+                    <CardImg style={{width: '2rem', maxHeight: '2rem', margin: '.5rem'}} src={'race/icons/'+G.races[pid].rid+'.png'} />
+                  </Col>
+                  <Col xs='8' style={{padding: '1rem 1rem 0 2rem', fontFamily: 'Handel Gothic', textDecoration: G.passedPlayers.includes(''+pid) ? 'line-through':''}}>
+                    {G.races[pid].name}</Col>
+                  <Col xs='3' style={{padding: '.5rem 0'}}>
+                    {G.races[pid].strategy.map((s, i) => 
+                      <p key={i} style={{fontSize: '75%', margin: 0, textDecoration: s.exhausted ? 'line-through':''}}>
+                        {s.id + ' [' + (s.init+1) + ']'}</p>)}
+                  </Col>
+                </Row>
+              )}
+            </AccordionBody>
+          </AccordionItem>
+        </UncontrolledAccordion>
+      </Nav>
+      <Nav style={{paddingRight: '5em'}}>
+        {false && <><NavItem style={{marginRight: '1rem'}}>
+          <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
+        </NavItem>
+        <NavItem style={{marginRight: '1rem'}}>
+          <Button color='light' outline={!tilesTxt} onClick={()=>setTilesTxt(!tilesTxt)}>Text</Button>
+        </NavItem></>}
 
-    <Nav>
-      <UncontrolledAccordion open='' id='turnLine' style={{minWidth: '30rem'}}>
-        <AccordionItem style={{border: 'solid 1px rgba(255,255,255,.2)', backgroundColor: 'rgba(0,0,0,.75)'}}>
-          <AccordionHeader style={{}} targetId='1'>
-            <span style={{display: 'flex', width: '100%', padding: '1rem', backgroundColor: G.races[ctx.currentPlayer].color[1]}}>
-              <CardImg style={{width: '2rem', maxHeight: '2rem', marginRight: '1rem'}} src={'race/icons/'+G.races[ctx.currentPlayer].rid+'.png'} />
-              <h5 style={{margin: 0, alignSelf: 'center', flex: 'auto'}}>{G.races[ctx.currentPlayer].name + ' turns'}</h5>
-            </span>
-          </AccordionHeader>
-          <AccordionBody style={{padding: '0', overflow: 'hidden'}} accordionId='1'>
-            {[...ctx.playOrder.slice(ctx.playOrderPos+1), ...ctx.playOrder.slice(0, ctx.playOrderPos)].map((pid, idx) => 
-              <Row key={idx} style={{backgroundColor: G.races[pid].color[1]}}>
-                <Col xs='1' style={{}}>
-                  <CardImg style={{width: '2rem', maxHeight: '2rem', margin: '.5rem'}} src={'race/icons/'+G.races[pid].rid+'.png'} />
-                </Col>
-                <Col xs='8' style={{padding: '1rem 1rem 0 2rem', fontFamily: 'Handel Gothic', textDecoration: G.passedPlayers.includes(''+pid) ? 'line-through':''}}>
-                  {G.races[pid].name}</Col>
-                <Col xs='3' style={{padding: '.5rem 0'}}>
-                  {G.races[pid].strategy.map((s, i) => 
-                    <p key={i} style={{fontSize: '75%', margin: 0, textDecoration: s.exhausted ? 'line-through':''}}>
-                      {s.id + ' [' + (s.init+1) + ']'}</p>)}
-                </Col>
-              </Row>
-            )}
-          </AccordionBody>
-        </AccordionItem>
-      </UncontrolledAccordion>
-    </Nav>
-    <Nav style={{paddingRight: '5em'}}>
-      {false && <><NavItem style={{marginRight: '1rem'}}>
-        <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
-      </NavItem>
-      <NavItem style={{marginRight: '1rem'}}>
-        <Button color='light' outline={!tilesTxt} onClick={()=>setTilesTxt(!tilesTxt)}>Text</Button>
-      </NavItem></>}
-    {isMyTurn &&
-      <NavItem style={{marginRight: '1rem'}}>
-        {ctx.phase === 'acts' && <>
-          <Button disabled={ctx.numMoves == 0} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}><h5 style={{margin: '.5rem'}}>Undo</h5></Button>
-          {!G.spaceCannons && <>
-            {!(activeTile && activeTile.tdata.attacker) && <Button color='warning' onClick={()=>moves.endTurn()}><h5 style={{margin: '.5rem'}}>End turn</h5></Button>}
-            {activeTile && activeTile.tdata.attacker && <Button color='warning' onClick={()=>moves.antiFighterBarrage()}><h5 style={{margin: '.5rem'}}>Space combat</h5></Button>}
-            </>
-          }
-          {G.spaceCannons && <Button color='warning' onClick={()=>moves.spaceCannonAttack()}><h5 style={{margin: '.5rem'}}>Space cannon</h5></Button>}
-        </>}
-        {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && <Button color='dark' onClick={()=>moves.pass()}><h5 style={{margin: '.5rem'}}>Pass</h5></Button>}
-      </NavItem>}
-    </Nav>
-  </div>;
+        <NavItem style={{marginRight: '1rem'}}>
+          {ctx.phase === 'acts' && <>
+            <Button disabled={ctx.numMoves == 0 || !isMyTurn} color='dark' style={{marginLeft: '1rem'}} onClick={() => undo()}><h5 style={{margin: '.5rem'}}>{t("board.nav.undo")}</h5></Button>
+            {!G.spaceCannons && <>
+              {!(activeTile && activeTile.tdata.attacker) && <Button disabled={!isMyTurn} color='warning' onClick={()=>moves.endTurn()}><h5 style={{margin: '.5rem'}}>{t("board.nav.end_turn")}</h5></Button>}
+              {activeTile && activeTile.tdata.attacker && <Button disabled={!isMyTurn} color='warning' onClick={()=>moves.antiFighterBarrage()}><h5 style={{margin: '.5rem'}}>{t("board.nav.space_combat")}</h5></Button>}
+              </>
+            }
+            {isMyTurn && G.spaceCannons && <Button color='warning' onClick={()=>moves.spaceCannonAttack()}><h5 style={{margin: '.5rem'}}>{t("board.nav.space_cannon")}</h5></Button>}
+          </>}
+          {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && <Button disabled={!isMyTurn} color='dark' onClick={()=>moves.pass()}><h5 style={{margin: '.5rem'}}>{t("board.nav.pass")}</h5></Button>}
+        </NavItem>
+      </Nav>
+    </div>;
 
   const completeObjective = (oid) => {
     let objective = G.pubObjectives.find(o => o.id === oid);
@@ -284,28 +294,20 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [rightBottomVisible]);
 
   const StrategyCard = ({card, idx, style}) => {
-    //const i = idx + 1;
- /**onClick={()=>setStratUnfold((stratUnfold & i) === i ? stratUnfold - i:stratUnfold + i)}  
-  * {(stratUnfold & i) === i && <div>
-          <h6 style={{marginTop: '.5rem'}}>Primary:</h6>
-          <CardText>{cardData.strategy[card.id].primary}</CardText>
-          <h6>Secondary:</h6>
-          <CardText>{cardData.strategy[card.id].secondary}</CardText>
-        </div>}
- */
+
     return <Card style={{...style, opacity: '.95', border: 'none', background: 'none', position: 'relative', 
               marginTop: idx > 0 ? '0.5rem':'0rem', alignItems: 'end'}}>
               <CardImg id={'strategyCard_'+card.id} src={'strategy/'+ card.id + '.png'} style={{position: 'relative', cursor: 'default', width: '40%'}}></CardImg>
               <div style={{width:'40%', borderRadius: '3px', paddingTop: '2rem', background: 'rgba(33, 37, 41, 0.65)', 
                           marginRight: '.5rem', marginTop: '-2.3rem', border: 'solid 1px ' + getStratColor(card.id, '.6')}}>
                 <Button disabled={card.exhausted} size='sm' style={{opacity: card.exhausted ? 0:1, backgroundColor: getStratColor(card.id, '.6'), width: '100%', fontFamily: 'Handel gothic'}} 
-                  onClick={(e)=>{e.stopPropagation(); moves.useStrategy(idx)}}>Activate</Button>
+                  onClick={(e)=>{e.stopPropagation(); moves.useStrategy(idx)}}>{t('board.activate')}</Button>
               </div>
             <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#strategyCard_' + card.id}>
-              <h6 style={{marginTop: '.5rem'}}>Primary:</h6>
-              <CardText>{cardData.strategy[card.id].primary}</CardText>
-              <h6>Secondary:</h6>
-              <CardText>{cardData.strategy[card.id].secondary}</CardText>
+              <h6 style={{marginTop: '.5rem'}}>{t('board.primary')}:</h6>
+              <CardText>{t('cards.strategy.' + card.id + '.primary')}</CardText>
+              <h6>{t('board.secondary')}:</h6>
+              <CardText>{t('cards.strategy.' + card.id + '.secondary')}</CardText>
             </UncontrolledTooltip>
           </Card>
   }
@@ -1200,12 +1202,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 onCancel={(finish)=>{setProducing(null); if(finish && justOccupied && exhaustedCards.indexOf('INTEGRATED_ECONOMY')>-1){setJustOccupied(null)}}} 
                 pname={producing} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
 
-              <ChatBoard sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
+              
             </CardColumns>
+
+            <ChatBoard sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
 
             {!race.isSpectator && ctx.phase === 'strat' && 
             <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: actionCardStage ? '35%':'60%', position: 'absolute', margin: actionCardStage ? '5rem 0 0 40%':'5% 10%'}}>
-              <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>Strategy pick</h3></CardTitle>
+              <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>{t("board.strategy_pick")}</h3></CardTitle>
               <CardBody style={{display: 'flex'}}>
                 <ListGroup style={{background: 'none', width: actionCardStage ? '100%':'60%'}}>
                     {Object.keys(cardData.strategy).map((key, idx) => {
@@ -1232,12 +1236,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   </ListGroup>
                   {!actionCardStage && <Card style={{width: '40%', background: 'none', border: 'none', color: 'black'}}>
                     <CardBody>
-                      <CardTitle><h4>{strategyHover}</h4></CardTitle>
-                      <CardSubtitle style={{margin: '2rem 0'}}>{cardData.strategy[strategyHover].hit}</CardSubtitle>
-                      <h5>Primary:</h5>
-                      <p>{cardData.strategy[strategyHover].primary}</p>
-                      <h5>Secondary:</h5>
-                      <p>{cardData.strategy[strategyHover].secondary}</p>
+                      <CardTitle><h4>{t("cards.strategy." + strategyHover + ".label")}</h4></CardTitle>
+                      <CardSubtitle style={{margin: '2rem 0'}}>{t("cards.strategy." + strategyHover + ".hit")}</CardSubtitle>
+                      <h5>{t("board.primary")}:</h5>
+                      <p>{t("cards.strategy." + strategyHover + ".primary")}</p>
+                      <h5>{t("board.secondary")}:</h5>
+                      <p>{t("cards.strategy." + strategyHover + ".secondary")}</p>
                     </CardBody>
                   </Card>}
               </CardBody>
@@ -1277,7 +1281,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </CardBody>
             </Card>}
 
-            <Stage width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
+            <Stage style={{border: 'double 1rem', borderColor: race ? race.color[1]:'black'}} width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport home={G.tiles.find(t => t.tid === G.races[playerID].rid)}>
                 
                 {G.tiles.map((element, index) => {
@@ -1429,17 +1433,17 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </ListGroupItem>)}
                   </ListGroup>}
                 </div>
-                <ButtonGroup style={{alignSelf: 'flex-end', fontFamily:'Handel Gothic', marginBottom: '1rem', position: 'fixed', bottom: 0}}>
+                <ButtonGroup style={{alignSelf: 'flex-end', opacity: '80%', fontFamily:'Handel Gothic', marginBottom: '1rem', position: 'fixed', bottom: 0}}>
                     <Button color={rightBottomVisible.includes('promissory') ? 'light':'dark'} onClick={()=>rightBottomSwitch('promissory')} 
-                      style={{width: '7rem'}}>promissory</Button>
+                      style={{width: '7rem'}}>{t("board.nav.promissory")}</Button>
                     <Button color={rightBottomVisible.includes('relics') ? 'light':'dark'} onClick={()=>rightBottomSwitch('relics')} 
-                      style={{width: '7rem'}}>relics</Button> 
+                      style={{width: '7rem'}}>{t("board.nav.relics")}</Button> 
                     <Button color={rightBottomVisible.includes('agenda') ? 'light':'dark'} onClick={()=>rightBottomSwitch('agenda')} 
-                      style={{width: '7rem'}}>agenda</Button>
+                      style={{width: '7rem'}}>{t("board.nav.agenda")}</Button>
                     <Button color={rightBottomVisible.includes('actions') ? 'light':'dark'} onClick={()=>rightBottomSwitch('actions')} 
-                      style={{width: '7rem'}}>actions</Button>
+                      style={{width: '7rem'}}>{t("board.nav.actions")}</Button>
                     <Button color={rightBottomVisible.includes('context') ? 'light':'dark'} onClick={()=>rightBottomSwitch('context')} 
-                      style={{width: '7rem'}}>context</Button>
+                      style={{width: '7rem'}}>{t("board.nav.context")}</Button>
                 </ButtonGroup>
               </CardColumns>
 

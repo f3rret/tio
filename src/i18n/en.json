@@ -47,6 +47,87 @@
             "randomize_priorities_help": "Randomizes the priority picks for each picking round.\n***\nNormally when placing tiles, this tool attempts to place the tiles so player 1 does not always get the best tiles. To do this, it follows the game setup rules and (in a 6 player game) player 1 gets to place tile 1 and 12, while player 6 gets to place tile 6 and 7.\n***\nTurning this on stops this from happening, and instead completely randomizes the placement order.",
             "reverse_placement_help": "Reverses which tiles are placed first in placement order.\n***\nTiles are normally placed in priority (see randomize priority help). This reverses the order, so that the last picks are first, which generally has the effect of pushing the more valuable tiles towards the center of the galaxy."
 
+        },
+        "board": {
+            "nav": {
+                "objectives": "Objectives",
+                "planets": "Planets",
+                "units": "Units",
+                "technologies": "Technologies",
+                "trade": "Trade",
+                "chat": "chat",
+                "undo": "Undo",
+                "end_turn": "End turn",
+                "pass": "Pass",
+                "promissory": "promissory",
+                "relics": "relics",
+                "agenda": "agenda",
+                "actions": "actions",
+                "context": "context",
+                "space_combat": "Space combat",
+                "space_cannon": "Space cannon"
+            },
+            "strategy_pick": "Strategy pick",
+            "primary": "Primary",
+            "secondary": "Secondary",
+            "activate": "activate",
+            "next": "Next",
+            "back": "Back",
+            "accept": "Accept",
+            "decline": "Decline",
+            "done": "Done"
+        },
+        "cards": {
+            "strategy": {
+                "LEADERSHIP": {
+                    "label": "Leadership",
+                    "primary": "Gain 3 command tokens. Spend any amount of influence to gain 1 command token for every 3 influence spent.",
+                    "secondary": "Spend any amount of influence to gain 1 command token for every 3 influence spent.",
+                    "hit": "A player might choose this card to gain more command tokens, enabling him to perform more actions during the action phase."
+                },
+                "DIPLOMACY": {
+                    "label": "Diplomacy",
+                    "primary": "Choose 1 system, other than Mecatol Rex, that contains a planet you control; each other player places a command token from their reinforcements in the chosen system. Then, ready each exhausted planet you control in that system.",
+                    "secondary": "Spend 1 token from your strategy pool to ready up to 2 exhausted planets.",
+                    "hit": "A player might choose this card if he feels threatened, to prevent other players from attacking his system."
+                },
+                "POLITICS": {
+                    "label": "Politics",
+                    "primary": "Choose a player other than the speaker. That player gains the speaker token. Draw 2 action cards. Look at the top 2 cards of the agenda deck. Place each card on the top or bottom of the deck in any order.",
+                    "secondary": "Spend 1 token from your strategy pool to draw 2 action cards.",
+                    "hit": "A player might choose this card to draw action cards, increasing the variety of abilities that are available to him."
+                },
+                "CONSTRUCTION": {
+                    "label": "Construction",
+                    "primary": "Place 1 PDS or 1 space dock on a planet you control. Place 1 PDS on a planet you control.",
+                    "secondary": "Spend 1 token from your strategy pool in any system; you may place either 1 space dock or 1 PDS on a planet you control in that system.",
+                    "hit": "A player might choose this card to produce planetary structures, such as space docks and PDS units."
+                },
+                "TRADE": {
+                    "label": "Trade",
+                    "primary": "Gain 3 trade goods. Replenish commodities. Choose any number of other players. Those players use the secondary ability of this strategy card without spending a command token.",
+                    "secondary": "Spend 1 token from your strategy pool to replenish commodities.",
+                    "hit": "A player might choose this card to gain trade goods and commodities, which he could use to produce additional units or trade to other players."
+                },
+                "WARFARE": {
+                    "label": "Warfare",
+                    "primary": "Remove 1 of your command tokens from the game board; then, gain 1 command token. Redistribute any number of the command tokens on your command sheet.",
+                    "secondary": "Spend 1 token from your strategy pool to use the PRODUCTION ability of 1 of your space docks in your home system.",
+                    "hit": "A player might choose this card to allow some of his ships to move twice, or to build a unit and move it during the same game round."
+                },
+                "TECHNOLOGY": {
+                    "label": "Technology",
+                    "primary": "Research 1 technology. Spend 6 resources to research 1 technology.",
+                    "secondary": "Spend 1 token from your strategy pool and 4 resources to research 1 technology.",
+                    "hit": "A player might choose this card to research a new technology that would grant him a new ability or unit upgrade."
+                },
+                "IMPERIAL": {
+                    "label": "Imperial",
+                    "primary": "Immediately score 1 public objective if you fulfill its requirements. Gain 1 victory point if you control Mecatol Rex; otherwise, draw 1 secret objective.",
+                    "secondary": "Spend 1 token from your strategy pool to draw 1 secret objective",
+                    "hit": "A player might choose this card to draw an additional secret objective, granting him additional routes to victory."
+                }
+            }
         }
     }
 }
