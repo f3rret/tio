@@ -1081,6 +1081,7 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect}) => {
 
 export const ObjectivesList = ({onSelect, selected, mustSecObj}) => {
     const { G, playerID } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     /*const mustSecObj = useMemo(() => {
         if(G.races[playerID] && G.races[playerID].secretObjectives) return G.races[playerID].mustDropSecObj || G.races[playerID].secretObjectives.length > 3
       }, [G.races, playerID]);*/
@@ -1100,13 +1101,13 @@ export const ObjectivesList = ({onSelect, selected, mustSecObj}) => {
                         }}>
                     <CardImg style={{display: 'inline-block', width: '2rem', margin: '0 1rem .5rem 0', opacity: checkObjective(G, playerID, o.id) ? '1': '.5'}} 
                         src={o.vp === 2 ? 'icons/public_2.png': o.vp === 1 ? 'icons/public_1.png':'icons/secret_regular.png'} />
-                    <b>{o.id}</b>
+                    <b>{t("cards.objectives." + o.id + ".label")}</b>
                     <span style={{float: 'right'}}>
                         {o.players && o.players.length > 0 && 
                         o.players.map((p, pi) => <CardImg key={pi} src={'race/icons/' + G.races[p].rid + '.png'} 
                         style={{display: 'inline-block', width: '1rem', marginRight: '.5rem'}}/>)}
                     </span>
-                    <p style={{fontSize: '0.8rem'}}>{o.title}</p>
+                    <p style={{fontSize: '0.8rem'}}>{t("cards.objectives." + o.id + ".title")}</p>
                     {mustSecObj && !o.vp && (!o.players || !o.players.length) &&
                             <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', right: '0', top: '0', position: 'absolute'}}>Drop</b>}
                   </ListGroupItem>})
