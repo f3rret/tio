@@ -1109,7 +1109,7 @@ export const ObjectivesList = ({onSelect, selected, mustSecObj}) => {
                     </span>
                     <p style={{fontSize: '0.8rem'}}>{t("cards.objectives." + o.id + ".title")}</p>
                     {mustSecObj && !o.vp && (!o.players || !o.players.length) &&
-                            <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', right: '0', top: '0', position: 'absolute'}}>Drop</b>}
+                            <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', right: '0', top: '0', position: 'absolute'}}>{t('board.drop')}</b>}
                   </ListGroupItem>})
         }
       
@@ -1459,6 +1459,7 @@ export const TradePanel = ({ onTrade }) => {
 
 const RacePanel = ({rid, onSelect}) => {
     const { G, playerID } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const [buttonSwitch, setButtonSwitch] = useState('promissory');
     const r = G.races.find(f => f.rid === rid);
     if(!onSelect) onSelect=()=>{}
@@ -1509,8 +1510,8 @@ const RacePanel = ({rid, onSelect}) => {
             </Row>}
             {buttonSwitch === 'actions' && <Row>
                 <Col>{r.actionCards.map((k, i) => <span key={i}>
-                    <Badge onClick={()=>onSelect('action.'+k.id)} color='dark' id={k.id.replaceAll(' ', '_')+'_trade'} className='hoverable' style={{fontSize: '.6rem'}}>{k.id.replaceAll('_', ' ')}</Badge>
-                    <UncontrolledTooltip target={'#'+k.id.replaceAll(' ', '_')+'_trade'}>{k.description}</UncontrolledTooltip>
+                    <Badge onClick={()=>onSelect('action.'+k.id)} color='dark' id={k.id.replaceAll(' ', '_')+'_trade'} className='hoverable' style={{fontSize: '.6rem'}}>{t('cards.actions.' + k.id + '.label')}</Badge>
+                    <UncontrolledTooltip target={'#'+k.id.replaceAll(' ', '_')+'_trade'}>{t('cards.actions.' + k.id + '.description')}</UncontrolledTooltip>
                     </span>)}
                 </Col>
             </Row>}

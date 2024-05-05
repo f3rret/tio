@@ -103,7 +103,7 @@ export const TIO = {
 
           if(!G.actionsDeck.length){
             const deck = [];
-            cardData.actions.forEach(a => {
+            cardData.actions.filter(a => !a.mod).forEach(a => {
               if(a.count){
                 for(var i=0; i<a.count; i++){
                   deck.push(a);

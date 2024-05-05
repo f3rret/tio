@@ -1323,7 +1323,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               flexDirection: 'column', justifyContent: 'space-between', alignSelf: 'flex-start'}}>
 
                 <div style={{display: 'flex', flexDirection: 'column', position: 'fixed', bottom: '4rem', width: '13rem'}}>
-                  {rightBottomVisible.includes('context') && <>
+                  {rightBottomVisible && rightBottomVisible.includes('context') && <>
                     <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
                       {haveTechnology(race, 'GRAVITY_DRIVE') && <TechAction techId='GRAVITY_DRIVE'/>}
                       {haveTechnology(race, 'SLING_RELAY') && <TechAction techId='SLING_RELAY'/>}
@@ -1405,12 +1405,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       return <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
                         <Button style={{width: '100%'}} onClick={()=> { 
                                   if(mustAction){moves.dropActionCard(pr.id)}
-                                  else if(!disabled){ moves.playActionCard(pr); setRightBottomVisible(null)}}} size='sm' color={disabled || mustAction ? 'dark':'warning'} id={pr.id.replaceAll(' ', '_')} >
+                        else if(!disabled){ moves.playActionCard(pr); /*setRightBottomVisible(null)*/}}} 
+                                  size='sm' color={disabled || mustAction ? 'dark':'warning'} id={pr.id.replaceAll(' ', '_')} >
                           {mustAction && race.actionCards.length > 7 && 
-                            <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', left: '0', top: '0', position: 'absolute'}}>Drop</b>}
-                          <b>{pr.id.toUpperCase()}</b>
+                            <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', left: '0', top: '0', position: 'absolute'}}>{t('board.drop')}</b>}
+                          <b>{t('cards.actions.' + pr.id + '.label').toUpperCase()}</b>
                         </Button>
-                        <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>{pr.description}</UncontrolledTooltip> 
+                        <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>
+                          {t('cards.actions.' + pr.id + '.description')}</UncontrolledTooltip> 
                       </ListGroupItem>}
                     )}
                   </ListGroup>}

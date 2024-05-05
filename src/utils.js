@@ -962,7 +962,7 @@ export const completeObjective = ({G, playerID, oid, payment}) => {
 
   let objective = G.pubObjectives.find(o => o.id === oid);
   if(!objective) objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
-  if(objective && objective.players.indexOf(playerID) === -1){
+  if(objective && objective.players && objective.players.indexOf(playerID) === -1){
 
     const req = objective.req;
     const race = G.races[playerID];

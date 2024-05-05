@@ -2,12 +2,13 @@ import { Card, CardImg,  CardTitle, CardBody, CardFooter, ButtonGroup, Button, R
 import { useState, useMemo, useContext, useCallback, useEffect, useRef } from 'react';
 import { produce } from 'immer';
 //import techData from './techData.json';
-import { StateContext, haveTechnology, UNITS_LIMIT, getPlanetByName, getMyNeighbors, wormholesAreAdjacent} from './utils';
+import { StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT, getPlanetByName, getMyNeighbors, wormholesAreAdjacent} from './utils';
 import { neighbors } from './Grid.js'
 import { UnmeetReqs, PlanetsRows, getTechType } from './dialogs.js';
 
 export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) => {
     const {G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, PLANETS, UNITS} = useContext(StateContext);
+    const {t} = useContext(LocalizationContext);
     const [selection, setSelection] = useState();
     const [selection2, setSelection2] = useState();
     const [exhausted, setExhausted] = useState({});
@@ -493,22 +494,22 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     }
 
     return <Card style={style}>
-                <CardTitle style={{borderBottom: '1px solid coral', color: 'black'}}><h3>Action card</h3></CardTitle>
+                <CardTitle style={{borderBottom: '1px solid coral', color: 'black'}}><h3>{t('board.action_card')}</h3></CardTitle>
                 <CardBody style={{display: 'flex', color: 'black', width: 'min-content'}}>
                     {card.when !== 'COMBAT' && <div>
                         <CardImg src={'race/'+ G.races[cardOwner].rid +'.png'} style={{width: '205px'}}/>
                     </div>}
                     <div style={{display: 'flex', flexDirection: 'column', padding: '0 1rem 1rem 1rem', minWidth: '30rem'}}>
-                        <h6 style={{margin: '0 0 1rem 1rem'}}>{card.when !== 'COMBAT' && card.when + ':'}
+                        <h6 style={{margin: '0 0 1rem 1rem'}}>{card.when !== 'COMBAT' && t('board.when_' + card.when) + ':'}
                             {card.when === 'COMBAT' && <><CardImg src={'race/icons/'+ G.races[cardOwner].rid +'.png'} style={{width: '2rem'}}/>{' '+G.races[cardOwner].name}</>}
                         </h6>
                         <div style={{padding: '1rem', backgroundColor: 'rgba(0,0,0,.15)', position: 'relative'}}>
-                            <h5>{card.id}</h5>
-                            <p>{card.description}</p>
+                            <h5>{t('cards.actions.' + card.id + '.label')}</h5>
+                            <p>{t('cards.actions.' + card.id + '.description')}</p>
                         </div>
 
                         {(notarget.indexOf(card.id) === -1 && !(card.id === 'Skilled Retreat' && isMine && !card.target)) && 
-                        <h6 style={{margin: '2rem 1rem 1rem 1rem'}}>TARGET:</h6>}
+                        <h6 style={{margin: '2rem 1rem 1rem 1rem'}}>{t('board.target')+':'}</h6>}
 
                         {isMine && !card.target && card.when !=='COMBAT' && <div style={{backgroundColor: 'rgba(0,0,0,.15)', minHeight: '3.5rem', maxHeight: '30rem'}}>
                             {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown', 
@@ -536,8 +537,8 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             {card.id === 'Signal Jamming' && <><TileInfo tidx={selectedTile}/><PlayerSelect selected={selection}  onSelect={setSelection}/></>}
                             {card.id === 'Reparations' && <>
                                 <ButtonGroup>
-                                    <Button color={tabs === 0 ? 'dark':'light'} onClick={()=>setTabs(0)}>1. Exhaust enemy's planet</Button>
-                                    <Button color={tabs === 1 ? 'dark':'light'} onClick={()=>setTabs(1)}>2. Ready your planet</Button>
+                                    <Button color={tabs === 0 ? 'dark':'light'} onClick={()=>setTabs(0)}>1. {t('board.exhaust_enemys_planet')}</Button>
+                                    <Button color={tabs === 1 ? 'dark':'light'} onClick={()=>setTabs(1)}>2. {t('board.ready_your_planet')}</Button>
                                 </ButtonGroup>
                                 <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                     {tabs === 0 && <PlanetsRows PLANETS={getPlayerPlanets(ctx.currentPlayer)} exhausted={exhausted2} onClick={planetsRowsClick2} />}
@@ -548,12 +549,12 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             {card.id === 'Bribery' && <PayTg onChange={setSelection}/>}
                             {card.id === 'Construction Rider' && <>
                                 <Predict onSelect={setSelection}/>
-                                <p style={{margin: '1rem 0 0 1rem'}}><b>Choose one:</b></p>
+                                <p style={{margin: '1rem 0 0 1rem'}}><b>{t('board.choose_one') + ':'}</b></p>
                                 <div style={{padding: '0 .5rem 1rem'}}><PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/></div>
                             </>}
                             {['Diplomacy Rider', 'Warfare Rider'].indexOf(card.id) > -1 && <>
                                 <Predict onSelect={setSelection}/>
-                                <p style={{margin: '1rem 0 0 1rem'}}><b>Choose one:</b></p>
+                                <p style={{margin: '1rem 0 0 1rem'}}><b>{t('board.choose_one') + ':'}</b></p>
                                 <TileInfo tidx={selectedTile}/>
                             </>}
                             {card.id === 'Technology Rider' && <>
@@ -593,13 +594,13 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             {card.id === 'Signal Jamming' && <><TileInfo tidx={selectedTile}/><OneLinePlayerInfo race={G.races[card.target.playerID]}/></>}
                             {card.id === 'Reparations' && <>
                                     <div style={{backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                                        <b style={{color: 'white', padding: '1rem', display: 'block'}}>Exhaust enemy's planet:</b>
+                                        <b style={{color: 'white', padding: '1rem', display: 'block'}}>{t('board.exhaust_enemys_planet')}:</b>
                                         <div style={{overflowY: 'auto', maxHeight: '5rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                             <PlanetsRows PLANETS={card.target.exhausted2} />
                                         </div>
                                     </div>
                                     <div style={{backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                                        <b style={{color: 'white', padding: '1rem', display: 'block'}}>Ready your planet:</b>
+                                        <b style={{color: 'white', padding: '1rem', display: 'block'}}>{t('board.ready_your_planet')}:</b>
                                         <div style={{overflowY: 'auto', maxHeight: '5rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                             <PlanetsRows PLANETS={card.target.exhausted} />
                                         </div>
@@ -640,24 +641,24 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                 </CardBody>
                 <CardFooter style={{background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid coral'}}>
                     {isMine && <>
-                        <Button color='danger' disabled={isSabotaged} onClick={card.when === 'COMBAT' ? ()=>moves.actionCardCancel() : ()=>moves.cancel()}>Cancel</Button>
-                        {!card.target && <Button color='success' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardNext(myTarget) : ()=>moves.next(myTarget)} disabled={!myTarget}>Next</Button>}
+                        <Button color='danger' disabled={isSabotaged} onClick={card.when === 'COMBAT' ? ()=>moves.actionCardCancel() : ()=>moves.cancel()}>{t('board.cancel')}</Button>
+                        {!card.target && <Button color='success' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardNext(myTarget) : ()=>moves.next(myTarget)} disabled={!myTarget}>{t('board.next')}</Button>}
                     </>}
                     {!isMine && !card.reaction[playerID] && <>
-                        <Button style={{alignSelf: 'flex-start'}} disabled={!haveSabotageCard} color='danger' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardSabotage() : ()=>moves.sabotage()}>Sabotage</Button>
+                        <Button style={{alignSelf: 'flex-start'}} disabled={!haveSabotageCard} color='danger' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardSabotage() : ()=>moves.sabotage()}>{t('board.sabotage')}</Button>
                     </>}
                     {((isMine && card.target) || !isMine) && <div>
                         {Object.keys(card.reaction).map((pid, i) => {
                             return <p key={i} style={{color: 'black', margin: '.5rem'}}><b>{G.races[pid].name + ': '}</b>
                                 <b style={{color: card.reaction[pid] === 'pass' ? 'gray':'coral'}}>{card.reaction[pid]}</b></p>
                         })}
-                        {isMine && Object.keys(card.reaction).length === 0 && <p style={{color: 'black'}}><b>Awaiting other players...</b></p>}
+                        {isMine && Object.keys(card.reaction).length === 0 && <p style={{color: 'black'}}><b>{t('board.awaiting_other_players')}...</b></p>}
                     </div>}
                     {!isMine && !card.reaction[playerID] && <>
-                        <Button style={{alignSelf: 'flex-start'}} color='dark' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardPass() : ()=>moves.pass()}>Pass</Button>
+                        <Button style={{alignSelf: 'flex-start'}} color='dark' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardPass() : ()=>moves.pass()}>{t('board.nav.pass')}</Button>
                     </>}
                     {isMine && card.target && Object.keys(card.reaction).length === (Object.keys(ctx.activePlayers).length - 1) && 
-                        <Button style={{alignSelf: 'flex-start'}} color='success' onClick={doneClick}>Done</Button>
+                        <Button style={{alignSelf: 'flex-start'}} color='success' onClick={doneClick}>{t('board.done')}</Button>
                     }
                 </CardFooter>
             </Card>
@@ -725,6 +726,7 @@ const SelectSustained = ({selected, onSelect, initiator, readOnly}) => {
 
 const ForcesRelocationRO = ({selection}) => {
     const { G } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
 
     const activeTile = useMemo(() => {
         return G.tiles.find(t => t.active === true);
@@ -733,11 +735,11 @@ const ForcesRelocationRO = ({selection}) => {
     return <>
         {selection && activeTile.tdata.planets && <div style={{fontSize: '.8rem'}}>
             {selection.from !== undefined && <Row>
-                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>From planet:</b></Col>
+                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>{t('board.from_planet')}:</b></Col>
                 <Col><b style={{display: 'block', margin: '.5rem'}}>{activeTile.tdata.planets[selection.from] && activeTile.tdata.planets[selection.from].name}</b></Col>
             </Row>}
             {selection.to !== undefined && <Row>
-                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>To planet:</b></Col>
+                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>{t('board.to_planet')}:</b></Col>
                 <Col><b style={{display: 'block', margin: '.5rem'}}>{activeTile.tdata.planets[selection.to] && activeTile.tdata.planets[selection.to].name}</b></Col>
             </Row>}
 
@@ -755,6 +757,7 @@ const ForcesRelocationRO = ({selection}) => {
 const ForcesRelocation = ({onResult}) => {
 
     const { G, playerID, ctx, prevStages } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const [from, setFrom] = useState(undefined);
     const [to, setTo] = useState(undefined);
     const [escGround, setEscGround] = useState({});
@@ -849,7 +852,7 @@ const ForcesRelocation = ({onResult}) => {
     return <>
         {activeTile.tdata.planets && justLanding && <div style={{fontSize: '.8rem'}}>
             <Row>
-                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>From planet:</b></Col>
+                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>{t('board.from_planet')}:</b></Col>
                 <Col><Input type='select' onChange={(e)=>setFrom(e.target.value)} style={{width: '90%', fontSize: '.8rem', color: 'black'}}>
                 {activeTile.tdata.planets.map((p,i) =>
                     <option key={i} value={i} style={{fontWeight: 'bold'}}>{p.name}</option>
@@ -857,7 +860,7 @@ const ForcesRelocation = ({onResult}) => {
                 </Input></Col>
             </Row>
             <Row>
-                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>To planet:</b></Col>
+                <Col xs={4}><b style={{display: 'block', margin: '.5rem'}}>{t('board.to_planet')}:</b></Col>
                 <Col><Input type='select' onChange={(e)=>setTo(e.target.value)} style={{width: '90%', fontSize: '.8rem', color: 'black'}}>
                 {activeTile.tdata.planets.map((p,i) =>
                     <option key={i} value={i} style={{fontWeight: 'bold'}}>{p.name}</option>
@@ -884,6 +887,7 @@ const ForcesRelocation = ({onResult}) => {
 
 const Predict = ({onSelect}) => {
     const { G } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const [voteRadio, setVoteRadio] = useState('for');
     const a = G.vote2 ? G.vote2 : G.vote1;
     const ref = useRef();
@@ -898,11 +902,11 @@ const Predict = ({onSelect}) => {
     }, [a, onSelect, voteRadio])
 
     return <>
-        <p style={{margin: '1rem 0 0 1rem'}}><b>Predict vote outcome:</b></p>
+        <p style={{margin: '1rem 0 0 1rem'}}><b>{t('board.predict_vote_outcome')}:</b></p>
         {!a.elect && a.for && <h6 style={{margin: '2rem'}}>
-            <span onClick={()=>setVoteRadio('for')}><Input type='radio' name='vote' checked={voteRadio === 'for' ? 'checked':''} value='for' onChange={()=>setVoteRadio('for')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>For</Label></span>
-            <span onClick={()=>setVoteRadio('against')}><Input type='radio' name='vote' checked={voteRadio === 'against' ? 'checked':''} value='against' onChange={()=>setVoteRadio('against')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>Against</Label></span>
-            <span onClick={()=>setVoteRadio('pass')}><Input type='radio' name='vote' checked={voteRadio === 'pass' ? 'checked':''} value='pass' onChange={()=>setVoteRadio('pass')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>Pass</Label></span>
+            <span onClick={()=>setVoteRadio('for')}><Input type='radio' name='vote' checked={voteRadio === 'for' ? 'checked':''} value='for' onChange={()=>setVoteRadio('for')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>{t('board.for')}:</Label></span>
+            <span onClick={()=>setVoteRadio('against')}><Input type='radio' name='vote' checked={voteRadio === 'against' ? 'checked':''} value='against' onChange={()=>setVoteRadio('against')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>{t('board.against')}:</Label></span>
+            <span onClick={()=>setVoteRadio('pass')}><Input type='radio' name='vote' checked={voteRadio === 'pass' ? 'checked':''} value='pass' onChange={()=>setVoteRadio('pass')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>{t('board.nav.pass')}:</Label></span>
         </h6>}
         {a.elect && <>
             <Input type='select' innerRef={ref} onChange={(e)=>onSelect(e.target.value)} style={{margin: '1rem', width: '90%', color: 'black'}}>
@@ -961,6 +965,7 @@ const OneLinePlayerInfo = ({race}) => {
 const TechnologySelect = ({onSelect, requirements, exhausted, setExhausted, races}) => {
     
     const {G, playerID, PLANETS} = useContext(StateContext);
+    const {t} = useContext(LocalizationContext);
     const splanets = PLANETS.filter(p => !p.exhausted && p.specialty);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedTech, setSelectedTech] = useState([]);
@@ -970,7 +975,7 @@ const TechnologySelect = ({onSelect, requirements, exhausted, setExhausted, race
     }
 
     return  <div style={{padding: '1rem'}}>
-                <Button size='sm' color='success' onClick={()=>setDialogOpen(!dialogOpen)}>Choose technology</Button>
+                <Button size='sm' color='success' onClick={()=>setDialogOpen(!dialogOpen)}>{t('board.choose_technology')}</Button>
                 {dialogOpen && 
                     <Modal style={{maxWidth: '72rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} isOpen={dialogOpen} toggle={()=>setDialogOpen(!dialogOpen)}>
                         <ModalBody style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '1rem'}}>
@@ -978,7 +983,7 @@ const TechnologySelect = ({onSelect, requirements, exhausted, setExhausted, race
                         </ModalBody>
                         <ModalFooter style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '0 1rem 1rem 1rem', borderTop: 'none'}}>
                             <Button color='success' onClick={()=>setDialogOpen(!dialogOpen)}>
-                                Confirm
+                            {t('board.confirm')}
                             </Button>
                         </ModalFooter>
                     </Modal>}
@@ -1068,6 +1073,7 @@ const LawSelect = ({onSelect}) => {
 
 const PlanetInfo = ({tidx, pidx}) => {
     const { G } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
 
     const planet = useMemo(() => {
         if(tidx > -1 && pidx > -1){
@@ -1097,24 +1103,26 @@ const PlanetInfo = ({tidx, pidx}) => {
         
     }
 
-    return <p style={{margin: '1rem', color: 'rgba(0,0,0,.5)'}}>Click planet on map</p>
+    return <p style={{margin: '1rem', color: 'rgba(0,0,0,.5)'}}>{t('board.click_planet')}</p>
 }
 
 const TileInfo = ({tidx}) => {
     const { G } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
 
     return <div style={{width: '80%', padding: '1rem', display: 'flex', alignItems: 'center'}}>
-            {tidx === -1 && <p style={{margin: '1rem', color: 'rgba(0,0,0,.5)'}}>Click tile on map</p>}
+            {tidx === -1 && <p style={{margin: '1rem', color: 'rgba(0,0,0,.5)'}}>{t('board.click_tile')}</p>}
             {tidx > -1 && <CardImg style={{width: '65%'}} src={'tiles/ST_'+G.tiles[tidx].tid+'.png'} />}
         </div>
 }
 
 const UnitInfo = ({selectedUnit}) => {
     const {G} = useContext(StateContext);
+    const {t} = useContext(LocalizationContext);
     const tile = selectedUnit ? G.tiles[selectedUnit.tile]:undefined;
 
     return <div style={{width: '80%', padding: '1rem', display: 'flex', position: 'relative', alignItems: 'center'}}>
-            {!tile && <p style={{margin: '1rem', color: 'rgba(0,0,0,.5)'}}>Click unit on map</p>}
+            {!tile && <p style={{margin: '1rem', color: 'rgba(0,0,0,.5)'}}>{t('board.click_unit')}</p>}
             {tile && <>
                 <CardImg style={{width: '75%'}} src={'tiles/ST_' + tile.tid + '.png'} />
                 {tile.tdata.occupied !== undefined && <CardImg style={{width: '3rem', top: '1rem', left: '1rem', position: 'absolute'}} src={'race/icons/' + G.races[tile.tdata.occupied].rid + '.png'}/>}
