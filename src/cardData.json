@@ -115,7 +115,7 @@
         {"id": "Archived Secret", "type": "DIRECTIVE", "elect": "Player", "for": "Elected player draws 1 secret objective."},   
         {"id": "Arms Reduction", "type": "DIRECTIVE", "for": "Each player destroys all but 2 of their dreadnaughts and all but 4 of their cruisers.", "against": "At the start of the next strategy phase, each player exhausts each of their planets with a technology specialty."},  
         {"id": "Classified Document Leaks", "type": "LAW", "elect": "Scored Secret Objective", "for": "The elected secret objective becomes a public objective."},  
-        {"id": "Colonial Redistribution", "type": "DIRECTIVE", "elect": "Non-home, non-Mecatol Rex system", "for": "Destroy each unit on the planet. It's controller chooses a player with the fewest victory points to place 1 infantry on the planet."},  
+        {"id": "Colonial Redistribution", "type": "DIRECTIVE", "elect": "NonHome nonMecatol system", "for": "Destroy each unit on the planet. It's controller chooses a player with the fewest victory points to place 1 infantry on the planet."},  
         {"id": "Committee Formation", "type": "LAW", "elect": "Player", "for": "This card may be discarded during a future agenda to choose a player to be elected for an agenda, bypassing the voting process."},  
         {"id": "Compensated Disarmament", "type": "DIRECTIVE", "elect": "Planet", "for": "Destroy each ground force on the planet. For each unit destroyed, the player who controls that planet gains 1 trade good."},  
         {"id": "Conventions of War", "type": "LAW", "for": "Players cannot use Bombardment against cultural planets. Players who voted 'Against' discard all of their action cards."},  

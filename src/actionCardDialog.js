@@ -917,7 +917,7 @@ const Predict = ({onSelect}) => {
                 {a.elect === 'Industrial Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'industrial' && <option key={p.name} value={p.name}>{p.name}</option>))}
                 {a.elect === 'Hazardous Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'hazardous' && <option key={p.name} value={p.name}>{p.name}</option>))}
                 {a.elect === 'Cultural Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'cultural' && <option key={p.name} value={p.name}>{p.name}</option>))}
-                {a.elect === 'Non-home, non-Mecatol Rex system' && G.tiles.map((t) => t.tid > 0 && t.tdata.type !== 'green' && t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
+                {a.elect === 'NonHome nonMecatol system' && G.tiles.map((t) => t.tid > 0 && t.tdata.type !== 'green' && t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
             </Input>
         </>}
     </>

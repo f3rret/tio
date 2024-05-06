@@ -127,6 +127,10 @@ li.list-group-item{
     color: var(--bs-accordion-btn-color);
 }
 
+.bgio-client .form-select{
+    background-color: transparent;
+}
+
 @import "../../node_modules/bootstrap/scss/bootstrap";
 
 

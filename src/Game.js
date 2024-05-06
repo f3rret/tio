@@ -1022,8 +1022,10 @@ export const TIO = {
         turn: {
           order: {//TurnOrder.CUSTOM_FROM('TURN_ORDER'),
             playOrder: ({ G }) => G.TURN_ORDER,
-            first: () => 1, //speaker at the end
+            first: ({ctx}) => ctx.numPlayers > 1 ? 1:0, //speaker at the end
             next: ({ G, ctx }) => {
+              if(ctx.numPlayers === 1) return 0;
+
               const agendaNumber = G.vote2 ? 2:1;
               let acPlayers = 0;
               let votedPlayers = 0;
@@ -1156,7 +1158,7 @@ export const TIO = {
                 if(electedRace > -1) checkSecretObjective(G, electedRace, 'Drive the Debate');
               }
 
-              if(G['vote' + agendaNumber].elect.indexOf('Planet') > -1){
+              if(G['vote' + agendaNumber].elect && G['vote' + agendaNumber].elect.indexOf('Planet') > -1){
                 const planet = getPlanetByName(G.tiles, G['vote' + agendaNumber].decision);
                 if(planet && planet.occupied !== undefined){
                   checkSecretObjective(G, planet.occupied, 'Drive the Debate');
