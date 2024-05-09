@@ -437,6 +437,21 @@
                 "Merchant Station": {"label": "Merchant Station", "effect": "You may replenish your commodities, or you may convert your commodities to trade goods."},
                 "Mirage": {"label": "Mirage", "effect": "Place the Mirage planet token in this system. Gain the Mirage planet card and ready it. Then, purge this card."},
                 "Unknown Relic Fragment": {"label": "Unknown Relic Fragment", "effect": "This card counts as a relic fragment of any type."}
+            },
+            "relics": {
+                "Dominus Orb": {"label": "Dominus Orb", "effect": "Before you move units during a tactical action, you may purge this card to move and transport units that are in systems that contain 1 your command tokens."}, 
+                "Maw of Worlds": {"label": "Maw of Worlds", "effect": "At the start of the agenda phase, you may purge this card and exhaust all of your planets to gain any 1 technology."}, 
+                "Scepter of Emelpar": {"label": "Scepter of Emelpar", "effect": "When you would spend a token from your strategy pool, you may exhaust this card to spend a token from your reinforcements instead."}, 
+                "Shard of the Throne": {"label": "Shard of the Throne", "effect": "When you gain this card, gain 1 victory point; when you lose this card, lose 1 victory point. When a player gains control of a legendary planet you control or a planet you control in your home system, that player gains this card."}, 
+                "Stellar Converter": {"label": "Stellar Converter", "type": "ACTION", "effect": "Choose 1 non-home, non-legendary planet other than Mecatol Rex in a system that is adjacent to 1 or more of your units that have Bombardment; destroy all units on that planet and purge its attachments and its planet card. Then, place the destroyed planet token on that planet and purge this card."}, 
+                "The Codex": {"label": "The Codex", "type": "ACTION", "effect": "Purge this card to take up to 3 action cards of your choice from the action card discard pile."}, 
+                "The Crown of Emphidia": {"label": "The Crown of Emphidia", "effect": "After you perform a tactical action, you may exhaust this card to explore 1 planet you control. At the end of the status phase, if you control the 'Tomb of Emphidia', you may purge this card to gain 1 victory point."}, 
+                "The Crown of Thalnos": {"label": "The Crown of Thalnos", "effect": "During each combat round, this card's owner may reroll any number of their dice, applying +1 to the results; any units that reroll dice but do not produce at least 1 hit are destroyed."}, 
+                "The Obsidian": {"label": "The Obsidian", "effect": "When you gain this card, draw 1 secret objective. You can have 1 additional scored or unscored secret objective."}, 
+                "The Prophet's Tears": {"label": "The Prophet's Tears", "effect": "When you research a technology, you may exhaust this card to ignore 1 prerequisite or draw 1 action card."},
+                "Nano-Forge": {"label": "Nano-Forge", "effect": "Attach this card to a non-legendary, non-home planet you control; its resource and influence values are increased by 2 and it is a legendary planet."},
+                "Dynamis Core": {"label": "Dynamis Core", "effect": "Attach this card to a non-legendary, non-home planet you control; its resource and influence values are increased by 2 and it is a legendary planet."},
+                "Lost Titan Prototype": {"label": "JR-XS455-O (Lost Titan Prototype)", "effect": "Exhaust this agent and choose a player; that playe rmay spend 3 resources to place a structure on a planet they control. If they do not, they gain 1 trade good."}
             }
         }
     }

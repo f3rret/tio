@@ -18,7 +18,7 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
         setMsg(e.target.value)
     }, [])
     const messages = useMemo(()=>{
-        return [...chatMessages].slice(-20).reverse().map((m, i) => <p key={i} style={{margin: 0}}><b>{G.races[m.sender].name + ' '}</b>{m.payload}</p>)
+        return [...chatMessages].slice(-20).reverse().map((m, i) => <p key={i} style={{}}><b>{G.races[m.sender].name + ' '}</b>{m.payload}</p>)
     }, [G.races,chatMessages]);
 /**
  * <ButtonGroup vertical style={{height: 'min-content', padding: '.5rem'}}>
@@ -37,7 +37,8 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
         </CardFooter>
       </Card>}
 
-      {!chatVisible && messages && <div style={{marginBottom: '1rem', width: '40rem', height: '2.5rem', background: 'none', paddingLeft: '1rem'}}>
+      {!chatVisible && messages && <div style={{marginBottom: '1rem', width: '40rem', height: '3.5rem', backgroundColor: 'rgba(0,0,0,.5)', 
+            overflow: 'hidden', padding: '.25rem 0 .25rem 1rem'}}>
         {messages[0]}
         </div>}
 

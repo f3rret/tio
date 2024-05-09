@@ -144,7 +144,7 @@ export const TIO = {
           }
 
           if(!G.relicsDeck.length){
-            G.relicsDeck = random.Shuffle(cardData.relics);
+            G.relicsDeck = random.Shuffle(cardData.relics.filter(r => !r.mod));
           }
 
           if(!G.secretObjDeck.length){
