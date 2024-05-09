@@ -100,14 +100,7 @@
                 "effect": "After this unit is destroyed, roll 1 die. If the result is 5 or greater, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."
             }
         ],
-        "promissory": [
-            {
-                "id": "MILITARY_SUPPORT",
-                "racial": true,
-                "when": "ACT_TURN",
-                "effect": "At the start of the Sol player’s turn: Remove 1 token from the Sol player’s strategy pool, if able, and return it to his reinforcements. Then, you may place 2 infantry from your reinforcements on any planet you control." 
-            }
-        ]
+        "promissory": ["MILITARY_SUPPORT"]
     },
     "2": {
         "name": "The Mentak Coalition",
@@ -171,14 +164,7 @@
                 "exhaust": false
             }       
         ],
-        "promissory": [
-            {
-                "id": "PROMISE_OF_PROTECTION",
-                "racial": true,
-                "type": "ACTION",
-                "effect": "Place this card faceup in your play area. While this card is in your play area, the Mentak player cannot use his PILLAGE faction ability against you. If you activate a system that contains 1 or more of the Mentak player’s units, return this card." 
-            }
-        ]
+        "promissory": ["PROMISE_OF_PROTECTION"]
     },
     "3": {
         "name": "The Yin Brotherhood",
@@ -243,14 +229,7 @@
                 "exhaust": false
             }
         ],
-        "promissory": [
-            {
-                "id": "GREYFIRE_MUTAGEN",
-                "racial": true,
-                "when": "COMBAT",
-                "effect": "At the start of a ground combat against 2 or more ground forces that are not controlled by the Yin player: Replace 1 of your opponent’s infantry with 1 infantry from your reinforcements. Then, return this card to the Yin player." 
-            }
-        ]
+        "promissory": ["GREYFIRE_MUTAGEN"]
     },
     "4": {
         "name": "The Embers of Muaat",
@@ -340,14 +319,7 @@
                 "effect": "Other players’ units in this system lose PLANETARY SHIELD."
             }    
         ],
-        "promissory": [
-            {
-                "id": "FIRES_OF_GASHLAI",
-                "racial": true,
-                "type": "ACTION",
-                "effect": "Remove 1 token from the Muaat player’s fleet pool and return it to his reinforcements. Then, gain your war sun unit upgrade technology card. Then, return this card to the Muaat player." 
-            }
-        ]
+        "promissory": ["FIRES_OF_GASHLAI"]
     },
     "5": {
         "name": "The Arborec",
@@ -432,14 +404,7 @@
                 "effect": "After this unit is destroyed, roll 1 die. If the result is 6 or greater, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."
             }
         ],
-        "promissory": [
-            {
-                "id": "STYMIE",
-                "racial": true,
-                "when": "AFTER_MOVE",
-                "effect": "After another player moves ships into a system that contains 1 or more of your units: You may place 1 command token from that player’s reinforcements in any non-home system. Then, return this card to the Arborec player." 
-            }
-        ]
+        "promissory": ["STYMIE"]
     },
     "6": {
         "name": "The Lizix Mindnet",
@@ -530,14 +495,7 @@
                 "effect": "This unit cannot be destroyed by 'Direct Hit' action cards."
             }
         ],
-        "promissory": [
-            {
-                "id": "CYBERNETIC_ENHANCEMENTS",
-                "racial": true,
-                "when": "STAT_TURN",
-                "effect": "When you gain command tokens during the status phase: Gain 1 additional command token. Then, return this card to the L1Z1X player." 
-            }
-        ]
+        "promissory": ["CYBERNETIC_ENHANCEMENTS"]
     },
     "7": {
         "name": "The Winnu",
@@ -602,14 +560,7 @@
                 "exhaust": true
             }
         ],
-        "promissory": [
-            {
-                "id": "ACQUIESCENCE",
-                "racial": true,
-                "when": "ACT_STRAT",
-                "effect": "When the Winnu player resolves a strategic action: You do not have to spend or place a command token to resolve the secondary ability of that strategy card. Then, return this card to the Winnu player." 
-            }
-        ]
+        "promissory": ["ACQUIESCENCE"]
     },
     "8": {
         "name": "The Nekro Virus",
@@ -674,14 +625,7 @@
                 "exhaust": false
             }     
         ],
-        "promissory": [
-            {
-                "id": "ANTI-VIRUS",
-                "racial": true,
-                "when": "COMBAT",
-                "effect": "At the start of a combat: Place this card faceup in your play area. While this card is in your play area, the Nekro player cannot use his TECHNOLOGICAL SINGULARITY ability against you." 
-            }
-        ]
+        "promissory": ["ANTI-VIRUS"]
     },
     "9": {
         "name": "The Naalu Collective",
@@ -766,14 +710,7 @@
                 "size": 0.5
             }    
         ],
-        "promissory": [
-            {
-                "id": "GIFT_OF_PRESCIENCE",
-                "racial": true,
-                "when": "STRAT_TURN",
-                "effect": "At the end of the strategy phase: Place this card faceup in your play area and place the Naalu '0' token on your strategy card; you are first in initiative order." 
-            }
-        ]
+        "promissory": ["GIFT_OF_PRESCIENCE"]
     },
     "10": {
         "name": "The Barony of Letnev",
@@ -836,14 +773,7 @@
                 "exhaust": false
             }           
         ],
-        "promissory": [
-            {
-                "id": "WAR_FUNDING",
-                "racial": true,
-                "when": "COMBAT",
-                "effect": "After you and your opponent roll dice during space combat: You may reroll all of your opponent’s dice. You may reroll any number of your dice. Then, return this card to the Letnev player." 
-            }
-        ]
+        "promissory": ["WAR_FUNDING"]
     },
     "11": {
         "name": "The Clan of Saar",
@@ -918,14 +848,7 @@
                 "effect": "This unit is placed in a space area instead of on a planet. This unit can move and retreat as if it were a ship. If this unit is blockaded, it is destroyed."
             }   
         ],
-        "promissory": [
-            {
-                "id": "RAGHS_CALL",
-                "racial": true,
-                "when": "COMBAT",
-                "effect": "After you commit 1 or more of your units to land on a planet: Remove all of the Saar player’s ground forces from that planet and place them on a planet controlled by the Saar player." 
-            }
-        ]
+        "promissory": ["RAGHS_CALL"]
         
     },
     "12": {
@@ -990,14 +913,7 @@
                 "exhaust": false
             }
         ],
-        "promissory": [
-            {
-                "id": "RESEARCH_AGREEMENT",
-                "racial": true,
-                "when": "RESEARCH",
-                "effect": "After the Jol-Nar player researches a technology that is not a faction technology: Gain that technology. Then, return this card to the Jol-Nar player." 
-            }
-        ]
+        "promissory": ["RESEARCH_AGREEMENT"]
     },
     "13": {
         "name": "Sardakk N'orr",
@@ -1081,14 +997,7 @@
                 "effect": "This unit cannot be destroyed by “Direct Hit” action cards. After a round of space combat, you may destroy this unit to destroy up to 2 ships in this system."
             }   
         ],
-        "promissory": [
-            {
-                "id": "TEKKLAR_LEGION",
-                "racial": true,
-                "when": "COMBAT",
-                "effect": "At the start of an invasion combat: Apply +1 to the result of each of your unit’s combat rolls during this combat. If your opponent is the N’orr player, apply -1 to the result of each of his unit’s combat rolls during this combat." 
-            }
-        ]
+        "promissory": ["TEKKLAR_LEGION"]
     },
     "14": {
         "name": "The Xxcha Kingdom",
@@ -1154,14 +1063,7 @@
                 "exhaust": true
             }
         ],
-        "promissory": [
-            {
-                "id": "POLITICAL_FAVOR",
-                "racial": true,
-                "when": "AGENDA",
-                "effect": "When an agenda is revealed: Remove 1 token from the Xxcha player’s strategy pool and return it to his reinforcements. Then, discard the revealed agenda and reveal 1 agenda from the top of the deck. Players vote on this agenda instead." 
-            }
-        ]
+        "promissory": ["POLITICAL_FAVOR"]
     },
     "15": {
         "name": "The Yssaril Tribes",
@@ -1225,14 +1127,7 @@
                 "exhaust": true
             }
         ],
-        "promissory": [
-            {
-                "id": "SPY_NET",
-                "racial": true,
-                "when": "ACT_TURN",
-                "effect": "At the start of your turn: Look at the Yssaril player’s hand of action cards. Choose 1 of those cards and add it to your hand. Then, return this card to the Yssaril player." 
-            }
-        ]
+        "promissory": ["SPY_NET"]
     },
     "16": {
         "name": "The Emirates of Hacan",
@@ -1295,14 +1190,7 @@
                 "exhaust": false
             }
         ],
-        "promissory": [
-            {
-                "id": "TRADE_CONVOYS",
-                "racial": true,
-                "type": "ACTION",
-                "effect": "Place this card faceup in your play area. While this card is in your play area, you may negotiate transactions with players who are not your neighbor. If you activate a system that contains 1 or more of the Hacan player’s units, return this card to the Hacan player." 
-            }
-        ]
+        "promissory": ["TRADE_CONVOYS"]
     },
     "17": {
         "name": "The Ghosts of Creuss",
@@ -1366,14 +1254,7 @@
                 "exhaust": false
             }
         ],
-        "promissory": [
-            {
-                "id": "CREUSS_IFF",
-                "racial": true,
-                "when": "ACT_TURN",
-                "effect": "At the start of your turn during the action phase: Place or move a Creuss wormhole token into either a system that contains a planet you control or a non-home system that does not contain another player’s ships." 
-            }
-        ]
+        "promissory": ["CREUSS_IFF"]
     },
     "52": {
         "name": "The Mahact Gene-sorcerers",
@@ -1452,14 +1333,7 @@
                 "effect": "After this unit is destroyed, gain 1 commodity or convert 1 commodity. Then, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."
             }       
         ],
-        "promissory": [
-            {
-                "id": "SCEPTER_OF_DOMINION",
-                "racial": true,
-                "when": "STRAT_TURN",
-                "effect": "At the start of the strategy phase: Choose 1 non-home system that contains your units; each other player who has a token on the Mahact command sheet places a token from their reinforcements into that system." 
-            }
-        ]
+        "promissory": ["SCEPTER_OF_DOMINION"]
     },
     "53": {
         "name": "The Nomad",
@@ -1534,14 +1408,7 @@
                 "effect": "You may treat this unit as if it were adjacent to systems that contain 1 or more of your mechs."
             }    
         ],
-        "promissory": [
-            {
-                "id": "THE_CAVALRY",
-                "racial": true,
-                "when": "COMBAT",
-                "effect": "At the start of a space combat against a player other than the Nomad: During this combat, treat 1 of your non-fighter ships as if it has the SUSTAIN DAMAGE ability, combat value, and ANTI-FIGHTER BARRAGE values of the Nomad’s flagship. Return this card to the Nomad player at the end of the combat." 
-            }
-        ]
+        "promissory": ["THE_CAVALRY"]
     },
     "54": {
         "name": "The Vuil'raith Cabal",
@@ -1615,14 +1482,7 @@
                 "exhaust": true
             }
         ],
-        "promissory": [
-            {
-                "id": "CRUCIBLE",
-                "racial": true,
-                "when": "ACT_TURN",
-                "effect": "After you activate a system: Your ships do not roll for gravity rifts during this movement; apply an additional +1 to the move values of your ships that would move out of or through a gravity rift instead." 
-            }
-        ]
+        "promissory": ["CRUCIBLE"]
     },
     "55": {
         "name": "The Titans of Ul",
@@ -1722,14 +1582,7 @@
                 "effect": "This unit is treated as both a structure and a ground force. It cannot be transported. You may use this unit’s SPACE CANNON against ships that are adjacent to this unit’s system."
             }
         ],
-        "promissory": [
-            {
-                "id": "TERRAFORM",
-                "racial": true,
-                "type": "ACTION",
-                "effect": "Attach this card to a non-home planet you control other than Mecatol Rex. Its resource and influence values are each increased by 1, and it is treated as having all 3 planet traits." 
-            }
-        ]
+        "promissory": ["TERRAFORM"]
     },
     "56": {
         "name": "The Empyrean",
@@ -1793,20 +1646,7 @@
                 "exhaust": false
             }
         ],
-        "promissory": [
-            {
-                "id": "BLOOD_PACT",
-                "racial": true,
-                "type": "ACTION",
-                "effect": "Place this card faceup in your play area. When you and the Empyrean player cast votes for the same outcome, cast 4 additional votes for that outcome. If you activate a system that contains 1 or more of the Empyrean player’s units, return this card to the Empyrean player." 
-            },
-            {
-                "id": "DARK_PACT",
-                "racial": true,
-                "type": "ACTION",
-                "effect": "Place this card faceup in your play area. When you give a number of commodities to the Empyrean player equal to your maximum commodity value, you each gain 1 trade good.  If you activate a system that contains 1 or more of the Empyrean player’s units, return this card to the Empyrean player." 
-            }
-        ]
+        "promissory": ["BLOOD_PACT", "DARK_PACT"]
     },
     "57": {
         "name": "The Naaz-Rokha Alliance",
@@ -1880,14 +1720,7 @@
                 "exhaust": true
             }    
         ],
-        "promissory": [
-            {
-                "id": "BLACK_MARKET_FORGERY",
-                "racial": true,
-                "type": "ACTION",
-                "effect": "Purge 2 of your relic fragments of the same type to gain 1 relic. Then, return this card to the Naaz-Rokha player." 
-            }
-        ]
+        "promissory": ["BLACK_MARKET_FORGERY"]
     },
     "58": {
         "name": "The Argent Flight",
@@ -1968,13 +1801,6 @@
                 "barrage": { "count": 3, "value": 6 }
             }
         ],
-        "promissory": [
-            {
-                "id": "STRIKE_WING_AMBUSCADE",
-                "racial": true,
-                "when": "ROLL",
-                "effect": "When 1 or more of your units make a roll for a unit ability: Choose 1 of those units to roll 1 additional die. Then, return this card to the Argent player." 
-            }
-        ]
+        "promissory": ["STRIKE_WING_AMBUSCADE"]
     }
 }

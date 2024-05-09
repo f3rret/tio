@@ -37,7 +37,7 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
         </CardFooter>
       </Card>}
 
-      {!chatVisible && messages && <div style={{marginBottom: '1rem', width: '40rem', height: '3.5rem', backgroundColor: 'rgba(0,0,0,.5)', 
+      {!chatVisible && messages && messages.length > 0 && <div style={{marginBottom: '1rem', width: '40rem', height: '3.5rem', backgroundColor: 'rgba(0,0,0,.5)', 
             overflow: 'hidden', padding: '.25rem 0 .25rem 1rem'}}>
         {messages[0]}
         </div>}

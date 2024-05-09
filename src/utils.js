@@ -39,7 +39,9 @@ export const getInitRaces = (hexGrid, numPlayers, simpleColors) => {
       }
     });
     //r.promissory.forEach(r => r.racial = true);
-    r.promissory.push(...cardData.promissory);
+    const cd = JSON.parse(JSON.stringify(cardData.promissory));
+    r.promissory = r.promissory.map(p => cd.find(c => c.id === p));
+    r.promissory.push(...cd.filter(c => !c.racial));
 
     //r.actionCards.push(...cardData.actions.slice(70, 76)); //test only
   });
