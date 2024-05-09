@@ -165,43 +165,43 @@
 
     "exploration": {
         "cultural": [
-            {"id": "Cultural Relic Fragment", "count": 9, "effect": "Purge 3 of your cultural relic fragments to gain 1 relic."},
-            {"id": "Demilitarized Zone", "type": "ATTACH", "effect": "Return all structures on this planet to your reinforcements. Then, return all ground forces on this planet to the space area. ATTACH: Units cannot be committed to, produced on, or placed on this planet. During the agenda phase, this planet's planet card can be traded as part of a transaction."},
-            {"id": "Dyson Sphere", "type": "ATTACH", "effect": "This planet's resource value is increased by 2 and its influence value is increased by 1."},
-            {"id": "Freelancers", "count": 3, "effect": "You may produce 1 unit in this system; you may spend influence as if it were resources to produce this unit."},
-            {"id": "Gamma Wormhole", "effect": "Place a gamma wormhole token in this system. Then, purge this card."},
-            {"id": "Mercenary Outfit", "count": 3, "effect": "You may place 1 infantry from your reinforcements on this planet."},
-            {"id": "Paradise World", "type": "ATTACH", "effect": "This planet's influence value is increased by 2."},
-            {"id": "Tomb of Emphidia", "type": "ATTACH", "effect": "This planet's influence value is increased by 1."}
+            {"id": "Cultural Relic Fragment", "count": 9},
+            {"id": "Demilitarized Zone", "type": "ATTACH"},
+            {"id": "Dyson Sphere", "type": "ATTACH"},
+            {"id": "Freelancers", "count": 3},
+            {"id": "Gamma Wormhole"},
+            {"id": "Mercenary Outfit", "count": 3},
+            {"id": "Paradise World", "type": "ATTACH"},
+            {"id": "Tomb of Emphidia", "type": "ATTACH"}
         ],
         "hazardous": [
-            {"id": "Core Mine", "count": 3, "effect": "If you have at least 1 mech on this planet, or if you remove 1 infantry from this planet, gain 1 trade good."},
-            {"id": "Expedition", "count": 3, "effect": "If you have at least 1 mech on this planet, or if you remove 1 infantry from this planet, ready this planet."},
-            {"id": "Hazardous Relic Fragment", "count": 7, "effect": "Purge 3 of your hazardous relic fragments to gain 1 relic."},
-            {"id": "Lazax Survivors", "type": "ATTACH", "effect": "This planet's resource value is increased by 1 and its influence value is increased by 2."},
-            {"id": "Mining World", "type": "ATTACH", "effect": "This planet's resource value is increased by 2."},
-            {"id": "Rich World", "type": "ATTACH", "effect": "This planet's resource value is increased by 1."},
-            {"id": "Volatile Fuel Source", "count": 3, "effect": "If you have at least 1 mech on this planet, or if you remove 1 infantry from this planet, gain 1 command token."},
-            {"id": "Warfare Research Facility", "type": "ATTACH", "effect": "This planet has a red technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."}
+            {"id": "Core Mine", "count": 3},
+            {"id": "Expedition", "count": 3},
+            {"id": "Hazardous Relic Fragment", "count": 7},
+            {"id": "Lazax Survivors", "type": "ATTACH"},
+            {"id": "Mining World", "type": "ATTACH"},
+            {"id": "Rich World", "type": "ATTACH"},
+            {"id": "Volatile Fuel Source", "count": 3},
+            {"id": "Warfare Research Facility", "type": "ATTACH"}
         ],
         "industrial": [
-            {"id": "Abandoned Warehouses", "count": 4, "effect": "You may gain 2 commodities, or you may convert up to 2 of your commodities to trade goods."},
-            {"id": "Biotic Research Facility", "type": "ATTACH", "effect": "This planet has a green technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."},
-            {"id": "Cybernetic Research Facility", "type": "ATTACH", "effect": "This planet has a yellow technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."},
-            {"id": "Functioning Base", "count": 4, "effect": "You may gain 1 commodity, or you may spend 1 trade good or 1 commodity to draw 1 action card."},
-            {"id": "Industrial Relic Fragment", "count": 5, "effect": "Purge 3 of your industrial relic fragments to gain 1 relic."},
-            {"id": "Local Fabricators", "count": 4, "effect": "You may gain 1 commodity, or you may spend 1 trade good or 1 commodity to place 1 mech from your reinforcements on this planet."},
-            {"id": "Propulsion Research Facility", "type": "ATTACH", "effect": "This planet has a blue technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."}
+            {"id": "Abandoned Warehouses", "count": 4},
+            {"id": "Biotic Research Facility", "type": "ATTACH"},
+            {"id": "Cybernetic Research Facility", "type": "ATTACH"},
+            {"id": "Functioning Base", "count": 4},
+            {"id": "Industrial Relic Fragment", "count": 5},
+            {"id": "Local Fabricators", "count": 4},
+            {"id": "Propulsion Research Facility", "type": "ATTACH"}
         ],
         "frontier": [
-            {"id": "Derelict Vessel", "count": 2, "effect": "Draw 1 secret objective."},
-            {"id": "Enigmatic Device", "count": 2, "effect": "Place this card faceup in your play area. ACTION: You may spend 6 resources and purge this card to research 1 technology."},
-            {"id": "Gamma Relay", "effect": "Place a gamma wormhole token in this system. Then, purge this card."},
-            {"id": "Ion Storm", "effect": "Place the ion storm token in this system with either side faceup. Then, place this card in the common play area. At the end of the 'Move Ships' or 'Retreat' substep of a tactical action during which 1 or more of your ships use the ion storm wormhole, flip the ion storm token to its opposing side."},
-            {"id": "Lost Crew", "count": 2, "effect": "Draw 2 action cards."},
-            {"id": "Merchant Station", "count": 2, "effect": "You may replenish your commodities, or you may convert your commodities to trade goods."},
-            {"id": "Mirage", "effect": "Place the Mirage planet token in this system. Gain the Mirage planet card and ready it. Then, purge this card."},
-            {"id": "Unknown Relic Fragment", "count": 3, "effect": "This card counts as a relic fragment of any type."}
+            {"id": "Derelict Vessel", "count": 2},
+            {"id": "Enigmatic Device", "count": 2},
+            {"id": "Gamma Relay"},
+            {"id": "Ion Storm"},
+            {"id": "Lost Crew", "count": 2},
+            {"id": "Merchant Station", "count": 2},
+            {"id": "Mirage"},
+            {"id": "Unknown Relic Fragment", "count": 3}
         ]
     },
 

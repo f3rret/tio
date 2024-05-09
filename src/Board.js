@@ -1618,7 +1618,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     {race && <Card style={{...CARD_STYLE, backgroundColor: race.color[1], margin: 0}}>
                       <div style={{display: 'flex'}}>
                         <div style={{display: 'flex', flexFlow: 'column'}}>
-                          <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.commodity || 0 + '/' + race.commCap}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>commodity</b></Button>
+                          <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{(race.commodity || 0) + '/' + race.commCap}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>commodity</b></Button>
                           <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>trade goods</b></Button>
                           {G.speaker === race.rid && <SpeakerToken />}
                         </div>
