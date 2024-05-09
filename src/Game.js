@@ -23,7 +23,7 @@ export const TIO = {
       
       return {
         matchName: setupData.matchName || 'New game',
-        speaker: races[0],
+        speaker: races[0].rid,
         mapArray: setupData.mapArray, 
         tiles: getInitTiles(hg, races),
         pubObjDeck: [],

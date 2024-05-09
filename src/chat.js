@@ -26,9 +26,9 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
           style={{borderRadius: '5px', fontSize: '2rem', padding: '0 1rem', background:'none', borderColor: 'transparent'}}/>
       </ButtonGroup>
  */
-    return <div style={{position: 'fixed', bottom: '1rem', left: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
+    return <div style={{position: 'fixed', bottom: '1rem', left: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
       
-      {chatVisible && <Card style={{backgroundColor: 'rgba(0,0,0,.3)', border: 'solid 1px rgba(255,255,255,.7)', width: '40rem', height: '20rem'}}>
+      {chatVisible && <Card style={{margin: '0 0 1rem 0', backgroundColor: 'rgba(0,0,0,.3)', border: 'solid 1px rgba(255,255,255,.7)', width: '40rem', height: '20rem'}}>
         <CardBody style={{overflowY: 'auto'}}>
             <div style={{fontSize: '.8rem'}}>{messages}</div>
         </CardBody>
@@ -37,7 +37,7 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
         </CardFooter>
       </Card>}
 
-      {!chatVisible && messages && <div style={{width: '40rem', height: '2.5rem', background: 'none', paddingLeft: '1rem'}}>
+      {!chatVisible && messages && <div style={{marginBottom: '1rem', width: '40rem', height: '2.5rem', background: 'none', paddingLeft: '1rem'}}>
         {messages[0]}
         </div>}
 

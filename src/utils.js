@@ -24,7 +24,7 @@ export const getInitRaces = (hexGrid, numPlayers, simpleColors) => {
   races = races.map( (r, idx) => {
     const rd = JSON.parse(JSON.stringify(raceData[r.rid]));
     return {rid: r.rid, ...rd, pid: idx, color: colors[idx], destroyedUnits: [], commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
-    exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 10, c: 10, h: 10, i: 10}, relics: []}
+    exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []}
   });
 
   races.forEach( r => {
@@ -1234,12 +1234,11 @@ export const exploreFrontier = (G, playerID, tile) => {
   else if(explore.id === 'Ion Storm'){
     G.races[playerID].explorationDialog = {
       id: explore.id,
-      title: explore.id,
-      text: explore.effect,
+      type: 'exploration',
       tid: tile.tid,
       options: [
-        {label: 'Alpha'},
-        {label: 'Beta'}
+        {label: 'alpha'},
+        {label: 'beta'}
       ]
     };
   }
@@ -1249,11 +1248,10 @@ export const exploreFrontier = (G, playerID, tile) => {
   else if(explore.id === 'Merchant Station'){
     G.races[playerID].explorationDialog = {
       id: explore.id,
-      title: explore.id,
-      text: explore.effect,
+      type: 'exploration',
       options: [
-        {label: 'Replenish'},
-        {label: 'Convert'}
+        {label: 'replenish'},
+        {label: 'convert'}
       ]
     };
   }
@@ -1378,11 +1376,10 @@ export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
   else if(explore.id === 'Abandoned Warehouses'){ //industrial
     G.races[playerID].explorationDialog = {
       id: explore.id,
-      title: explore.id,
-      text: explore.effect,
+      type: 'exploration',
       options: [
-        {label: 'Gain commodities'},
-        {label: 'Convert to tg'}
+        {label: 'replenish'},
+        {label: 'convert'}
       ]
     };
   }
@@ -1407,25 +1404,23 @@ export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
   else if(explore.id === 'Functioning Base'){
     G.races[playerID].explorationDialog = {
       id: explore.id,
-      title: explore.id,
-      text: explore.effect,
+      type: 'exploration',
       options: [
-        {label: 'Gain 1 commodity'},
-        {label: 'Spend 1 commodity'},
-        {label: 'Spend 1 tg'}
+        {label: 'gain_1_commodity'},
+        {label: 'spend_1_commodity'},
+        {label: 'spend_1_tg'}
       ]
     };
   }
   else if(explore.id === 'Local Fabricators'){
     G.races[playerID].explorationDialog = {
       id: explore.id,
-      title: explore.id,
-      text: explore.effect,
+      type: 'exploration',
       pname,
       options: [
-        {label: 'Gain 1 commodity'},
-        {label: 'Spend 1 commodity'},
-        {label: 'Spend 1 tg'}
+        {label: 'gain_1_commodity'},
+        {label: 'spend_1_commodity'},
+        {label: 'spend_1_tg'}
       ]
     };
   }

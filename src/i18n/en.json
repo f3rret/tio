@@ -119,7 +119,18 @@
                 "Cultural Planet": "Cultural Planet",
                 "Industrial Planet": "Industrial Planet",
                 "Law": "Law"
-            }
+            },
+            "got_new_exploration": "got new exploration",
+            "got_new_relic": "got new relic",
+            "alpha": "Alpha",
+            "beta": "Beta",
+            "replenish": "Replenish",
+            "convert": "Convert",
+            "gain_1_commodity": "Gain 1 commodity",
+            "spend_1_commodity": "Spend 1 commodity",
+            "spend_1_tg": "Spend 1 tg"
+
+
         },
         "cards": {
             "strategy": {
@@ -390,6 +401,42 @@
                 "Unconventional Measures": {"label": "Unconventional Measures", "for": "Each player that voted 'For' draws 2 action cards.", "against": "Each player that voted 'For' discards all of their action cards."},  
                 "Wormhole Reconstruction": {"label": "Wormhole Reconstruction", "for": "Systems that contain an alpha or beta wormhole are adjacent to each other.", "against": "Each player places a command token in each system with one of their ships and either an alpha or beta wormhole."},  
                 "Wormhole Research": {"label": "Wormhole Research", "for": "Each player with a ship in a system with an alpha or beta wormhole destroys all his ships in those systems, then researches a technology.", "against": "Each player who voted 'Against' removes a command token from his command sheet."}
+            },
+            "exploration": {
+                "Cultural Relic Fragment": {"label": "Cultural Relic Fragment", "effect": "Purge 3 of your cultural relic fragments to gain 1 relic."},
+                "Demilitarized Zone": {"label": "Demilitarized Zone", "effect": "Return all structures on this planet to your reinforcements. Then, return all ground forces on this planet to the space area. ATTACH: Units cannot be committed to, produced on, or placed on this planet. During the agenda phase, this planet's planet card can be traded as part of a transaction."},
+                "Dyson Sphere": {"label": "Dyson Sphere", "effect": "This planet's resource value is increased by 2 and its influence value is increased by 1."},
+                "Freelancers": {"label": "Freelancers", "effect": "You may produce 1 unit in this system; you may spend influence as if it were resources to produce this unit."},
+                "Gamma Wormhole": {"label": "Gamma Wormhole", "effect": "Place a gamma wormhole token in this system. Then, purge this card."},
+                "Mercenary Outfit": {"label": "Mercenary Outfit", "effect": "You may place 1 infantry from your reinforcements on this planet."},
+                "Paradise World": {"label": "Paradise World", "effect": "This planet's influence value is increased by 2."},
+                "Tomb of Emphidia": {"label": "Tomb of Emphidia", "effect": "This planet's influence value is increased by 1."},
+            
+                "Core Mine": {"label": "Core Mine", "effect": "If you have at least 1 mech on this planet, or if you remove 1 infantry from this planet, gain 1 trade good."},
+                "Expedition": {"label": "Expedition", "effect": "If you have at least 1 mech on this planet, or if you remove 1 infantry from this planet, ready this planet."},
+                "Hazardous Relic Fragment": {"label": "Hazardous Relic Fragment", "effect": "Purge 3 of your hazardous relic fragments to gain 1 relic."},
+                "Lazax Survivors": {"label": "Lazax Survivors", "effect": "This planet's resource value is increased by 1 and its influence value is increased by 2."},
+                "Mining World": {"label": "Mining World", "effect": "This planet's resource value is increased by 2."},
+                "Rich World": {"label": "Rich World", "effect": "This planet's resource value is increased by 1."},
+                "Volatile Fuel Source": {"label": "Volatile Fuel Source", "effect": "If you have at least 1 mech on this planet, or if you remove 1 infantry from this planet, gain 1 command token."},
+                "Warfare Research Facility": {"label": "Warfare Research Facility", "effect": "This planet has a red technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."},
+            
+                "Abandoned Warehouses": {"label": "Abandoned Warehouses", "effect": "You may gain 2 commodities, or you may convert up to 2 of your commodities to trade goods."},
+                "Biotic Research Facility": {"label": "Biotic Research Facility", "effect": "This planet has a green technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."},
+                "Cybernetic Research Facility": {"label": "Cybernetic Research Facility", "effect": "This planet has a yellow technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."},
+                "Functioning Base": {"label": "Functioning Base", "effect": "You may gain 1 commodity, or you may spend 1 trade good or 1 commodity to draw 1 action card."},
+                "Industrial Relic Fragment": {"label": "Industrial Relic Fragment", "effect": "Purge 3 of your industrial relic fragments to gain 1 relic."},
+                "Local Fabricators": {"label": "Local Fabricators", "effect": "You may gain 1 commodity, or you may spend 1 trade good or 1 commodity to place 1 mech from your reinforcements on this planet."},
+                "Propulsion Research Facility": {"label": "Propulsion Research Facility", "effect": "This planet has a blue technology specialty; if this planet already has a technology specialty, this planet's resource and influence values are each increased by 1 instead."},
+            
+                "Derelict Vessel": {"label": "Derelict Vessel", "effect": "Draw 1 secret objective."},
+                "Enigmatic Device": {"label": "Enigmatic Device", "effect": "Place this card faceup in your play area. ACTION: You may spend 6 resources and purge this card to research 1 technology."},
+                "Gamma Relay": {"label": "Gamma Relay", "effect": "Place a gamma wormhole token in this system. Then, purge this card."},
+                "Ion Storm": {"label": "Ion Storm", "effect": "Place the ion storm token in this system with either side faceup. Then, place this card in the common play area. At the end of the 'Move Ships' or 'Retreat' substep of a tactical action during which 1 or more of your ships use the ion storm wormhole, flip the ion storm token to its opposing side."},
+                "Lost Crew": {"label": "Lost Crew", "effect": "Draw 2 action cards."},
+                "Merchant Station": {"label": "Merchant Station", "effect": "You may replenish your commodities, or you may convert your commodities to trade goods."},
+                "Mirage": {"label": "Mirage", "effect": "Place the Mirage planet token in this system. Gain the Mirage planet card and ready it. Then, purge this card."},
+                "Unknown Relic Fragment": {"label": "Unknown Relic Fragment", "effect": "This card counts as a relic fragment of any type."}
             }
         }
     }

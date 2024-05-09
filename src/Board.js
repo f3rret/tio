@@ -960,17 +960,29 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     
   }, [ctx.phase, objVisible, mustAction, mustSecObj]);
 
-  useEffect(()=>{
-    if(race.exploration && race.exploration.length){
-      sendChatMessage('got new exploration: ' + race.exploration[race.exploration.length-1].id);
-    }
-  }, [race.exploration, sendChatMessage]);
+  const PREV_EXPLORATION = useRef([]);
 
   useEffect(()=>{
-    if(race.relics && race.relics.length){
-      sendChatMessage('got new relic: ' + race.relics[race.relics.length-1].id);
+    if(race.exploration && race.exploration.length && race.exploration.length > PREV_EXPLORATION.current.length){
+      PREV_EXPLORATION.current = race.exploration;
+      sendChatMessage(t('board.got_new_exploration') + ': ' 
+      + t('cards.exploration.' + race.exploration[race.exploration.length-1].id + '.label').toUpperCase() + ' ('
+      + t('cards.exploration.' + race.exploration[race.exploration.length-1].id + '.effect') + ')');
     }
-  }, [race.relics, sendChatMessage]);
+    // eslint-disable-next-line
+  }, [race.exploration]);
+
+  const PREV_RELICS = useRef([]);
+
+  useEffect(()=>{
+    if(race.relics && race.relics.length && race.relics.length > PREV_RELICS.current.length){
+      PREV_RELICS.current = race.relics;
+      sendChatMessage(t('board.got_new_relic') + ': ' 
+      + t('cards.relics.' + race.relics[race.relics.length-1].id + '.label').toUpperCase() + ' ('
+      + t('cards.relics.' + race.relics[race.relics.length-1].id + '.effect'));
+    }
+    // eslint-disable-next-line
+  }, [race.relics]);
   
   const PREV_PLANETS = useRef([]);
 

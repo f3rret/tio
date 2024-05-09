@@ -1798,14 +1798,19 @@ export const UnmeetReqs = (args) => {
 
 export const ChoiceDialog = ({args, onSelect}) => {
 
+    const { t } = useContext(LocalizationContext);
+    const title = args.type === 'exploration' ? t('cards.exploration.' + args.id + '.label') : args.title;
+    const text = args.type === 'exploration' ? t('cards.exploration.' + args.id + '.effect') : args.text;
+
+
     return  <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', position: 'absolute', padding: '1rem', margin: '10rem', 
                             backgroundColor: 'rgba(33, 37, 41, 0.95)', width: '30rem'}}>
-                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{args.title}</h6></CardTitle>
+                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{title}</h6></CardTitle>
                 <div style={{display: 'flex', flexDirection: 'column', margin: '1rem'}}>
-                    <CardText>{args.text}</CardText>
+                    <CardText>{text}</CardText>
 
                     {args.options && args.options.map((o, i) => 
-                        <Button style={{width: '75%', marginTop: '.5rem'}} key={i} color='light' onClick={() => onSelect(i)}>{o.label}</Button>
+                        <Button style={{width: '75%', marginTop: '.5rem'}} key={i} color='light' onClick={() => onSelect(i)}>{t('board.' + o.label)}</Button>
                     )}
                 </div>
             </Card>
