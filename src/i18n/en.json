@@ -128,8 +128,17 @@
             "convert": "Convert",
             "gain_1_commodity": "Gain 1 commodity",
             "spend_1_commodity": "Spend 1 commodity",
-            "spend_1_tg": "Spend 1 tg"
-
+            "spend_1_tg": "Spend 1 tg",
+            "colors": {
+                "red": "red",
+                "blue": "blue", 
+                "orange": "orange", 
+                "gray": "gray", 
+                "pink": "pink", 
+                "green": "green", 
+                "cyan": "cyan", 
+                "violet": "violet"
+            }
 
         },
         "cards": {

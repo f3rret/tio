@@ -2,7 +2,7 @@
 import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
 import { useMemo, useCallback, useState, useEffect, useRef, useContext } from 'react';
 import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip,/*UncontrolledAccordion, 
-  AccordionItem, AccordionBody, AccordionHeader,*/ CardBody,
+  AccordionItem, AccordionBody, AccordionHeader,*/ CardBody, 
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont, Row, Col, 
   UncontrolledAccordion,
   AccordionItem,
@@ -1383,7 +1383,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         {pr.racial && !pr.owner ? <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.4rem'}} src={'race/icons/' + race.rid + '.png'} />:''}
                         {pr.owner ? <img alt='from other player' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.4rem'}} src={'race/icons/' + pr.owner + '.png'} />:''}
                       </Button>
-                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id}>{t('cards.promissory.' + pr.id + '.effect')}</UncontrolledTooltip> 
+                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id}>
+                        {t('cards.promissory.' + pr.id + '.effect').replaceAll('[color of card]', t('board.colors.' + pr.color))}
+                      </UncontrolledTooltip> 
                     </ListGroupItem>)}
                   </ListGroup>}
 

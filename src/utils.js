@@ -27,7 +27,7 @@ export const getInitRaces = (hexGrid, numPlayers, simpleColors) => {
     exploration:[], vp: 0, tg: 10, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []}
   });
 
-  races.forEach( r => {
+  races.forEach( (r, idx) => {
 
     all_units.forEach( t => {
       const tch = r.technologies.find( f => f.id === t.id);
@@ -42,6 +42,7 @@ export const getInitRaces = (hexGrid, numPlayers, simpleColors) => {
     const cd = JSON.parse(JSON.stringify(cardData.promissory));
     r.promissory = r.promissory.map(p => cd.find(c => c.id === p));
     r.promissory.push(...cd.filter(c => !c.racial));
+    r.promissory.forEach(p => p.color = colors[idx][2]);
 
     //r.actionCards.push(...cardData.actions.slice(70, 76)); //test only
   });

@@ -1505,8 +1505,8 @@ const RacePanel = ({rid, onSelect}) => {
             </Row>}
             {buttonSwitch === 'promissory' && <Row>
                 <Col>{r.promissory.filter(p => !p.sold).map((k,i) => <span key={i}>
-                    <Badge onClick={()=>onSelect('promissory.'+k.id)} color='dark' id={k.id+'_trade'} className='hoverable' style={{fontSize: '.6rem'}}>{t('cards.promissory.' + k.id + '.label')}</Badge>
-                    <UncontrolledTooltip target={'#'+k.id+'_trade'}>{t('cards.promissory.' + k.id + '.effect')}</UncontrolledTooltip>
+                    <Badge onClick={()=>onSelect('promissory.'+k.id)} color='dark' id={k.id+'_trade_'+k.color} className='hoverable' style={{fontSize: '.6rem'}}>{t('cards.promissory.' + k.id + '.label')}</Badge>
+                    <UncontrolledTooltip target={'#'+k.id+'_trade_'+k.color}>{t('cards.promissory.' + k.id + '.effect').replaceAll('[color of card]', t('board.colors.' + k.color))}</UncontrolledTooltip>
                     </span>)}
                 </Col>
             </Row>}
