@@ -1377,13 +1377,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   </>}
                   {rightBottomVisible.includes('promissory') && race.promissory.length > 0 && <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
                     {race.promissory.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
-                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id}>
+                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id+pr.color}>
                         {pr.sold ? <img alt='to other player' style={{width: '1rem', position: 'absolute', left: '.5rem', top: '.4rem'}} src={'race/icons/' + pr.sold + '.png'} />:''}
                         <b style={{textDecoration: pr.sold ? 'line-through':''}}>{t('cards.promissory.' + pr.id + '.label').toUpperCase()}</b>
                         {pr.racial && !pr.owner ? <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.4rem'}} src={'race/icons/' + race.rid + '.png'} />:''}
                         {pr.owner ? <img alt='from other player' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.4rem'}} src={'race/icons/' + pr.owner + '.png'} />:''}
                       </Button>
-                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id}>
+                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id+pr.color}>
                         {t('cards.promissory.' + pr.id + '.effect').replaceAll('[color of card]', t('board.colors.' + pr.color))}
                       </UncontrolledTooltip> 
                     </ListGroupItem>)}
