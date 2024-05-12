@@ -1121,15 +1121,15 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         exhaustTechCard(args.techId);
       }
     }
-
+//                {techData.find(t => t.id === args.techId).description}
     return  <ListGroupItem style={{background: 'none', padding: 0}}>
               <Button size='sm' style={{width: '100%'}} disabled={disabled} id={'context_'+args.techId}
                   color={exhaustedCards.indexOf(args.techId) > -1 || disabled ? 'secondary':'warning'} onClick={onClick}>
                 <img alt='propulsion' src={'icons/'+icon+'.png'} style={{width: '1rem', marginRight: '.5rem'}}/>
-                {args.techId.replaceAll('_', ' ')}
+                {t('cards.techno.' + args.techId + '.label')}
               </Button>
               <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#context_'+args.techId}>
-                {techData.find(t => t.id === args.techId).description}
+                {t('cards.techno.' + args.techId + '.description')}
               </UncontrolledTooltip>
             </ListGroupItem>
   }

@@ -491,6 +491,440 @@
                 "DARK_PACT": {"label": "Темный пакт", "effect": "ДЕЙСТВИЕ: Выложите эту карту лицевой стороной вверх перед собой. Когда вы даете игроку играющему за Возвышенных Продукцию в количестве Значения Продукции вашей фракции, каждый из вас получает 1 Товар. Если вы активировали систему, в которой есть хотя бы 1 отряд Возвышенных, верните эту карту обещания игроку играющему за Возвышенных." },
                 "BLACK_MARKET_FORGERY": {"label": "Подделка с чёрного рынка", "effect": "ДЕЙСТВИЕ: Изгоните 2 своих фрагмента реликвий одного типа, чтобы получить 1 реликвию. Затем верните эту карту обещания игроку играющему за Альянс Нааз-Роха." },
                 "STRIKE_WING_AMBUSCADE": {"label": "Засада Ударного Крыла", "effect": "Когда хотя бы 1 ваш отряд бросает кубики на проверку способности отряда: Вы можете бросить за один из этих отрядов дополнительный кубик. Затем верните эту карту обещания игроку играющему за Серебряную Стаю." }
+            },
+            "techno": {
+                "DARK_ENERGY_TAP": {"label": "ИСТОЧНИК ТЁМНОЙ ЭНЕРГИИ","description": "После того как вы выполнили тактическое действие в системе, которая содержит жетон пограничья; если у вас есть хотя бы 1 корабль в этой системе разведайте этот жетон. Ваши корабли могут отступить в смежную систему, которая не содержат отряды других игроков, даже если у вас нет отрядов или подконтрольных планет в этой системе."},
+                "ANTIMASS_DEFLECTORS": {"label": "ОТРАЖАТЕЛИ МАССЫ","description": "Ваши корабли могут передвигаться через поле астероидов и заканчивать движение в нём. Когда отряды других игроков используют против ваших отрядов способность «КОСМИЧЕСКАЯ ПУШКА», добавляйте -1 к результату каждого броска кубика."},
+                "GRAVITY_DRIVE": {"label": "ГРАВИТАЦИОННЫЙ ДВИГАТЕЛЬ","description": "После того, как вы активировали систему, добавьте +1 к значению полёта одного из ваших кораблей на время текущего тактического действия."},
+                "SLING_RELAY": {"label": "ЗАПУСКАЮЩИЙ РЕТРАНСЛЯТОР","description": "ДЕЙСТВИЕ: переверните эту карту чтобы произвести 1 корабль в любой системе, которая содержит одну из ваших баз."},
+                "FLEET_LOGISTICS": {"label": "ПРОДВИНУТАЯ ЛОГИСТИКА","description": "Во время каждого вашего хода в фазе действий вы можете совершить 2 действия вместо 1."},
+                "LIGHTWAVE_DEFLECTOR": {"label": "СВЕТОВОЛНОВОЙ ОТРАЖАТЕЛЬ","description": "Ваши корабли могут передвигаться через системы, в которых есть корабли других игроков."},
+
+
+                "NEURAL_MOTIVATOR": {"label": "НЕЙРОМОТИВАТОРЫ","description": "Во время фазы статуса вы берёте 2 карты действий вместо 1."},
+                "PSYCHOARCHAEOLOGY": {"label": "ПСИХОАРХЕОЛОГИЯ","description": "Вы можете использовать технологические специализации подконтрольных вам планет не переворачивая их (даже если они перевёрнуты). Во время фазы действий вы можете перевернуть подконтрольную вам планету, которая имеет технологическую специализацию, чтобы получить 1 товар."},
+                "DACXIVE_ANIMATORS": {"label": "ДЭКСИВНЫЕ ВОСКРЕШАТЕЛИ","description": "После вашей победы в наземном бою вы можете разместить на этой планете 1 отряд пехоты из вашего снабжения."},
+                "BIO_STIMS": {"label": "БИОСТИМУЛЯТОРЫ","description": "Вы можете перевернуть эту карту в конце своего хода чтобы подготовить 1 вашу другую технологию или подконтрольную вам планету, которая имеет технологическую специализацию."},
+                "HYPER_METABOLISM": {"label": "УСКОРЕННЫЙ МЕТАБОЛИЗМ","description": "Во время фазы статуса вы получаете 3 жетона приказов вместо 2."},
+                "X89_BACTERIAL_WEAPON": {"label": "БАКТЕРИОЛОГИЧЕСКОЕ ОРУЖИЕ Х89","description": "Когда хотя бы 1 ваш отряд использует способность «БОМБАРДИРОВКА», если хотя бы 1 отряд пехоты вашего противника уничтожен, вы можете уничтожить всю пехоту вашего противника на этой планете."},
+
+                "SARWEEN_TOOLS": {"label": "САРВИНСКИЕ ИНСТРУМЕНТЫ","description": "Когда хотя бы 1 ваш отряд использует способность «ПРОИЗВОДСТВО», уменьшите общую цену производимых отрядов на 1."},
+                "SCANLINK_DRONE_NETWORK": {"label": "СЕТЬ СКАНИРУЮЩИХ ДРОНОВ","description": "Когда вы активируете систему, вы можете разведать 1 планету, которая содержит хотя бы 1 ваш отряд."},
+                "GRAVITON_LASER_SYSTEM": {"label": "ГРАВИТОННАЯ ЛАЗЕРНАЯ СИСТЕМА","description": "Вы можете перевернуть эту карту перед тем, как хотя бы 1 ваш отряд использует способность «КОСМИЧЕСКАЯ ПУШКА»; попадания, нанесённые этими отрядами, ваш противник должен присвоить любым своим кораблям, кроме истребителей (при возможности)."},
+                "PREDICTIVE_INTELLIGENCE": {"label": "ПРЕДСКАЗАТЕЛЬНЫЙ ИНТЕЛЛЕКТ","description": "В конце своего хода вы можете перевернуть эту карту, чтобы перераспределить любое количество жетонов приказов на вашем планшете приказов. Когда вы голосуете во время фазы политики, вы можете отдать 3 дополнительных голоса; если вы это сделаете, и результат за который вы проголосовали не будет применён, переверните эту карту."},
+                "TRANSIT_DIODES": {"label": "ПРОЛЁТНЫЕ ДИОДЫ","description": "Вы можете перевернуть эту карту в начале вашего хода в фазе действий; уберите до 4 отрядов ваших наземных войск с игрового поля и поместите их на 1 или несколько подконтрольных вам планет."},
+                "INTEGRATED_ECONOMY": {"label": "ОБЪЕДИНЁННАЯ ЭКОНОМИКА","description": "После того как вы получили контроль над планетой, вы можете произвести на ней любое количество отрядов, общая цена которых равна или меньше значения ресурсов этой планеты."},
+
+                "PLASMA_SCORING": {"label": "ПЛАЗМЕННЫЕ БОЕГОЛОВКИ","description": "Когда хотя бы 1 ваш отряд использует способность «БОМБАРДИРОВКА» или «КОСМИЧЕСКАЯ ПУШКА», вы можете бросить за один из этих отрядов дополнительный кубик."},
+                "AI_DEVELOPMENT_ALGORITHM": {"label": "АЛГОРИТМ РАЗВИТИЯ ИИ","description": "Когда вы исследуете технологию улучшения отряда, вы можете перевернуть эту карту, чтобы проигнорировать 1 требование исследуемой технологии. Когда хотя бы 1 ваш отряд использует способность «ПРОИЗВОДСТВО», вы можете перевернуть эту карту, чтобы уменьшить общую цену производимых отрядов на количество карт технологий улучшения отрядов, которыми вы владеете."},
+                "MAGEN_DEFENSE_GRID": {"label": "ЗАЩИТНАЯ СЕТЬ «МАГЕН»","description": "В начале наземного боя на планете, которая содержит хотя бы 1 ваше сооружение, вы можете нанести 1 попадание и присвоить его одному из отрядов наземных войск противника."},
+                "SELF_ASSEMBLY_ROUTINES": {"label": "ПРОГРАММА САМОСБОРКИ","description": "После того как хотя бы 1 ваш отряд использовал способность «ПРОИЗВОДСТВО», можете перевернуть эту карту, чтобы разместить 1 меха из вашего снабжения на подконтрольной вам планете в этой системе. После уничтожения 1 из ваших мехов получите 1 товар."},
+                "DURANIUM_ARMOR": {"label": "ДЮРАНИЕВАЯ БРОНЯ","description": "Во время каждого раунда боя, после присвоения попаданий вашим отрядам, отремонтируйте 1 свой повреждённый отряд, который не использовал способность «ПОГЛОЩЕНИЕ УРОНА» в этом раунде боя."},
+                "ASSAULT_CANNON": {"label": "ШТУРМОВАЯ ПУШКА","description": "В начале космического боя в системе, в которой есть 3 ваших корабля или больше (не считая истребителей), ваш противник должен уничтожить 1 из своих кораблей (кроме истребителей)."},
+
+                "WARSUN": {"label": "СОЛНЦЕ ВОЙНЫ"},
+                "FLAGSHIP": {"label": "ФЛАГМАН"},
+                "DREADNOUGHT": {"label": "ДРЕДНОУТ"},
+                "DREADNOUGHT2": {"label": "ДРЕДНОУТ2"},
+                "CRUISER": {"label": "КРЕЙСЕР"},
+                "CRUISER2": {"label": "КРЕЙСЕР2"},
+                "DESTROYER": {"label": "ЭСМИНЕЦ"},
+                "DESTROYER2": {"label": "ЭСМИНЕЦ2"},
+                "CARRIER": {"label": "ТРАНСПОРТНИК"},
+                "CARRIER2": {"label": "ТРАНСПОРТНИК2"},
+                "FIGHTER": {"label": "ИСТРЕБИТЕЛЬ"},
+                "FIGHTER2": {"label": "ИСТРЕБИТЕЛЬ2"},
+                "MECH": {"label": "МЕХ"},
+                "INFANTRY": {"label": "ПЕХОТА"},
+                "INFANTRY2": {"label": "ПЕХОТА2"},
+
+                "PDS": {"label": "ПСО"},
+                "PDS2": {"label": "ПСО2"},
+                "SPACEDOCK": {"label": "БАЗА"},
+                "SPACEDOCK2": {"label": "БАЗА2"}
+            }
+        },
+        "races": {
+            "1": {
+                "name": "The Federation of Sol",
+                "agentAbility": "At the start of a ground combat round: You may exhaust this card to choose 1 ground force in the active system; that ground force rolls 1 additional die during this combat round.",
+                "commanderAbility": "At the start of a ground combat on a planet you control: You may place 1 infantry from your reinforcements on that planet.",
+                "commanderUnlock": "Control planets that have a combined total of at least 12 resources.",
+                "heroAbility": "Remove each of your command tokens from the game board and return them to your reinforcements. Then, purge this card.",
+                
+                "ORBITAL_DROP": {"label": "ORBITAL DROP", "effect": "Spend 1 token from your strategy pool to place 2 infantry from your reinforcements on 1 planet you control."},
+                "VERSATILE": {"label": "VERSATILE", "effect": "When you gain command tokens during the status phase, gain 1 additional command token."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "description": "GENESIS", "effect": "At the end of the status phase, place 1 infantry from your reinforcements in this system’s space area."},
+                "MECH": {"label": "MECH", "description": "ZS THUNDERBOLT M2", "deploy": "After you use your ORBITAL DROP faction ability, you may spend 3 resources to place 1 mech on that planet."},
+                "CARRIER": {"label": "CARRIER", "description": "ADVANCED CARRIER I"},
+                "INFANTRY": {"label": "INFANTRY", "description": "SPEC OPS I"},
+                "CARRIER2": {"label": "CARRIER2", "description": "ADVANCED CARRIER II"},
+                "INFANTRY2": {"label": "INFANTRY2", "description": "SPEC OPS II", "effect": "After this unit is destroyed, roll 1 die. If the result is 5 or greater, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."}
+            },
+            "2": {
+                "name": "The Mentak Coalition",
+                "agentAbility": "After the faction ability is used against another player: You may exhaust this card; if you do, you and that player each draw 1 action card.",
+                "commanderAbility": "After you win a space combat: You may force your opponent to give you 1 promissory note from their hand.",
+                "commanderUnlock": "Have 4 cruisers on the game board.",
+                "heroAbility": "At the start of a space combat that you are participating in: You may purge this card; if you do, for each other player's ship that is destroyed during this combat, place 1 ship of that type from your reinforcements in the active system.",
+                
+                "AMBUSH": {"label": "AMBUSH", "effect": "At the start of a space combat, you may roll 1 die for each of up to 2 of your cruisers or destroyers in the system. For each result equal to or greater than that ship’s combat value, produce 1 hit; your opponent must assign it to 1 of his ships."},
+                "PILLAGE": {"label": "PILLAGE", "effect": "After 1 of your neighbors gains trade goods or resolves a transaction, if he has 3 or more trade goods, you may take 1 of his trade goods or commodities."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "description": "FOURTH MOON", "effect": "Other players’ ships in this system cannot use SUSTAIN DAMAGE."},
+                "MECH": {"label": "MECH", "description": "MOLL TERMINUS", "effect": "Other players’ ground forces on this planet cannot use SUSTAIN DAMAGE."},
+                "SALVAGE_OPERATIONS": {"label": "ВОЕННЫЕ ТРОФЕИ", "description": "После вашей победы или поражения в космическом бою вы получаете 1 товар; если вы выиграли бой, вы можете также произвести в этой системе 1 корабль любого типа из тех, что были уничтожены в бою."},
+                "MIRROR_COMPUTING": {"label": "ДУБЛИРУЮЩЕЕ ВЫЧИСЛЕНИЕ", "description": "Когда вы тратите товары, каждый товар обменивается на 2 очка ресурсов или влияния, а не на 1."}       
+            },
+            "3": {
+                "name": "The Yin Brotherhood",
+                "agentAbility": "After a player's destroyer or cruiser is destroyed: You may exhaust this card; if you do, that player may place up to 2 fighters from their Reinforcements in that unit's system.",
+                "commanderAbility": "This card satisfies a green technology prerequisite. You may produce 1 additional infantry for their cost; these additional infantry do not count against your PRODUCTION limit.",
+                "commanderUnlock": "Use your INDOCTRINATION faction ability",
+                "heroAbility": "For each planet that contains any number of your infantry, either ready that planet or place an equal number of infantry from your reinforcements on that planet. Then, purge this card.",
+                
+                "INDOCTRINATION": {"label": "INDOCTRINATION", "effect": "At the start of a ground combat, you may spend 2 influence to replace 1 of your opponent’s participating infantry with 1 infantry from your reinforcements."},
+                "DEVOTION": {"label": "DEVOTION", "effect": "After each space battle round, you may destroy 1 of your cruisers or destroyers in the active system to produce 1 hit and assign it to 1 of your opponent’s ships in that system."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "description": "VAN HAUGE", "effect": "When this ship is destroyed, destroy all ships in this system."},
+                "MECH": {"label": "MECH", "description": "MOYIN’S ASHES", "deploy": "When you use your INDOCTRINATION faction ability, you may spend 1 additional influence to replace your opponent’s unit with 1 mech instead of 1 infantry."},
+                "YIN_SPINNER": {"label": "ИНЬСКИЙ ВОЛЧОК", "description": "После того как вы производите отряды, разместите до 2 отрядов пехоты из вашего снабжения на любую подконтрольную вам планету или любой участок космоса, который содержит хотя бы 1 ваш корабль."},
+                "IMPULSE_CORE": {"label": "ИМПУЛЬСНОЕ ЯДРО", "description": "В начале космического боя вы можете уничтожить 1 свой крейсер или эсминец в активной системе, чтобы нанести 1 попадание; это попадание ваш противник должен присвоить любому своему кораблю, кроме истребителя (при возможности)."}
+            },
+            "4": {
+                "name": "The Embers of Muaat",
+                "agentAbility": "Exhaust this card to choose a player; that player may produce up to 2 units that each have a cost of 4 or less in a system that contains 1 of their war suns or their flagship.",
+                "agentAbilityType": "ACTION",
+                "commanderAbility": "After you spend token from your strategy pool: You may gain 1 trade good.",
+                "commanderUnlock": "Produce a war sun.",
+                "heroAbility": "After you move a war sun into a nonhome system other than Mecatol Rex: You may destroy all other players' units in that system and replace that system tile with the Muaat supernova tile. If you do, purge this card and each planet card that corresponds to the replaced system tile.",
+                "STAR_FORGE": {"label": "STAR FORGE", "effect": "Spend 1 token from your strategy pool to place either 2 fighters or 1 destroyer from your reinforcements in a system that contains 1 or more of your war suns."},
+                "GASHLAI_PHYSIOLOGY": {"label": "GASHLAI PHYSIOLOGY", "effect": "Your ships can move through supernovas."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "description": "THE INFERNO", "action": "Spend 1 token from your strategy pool to place 1 cruiser in this unit’s system."},
+                "MECH": {"label": "MECH", "description": "EMBER COLOSSUS", "effect": "When you use your STAR FORGE faction ability in this system or an adjacent system, you may place 1 infantry from your reinforcements with this unit."},
+                "WARSUN": {"label": "WARSUN", "description": "PROTOTYPE WAR SUN I", "effect": "Other players’ units in this system lose PLANETARY SHIELD."},
+                "MAGMUS_REACTOR": {"label": "РЕАКТОР МАГМУСА", "description": "Ваши корабли могут заканчивать движение в сверхновых. Каждая сверхновая, которая содержит хотя бы 1 ваш отряд, получает способность «ПРОИЗВОДСТВО 5», как если бы это был 1 из ваших отрядов."},
+                "WARSUN2": {"label": "WARSUN2", "description": "PROTOTYPE WAR SUN II", "effect": "Other players’ units in this system lose PLANETARY SHIELD."}    
+            },
+            "5": {
+                "name": "The Arborec",
+                "agentAbility": "Exhaust this card and choose a player's non-fighter ship; that player may replace that ship with 1 from their reinforcements that costs up to 2 more than the replaced ship",
+                "agentAbilityType": "ACTION",
+                "commanderAbility": "After another player activates a system that has 1 or more of your units that have PRODUCTION: produce 1 unit in that system.",
+                "commanderUnlock": "Have 12 ground forces on planets you control.",
+                "heroAbility": "Produce any number of units in any number of systems that contain or more of your ground forces. Then, purge this card.",
+                
+                "MITOSIS": {"label": "MITOSIS", "effect": "Your space docks cannot produce infantry. At the start of the status phase, place 1 infantry from your reinforcements on any planet you control."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "description": "DUHA MENAIMON", "effect": "After you activate this system, you may produce up to 5 units in this system."},
+                "INFANTRY": {"label": "INFANTRY", "description": "LETANI WARRIOR I"},
+                "MECH": {"label": "MECH", "description": "LETANI BEHEMOTH", "deploy": "When you would use your MITOSIS faction ability, you may replace 1 of your infantry with 1 mech from your reinforcements instead."},
+                "BIOPLASMOSIS": {"label": "БИОПЛАЗМОЗ", "description": "В конце фазы статуса вы можете убрать любое количество отрядов пехоты с планет под вашим контролем и разместить их на одной или нескольких планетах под вашим контролем в тех же или смежных с ними системах."},
+                "INFANTRY2": {"label": "INFANTRY2", "description": "LETANI WARRIOR II", "effect": "After this unit is destroyed, roll 1 die. If the result is 6 or greater, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."}
+            },
+            "6": {
+                "name": "The Lizix Mindnet",
+                "agentAbility": "After a player activates a system: You may exhaust this card to allow that player to replace 1 of their infantry in the active system with 1 mech from their reinforcements.",
+                "commanderAbility": "Units that have PLANETARY SHIELD do not prevent you from using BOMBARDMENT.",
+                "commanderUnlock": "Have 4 dreadnoughts on the game board.",
+                "heroAbility": "Choose system that does not contain other players' ships; you may move your flagship and any number of your dreadnoughts from other systems into the chosen system. Then, purge this card.",
+                
+                "ASSIMILATE": {"label": "ASSIMILATE", "effect": "When you gain control of a planet, replace each PDS and space dock that is on that planet with a matching unit from your reinforcements."},
+                "HARROW": {"label": "HARROW", "effect": "At the end of each round of ground combat, your ships in the active system may use their BOMBARDMENT abilities against your opponent’s ground forces on that planet."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "description": "0.0.1", "effect": "During a space combat, hits produced by this ship and by your dreadnoughts in this system must be assigned to non-fighter ships if able."},
+                "MECH": {"label": "MECH", "description": "ANNIHILATOR", "effect": "While not participating in ground combat, this unit can use its BOMBARDMENT ability on planets in its system as if it were a ship."},
+                "DREADNOUGHT": {"label": "DREADNOUGHT", "description": "SUPER-DREADNOUGHT I"},
+                "INHERITANCE_SYSTEMS": {"label": "САМООБУЧАЮЩАЯСЯ СИСТЕМА", "description": "Когда вы исследуете технологию, вы можете перевернуть эту карту и потратить 2 очка ресурсов; если вы это сделали, игнорируйте все требования исследуемой технологии."},
+                "DREADNOUGHT2": {"label": "DREADNOUGHT2", "description": "SUPER-DREADNOUGHT II", "effect": "This unit cannot be destroyed by 'Direct Hit' action cards."}
+            },
+            "7": {
+                "name": "The Winnu",
+                "agentAbility": "When 1 or more of a player's units use PRODUCTION: You may exhaust this card to reduce the combined cost of the produced units by 2.",
+                "commanderAbility": "During combat: Apply +2 to the result of each of your unit's combat rolls in the Mecatol Rex system, your home system, and each system that contains a legendary planet.",
+                "commanderUnlock": "Control Mecatol Rex or enter into a combat in the Mecatol Rex system.",
+                "heroAbility": "Perform the primary ability of any strategy card. Then, choose any number of other players. Those players may perform the secondary ability of that strategy card. Then, purge this card.",
+                
+                "BLOOD_TIES": {"label": "BLOOD TIES", "effect": "You do not have to spend influence to remove the custodians token from Mecatol Rex."},
+                "RECLAMATION": {"label": "RECLAMATION", "effect": "After you resolve a tactical action during which you gained control of Mecatol Rex, you may place 1 PDS and 1 space dock from your reinforcements on Mecatol Rex."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "description": "SALAI SAI CORIAN", "effect": "When this unit makes a combat roll, it rolls a number of dice equal to the number of your opponent’s non-fighter ships in this system."},
+                "MECH": {"label": "MECH", "description": "RECLAIMER", "effect": "After you resolve a tactical action during which you gained control of this planet, you may place 1 PDS or 1 space dock from your reinforcements on this planet."},
+                "HEGEMONIC_TRADE_POLICY": {"label": "ТОРГОВАЯ ГЕГЕМОНИЯ", "description": "Вы можете перевернуть эту карту, когда хотя бы 1 ваш отряд использует способность «ПРОИЗВОДСТВО»; если вы это сделали, то во время использования этой способности поменяйте местами значения ресурсов и влияния одной подконтрольной вам планеты."},
+                "LAZAX_GATE_FOLDING": {"label": "РАЗВЕРТКА ЛАЗАКСКИХ ВРАТ", "description": "Если вы не контролируете Мекатол-Рекс, во время ваших тактических действий её система считается содержащей альфа- и бета-червоточины. ДЕЙСТВИЕ: если вы контролируете Мекатол-Рекс, переверните эту карту, чтобы разместить на Мекатол-Рексе 1 отряд пехоты из вашего снабжения."}
+            },
+            "8": {
+                "name": "The Nekro Virus",
+                "agentAbility": "During the action phase: You may exhaust this card to choose a player; that player may discard 1 action card or spend 1 command token from their Rommand sheet to gain 2 trade goods.",
+                "commanderAbility": "After you gain a technology: You may draw 1 action card.",
+                "commanderUnlock": "Own 3 technologies. A Valefar Assimilator technology counts only if its X or Y token is on a technology.",
+                "heroAbility": "Choose a planet that has technology specialty in system that contains your units. Destroy any other player's units on that planet. Gain trade goods equal to the planet's combined resource and influence values and gain 1 technology that matches the specialty of that planet. Then, purge this card.",
+                
+                "GALACTIC_THREAT": {"label": "GALACTIC THREAT", "effect": "You cannot vote on agendas. Once per agenda phase, after an agenda is revealed, you may predict aloud the outcome of that agenda. If your prediction is correct, gain 1 technology that is owned by a player who voted how you predicted."},
+                "TECHNOLOGICAL_SINGULARITY": {"label": "TECHNOLOGICAL SINGULARITY", "effect": "Once per combat, after 1 of your opponent’s units is destroyed, you may gain 1 technology that is owned by that player."},
+                "PROPAGATION": {"label": "PROPAGATION", "effect": "You cannot research technology. When you would research a technology, gain 3 command tokens instead."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "description": "THE ALASTOR", "effect": "At the start of a space combat, choose any number of your ground forces in this system to participate in that combat as if they were ships."},
+                "MECH": {"label": "MECH", "description": "MORDRED", "effect": "During combat against an opponent who has an 'X' or 'Y' token on 1 or more of their technologies, apply +2 to the result of this unit’s combat rolls."},
+                "VALEFAR_ASSIMILATOR_X": {"label": "АССИМИЛЯТОР ВАЛЕФАРА X", "description": "Когда вы должны получить технологию другого игрока, используя свою фракционную способность, вы можете вместо этого положить жетон ассимиляции «X» на карту фракционной технологии этого игрока (но только если там нет жетона ассимиляции). Пока жетон находится на ней, карта «Ассимилятор Валефара X» считается её копией."},
+                "VALEFAR_ASSIMILATOR_Y": {"label": "АССИМИЛЯТОР ВАЛЕФАРА Y", "description": "Когда вы должны получить технологию другого игрока, используя свою фракционную способность, вы можете вместо этого положить жетон ассимиляции «Y» на карту фракционной технологии этого игрока (но только если там нет жетона ассимиляции). Пока жетон находится на ней, карта «Ассимилятор Валефара Y» считается её копией."}     
+            },
+            "9": {
+                "name": "The Naalu Collective",
+                "agentAbility": "After an agenda is revealed: You may exhaust this card to look at the top card of the agenda deck. Then, you may show that card to 1 other player.",
+                "commanderAbility": "You may produce 1 additional fighter for their cost; these additional units do not count against your PRODUCTION limit.",
+                "commanderUnlock": "Have 12 fighters on the game board.",
+                "heroAbility": "At the end of the status phase: You may force each other player to give you 1 promissory note from their hand. If you do, purge this card.",
+                "TELEPATHIC": {"label": "TELEPATHIC", "effect": "At the end of the strategy phase, place the Naalu '0' token on your strategy card; you are first in initiative order."},
+                "FORESIGHT": {"label": "FORESIGHT", "effect": "After another player moves ships into a system that contains 1 or more of your ships, you may place 1 token from your strategy pool in an adjacent system that does not contain another player's ships; move your ships from the active system into that system."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "During an invasion in this system, you may commit fighters to planets as if they were ground forces. When combat ends, return those units to the space area."},
+                "MECH": {"label": "MECH", "effect": "During combat against an opponent who has at least 1 relic fragment, apply +2 to the results of this unit’s combat rolls."},
+                "FIGHTER": {"label": "FIGHTER", "description": "HYBRID CRYSTAL FIGHTER I"},
+                "NEUROGLAVE": {"label": "НЕЙРОКЛИНОК", "description": "После того как другой игрок активировал систему, в которой есть хотя бы 1 ваш корабль, этот игрок возвращает 1 жетон из своего резерва флота в снабжение."},
+                "FIGHTER2": {"label": "FIGHTER2", "description": "HYBRID CRYSTAL FIGHTER II", "effect": "This unit may move without being transported. Each fighter in excess of your ships' capacity counts as ½ of a ship against your fleet pool."}    
+            },
+            "10": {
+                "name": "The Barony of Letnev",
+                "agentAbility": "At the start of a space combat round: You may exhaust this card to choose 1 ship in the active system; that ship rolls 1 additional die during this combat round.",
+                "commanderAbility": "After 1 of your units uses SUSTAIN DAMAGE: You may gain 1 trade good.",
+                "commanderUnlock": "Have 5 non-fighter ships in 1 system",
+                "heroAbility": "Place this card near the game board; the number of non-fighter ships you have in systems is not limited by laws or by the number of command tokens in your fleet pool during this game round. At the end of that game round, purge this card.",
+                
+                "MUNITIONS_RESERVES": {"label": "MUNITIONS RESERVES", "effect": "At the start of each round of space combat, you may spend 2 trade goods; you may reroll any number of your dice during that combat round."},
+                "ARMADA": {"label": "ARMADA", "effect": "The maximum number of non-fighter ships you can have in each system is equal to 2 more than the number of tokens in your fleet pool."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "Other players’ units in this system lose PLANETARY SHIELD. At the start of each space combat round, repair this ship."},
+                "MECH": {"label": "MECH", "deploy": "At the start of a round of ground combat, you may spend 2 resources to replace 1 of your infantry in that combat with 1 mech."},
+                "NON_EUCLIDEAN_SHIELDING": {"label": "НЕЭВКЛИДОВОЕ ЭКРАНИРОВАНИЕ", "description": "Когда 1 из ваших отрядов использует способность «ПОГЛОЩЕНИЕ УРОНА», отмените 2 попадания вместо 1."},
+                "L4_DISRUPTORS": {"label": "ДЕЗИНТЕГРАТОР 4 УРОВНЯ", "description": "Во время вторжения отряды противника не могут использовать способность «КОСМИЧЕСКАЯ ПУШКА» против ваших отрядов."}           
+            },
+            "11": {
+                "name": "The Clan of Saar",
+                "agentAbility": "After a player activates a system: You may exhaust this card to increase the move value of 1 of that player's ships to match the move value of the ship on the game board that has the highest move value.",
+                "commanderAbility": "When you produce fighters or infantry: You may place each of those units at any of your space docks that are not blockaded.",
+                "commanderUnlock": "Have 3 space docks on the game board.",
+                "heroAbility": "Choose system hat is adjacent to of your space docks. Destroy all other players' infantry and fighters in that system. Then, purge this card.",
+                
+                "SCAVENGE": {"label": "SCAVENGE", "effect": "After you gain control of a planet, gain 1 trade good."},
+                "NOMADIC": {"label": "NOMADIC", "effect": "You can score objectives even if you do not control the planets in your home system."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP"},
+                "MECH": {"label": "MECH", "deploy": "After you gain control of a planet, you may spend 1 trade good to place 1 mech on that planet."},
+                "SPACEDOCK": {"label": "SPACEDOCK",  "effect": "This unit is placed in a space area instead of on a planet. This unit can move and retreat as if it were a ship. If this unit is blockaded, it is destroyed."},
+                "CHAOS_MAPPING": {"label": "СТРУКТУРИЗАЦИЯ ХАОСА", "description": "Другие игроки не могут активировать поля астероидов, в которых есть хотя бы 1 ваш корабль. В начале вашего хода во время фазы действий вы можете произвести 1 отряд в системе, где есть хотя бы 1 ваш отряд со способностью «ПРОИЗВОДСТВО»."},
+                "SPACEDOCK2": {"label": "SPACEDOCK2", "description": "FLOATING FACTORY II", "effect": "This unit is placed in a space area instead of on a planet. This unit can move and retreat as if it were a ship. If this unit is blockaded, it is destroyed."}   
+            },
+            "12": {
+                "name": "The Universities of Jol-Nar",
+                "agentAbility": "When player spends resources to research: You may exhaust this card to allow that player to remove any number of their infantry from the game board. For each unit removed, reduce the resources spent by 1.",
+                "commanderAbility": "After you roll dice for a unit ability: You may reroll any number of those dice.",
+                "commanderUnlock": "Own 8 technologies.",
+                "heroAbility": "For each non-unit upgrade technology you own, you may replace that technology with any technology of the same color from the deck. Then, purge this card.",
+                
+                "FRAGILE": {"label": "FRAGILE", "effect": "Apply -1 to the result of each of your unit’s combat rolls."},
+                "BRILLIANT": {"label": "BRILLIANT", "effect": "When you spend a command token to resolve the secondary ability of the 'Technology' strategy card, you may resolve the primary ability instead."},
+                "ANALYTICAL": {"label": "ANALYTICAL", "effect": "When you research a technology that is not a unit upgrade technology, you may ignore 1 prerequisite."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "When making a combat roll for this ship, each result of 9 or 10, before applying modifiers, produces 2 additional hits."},
+                "MECH": {"label": "MECH", "effect": "Your infantry on this planet are not affected by your FRAGILE faction ability."},
+                "SPACIAL_CONDUIT_CYLINDER": {"label": "ПРОСТРАНСТВОПРОВОДНЫЙ ЦИЛИНДР", "description": "Вы можете перевернуть эту карту после того как активировали систему, в которой есть хотя бы 1 ваш отряд; во время этой активации эта система считается смежной со всеми другими системами, в которых есть хотя бы 1 ваш отряд."},
+                "E-RES_SIPHONS": {"label": "СИФОН Э-ВИЗ", "description": "После того как другой игрок активировал систему, в которой есть хотя бы 1 ваш корабль, вы получаете 4 товара."}
+            },
+            "13": {
+                "name": "Sardakk N'orr",
+                "agentAbility": "At the end of a player's tactical action: You may exhaust this card; if you do, that player may place 2 infantry from their reinforcements on a planet they control in the active system.",
+                "commanderAbility": "During the Commit Ground Forces step: You can commit up to 1 ground force from each planet in the active system and each planet in adjacent systems that do not contain 1 of your command tokens.",
+                "commanderUnlock": "Control 5 planets in nonhome systems.",
+                "heroAbility": "After you move ships into the active system: You may skip directly to the Commit Ground Forces step. If you do, after you commit ground forces to land on planets, purge this card and return each of your ships in the active system to your reinforcements.",
+                "UNRELENTING": {"label": "UNRELENTING", "effect": "Apply +1 to the result of each of your unit’s combat rolls."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "Apply +1 to the result of each of your other ship's combat rolls in this system."},
+                "MECH": {"label": "MECH", "effect": "After this unit uses its SUSTAIN DAMAGE ability during ground combat, it produces 1 hit against your opponent’s ground forces on this planet."},
+                "DREADNOUGHT": {"label": "DREADNOUGHT"},
+                "VALKYRIE_PARTICLE_WEAVE": {"label": "УЗОР ВАЛЬКИРИЯ", "description": "Если после прохождения боевых проверок во время наземного боя ваш противник нанёс вашим войскам хотя бы 1 попадание, вы наносите 1 дополнительное попадание."},
+                "DREADNOUGHT2": {"label": "DREADNOUGHT2", "description": "EXOTRIREME II", "effect": "This unit cannot be destroyed by “Direct Hit” action cards. After a round of space combat, you may destroy this unit to destroy up to 2 ships in this system."}   
+            },
+            "14": {
+                "name": "The Xxcha Kingdom",
+                "agentAbility": "Exhaust this card to ready any planet; if that planet is in a system that is adjacent to a planet you control, you may remove 1 infantry from that planet and return it to its reinforcements.",
+                "agentAbilityType": "ACTION",
+                "commanderAbility": "Each planet that you exhaust to cast votes provides additional vote. Game effects cannot prevent you from voting on an agenda.",
+                "commanderUnlock": "Control planets that have a combined total of at least 12 influence.",
+                "heroAbility": "You may discard 1 law from play. Look at the top 5 cards of the agenda deck. Choose 2 to reveal, and resolve each as if you had cast 1 vote for an outcome of your choice; then discard the rest. Other players cannot resolve abilities during this action.Then, purge this card.",
+                
+                "PEACE_ACCORDS": {"label": "PEACE ACCORDS", "effect": "After you resolve the primary or secondary ability of the 'Diplomacy' strategy card, you may gain control of 1 planet other than Mecatol Rex that does not contain any units and is in a system that is adjacent to a planet you control."},
+                "QUASH": {"label": "QUASH", "effect": "When an agenda is revealed, you may spend 1 token from your strategy pool to discard that agenda and reveal 1 agenda from the top of the deck. Players vote on this agenda instead."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "You may use this unit’s SPACE CANNON against ships that are in adjacent systems."},
+                "MECH": {"label": "MECH", "effect": "You may use this unit’s SPACE CANNON against ships that are in adjacent systems."},
+                "INSTINCT_TRAINING": {"label": "ТРЕНИРОВКА ИНСТИНКТОВ", "description": "Когда другой игрок разыгрывает карту действия, вы можете перевернуть эту карту и потратить 1 жетон из вашего стратегического резерва, чтобы отменить эту карту действия."},
+                "NULLIFICATION_FIELD": {"label": "ОТЧУЖДАЮЩЕЕ ПОЛЕ", "description": "После того как другой игрок активировал систему, в которой есть хотя бы 1 ваш корабль, вы можете перевернуть эту карту и потратить 1 жетон из вашего стратегического резерва; если вы это сделали, этот игрок немедленно завершает свой ход."}
+            },
+            "15": {
+                "name": "The Yssaril Tribes",
+                "agentAbility": "This card has the text ability of each other player's agent, even if that agent is exhausted.",
+                "commanderAbility": "After another player activates a system that contains your units: You may look at that player's action cards, promissory notes, or secret objectives.",
+                "commanderUnlock": "Have 7 action cards.",
+                "heroAbility": "Each other player you 1 action card from their hand. For each player, you may either take that card or force that player to discard 3 random action cards from their hand. Then, purge this card.",
+                
+                "STALL_TACTICS": {"label": "STALL TACTICS", "effect": "Discard 1 action card from your hand."},
+                "SCHEMING": {"label": "SCHEMING", "effect": "When you draw 1 or more action cards, draw 1 additional action card. Then, choose and discard 1 action card from your hand."},
+                "CRAFTY": {"label": "CRAFTY", "effect": "You can have any number of action cards in your hand. Game effects cannot prevent you from using this ability."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "This ship can move through systems that contain other players’ ships."},
+                "MECH": {"label": "MECH", "deploy": "After you use your STALL TACTICS faction ability, you may place 1 mech on a planet you control."},
+                "TRANSPARASTEEL_PLATING": {"label": "ТРАНСПАРИСТАЛЬНАЯ БРОНЯ", "description": "Во время вашего хода в фазе действий игроки, которые пропустили ход, не могут разыгрывать карты действий."},
+                "MAGEON_IMPLANTS": {"label": "ИМПЛАНТЫ МАГЕОН", "description": "ДЕЙСТВИЕ: переверните эту карту, чтобы посмотреть карты действий на руке другого игрока. Выберите 1 из этих карт и возьмите её себе."}
+            },
+            "16": {
+                "name": "The Emirates of Hacan",
+                "agentAbility": "During the action phase: You may exhaust this card to gain 2 commodities or replenish another player's commodities.",
+                "commanderAbility": "When you cast votes: You may spend any number of trade goods. Cast 2 additional votes for each trade good spent.",
+                "commanderUnlock": "Have 10 trade goods.",
+                "heroAbility": "When 1 or more of your units use PRODUCTION: You may reduce the cost of each of your units to 0 during this use of PRODUCTION. If you do, purge this card.",
+                "MASTERS_OF_TRADE": {"label": "MASTERS OF TRADE", "effect": "You do not have to spend a command token to resolve the secondary ability of the 'Trade' strategy card."},
+                "GUILD_SHIPS": {"label": "GUILD SHIPS", "effect": "You can negotiate transactions with players who are not your neighbors."},
+                "ARBITERS": {"label": "ARBITERS", "effect": "When you are negotiating a transaction, action cards can be exchanged as part of that transaction."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "After you roll a die during a space combat in this system, you may spend 1 trade good to apply +1 to the result."},
+                "MECH": {"label": "MECH", "effect": "This planet’s planet card may be traded as part of a transaction; if you do, move all of your units from this planet to another planet you control."},
+                "PRODUCTION_BIOMES": {"label": "ПРОИЗВОДСТВЕННЫЕ БИОМЫ", "description": "ДЕЙСТВИЕ: переверните эту карту и потратьте 1 жетон из вашего стратегического резерва, чтобы получить 4 товара. Также выберите другого игрока — он получает 2 товара."},
+                "QUANTUM_DATAHUB_NODE": {"label": "КВАНТОВЫЙ ИНФОРМАЦИОННЫЙ ЦЕНТР", "description": "В конце фазы стратегии вы можете потратить 1 жетон из вашего стратегического резерва и отдать другому игроку 3 товара. Сделав это, отдайте 1 из своих карт стратегии этому игроку и заберите 1 из его карт стратегии."}
+            },
+            "17": {
+                "name": "The Ghosts of Creuss",
+                "agentAbility": "After a player activates a system that contains a non-delta wormhole: You may exhaust this card; if you do, that system is adjacent to all other systems that contain a wormhole during this tactical action.",
+                "commanderAbility": "After your ships move: For each ship that has a capacity value and moved through 1 or more wormholes, you may place 1 fighter from your reinforcements with that ship if you have unused capacity in the active system.",
+                "commanderUnlock": "Have 3 units in 3 systems that contain alpha or beta wormholes.",
+                "heroAbility": "Swap the positions of any 2 systems that contain wormholes or your units, other than the Creuss system and the wormhole nexus. Then, purge this card.",
+                
+                "QUANTUM_ENTANGLEMENT": {"label": "QUANTUM ENTANGLEMENT", "effect": "You treat all systems that contain either an alpha or beta wormhole as adjacent to each other. Game effects cannot prevent you from using this ability."},
+                "SLIPSTREAM": {"label": "SLIPSTREAM", "effect": "During your tactical actions, apply +1 to the move value of each of your ships that starts its movement in your home system or in a system that contains either an alpha or beta wormhole."},
+                "CREUSS_GATE": {"label": "CREUSS GATE", "effect": "When you create the game board, place the Creuss Gate where your home system would normally be placed. The Creuss Gate is not a home system. Then, place your home system in your play area."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "This ship’s system contains a delta wormhole. During movement, this ship may move before or after your other ships."},
+                "MECH": {"label": "MECH", "effect": "After any player activates a system, you may remove this unit from the game board to place or move a Creuss wormhole token into this system."},
+                "WORMHOLE_GENERATOR": {"label": "ГЕНЕРАТОР ЧЕРВОТОЧИН", "description": "ДЕЙСТВИЕ: переверните эту карту чтобы положить или переместить жетон червоточины Призраков Креусса либо в систему с планетой под вашим контролем либо в неродную систему, в которой нет кораблей других игроков."},
+                "DIMENSIONAL_SPLICER": {"label": "ПРОСТРАНСТВЕННЫЙ ИСКАЗИТЕЛЬ", "description": "В начале космического боя в системе, в которой есть червоточина и хотя бы 1 ваш корабль, вы можете нанести 1 попадание и присвоить его одному из кораблей противника."}
+            },
+            "52": {
+                "name": "The Mahact Gene-sorcerers",
+                "agentAbility": "When you would spend a command token during the secondary ability of a strategic action: You may exhaust this card to remove 1 of the active player's command tokens from the board and use it instead.",
+                "commanderAbility": "During your tactical actions, you can activate systems that contain your command tokens. If you do, return both command tokens to your reinforcements at the end of your turn.",
+                "commanderUnlock": "Have 2 other factions' command tokens in your fleet pool.",
+                "heroAbility": "all units in the space area of any system to an adjacent system that contains a different player's ships. Space combat is resolved in that system; neither player can retreat or resolve abilities that would move their ships. Then,purge this card.",
+                
+                "EDICT": {"label": "EDICT", "effect": "When you win a combat, place 1 command token from your opponent’s reinforcements in your fleet pool if it does not already contain 1; other players’ tokens increase your fleet limit but cannot be redistributed."},
+                "IMPERIA": {"label": "IMPERIA", "effect": "While another player’s command token is in your fleet pool, you can use the ability of that player’s commander, if it is unlocked."},
+                "HUBRIS": {"label": "HUBRIS", "effect": "During setup, purge your 'Alliance' promissory note. Other players cannot give you their “Alliance” promissory note."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "During combat against an opponent whose command token is not in your fleet pool, apply +2 to the results of this unit’s combat rolls."},
+                "MECH": {"label": "MECH", "effect": "After a player activates this system, you may spend 1 of their tokens from your fleet pool to end their turn; they gain that token."},
+                "INFANTRY": {"label": "INFANTRY", "effect": "After this unit is destroyed, gain 1 commodity or convert 1 of your commodities to a trade good."},
+                "GENETIC_RECOMBINATION": {"label": "ГЕНЕТИЧЕСКАЯ РЕКОМБИНАЦИЯ", "description": "Вы можете перевернуть эту карту перед тем как игрок голосует; этот игрок должен отдать хотя бы 1 голос за указанный вами вариант или вернуть 1 жетон из своего резерва флота в снабжение."},
+                "INFANTRY2": {"label": "INFANTRY2", "description": "CRIMSON LEGIONNAIRE II", "effect": "After this unit is destroyed, gain 1 commodity or convert 1 commodity. Then, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."}
+            },
+            "53": {
+                "name": "The Nomad",
+                "agentAbility": ["When you gain trade goods from the supply: You may exhaust this card to place an equal number of trade goods on this card. When this card readies, gain the trade goods on this card.",
+                "At the end of a player's turn: You may exhaust this card to allow that player to remove 2 of their ground forces from the game board and place them on planets they control in the active system.",
+                "After the Roll Dice step of combat: You may exhaust this card. If you do, hits are not assigned to either player's units. Return to the start of this combat round's Roll Dice step."],
+                "commanderAbility": "You can produce your flagship without spending resources.",
+                "commanderUnlock": "Have 1 scored secret objective.",
+                "heroAbility": "Place this card near the game board; your flagship and units it transports can move out of systems that contain your command tokens during this game round. At the end of that game round, purge this card.",
+                
+                "THE_COMPANY": {"label": "THE COMPANY", "effect": "During setup, take the 2 additional Nomad faction agents and place them next to your faction sheet; you have 3 agents."},
+                "FUTURE_SIGHT": {"label": "FUTURE SIGHT", "effect": "During the agenda phase, after an outcome you voted for or predicted is resolved, gain 1 trade good."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "description": "MEMORIA I", "effect": "You may treat this unit as if it were adjacent to systems that contain 1 or more of your mechs."},
+                "MECH": {"label": "MECH", "effect": "While this unit is in a space area during combat, you may use its SUSTAIN DAMAGE ability to cancel a hit produced against your ships in this system."},
+                "TEMPORAL_COMMAND_SUITE": {"label": "ТЕМПОРАЛЬНЫЙ ПОСТ УПРАВЛЕНИЯ", "description": "После того, как агент любого игрока переворачивается, вы можете подготовить этого агента, перевернув эту карту. Если вы подготовили агента другого игрока, вы можете провести сделку с этим игроком."},
+                "FLAGSHIP2": {"label": "FLAGSHIP2", "description": "MEMORIA II", "effect": "You may treat this unit as if it were adjacent to systems that contain 1 or more of your mechs."}    
+            },
+            "54": {
+                "name": "The Vuil'raith Cabal",
+                "agentAbility": "After another player replenishes commodities: You may exhaust this card to convert their commodities to trade goods and capture 1 unit from their reinforcements that has a cost equal to or lower than their commodity value.",
+                "commanderAbility": "When you produce fighter or infantry units: Up 2 of those units do not count against your PRODUCTION limit.",
+                "commanderUnlock": "Have units in 3 gravity rifts.",
+                "heroAbility": "Each player rolls die for each of his non-fighter ships that are in or adjacent to system contains dimensional tear; on a 1-3 capture that unit. If this causes a player's ground forces or fighter to be removed, also capture those units. Then, purge this card.",
+                
+                "DEVOUR": {"label": "DEVOUR", "effect": "Capture your opponent’s non-structure units that are destroyed during combat."},
+                "AMALGAMATION": {"label": "AMALGAMATION", "effect": "When you produce a unit, you may return 1 captured unit of that type to produce that unit without spending resources."},
+                "RIFTMELD": {"label": "RIFTMELD", "effect": "When you research a unit upgrade technology, you may return 1 captured unit of that type to ignore all of that technology’s prerequisites."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "Capture all other non-structure units that are destroyed in this unit’s system, including your own."},
+                "MECH": {"label": "MECH", "effect": "When your infantry on this planet are destroyed, place them on your faction sheet; those units are captured."},
+                "SPACEDOCK": {"label": "SPACEDOCK",  "effect": "This system is a gravity rift; your ships do not roll for this gravity rift. Up to 6 fighters in this system do not count against your ships’ capacity."},
+                "SPACEDOCK2": {"label": "SPACEDOCK2", "description": "DIMENSIONAL TEAR II", "effect": "This system is a gravity rift; your ships do not roll for this gravity rift. Up to 12 fighters in this system do not count against your ships’ capacity."},
+                "VORTEX": {"label": "ВИХРЬ", "description": "ДЕЙСТВИЕ: переверните эту карту чтобы выбрать отряд не-сооружение другого игрока в системе, смежной с хотя бы 1 вашей базой. Захватите 1 отряд этого типа из снабжения этого игрока."}
+            },
+            "55": {
+                "name": "The Titans of Ul",
+                "agentAbility": "When a hit is produced against a unit: You may exhaust this card to cancel that hit.",
+                "commanderAbility": "When 1 or more of your units use: You may gain 1 trade good.",
+                "commanderUnlock": "Have 5 structures on the game board.",
+                "heroAbility": "Ready Elysium and attach this card to it. Its resource and influence values are each increased by 3, and it gains SPACE CANNON 5 (x3) ability as if it were a unit.",
+                
+                "TERRAGENESIS": {"label": "TERRAGENESIS", "effect": "After you explore a planet that does not have a sleeper token, you may place or move 1 sleeper token onto that planet."},
+                "AWAKEN": {"label": "AWAKEN", "effect": "After you activate a system that contains 1 or more of your sleeper tokens, you may replace each of those tokens with 1 PDS from your reinforcements."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "deploy": "After you activate a system that contains 1 or more of your PDS, you may replace 1 of those PDS with this unit."},
+                "MECH": {"label": "MECH", "deploy": "When you would place a PDS on a planet, you may place 1 mech and 1 infantry on that planet instead."},
+                "CRUISER": {"label": "CRUISER", "description": "SATURN ENGINE I"},
+                "PDS": {"label": "PDS", "effect": "This unit is treated as both a structure and a ground force. It cannot be transported."},
+                "CRUISER2": {"label": "CRUISER2", "description": "SATURN ENGINE II"},
+                "PDS2": {"label": "PDS2", "description": "HEL-TITAN II", "effect": "This unit is treated as both a structure and a ground force. It cannot be transported. You may use this unit’s SPACE CANNON against ships that are adjacent to this unit’s system."}
+            },
+            "56": {
+                "name": "The Empyrean",
+                "agentAbility": "After a player moves ships into a system that does not contain any planets: You may exhaust this card; that player gains 1 command token.",
+                "commanderAbility": "After another player moves ships into a system that contains 1 of your command tokens: You may return that token to your reinforcements.",
+                "commanderUnlock": "Be neighbors with all other players.",
+                "heroAbility": "Place 1 frontier token in each system that does not contain any planets and does not already have a frontier token. Then, explore each frontier token that is in system that contains 1 or more of your ships. Then, purge this card.",
+                
+                "VOIDBORN": {"label": "VOIDBORN", "effect": "Nebulae do not affect your ships’ movement."},
+                "AETHERPASSAGE": {"label": "AETHERPASSAGE", "effect": "After a player activates a system, you may allow that player to move their ships through systems that contain your ships."},
+                "DARK_WHISPERS": {"label": "DARK WHISPERS", "effect": "During setup, take the additional Empyrean faction promissory note; you have 2 faction promissory notes."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "After any player’s unit in this system or an adjacent system uses SUSTAIN DAMAGE, you may spend 2 influence to repair that unit."},
+                "MECH": {"label": "MECH", "effect": "You may remove this unit from a system that contains or is adjacent to another player’s units to cancel an action card played by that player."},
+                "VOIDWATCH": {"label": "СТРАЖА БЕЗДНЫ", "description": "После того как другой игрок закончит передвигать свои корабли в систему, где есть хотя бы 1 ваш отряд, он должен дать вам 1 карту обещаний со своей руки (если возможно)."},
+                "AETHERSTREAM": {"label": "ЭФИРНОЕ ТЕЧЕНИЕ", "description": "После того как Вы или один из ваших соседей активировали систему, смежную с аномалией, вы можете добавить +1 к значению полёта каждого корабля этого игрока во время этого тактического действия."}
+            },
+            "57": {
+                "name": "The Naaz-Rokha Alliance",
+                "agentAbility": "At the end of a player's turn: You may exhaust this card to allow that player to explore 1 of their planets.",
+                "commanderAbility": "After you gain control of a planet that was controlled by another player: You may explore that planet.",
+                "commanderUnlock": "Have mechs in 3 systems.",
+                "heroAbility": "Gain 1 relic and perform the secondary ability of up to 2 readied or unchosen strategy cards; during this action, spend command tokens from your reinforcements instead of your strategy pool. Then, purge this card.",
+                
+                "DISTANT_SUNS": {"label": "DISTANT SUNS", "effect": "When you explore a planet that contains 1 of your mechs, you may draw 1 additional card; choose 1 to resolve and discard the rest."},
+                "FABRICATION": {"label": "FABRICATION",   "effect": "Either purge 2 of your relic fragments of the same type to gain 1 relic or purge 1 of your relic fragments to gain 1 command token."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "Your mechs in this system roll 1 additional die during combat."},
+                "MECH": {"label": "MECH", "effect": "If this unit is in the space area at the start of space combat, flip this card. This card begins the game with this side face up."},
+                "MECH Z-GRAV": {"label": "MECH Z-GRAV", "effect": "If this unit is in the space area of the active system, it is also a ship. At the end of a space battle in the active system, flip this card."},
+                "PRE-FAB_ARCOLOGIES": {"label": "СБОРНЫЕ АРКОЛОГИИ", "description": "После того как вы разведали планету, подготовьте эту планету."},
+                "SUPERCHARGE": {"label": "СВЕРХЗАРЯД", "description": "В начале раунда боя вы можете перевернуть эту карту, чтобы добавлять +1 к результатам боевых проверок каждого вашего отряда во время этого раунда боя."}    
+            },
+            "58": {
+                "name": "The Argent Flight",
+                "agentAbility": "When a player produces ground forces in a system: You may exhaust this card; that player may place those units on any planets they control in that system and any adjacent systems.",
+                "commanderAbility": "When 1 or more of your units make a roll for a unit ability: You may choose 1 of those units to roll 1 additional die.",
+                "commanderUnlock": "Have 6 units that have ANTI-FIGHTER BARRAGE, SPACE CANNON or BOMBARDMENT on the game board.",
+                "heroAbility": "Move any number of your ships from any systems to any number of other systems that contain 1 of your command tokens and no other player's ships. Then, purge this card.",
+                
+                "ZEAL": {"label": "ZEAL", "effect": "You always vote first during the agenda phase. When you cast at least 1 vote, cast 1 additional vote for each player in the game, including you."},
+                "RAID_FORMATION": {"label": "RAID FORMATION", "effect": "When 1 or more of your units use ANTI-FIGHTER BARRAGE, for each hit produced in excess of your opponent’s fighters, choose 1 of your opponent’s ships that has SUSTAIN DAMAGE to become damaged."},
+                
+                "FLAGSHIP": {"label": "FLAGSHIP", "effect": "Other players cannot use SPACE CANNON against your ships in this system."},
+                "MECH": {"label": "MECH", "effect": "This unit does not count against capacity if it is being transported or if it is in a space area with 1 or more of your ships that have capacity values."},
+                "DESTROYER": {"label": "DESTROYER", "description": "STRIKE WING ALPHA I"},
+                "AERIE_HOLOLATTICE": {"label": "ГОЛОГРАФИЧЕСКАЯ СЕТЬ ГНЕЗДО", "description": "Другие игроки не могут передвигать свои корабли через системы, в которых есть ваши сооружения. Каждая планета, которая содержит хотя бы 1 ваше сооружение, получает способность «ПРОИЗВОДСТВО 1», как если бы это был 1 из ваших отрядов."},
+                "DESTROYER2": {"label": "DESTROYER2", "description": "STRIKE WING ALPHA II"}
             }
         }
     }

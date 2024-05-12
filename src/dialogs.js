@@ -927,11 +927,11 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                         </>}
                         {sid === 'TECHNOLOGY' && <><div style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', color: 'white', margin: '1rem 0', width: '60rem'}}>
                             <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                                {getTechType('propulsion', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
-                                {getTechType('biotic', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
-                                {getTechType('warfare', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
-                                {getTechType('cybernetic', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
-                                {getTechType('unit', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
+                                {GetTechType('propulsion', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
+                                {GetTechType('biotic', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
+                                {GetTechType('warfare', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
+                                {GetTechType('cybernetic', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
+                                {GetTechType('unit', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
                             </div>
                         </div>
                         <div><UnmeetReqs G={G} playerID={playerID} PLANETS={PLANETS} adjSpec={adjSpec} ex2={ex2}/></div>
@@ -1323,8 +1323,9 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
     }
   }
 
-export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
+export const GetTechType = (typ, race, tooltipMode, onSelect, selected) => {
 
+    const { t: translate } = useContext(LocalizationContext);
     const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
     const B_STYLE = {backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}
     const techs = (typ === 'unit' ? race.technologies.filter(t => t.type === typ && t.upgrade):[...techData, ...race.technologies.map(r=>({...r, racial: true}))].filter(t => t.type === typ));
@@ -1352,8 +1353,8 @@ export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
             
             return <ListGroupItem onClick={()=>ItemOnClick(t)} key={i} style={{opacity: race.exhaustedCards.indexOf(t.id)>-1 ? .35:1, background: 'none', padding: '.25rem', color: 'white', border: 'none', borderBottom: 'solid 1px rgba(255,255,255,.15)'}} >
                 <Button size='sm' color={color} id={t.id} style={{width: '100%', fontSize: '.7rem', textAlign: 'left'}}>
-                {t.id.replaceAll('_', ' ').replaceAll('2', ' II')}
-                {t.racial && <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.6rem'}} src={'race/icons/'+ race.rid +'.png'}/>}
+                {(t.racial ? translate('races.' + race.rid + '.' + t.id + '.label') : translate('cards.techno.' + t.id + '.label')).replaceAll('2', ' II')}
+                {t.racial && <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem'}} src={'race/icons/'+ race.rid +'.png'}/>}
                 {t.type === 'unit' && t.prereq && Object.keys(t.prereq).length > 0 && <div style={{textAlign: 'right', position: 'absolute', right: '.5rem', top: '.5rem'}}>
                     {Object.keys(t.prereq).map((p, j) =>{
                     let result = [];
@@ -1376,7 +1377,7 @@ export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
                     return result;
                     })}
                 </div>}
-                {t.type !== 'unit' && t.description}
+                {t.type !== 'unit' && (t.racial ? translate('races.' + race.rid + '.' + t.id + '.description') : translate('cards.techno.' + t.id + '.description'))}
                 
                 {t.type === 'unit' && <div style={{fontSize: tooltipMode ? '.9rem':'.7rem', width: '100%'}}>
                     <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center', marginBottom: '.5rem'}}>
@@ -1394,8 +1395,8 @@ export const getTechType = (typ, race, tooltipMode, onSelect, selected) => {
                 {t.planetaryShield && <p style={{margin: 0}}>♦ planetary shield </p>}
                 {t.spaceCannon && <p style={{margin: 0}}>♦ space cannon {t.spaceCannon.value + ' x ' + t.spaceCannon.count + ' range ' + t.spaceCannon.range}</p>}
                 {t.production && <p style={{margin: 0}}>♦ production {t.production}</p>}
-                {t.effect && <CardText style={{paddingTop: '.5rem'}}>{t.effect}</CardText>}
-                {t.deploy && <CardText style={{paddingTop: '.5rem'}}><b>DEPLOY</b>{' '+t.deploy}</CardText>}
+                {t.effect && <CardText style={{paddingTop: '.5rem'}}>{translate('races.' + race.rid + '.' + t.id + '.effect')}</CardText>}
+                {t.deploy && <CardText style={{paddingTop: '.5rem'}}><b>DEPLOY</b>{translate('races.' + race.rid + '.' + t.id + '.deploy')}</CardText>}
                 </div>
                 }
                 </Wrapper>

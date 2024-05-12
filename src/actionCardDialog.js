@@ -4,7 +4,7 @@ import { produce } from 'immer';
 //import techData from './techData.json';
 import { StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT, getPlanetByName, getMyNeighbors, wormholesAreAdjacent} from './utils';
 import { neighbors } from './Grid.js'
-import { UnmeetReqs, PlanetsRows, getTechType } from './dialogs.js';
+import { UnmeetReqs, PlanetsRows, GetTechType } from './dialogs.js';
 
 export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) => {
     const {G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, PLANETS, UNITS} = useContext(StateContext);
@@ -1024,11 +1024,11 @@ export const TechnologyDialog = ({tooltipMode, onSelect, selected, races}) => {
     </CardTitle>
     
     <div style={{display: 'flex', justifyContent: 'space-between'}}>
-      {getTechType('propulsion', race, tooltipMode, onSelectFn, selected)}
-      {getTechType('biotic', race, tooltipMode, onSelectFn, selected)}
-      {getTechType('warfare', race, tooltipMode, onSelectFn, selected)}
-      {getTechType('cybernetic', race, tooltipMode, onSelectFn, selected)}
-      {getTechType('unit', race, tooltipMode, onSelectFn, selected)}
+      {GetTechType('propulsion', race, tooltipMode, onSelectFn, selected)}
+      {GetTechType('biotic', race, tooltipMode, onSelectFn, selected)}
+      {GetTechType('warfare', race, tooltipMode, onSelectFn, selected)}
+      {GetTechType('cybernetic', race, tooltipMode, onSelectFn, selected)}
+      {GetTechType('unit', race, tooltipMode, onSelectFn, selected)}
     </div>
   </Card>
 }
