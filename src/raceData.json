@@ -36,13 +36,12 @@
                 "id": "MECH",
                 "racial": true,
                 "type": "unit",
-                "description": "ZS THUNDERBOLT M2",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "deploy": "After you use your ORBITAL DROP faction ability, you may spend 3 resources to place 1 mech on that planet."
+                "deploy": true
             },
             {
                 "id": "CARRIER",
@@ -139,13 +138,12 @@
                 "id": "MECH",
                 "racial": true,
                 "type": "unit",
-                "description": "MOLL TERMINUS",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "Other players’ ground forces on this planet cannot use SUSTAIN DAMAGE."
+                "effect": true
             },
             {
                 "id": "SALVAGE_OPERATIONS",
@@ -204,13 +202,12 @@
                 "id": "MECH",
                 "racial": true,
                 "type": "unit",
-                "description": "MOYIN’S ASHES",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "deploy": "When you use your INDOCTRINATION faction ability, you may spend 1 additional influence to replace your opponent’s unit with 1 mech instead of 1 infantry."
+                "deploy": true
             },
             {
                 "id": "YIN_SPINNER",
@@ -269,13 +266,12 @@
                 "id": "MECH",
                 "type": "unit",
                 "racial": true,
-                "description": "EMBER COLOSSUS",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "When you use your STAR FORGE faction ability in this system or an adjacent system, you may place 1 infantry from your reinforcements with this unit."
+                "effect": true
             },
             {
                 "id": "WARSUN",
@@ -371,7 +367,6 @@
                 "id": "MECH",
                 "type": "unit",
                 "racial": true,
-                "description": "LETANI BEHEMOTH",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
@@ -379,7 +374,7 @@
                 "shot": 1,
                 "production": 2,
                 "planetaryShield": true,
-                "deploy": "When you would use your MITOSIS faction ability, you may replace 1 of your infantry with 1 mech from your reinforcements instead."
+                "deploy": true
             },
             {
                 "id": "BIOPLASMOSIS",
@@ -444,14 +439,13 @@
                 "id": "MECH",
                 "type": "unit",
                 "racial": true,
-                "description": "ANNIHILATOR",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
                 "bombardment": { "count": 1, "value": 8 },
-                "effect": "While not participating in ground combat, this unit can use its BOMBARDMENT ability on planets in its system as if it were a ship."
+                "effect": true
             },
             {
                 "id": "DREADNOUGHT",
@@ -535,13 +529,12 @@
                 "id": "MECH",
                 "type": "unit",
                 "racial": true,
-                "description": "RECLAIMER",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "After you resolve a tactical action during which you gained control of this planet, you may place 1 PDS or 1 space dock from your reinforcements on this planet."
+                "effect": true
             },
             {
                 "id": "HEGEMONIC_TRADE_POLICY",
@@ -600,13 +593,12 @@
             {
                 "id": "MECH",
                 "type": "unit",
-                "description": "MORDRED",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "During combat against an opponent who has an 'X' or 'Y' token on 1 or more of their technologies, apply +2 to the result of this unit’s combat rolls."
+                "effect": true
             },
             {
                 "id": "VALEFAR_ASSIMILATOR_X",
@@ -662,13 +654,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "ICONOCLAST",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "During combat against an opponent who has at least 1 relic fragment, apply +2 to the results of this unit’s combat rolls."
+                "effect": true
             },
             {
                 "id": "FIGHTER",
@@ -748,13 +739,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "DUNLAIN REAPER",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "deploy": "At the start of a round of ground combat, you may spend 2 resources to replace 1 of your infantry in that combat with 1 mech."
+                "deploy": true
             },
             {
                 "id": "NON_EUCLIDEAN_SHIELDING",
@@ -810,13 +800,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "SCAVENGER ZETA",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "deploy": "After you gain control of a planet, you may spend 1 trade good to place 1 mech on that planet."
+                "deploy": true
             },
             {
                 "id": "SPACEDOCK",
@@ -888,7 +877,6 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "SHIELD PALING",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
@@ -948,14 +936,14 @@
             },
             {
                 "id": "MECH",
-                "type": "unit", "racial": true,
-                "description": "VALKYRIE EXOSKELETON",
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "After this unit uses its SUSTAIN DAMAGE ability during ground combat, it produces 1 hit against your opponent’s ground forces on this planet."
+                "effect": true
             },
             {
                 "id": "DREADNOUGHT",
@@ -1037,14 +1025,13 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "INDOMITUS",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
                 "spaceCannon": { "value": 8, "count": 1, "range": 2 },
-                "effect": "You may use this unit’s SPACE CANNON against ships that are in adjacent systems."
+                "effect": true
             },
             {
                 "id": "INSTINCT_TRAINING",
@@ -1102,13 +1089,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "BLACKSHADE INFILTRATOR",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "deploy": "After you use your STALL TACTICS faction ability, you may place 1 mech on a planet you control."
+                "deploy": true
             },
             {
                 "id": "TRANSPARASTEEL_PLATING",
@@ -1165,13 +1151,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "PRIDE OF KENARA",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "This planet’s planet card may be traded as part of a transaction; if you do, move all of your units from this planet to another planet you control."
+                "effect": true
             },
             {
                 "id": "PRODUCTION_BIOMES",
@@ -1229,13 +1214,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "ICARUS DRIVE",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "After any player activates a system, you may remove this unit from the game board to place or move a Creuss wormhole token into this system."
+                "effect": true
             },
             {
                 "id": "WORMHOLE_GENERATOR",
@@ -1293,13 +1277,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "STARLANCER",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "After a player activates this system, you may spend 1 of their tokens from your fleet pool to end their turn; they gain that token."
+                "effect": true
             },
             {
                 "id": "INFANTRY",
@@ -1375,13 +1358,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "QUANTUM MANIPULATOR",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "While this unit is in a space area during combat, you may use its SUSTAIN DAMAGE ability to cancel a hit produced against your ships in this system."
+                "effect": true
             },
             {
                 "id": "TEMPORAL_COMMAND_SUITE",
@@ -1446,13 +1428,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "REANIMATOR",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "When your infantry on this planet are destroyed, place them on your faction sheet; those units are captured."
+                "effect": true
             },
             {
                 "id": "SPACEDOCK",
@@ -1519,13 +1500,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "HECATONCHEIRES",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "deploy": "When you would place a PDS on a planet, you may place 1 mech and 1 infantry on that planet instead."
+                "deploy": true
             },
             {
                 "id": "CRUISER",
@@ -1621,13 +1601,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "WATCHER",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "You may remove this unit from a system that contains or is adjacent to another player’s units to cancel an action card played by that player."
+                "effect": true
             },
             {
                 "id": "VOIDWATCH",
@@ -1684,24 +1663,22 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "EIDOLON",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 2,
-                "effect": "If this unit is in the space area at the start of space combat, flip this card. This card begins the game with this side face up."
+                "effect": true
             },
             {
                 "id": "MECH Z-GRAV",
                 "type": "unit", "racial": true,
-                "description": "Z-GRAV EIDOLON",
                 "prereq": { },
                 "cost": 2,
                 "combat": 8,
                 "sustain": false,
                 "shot": 2,
-                "effect": "If this unit is in the space area of the active system, it is also a ship. At the end of a space battle in the active system, flip this card."
+                "effect": true
             },
             {
                 "id": "PRE-FAB_ARCOLOGIES",
@@ -1759,13 +1736,12 @@
             {
                 "id": "MECH",
                 "type": "unit", "racial": true,
-                "description": "AERIE SENTINEL",
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "This unit does not count against capacity if it is being transported or if it is in a space area with 1 or more of your ships that have capacity values."
+                "effect": true
             },
             {
                 "id": "DESTROYER",
