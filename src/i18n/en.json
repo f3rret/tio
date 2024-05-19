@@ -138,8 +138,27 @@
                 "green": "green", 
                 "cyan": "cyan", 
                 "violet": "violet"
-            }
-
+            },
+            "technologies_map": "technologies map",
+            "require": "require",
+            "propulsion": "propulsion",
+            "biotic": "biotic",
+            "warfare": "warfare",
+            "cybernetic": "cybernetic",
+            "upgrades": "upgrades",
+            "sustain_damage": "sustain damage",
+            "bombardment": "bombardment",
+            "barrage": "barrage",
+            "planetary_shield": "planetary shield",
+            "space_cannon": "space cannon",
+            "range": "range",
+            "upgradable": "upgradable",
+            "production": "production",
+            "cost": "cost",
+            "combat": "combat",
+            "move": "move",
+            "capacity": "capacity",
+            "shot": "shot"
         },
         "cards": {
             "strategy": {

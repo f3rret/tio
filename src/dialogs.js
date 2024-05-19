@@ -903,7 +903,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                                     <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex2}/>
                                 </div>
                                 <div style={{width: '35rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)', color: 'white', padding: '0 1rem 0 0'}}>
-                                    <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} onSelect={(u)=>setCurrentUnit(u)}/>
+                                    <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} rid={G.races[playerID].rid} onSelect={(u)=>setCurrentUnit(u)}/>
                                     <div style={{display: 'flex', justifyContent: 'flex-end'}}>
                                         <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' disabled={['PDS', 'SPACEDOCK'].indexOf(currentUnit) > -1 || exceedLimit(currentUnit)}><b>Deploy</b></Button>
                                     </div>
@@ -993,8 +993,9 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
   
 }
 
-export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect}) => {
+export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect, rid}) => {
 
+    const { t } = useContext(LocalizationContext);
     const TOKENS_STYLE = { display: 'flex', width: '30%', borderRadius: '5px', alignItems: 'center', textAlign: 'center', flexFlow: 'column', padding: '.15rem', background: 'none', margin: '.5rem', border: '1px solid rgba(74, 111, 144, 0.42)', color: 'white'}
     const B_STYLE = {backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%'}
     const [showUnit, setShowUnit] = useState('FLAGSHIP');
@@ -1009,73 +1010,83 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect}) => {
           {R_UNITS.map((u, i) =>
             <Button key={i} size='sm' color={showUnit === u.id ? 'light':'dark'} onClick={()=>setShowUnit(u.id)}>
               <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                <div>{u.alreadyUpgraded && <span style={{color: 'coral', marginRight: '.5rem'}}>▲</span>}{u.id}</div>
+                <div>{u.alreadyUpgraded && <span style={{color: 'coral', marginRight: '.5rem'}}>▲</span>}{t('cards.techno.' + u.id + '.label')}</div>
                 <div>{UNITS[u.id.toLowerCase()]}</div>
               </div>
             </Button>)}
         </div>
 
         {R_UNITS[showUnit] && <div style={{paddingLeft: '1rem', flex: 'auto', width: '70%'}}>
-          <CardImg src={'units/' + showUnit + '.png'} style={{width: 'auto', float: 'left'}}/>
-          <div style={{padding: '1rem', position: 'absolute', right: '1rem', textAlign: 'end'}}>
-            {R_UNITS[showUnit].description && <h5>{R_UNITS[showUnit].description}</h5>}
-            {R_UNITS[showUnit].sustain && <h6>♦ sustain damage</h6>}
-            {R_UNITS[showUnit].bombardment && <h6>♦ bombardment {R_UNITS[showUnit].bombardment.value + ' x ' + R_UNITS[showUnit].bombardment.count}</h6>}
-            {R_UNITS[showUnit].barrage && <h6>♦ barrage {R_UNITS[showUnit].barrage.value + ' x ' + R_UNITS[showUnit].barrage.count}</h6>}
-            {R_UNITS[showUnit].planetaryShield && <h6>♦ planetary shield</h6>}
-            {R_UNITS[showUnit].spaceCannon && <h6>♦ space cannon {R_UNITS[showUnit].spaceCannon.value + ' x ' + R_UNITS[showUnit].spaceCannon.count + ' range ' + R_UNITS[showUnit].spaceCannon.range}</h6>}
-            {R_UNITS[showUnit].production && <h6>♦ production {R_UNITS[showUnit].production}</h6>}
+            <CardImg src={'units/' + showUnit + '.png'} style={{width: 'auto', float: 'left'}}/>
+            <div style={{padding: '1rem', position: 'absolute', right: '1rem', textAlign: 'end'}}>
+            {R_UNITS[showUnit].racial && <h5>{t('races.' + rid + '.' + R_UNITS[showUnit].id + '.label')}</h5>}
+            {!R_UNITS[showUnit].racial && R_UNITS[showUnit].description && <h5>{t('cards.techno.' + R_UNITS[showUnit].id + '.description')}</h5>}
+            
+            {R_UNITS[showUnit].sustain && <h6>♦ {t('board.sustain_damage')}</h6>}
+            {R_UNITS[showUnit].bombardment && <h6>♦ {t('board.bombardment')} {R_UNITS[showUnit].bombardment.value + ' x ' + R_UNITS[showUnit].bombardment.count}</h6>}
+            {R_UNITS[showUnit].barrage && <h6>♦ {t('board.barrage')} {R_UNITS[showUnit].barrage.value + ' x ' + R_UNITS[showUnit].barrage.count}</h6>}
+            {R_UNITS[showUnit].planetaryShield && <h6>♦ {t('board.planetary_shield')}</h6>}
+            {R_UNITS[showUnit].spaceCannon && <h6>♦ {t('board.space_cannon')} {R_UNITS[showUnit].spaceCannon.value + ' x ' + R_UNITS[showUnit].spaceCannon.count + ' ' + t('board.range') + ' ' + R_UNITS[showUnit].spaceCannon.range}</h6>}
+            {R_UNITS[showUnit].production && <h6>♦ {t('board.production')} {R_UNITS[showUnit].production}</h6>}
             {!R_UNITS[showUnit].alreadyUpgraded && R_UPGRADES[showUnit+'2'] && <>
-              <h6 style={{marginTop: '2rem'}}>{'upgradable '}
-              {Object.keys(R_UPGRADES[showUnit+'2'].prereq).map((p, j) => {
+                <h6 style={{marginTop: '2rem'}}>{t('board.upgradable') + ' '}
+                {Object.keys(R_UPGRADES[showUnit+'2'].prereq).map((p, j) => {
                 let result = [];
                 for(var i=1; i<=R_UPGRADES[showUnit+'2'].prereq[p]; i++){
-                  result.push(<img key={j+' '+i} alt='requirement' style={{width: '1.25rem'}} src={'icons/'+p+'.png'}/>);
+                    result.push(<img key={j+' '+i} alt='requirement' style={{width: '1.25rem'}} src={'icons/'+p+'.png'}/>);
                 }
                 return result;
-              })}</h6>
+                })}</h6>
                 <ul style={{fontSize: '.8rem', marginTop: '-.5rem', opacity: '.8', listStyle: 'none'}}>
-                  {Object.keys(R_UPGRADES[showUnit+'2']).map((k, i) => {
+                    {Object.keys(R_UPGRADES[showUnit+'2']).map((k, i) => {
                     const L1 = R_UNITS[showUnit][k];
                     const L2 = R_UPGRADES[showUnit+'2'][k];
                     if(['cost', 'combat', 'move', 'capacity', 'shot', 'production'].indexOf(k) > -1){
-                      if(L2 !== L1){
-                        return <li key={i}>{k + ' ' + L2}</li>
-                      }
+                        if(L2 !== L1){
+                        return <li key={i}>{t('board.' + k) + ' ' + L2}</li>
+                        }
                     }
                     else if(['bombardment', 'barrage'].indexOf(k) > -1 && L2){
-                      if(!L1 || L2.value !== L1.value || L2.count !== L1.count){
-                        return <li key={i}>{k + ' ' + R_UPGRADES[showUnit+'2'][k].value + ' x ' + L2.count}</li>
-                      }
+                        if(!L1 || L2.value !== L1.value || L2.count !== L1.count){
+                        return <li key={i}>{t('board.' + k) + ' ' + R_UPGRADES[showUnit+'2'][k].value + ' x ' + L2.count}</li>
+                        }
                     }
                     else if(k === 'spaceCannon' && L2){
-                      if(!L1 || L2.value !== L1.value || L2.count !== L1.count || L2.range !== L1.range){
-                        return <li key={i}>{'space cannon ' + L2.value + ' x ' + L2.count + ' range ' + L2.range}</li>
-                      }
+                        if(!L1 || L2.value !== L1.value || L2.count !== L1.count || L2.range !== L1.range){
+                        return <li key={i}>{t('board.space_cannon') + ' ' + L2.value + ' x ' + L2.count + ' ' + t('board.range') + ' ' + L2.range}</li>
+                        }
                     }
                     else if( k === 'sustain' && L2){
-                      return <li key={i}>sustain damage</li>
+                        return <li key={i}>{t('board.sustain_damage')}</li>
                     }
                     return null
-                  })}
+                    })}
                 </ul>
-              </>
+                </>
             }
-          </div>
+            </div>
           
-          <div style={{clear: 'both'}}/>
-                              
-          <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center', marginBottom: '.5rem'}}>
-            {R_UNITS[showUnit].cost && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].cost}</h6><b style={B_STYLE}>cost</b></ListGroupItem>}
+            <div style={{clear: 'both'}}/>
+                                
+            <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center', marginBottom: '.5rem'}}>
+            {R_UNITS[showUnit].cost && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].cost}</h6><b style={B_STYLE}>{t('board.cost')}</b></ListGroupItem>}
             {R_UNITS[showUnit].combat && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}>
-              <h6 style={{fontSize: 30}}>{R_UNITS[showUnit].combat}{R_UNITS[showUnit].shot && R_UNITS[showUnit].shot > 1 && 
+                <h6 style={{fontSize: 30}}>{R_UNITS[showUnit].combat}{R_UNITS[showUnit].shot && R_UNITS[showUnit].shot > 1 && 
                 <i style={{position: 'absolute', fontSize: '1.25rem', top: '0.5rem', right: 0, transform: 'rotate(90deg)'}}>{'♦'.repeat(R_UNITS[showUnit].shot)}</i>}
-              </h6><b style={B_STYLE}>combat</b></ListGroupItem>}
-            {R_UNITS[showUnit].move && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].move}</h6><b style={B_STYLE}>move</b></ListGroupItem>}
-            {R_UNITS[showUnit].capacity && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].capacity}</h6><b style={B_STYLE}>capacity</b></ListGroupItem>}
-          </ListGroup>
-          {R_UNITS[showUnit].effect && <CardText style={{fontSize: '0.7rem'}}>{R_UNITS[showUnit].effect}</CardText>}
-          {R_UNITS[showUnit].deploy && <CardText style={{fontSize: '0.7rem'}}><b>DEPLOY</b>{' '+R_UNITS[showUnit].deploy}</CardText>}
+                </h6><b style={B_STYLE}>{t('board.combat')}</b></ListGroupItem>}
+            {R_UNITS[showUnit].move && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].move}</h6><b style={B_STYLE}>{t('board.move')}</b></ListGroupItem>}
+            {R_UNITS[showUnit].capacity && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{fontSize: 30}}>{R_UNITS[showUnit].capacity}</h6><b style={B_STYLE}>{t('board.capacity')}</b></ListGroupItem>}
+            </ListGroup>
+            {R_UNITS[showUnit].racial && <>
+                {R_UNITS[showUnit].effect && <CardText style={{fontSize: '0.7rem'}}>{t('races.' + rid + '.' + R_UNITS[showUnit].id + '.effect')}</CardText>}
+                {R_UNITS[showUnit].deploy && <CardText style={{fontSize: '0.7rem'}}>{t('races.' + rid + '.' + R_UNITS[showUnit].id + '.deploy')}</CardText>}
+                {R_UNITS[showUnit].action && <CardText style={{fontSize: '0.7rem'}}>{t('races.' + rid + '.' + R_UNITS[showUnit].id + '.action')}</CardText>}
+            </>}
+            {!R_UNITS[showUnit].racial && <>
+                {R_UNITS[showUnit].effect && <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '.effect')}</CardText>}
+                {R_UNITS[showUnit].deploy && <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '.deploy')}</CardText>}
+                {R_UNITS[showUnit].action && <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '.action')}</CardText>}
+            </>}
         </div>}
       </div>
 
@@ -1342,7 +1353,7 @@ export const GetTechType = (typ, race, tooltipMode, onSelect, selected) => {
     return (<div style={{width: typ === 'unit' ? '23%':'19%', border: 'solid 1px rgba(255,255,255,.42)', alignSelf:'flex-start'}}>
       <img alt='tech type' style={{width: '1.5rem', position: 'absolute', marginTop: '.2rem', marginLeft: '.5rem'}} src={'icons/'+typ+'.png'}/>
       <h6 style={{backgroundColor: 'rgba(74, 111, 144, 0.42)', width: '100%', textAlign: 'center', padding: '.5rem'}}>
-        {typ === 'unit' ? 'UPGRADES':typ.toUpperCase()}
+        {translate('board.' + (typ === 'unit' ? 'upgrades':typ)).toUpperCase()}
       </h6>
       
       <ListGroup>
@@ -1368,7 +1379,7 @@ export const GetTechType = (typ, race, tooltipMode, onSelect, selected) => {
                 </Button>
                 <Wrapper placement='right' toggler={'#'+t.id} target={'#'+t.id} style={{textAlign: 'left', minWidth: tooltipMode ? '14rem':'', width:'100%', fontSize: '.7rem', padding: tooltipMode ? '.5rem':'.2rem'}}>
                 {t.type !== 'unit' && t.prereq && Object.keys(t.prereq).length > 0 && <div style={{textAlign: 'right'}}>
-                    <b>require: </b>
+                    <b>{translate('board.require')}: </b>
                     {Object.keys(t.prereq).map((p, j) =>{
                     let result = [];
                     for(var i=1; i<=t.prereq[p]; i++){
@@ -1381,22 +1392,26 @@ export const GetTechType = (typ, race, tooltipMode, onSelect, selected) => {
                 
                 {t.type === 'unit' && <div style={{fontSize: tooltipMode ? '.9rem':'.7rem', width: '100%'}}>
                     <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center', marginBottom: '.5rem'}}>
-                    {t.cost && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.cost}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>cost</b></ListGroupItem>}
-                    {t.combat && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}>
-                    <h6 style={{margin: 0}}>{t.combat}{t.shot && t.shot > 1 && 
-                        <i style={{position: 'absolute', fontSize: 10, top: '0.5rem', right: 0, transform: 'rotate(90deg)'}}>{'♦'.repeat(t.shot)}</i>}
-                    </h6><b style={{...B_STYLE, fontSize: '.5rem'}}>combat</b></ListGroupItem>}
-                    {t.move && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.move}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>move</b></ListGroupItem>}
-                    {t.capacity && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.capacity}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>capacity</b></ListGroupItem>}
-                </ListGroup>
-                {t.sustain && <p style={{margin: 0}}>♦ sustain damage </p>}
-                {t.bombardment && <p style={{margin: 0}}>♦ bombardment {t.bombardment.value + ' x ' + t.bombardment.count}</p>}
-                {t.barrage && <p style={{margin: 0}}>♦ barrage {t.barrage.value + ' x ' + t.barrage.count} </p>}
-                {t.planetaryShield && <p style={{margin: 0}}>♦ planetary shield </p>}
-                {t.spaceCannon && <p style={{margin: 0}}>♦ space cannon {t.spaceCannon.value + ' x ' + t.spaceCannon.count + ' range ' + t.spaceCannon.range}</p>}
-                {t.production && <p style={{margin: 0}}>♦ production {t.production}</p>}
-                {t.effect && <CardText style={{paddingTop: '.5rem'}}>{translate('races.' + race.rid + '.' + t.id + '.effect')}</CardText>}
-                {t.deploy && <CardText style={{paddingTop: '.5rem'}}><b>DEPLOY</b>{translate('races.' + race.rid + '.' + t.id + '.deploy')}</CardText>}
+                        {t.cost && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.cost}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>{translate('board.cost')}</b></ListGroupItem>}
+                        {t.combat && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}>
+                        <h6 style={{margin: 0}}>{t.combat}{t.shot && t.shot > 1 && 
+                            <i style={{position: 'absolute', fontSize: 10, top: '0.5rem', right: 0, transform: 'rotate(90deg)'}}>{'♦'.repeat(t.shot)}</i>}
+                        </h6><b style={{...B_STYLE, fontSize: '.5rem'}}>{translate('board.combat')}</b></ListGroupItem>}
+                        {t.move && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.move}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>{translate('board.move')}</b></ListGroupItem>}
+                        {t.capacity && <ListGroupItem style={{...TOKENS_STYLE, width: '25%', margin: '.1rem'}}><h6 style={{margin: 0}}>{t.capacity}</h6><b style={{...B_STYLE, fontSize: '.5rem'}}>{translate('board.capacity')}</b></ListGroupItem>}
+                    </ListGroup>
+                    {t.sustain && <p style={{margin: 0}}>♦ {translate('board.sustain_damage')}</p>}
+                    {t.bombardment && <p style={{margin: 0}}>♦ {translate('board.bombardment')} {t.bombardment.value + ' x ' + t.bombardment.count}</p>}
+                    {t.barrage && <p style={{margin: 0}}>♦ {translate('board.barrage')} {t.barrage.value + ' x ' + t.barrage.count} </p>}
+                    {t.planetaryShield && <p style={{margin: 0}}>♦ {translate('board.planetary_shield')} </p>}
+                    {t.spaceCannon && <p style={{margin: 0}}>♦ {translate('board.space_cannon')} {t.spaceCannon.value + ' x ' + t.spaceCannon.count + ' range ' + t.spaceCannon.range}</p>}
+                    {t.production && <p style={{margin: 0}}>♦ {translate('board.production')} {t.production}</p>}
+                    {t.racial && <>
+                        {t.effect && <CardText style={{paddingTop: '.5rem'}}>{translate('races.' + race.rid + '.' + t.id + '.effect')}</CardText>}
+                        {t.deploy && <CardText style={{paddingTop: '.5rem'}}>{translate('races.' + race.rid + '.' + t.id + '.deploy')}</CardText>}
+                        {t.action && <CardText style={{paddingTop: '.5rem'}}>{translate('races.' + race.rid + '.' + t.id + '.action')}</CardText>}
+                    </>}
+                    {!t.racial && t.effect && <CardText style={{paddingTop: '.5rem'}}>{translate('cards.techno.' + t.id + '.effect')}</CardText>}
                 </div>
                 }
                 </Wrapper>
@@ -1692,7 +1707,7 @@ export const ProducingPanel = (args) => {
                         <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex2}/>
                     </div>
                     <div style={{width: '35rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)', color: 'white', padding: '0 1rem 0 0'}}>
-                        <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} onSelect={(u)=>setCurrentUnit(u)}/>
+                        <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} rid={G.races[playerID].rid} onSelect={(u)=>setCurrentUnit(u)}/>
                         <div style={{display: 'flex', justifyContent: 'flex-end'}}>
                             <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' 
                                 disabled={bannedUnits.indexOf(currentUnit) > -1 || exceedLimit(currentUnit)}>

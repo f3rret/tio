@@ -21,7 +21,6 @@
                 "id": "FLAGSHIP",
                 "racial": true,
                 "type": "unit",
-                "description": "GENESIS",
                 "prereq": {  },
                 "cost": 8,
                 "combat": 5,
@@ -30,7 +29,7 @@
                 "capacity": 12,
                 "sustain": true,
                 "bombardment": false,
-                "effect": "At the end of the status phase, place 1 infantry from your reinforcements in this system’s space area."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -47,7 +46,6 @@
                 "id": "CARRIER",
                 "racial": true,
                 "type": "unit",
-                "description": "ADVANCED CARRIER I",
                 "prereq": { },
                 "cost": 3,
                 "combat": 9,
@@ -62,7 +60,6 @@
                 "id": "INFANTRY",
                 "racial": true,
                 "type": "unit",
-                "description": "SPEC OPS I",
                 "prereq": { },
                 "cost": 0.5,
                 "combat": 7,
@@ -74,7 +71,6 @@
                 "racial": true,
                 "type": "unit",
                 "upgrade": true,
-                "description": "ADVANCED CARRIER II",
                 "prereq": { "propulsion": 2 },
                 "cost": 3,
                 "combat": 9,
@@ -90,13 +86,12 @@
                 "racial": true,
                 "type": "unit",
                 "upgrade": true,
-                "description": "SPEC OPS II",
                 "prereq": { "biotic": 2 },
                 "cost": 0.5,
                 "combat": 6,
                 "sustain": false,
                 "shot": 1,
-                "effect": "After this unit is destroyed, roll 1 die. If the result is 5 or greater, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."
+                "effect": true
             }
         ],
         "promissory": ["MILITARY_SUPPORT"]
@@ -122,7 +117,6 @@
                 "id": "FLAGSHIP",
                 "racial": true,
                 "type": "unit",
-                "description": "FOURTH MOON",
                 "prereq": {  },
                 "cost": 8,
                 "combat": 7,
@@ -132,7 +126,7 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "Other players’ ships in this system cannot use SUSTAIN DAMAGE."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -186,7 +180,6 @@
                 "id": "FLAGSHIP",
                 "racial": true,
                 "type": "unit",
-                "description": "VAN HAUGE",
                 "prereq": {  },
                 "cost": 8,
                 "combat": 9,
@@ -196,7 +189,7 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "When this ship is destroyed, destroy all ships in this system."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -250,7 +243,6 @@
                 "id": "FLAGSHIP",
                 "type": "unit",
                 "racial": true,
-                "description": "THE INFERNO",
                 "prereq": {  },
                 "cost": 8,
                 "combat": 5,
@@ -260,7 +252,7 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "action": "Spend 1 token from your strategy pool to place 1 cruiser in this unit’s system."
+                "action": true
             },
             {
                 "id": "MECH",
@@ -277,7 +269,6 @@
                 "id": "WARSUN",
                 "type": "unit",
                 "racial": true,
-                "description": "PROTOTYPE WAR SUN I",
                 "prereq": { },
                 "cost": 12,
                 "combat": 3,
@@ -287,7 +278,7 @@
                 "bombardment": { "count": 3, "value": 3 },
                 "barrage": false,
                 "shot": 3,
-                "effect": "Other players’ units in this system lose PLANETARY SHIELD."
+                "effect": true
             },
             {
                 "id": "MAGMUS_REACTOR",
@@ -302,7 +293,6 @@
                 "type": "unit",
                 "racial": true,
                 "upgrade": true,
-                "description": "PROTOTYPE WAR SUN II",
                 "prereq": { },
                 "cost": 10,
                 "combat": 3,
@@ -312,7 +302,7 @@
                 "bombardment": { "count": 3, "value": 3 },
                 "barrage": false,
                 "shot": 3,
-                "effect": "Other players’ units in this system lose PLANETARY SHIELD."
+                "effect": true
             }    
         ],
         "promissory": ["FIRES_OF_GASHLAI"]
@@ -339,7 +329,6 @@
                 "id": "FLAGSHIP",
                 "type": "unit",
                 "racial": true,
-                "description": "DUHA MENAIMON",
                 "prereq": {  },
                 "cost": 8,
                 "combat": 7,
@@ -349,13 +338,12 @@
                 "bombardment": false,
                 "barrage": false,
                 "shot": 2,
-                "effect": "After you activate this system, you may produce up to 5 units in this system."
+                "effect": true
             },
             {
                 "id": "INFANTRY",
                 "type": "unit",
                 "racial": true,
-                "description": "LETANI WARRIOR I",
                 "prereq": { },
                 "cost": 0.5,
                 "combat": 8,
@@ -389,14 +377,13 @@
                 "type": "unit",
                 "racial": true,
                 "upgrade": true,
-                "description": "LETANI WARRIOR II",
                 "prereq": { },
                 "cost": 0.5,
                 "combat": 7,
                 "sustain": false,
                 "shot": 1,
                 "production": 2,
-                "effect": "After this unit is destroyed, roll 1 die. If the result is 6 or greater, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."
+                "effect": true
             }
         ],
         "promissory": ["STYMIE"]
@@ -423,7 +410,6 @@
                 "id": "FLAGSHIP",
                 "type": "unit",
                 "racial": true,
-                "description": "0.0.1",
                 "prereq": {  },
                 "cost": 8,
                 "combat": 5,
@@ -433,7 +419,7 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "During a space combat, hits produced by this ship and by your dreadnoughts in this system must be assigned to non-fighter ships if able."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -451,7 +437,6 @@
                 "id": "DREADNOUGHT",
                 "type": "unit",
                 "racial": true,
-                "description": "SUPER-DREADNOUGHT I",
                 "prereq": { },
                 "cost": 4,
                 "combat": 5,
@@ -475,7 +460,6 @@
                 "type": "unit",
                 "racial": true,
                 "upgrade": true,
-                "description": "SUPER-DREADNOUGHT II",
                 "prereq": { "propulsion": 2, "cybernetic": 1},
                 "cost": 4,
                 "combat": 4,
@@ -486,7 +470,7 @@
                 "barrage": false,
                 "shot": 1,
                 "noDirectHit": true,
-                "effect": "This unit cannot be destroyed by 'Direct Hit' action cards."
+                "effect": true
             }
         ],
         "promissory": ["CYBERNETIC_ENHANCEMENTS"]
@@ -514,7 +498,6 @@
                 "id": "FLAGSHIP",
                 "type": "unit",
                 "racial": true,
-                "description": "SALAI SAI CORIAN",
                 "prereq": {  },
                 "cost": 8,
                 "combat": 7,
@@ -523,7 +506,7 @@
                 "capacity": 3,
                 "sustain": true,
                 "bombardment": false,
-                "effect": "When this unit makes a combat roll, it rolls a number of dice equal to the number of your opponent’s non-fighter ships in this system."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -578,7 +561,6 @@
                 "id": "FLAGSHIP",
                 "type": "unit",
                 "racial": true,
-                "description": "THE ALASTOR",
                 "prereq": {  },
                 "cost": 8,
                 "combat": 9,
@@ -588,7 +570,7 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "At the start of a space combat, choose any number of your ground forces in this system to participate in that combat as if they were ships."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -638,8 +620,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "MATRIARCH",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 9,
@@ -649,7 +631,7 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "During an invasion in this system, you may commit fighters to planets as if they were ground forces. When combat ends, return those units to the space area."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -663,8 +645,8 @@
             },
             {
                 "id": "FIGHTER",
-                "type": "unit", "racial": true,
-                "description": "HYBRID CRYSTAL FIGHTER I",
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 0.5,
                 "combat": 8,
@@ -687,7 +669,6 @@
                 "id": "FIGHTER2",
                 "type": "unit", "racial": true,
                 "upgrade": true,
-                "description": "HYBRID CRYSTAL FIGHTER II",
                 "prereq": { "biotic": 1, "propulsion": 1 },
                 "cost": 0.5,
                 "combat": 7,
@@ -697,7 +678,7 @@
                 "bombardment": false,
                 "barrage": false,
                 "shot": 1,
-                "effect": "This unit may move without being transported. Each fighter in excess of your ships' capacity counts as ½ of a ship against your fleet pool.",
+                "effect": true,
                 "size": 0.5
             }    
         ],
@@ -724,7 +705,6 @@
             {
                 "id": "FLAGSHIP",
                 "type": "unit", "racial": true,
-                "description": "ARC SECUNDUS",
                 "prereq": {  },
                 "cost": 8,
                 "combat": 5,
@@ -734,7 +714,7 @@
                 "sustain": true,
                 "bombardment": {"count": 3, "value": 5},
                 "barrage": false,
-                "effect": "Other players’ units in this system lose PLANETARY SHIELD. At the start of each space combat round, repair this ship."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -785,8 +765,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "SON OF RAGH",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 5,
@@ -809,13 +789,13 @@
             },
             {
                 "id": "SPACEDOCK",
-                "type": "unit", "racial": true,
-                "description": "FLOATING FACTORY I",
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "move": 1,
                 "production": 5,
                 "capacity": 4,
-                "effect": "This unit is placed in a space area instead of on a planet. This unit can move and retreat as if it were a ship. If this unit is blockaded, it is destroyed."
+                "effect": true
             },
             {
                 "id": "CHAOS_MAPPING",
@@ -827,14 +807,14 @@
             },
             {
                 "id": "SPACEDOCK2",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "upgrade": true,
-                "description": "FLOATING FACTORY II",
                 "prereq": { "cybernetic": 2 },
                 "move": 2,
                 "production": 7,
                 "capacity": 5,
-                "effect": "This unit is placed in a space area instead of on a planet. This unit can move and retreat as if it were a ship. If this unit is blockaded, it is destroyed."
+                "effect": true
             }   
         ],
         "promissory": ["RAGHS_CALL"]
@@ -861,8 +841,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "J.N.S. HYLARIM",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 6,
@@ -872,17 +852,18 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "When making a combat roll for this ship, each result of 9 or 10, before applying modifiers, produces 2 additional hits."
+                "effect": true
             },
             {
                 "id": "MECH",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
                 "sustain": true,
                 "shot": 1,
-                "effect": "Your infantry on this planet are not affected by your FRAGILE faction ability."
+                "effect": true
             },
             {
                 "id": "SPACIAL_CONDUIT_CYLINDER",
@@ -921,8 +902,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "C'MORRAN N'ORR",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 6,
@@ -932,7 +913,7 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "Apply +1 to the result of each of your other ship's combat rolls in this system."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -947,8 +928,8 @@
             },
             {
                 "id": "DREADNOUGHT",
-                "type": "unit", "racial": true,
-                "description": "EXOTRIREME I",
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 4,
                 "combat": 5,
@@ -969,9 +950,9 @@
             },
             {
                 "id": "DREADNOUGHT2",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "upgrade": true,
-                "description": "EXOTRIREME II",
                 "prereq": { "propulsion": 2, "cybernetic": 1 },
                 "cost": 4,
                 "combat": 5,
@@ -982,7 +963,7 @@
                 "barrage": false,
                 "shot": 1,
                 "noDirectHit": true,
-                "effect": "This unit cannot be destroyed by “Direct Hit” action cards. After a round of space combat, you may destroy this unit to destroy up to 2 ships in this system."
+                "effect": true
             }   
         ],
         "promissory": ["TEKKLAR_LEGION"]
@@ -1008,8 +989,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "LONCARA SSODU",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 7,
@@ -1020,7 +1001,7 @@
                 "bombardment": false,
                 "barrage": false,
                 "spaceCannon": { "value": 5, "count": 3, "range": 2 },
-                "effect": "You may use this unit’s SPACE CANNON against ships that are in adjacent systems."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -1073,8 +1054,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "Y’SIA Y’SSRILA",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 5,
@@ -1084,11 +1065,12 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "This ship can move through systems that contain other players’ ships."
+                "effect": true
             },
             {
                 "id": "MECH",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
@@ -1135,8 +1117,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "WRATH OF KENARA",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 7,
@@ -1146,11 +1128,12 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "After you roll a die during a space combat in this system, you may spend 1 trade good to apply +1 to the result."
+                "effect": true
             },
             {
                 "id": "MECH",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
@@ -1198,8 +1181,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "HIL COLISH",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 5,
@@ -1209,11 +1192,12 @@
                 "bombardment": false,
                 "barrage": false,
                 "shot": 1,
-                "effect": "This ship’s system contains a delta wormhole. During movement, this ship may move before or after your other ships."
+                "effect": true
             },
             {
                 "id": "MECH",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
@@ -1261,8 +1245,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "ARVICON REX",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 5,
@@ -1272,7 +1256,7 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "During combat against an opponent whose command token is not in your fleet pool, apply +2 to the results of this unit’s combat rolls."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -1286,14 +1270,14 @@
             },
             {
                 "id": "INFANTRY",
-                "type": "unit", "racial": true,
-                "description": "CRIMSON LEGIONNAIRE I",
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 0.5,
                 "combat": 8,
                 "sustain": false,
                 "shot": 1,
-                "effect": "After this unit is destroyed, gain 1 commodity or convert 1 of your commodities to a trade good."
+                "effect": true
             },
             {
                 "id": "GENETIC_RECOMBINATION",
@@ -1305,15 +1289,15 @@
             },
             {
                 "id": "INFANTRY2",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "upgrade": true,
-                "description": "CRIMSON LEGIONNAIRE II",
                 "prereq": { },
                 "cost": 0.5,
                 "combat": 7,
                 "sustain": false,
                 "shot": 1,
-                "effect": "After this unit is destroyed, gain 1 commodity or convert 1 commodity. Then, place the unit on this card. At the start of your next turn, place each unit that is on this card on a planet you control in your home system."
+                "effect": true
             }       
         ],
         "promissory": ["SCEPTER_OF_DOMINION"]
@@ -1342,8 +1326,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "MEMORIA I",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 7,
@@ -1353,7 +1337,7 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": {"value": 5, "count": 3},
-                "effect": "You may treat this unit as if it were adjacent to systems that contain 1 or more of your mechs."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -1375,9 +1359,9 @@
             },
             {
                 "id": "FLAGSHIP2",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "upgrade": true,
-                "description": "MEMORIA II",
                 "prereq": { "biotic": 1, "propulsion": 1, "cybernetic": 1 },
                 "cost": 8,
                 "combat": 5,
@@ -1387,7 +1371,7 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": {"value": 5, "count": 3},
-                "effect": "You may treat this unit as if it were adjacent to systems that contain 1 or more of your mechs."
+                "effect": true
             }    
         ],
         "promissory": ["THE_CAVALRY"]
@@ -1413,8 +1397,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "THE TERROR BETWEEN",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 5,
@@ -1423,11 +1407,12 @@
                 "capacity": 3,
                 "sustain": true,
                 "bombardment": {"value": 5, "count": 1},
-                "effect": "Capture all other non-structure units that are destroyed in this unit’s system, including your own."
+                "effect": true
             },
             {
                 "id": "MECH",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
@@ -1437,22 +1422,22 @@
             },
             {
                 "id": "SPACEDOCK",
-                "type": "unit", "racial": true,
-                "description": "DIMENSIONAL TEAR I",
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "production": 5,
                 "capacity": 6,
-                "effect": "This system is a gravity rift; your ships do not roll for this gravity rift. Up to 6 fighters in this system do not count against your ships’ capacity."
+                "effect": true
             },
             {
                 "id": "SPACEDOCK2",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "upgrade": true,
-                "description": "DIMENSIONAL TEAR II",
                 "prereq": { "cybernetic": 2 },
                 "production": 7,
                 "capacity": 12,
-                "effect": "This system is a gravity rift; your ships do not roll for this gravity rift. Up to 12 fighters in this system do not count against your ships’ capacity."
+                "effect": true
             },
             {
                 "id": "VORTEX",
@@ -1485,8 +1470,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "OURANOS",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 7,
@@ -1495,7 +1480,7 @@
                 "capacity": 3,
                 "sustain": true,
                 "bombardment": false,
-                "deploy": "After you activate a system that contains 1 or more of your PDS, you may replace 1 of those PDS with this unit."
+                "deploy": true
             },
             {
                 "id": "MECH",
@@ -1509,8 +1494,8 @@
             },
             {
                 "id": "CRUISER",
-                "type": "unit", "racial": true,
-                "description": "SATURN ENGINE I",
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 2,
                 "combat": 7,
@@ -1523,21 +1508,21 @@
             },
             {
                 "id": "PDS",
-                "type": "unit", "racial": true,
-                "description": "HEL-TITAN I",
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "combat": 7,
                 "sustain": true,
                 "planetaryShield": true,
                 "production": 1,
                 "spaceCannon": {"value": 6, "range": 1, "count": 1},
-                "effect": "This unit is treated as both a structure and a ground force. It cannot be transported."
+                "effect": true
             },
             {
                 "id": "CRUISER2",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "upgrade": true,
-                "description": "SATURN ENGINE II",
                 "prereq": { "biotic": 1, "cybernetic": 1, "warfare": 1 },
                 "cost": 2,
                 "combat": 6,
@@ -1550,16 +1535,16 @@
             },
             {
                 "id": "PDS2",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "upgrade": true,
-                "description": "HEL-TITAN II",
                 "prereq": { "cybernetic": 1, "warfare": 1 },
                 "combat": 6,
                 "sustain": true,
                 "planetaryShield": true,
                 "production": 1,
                 "spaceCannon": { "value": 5, "range": 2, "count": 1 },
-                "effect": "This unit is treated as both a structure and a ground force. It cannot be transported. You may use this unit’s SPACE CANNON against ships that are adjacent to this unit’s system."
+                "effect": true
             }
         ],
         "promissory": ["TERRAFORM"]
@@ -1585,8 +1570,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "DYNAMO",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 5,
@@ -1596,7 +1581,7 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "After any player’s unit in this system or an adjacent system uses SUSTAIN DAMAGE, you may spend 2 influence to repair that unit."
+                "effect": true
             },
             {
                 "id": "MECH",
@@ -1647,8 +1632,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "VISZ EL VIR",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 9,
@@ -1658,11 +1643,12 @@
                 "sustain": true,
                 "bombardment": false,
                 "barrage": false,
-                "effect": "Your mechs in this system roll 1 additional die during combat."
+                "effect": true
             },
             {
                 "id": "MECH",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
@@ -1672,7 +1658,8 @@
             },
             {
                 "id": "MECH Z-GRAV",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 2,
                 "combat": 8,
@@ -1720,8 +1707,8 @@
         "technologies": [
             {
                 "id": "FLAGSHIP",
-                "type": "unit", "racial": true,
-                "description": "QUETZECOATL",
+                "type": "unit", 
+                "racial": true,
                 "prereq": {  },
                 "cost": 8,
                 "combat": 7,
@@ -1731,11 +1718,12 @@
                 "bombardment": false,
                 "barrage": false,
                 "shot": 2,
-                "effect": "Other players cannot use SPACE CANNON against your ships in this system."
+                "effect": true
             },
             {
                 "id": "MECH",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 2,
                 "combat": 6,
@@ -1745,8 +1733,8 @@
             },
             {
                 "id": "DESTROYER",
-                "type": "unit", "racial": true,
-                "description": "STRIKE WING ALPHA I",
+                "type": "unit", 
+                "racial": true,
                 "prereq": { },
                 "cost": 1,
                 "combat": 8,
@@ -1765,9 +1753,9 @@
             },
             {
                 "id": "DESTROYER2",
-                "type": "unit", "racial": true,
+                "type": "unit", 
+                "racial": true,
                 "upgrade": true,
-                "description": "STRIKE WING ALPHA II",
                 "prereq": { "warfare": 2 },
                 "cost": 1,
                 "combat": 7,

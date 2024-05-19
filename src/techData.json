@@ -30,7 +30,6 @@
     {
         "id": "WARSUN",
         "type": "unit",
-        "description": "",
         "prereq": { "cybernetic": 1, "warfare": 3 },
         "cost": 12,
         "combat": 3,
@@ -40,12 +39,13 @@
         "bombardment": { "count": 3, "value": 3 },
         "barrage": false,
         "upgrade": true,
-        "shot": 3
+        "shot": 3,
+        "description": true,
+        "effect": true
     },
     {
         "id": "FLAGSHIP",
         "type": "unit",
-        "description": "",
         "prereq": {  },
         "cost": 8,
         "combat": 7,
@@ -59,7 +59,6 @@
     {
         "id": "DREADNOUGHT",
         "type": "unit",
-        "description": "",
         "prereq": { },
         "cost": 4,
         "combat": 5,
@@ -73,7 +72,6 @@
     {
         "id": "DREADNOUGHT2",
         "type": "unit",
-        "description": "",
         "prereq": { "propulsion": 2, "cybernetic": 1 },
         "cost": 4,
         "combat": 5,
@@ -84,12 +82,13 @@
         "bombardment": { "count": 1, "value": 5 },
         "noDirectHit": true,
         "barrage": false,
-        "shot": 1
+        "shot": 1,
+        "description": true,
+        "effect": true
     },
     {
         "id": "CRUISER",
         "type": "unit",
-        "description": "",
         "prereq": { },
         "cost": 2,
         "combat": 7,
@@ -102,7 +101,6 @@
     {
         "id": "CRUISER2",
         "type": "unit",
-        "description": "",
         "prereq": { "biotic": 1, "cybernetic": 1, "warfare": 1 },
         "cost": 2,
         "combat": 6,
@@ -112,12 +110,12 @@
         "upgrade": true,
         "bombardment": false,
         "barrage": false,
-        "shot": 1
+        "shot": 1,
+        "description": true
     },
     {
         "id": "DESTROYER",
         "type": "unit",
-        "description": "",
         "prereq": { },
         "cost": 1,
         "combat": 9,
@@ -131,7 +129,6 @@
     {
         "id": "DESTROYER2",
         "type": "unit",
-        "description": "",
         "prereq": { "warfare": 2 },
         "cost": 1,
         "combat": 8,
@@ -141,12 +138,12 @@
         "sustain": false,
         "bombardment": false,
         "barrage": { "count": 3, "value": 6 },
-        "shot": 1
+        "shot": 1,
+        "description": true
     },
     {
         "id": "CARRIER",
         "type": "unit",
-        "description": "",
         "prereq": { },
         "cost": 3,
         "combat": 9,
@@ -160,7 +157,6 @@
     {
         "id": "CARRIER2",
         "type": "unit",
-        "description": "",
         "prereq": { "propulsion": 2},
         "cost": 3,
         "combat": 9,
@@ -170,12 +166,12 @@
         "upgrade": true,
         "bombardment": false,
         "barrage": false,
-        "shot": 1
+        "shot": 1,
+        "description": true
     },
     {
         "id": "FIGHTER",
         "type": "unit",
-        "description": "",
         "prereq": { },
         "cost": 0.5,
         "combat": 9,
@@ -189,7 +185,6 @@
     {
         "id": "FIGHTER2",
         "type": "unit",
-        "description": "",
         "prereq": { "biotic": 1, "propulsion": 1},
         "cost": 0.5,
         "combat": 8,
@@ -199,12 +194,13 @@
         "upgrade": true,
         "bombardment": false,
         "barrage": false,
-        "shot": 1
+        "shot": 1,
+        "description": true,
+        "effect": true
     },
     {
         "id": "MECH",
         "type": "unit",
-        "description": "",
         "prereq": { },
         "cost": 2,
         "combat": 6,
@@ -214,7 +210,6 @@
     {
         "id": "INFANTRY",
         "type": "unit",
-        "description": "",
         "prereq": { },
         "cost": 0.5,
         "combat": 8,
@@ -224,19 +219,19 @@
     {
         "id": "INFANTRY2",
         "type": "unit",
-        "description": "",
         "upgrade": true,
         "prereq": { "biotic": 2 },
         "cost": 0.5,
         "combat": 7,
         "sustain": false,
-        "shot": 1
+        "shot": 1,
+        "description": true,
+        "effect": true
     },
     
     {
         "id": "PDS",
         "type": "unit",
-        "description": "",
         "prereq": { },
         "spaceCannon": { "value": 6, "range": 1, "count": 1 },
         "planetaryShield": true
@@ -245,15 +240,15 @@
         "id": "PDS2",
         "type": "unit",
         "upgrade": true,
-        "description": "",
         "prereq": { "cybernetic": 1, "warfare": 1 },
         "spaceCannon": { "value": 5, "range": 2, "count": 1},
-        "planetaryShield": true
+        "planetaryShield": true,
+        "description": true,
+        "effect": true
     },
     {
         "id": "SPACEDOCK",
         "type": "unit",
-        "description": "",
         "prereq": { },
         "production": 2,
         "capacity": 3
@@ -262,9 +257,10 @@
         "id": "SPACEDOCK2",
         "type": "unit",
         "upgrade": true,
-        "description": "",
         "prereq": { "cybernetic": 2 },
         "production": 4,
-        "capacity": 3
+        "capacity": 3,
+        "description": true,
+        "effect": true
     }
 ]

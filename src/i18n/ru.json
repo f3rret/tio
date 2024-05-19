@@ -137,7 +137,27 @@
                 "green": "зеленый", 
                 "cyan": "голубой", 
                 "violet": "фиолетовый"
-            }
+            },
+            "technologies_map": "карта технологий",
+            "require": "требует",
+            "propulsion": "Двигательные",
+            "biotic": "Биотех",
+            "warfare": "Военные",
+            "cybernetic": "Кибер",
+            "upgrades": "Апгрейды",
+            "sustain_damage": "поглощение урона",
+            "bombardment": "бомбардировка",
+            "barrage": "заград. огонь",
+            "planetary_shield": "планетарный щит",
+            "space_cannon": "косм. пушка",
+            "range": "дальн.",
+            "upgradable": "улучшаемый",
+            "production": "произв.",
+            "cost": "цена",
+            "combat": "бой",
+            "move": "движ.",
+            "capacity": "мест",
+            "shot": "выстр."
         },
         "cards": {
             "strategy": {

@@ -1008,6 +1008,7 @@ const TechnologySelect = ({onSelect, requirements, exhausted, setExhausted, race
 }
 
 export const TechnologyDialog = ({tooltipMode, onSelect, selected, races}) => {
+    const { t } = useContext(LocalizationContext);
     const { G, playerID } = useContext(StateContext);
     const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
     const [race, setRace] = useState(races && races.length ? races[0] : G.races[playerID]);
@@ -1015,7 +1016,7 @@ export const TechnologyDialog = ({tooltipMode, onSelect, selected, races}) => {
 
     return <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '1rem', position: 'relative', width: '70rem' }}>
     <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}>
-        <h6>{race.name + ' technologies map '}
+        <h6>{race.name + ' ' + t('board.technologies_map')}
             <ButtonGroup style={{height: '2.75rem', margin: '0 2rem', position: 'absolute', top: 0, right: 0}}>
                 {(races || G.races).map((r, i) => <Button onClick={()=>setRace(r)} color={r.rid === race.rid ? 'secondary':'dark'} style={{padding: '.25rem', height: '2.7rem'}} 
                     key={i} tag='img' src={'/race/icons/' + r.rid + '.png'}/>)}
