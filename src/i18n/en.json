@@ -617,7 +617,6 @@
             "4": {
                 "name": "The Embers of Muaat",
                 "agentAbility": "Exhaust this card to choose a player; that player may produce up to 2 units that each have a cost of 4 or less in a system that contains 1 of their war suns or their flagship.",
-                "agentAbilityType": "ACTION",
                 "commanderAbility": "After you spend token from your strategy pool: You may gain 1 trade good.",
                 "commanderUnlock": "Produce a war sun.",
                 "heroAbility": "After you move a war sun into a nonhome system other than Mecatol Rex: You may destroy all other players' units in that system and replace that system tile with the Muaat supernova tile. If you do, purge this card and each planet card that corresponds to the replaced system tile.",
@@ -634,7 +633,6 @@
             "5": {
                 "name": "The Arborec",
                 "agentAbility": "Exhaust this card and choose a player's non-fighter ship; that player may replace that ship with 1 from their reinforcements that costs up to 2 more than the replaced ship",
-                "agentAbilityType": "ACTION",
                 "commanderAbility": "After another player activates a system that has 1 or more of your units that have PRODUCTION: produce 1 unit in that system.",
                 "commanderUnlock": "Have 12 ground forces on planets you control.",
                 "heroAbility": "Produce any number of units in any number of systems that contain or more of your ground forces. Then, purge this card.",
@@ -782,7 +780,6 @@
             "14": {
                 "name": "The Xxcha Kingdom",
                 "agentAbility": "Exhaust this card to ready any planet; if that planet is in a system that is adjacent to a planet you control, you may remove 1 infantry from that planet and return it to its reinforcements.",
-                "agentAbilityType": "ACTION",
                 "commanderAbility": "Each planet that you exhaust to cast votes provides additional vote. Game effects cannot prevent you from voting on an agenda.",
                 "commanderUnlock": "Control planets that have a combined total of at least 12 influence.",
                 "heroAbility": "You may discard 1 law from play. Look at the top 5 cards of the agenda deck. Choose 2 to reveal, and resolve each as if you had cast 1 vote for an outcome of your choice; then discard the rest. Other players cannot resolve abilities during this action.Then, purge this card.",
@@ -851,7 +848,7 @@
                 "agentAbility": "When you would spend a command token during the secondary ability of a strategic action: You may exhaust this card to remove 1 of the active player's command tokens from the board and use it instead.",
                 "commanderAbility": "During your tactical actions, you can activate systems that contain your command tokens. If you do, return both command tokens to your reinforcements at the end of your turn.",
                 "commanderUnlock": "Have 2 other factions' command tokens in your fleet pool.",
-                "heroAbility": "all units in the space area of any system to an adjacent system that contains a different player's ships. Space combat is resolved in that system; neither player can retreat or resolve abilities that would move their ships. Then,purge this card.",
+                "heroAbility": "Move all units in the space area of any system to an adjacent system that contains a different player's ships. Space combat is resolved in that system; neither player can retreat or resolve abilities that would move their ships. Then,purge this card.",
                 
                 "EDICT": {"label": "EDICT", "effect": "When you win a combat, place 1 command token from your opponent’s reinforcements in your fleet pool if it does not already contain 1; other players’ tokens increase your fleet limit but cannot be redistributed."},
                 "IMPERIA": {"label": "IMPERIA", "effect": "While another player’s command token is in your fleet pool, you can use the ability of that player’s commander, if it is unlocked."},
