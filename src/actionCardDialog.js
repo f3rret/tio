@@ -1016,7 +1016,7 @@ export const TechnologyDialog = ({tooltipMode, onSelect, selected, races}) => {
 
     return <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '1rem', position: 'relative', width: '70rem' }}>
     <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}>
-        <h6>{race.name + ' ' + t('board.technologies_map')}
+        <h6>{t('board.technologies_map') + ' ' + t('races.' + race.rid + '.name')}
             <ButtonGroup style={{height: '2.75rem', margin: '0 2rem', position: 'absolute', top: 0, right: 0}}>
                 {(races || G.races).map((r, i) => <Button onClick={()=>setRace(r)} color={r.rid === race.rid ? 'secondary':'dark'} style={{padding: '.25rem', height: '2.7rem'}} 
                     key={i} tag='img' src={'/race/icons/' + r.rid + '.png'}/>)}

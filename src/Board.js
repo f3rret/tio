@@ -207,7 +207,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             <AccordionHeader style={{}} targetId='1'>
               <span style={{display: 'flex', width: '100%', padding: '1rem', backgroundColor: G.races[ctx.currentPlayer].color[1]}}>
                 <CardImg style={{width: '2rem', maxHeight: '2rem', marginRight: '1rem'}} src={'race/icons/'+G.races[ctx.currentPlayer].rid+'.png'} />
-                <h5 style={{margin: 0, alignSelf: 'center', flex: 'auto'}}>{G.races[ctx.currentPlayer].name + ' turns'}</h5>
+                <h5 style={{margin: 0, alignSelf: 'center', flex: 'auto'}}>{t('board.players_move') + ': ' + t('races.' + G.races[ctx.currentPlayer].rid + '.name')}</h5>
               </span>
             </AccordionHeader>
             <AccordionBody style={{padding: '0', overflow: 'hidden'}} accordionId='1'>
@@ -217,11 +217,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     <CardImg style={{width: '2rem', maxHeight: '2rem', margin: '.5rem'}} src={'race/icons/'+G.races[pid].rid+'.png'} />
                   </Col>
                   <Col xs='8' style={{padding: '1rem 1rem 0 2rem', fontFamily: 'Handel Gothic', textDecoration: G.passedPlayers.includes(''+pid) ? 'line-through':''}}>
-                    {G.races[pid].name}</Col>
+                    {t('races.' + G.races[pid].rid + '.name')}</Col>
                   <Col xs='3' style={{padding: '.5rem 0'}}>
                     {G.races[pid].strategy.map((s, i) => 
                       <p key={i} style={{fontSize: '75%', margin: 0, textDecoration: s.exhausted ? 'line-through':''}}>
-                        {s.id + ' [' + (s.init+1) + ']'}</p>)}
+                        {t('cards.strategy.' + s.id + '.label') + ' [' + (s.init+1) + ']'}</p>)}
                   </Col>
                 </Row>
               )}
@@ -1190,11 +1190,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && !race.isSpectator && <>
                 {techVisible && <TechnologyDialog />}
                 {objVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Objectives <span style={{float: 'right'}}>{'You have ' + VP + ' VP'}</span></h6></CardTitle>
+                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.nav.objectives')} <span style={{float: 'right'}}>{t('board.you_have') + ' ' + VP + ' ' + t('board.vp')}</span></h6></CardTitle>
                   <ObjectivesList mustSecObj={mustSecObj} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective: mustSecObj ? dropSecretObjective: ()=>{}}/>
                 </Card>}
                 {planetsVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Planets</h6></CardTitle>
+                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.nav.planets')}</h6></CardTitle>
                     <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
                       <Cont style={{border: 'none'}}>
                         {<PlanetsRows PLANETS={PLANETS} />}
@@ -1583,8 +1583,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     {race && subcardVisible === 'persons' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
                         {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
                           <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
-                          <div><CardText>{t('races.' + race.rid + '.agentAbility')}</CardText>
-                          <CardText><b>{t('board.ready')}</b></CardText></div>
+                          <CardText>{t('races.' + race.rid + '.agentAbility')}</CardText>
                         </Card>}
                         {agentVisible === 'commander' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
                           <CardImg src={'race/commander/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
@@ -1610,9 +1609,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           </CardText>
                         )}
                       </Card>
-                      <ButtonGroup style={{}}>
+                      <ButtonGroup style={{backgroundColor: '#212529'}}>
                           {race.abilities.map((a, i) => 
-                              <Button key={i} size='sm' onClick={()=>setAbilVisible(i)} color={abilVisible === i ? 'light':'dark'}>{t('races.' + race.rid + '.' + a.id + '.label')}</Button>
+                              <Button key={i} size='sm' onClick={()=>setAbilVisible(i)} color={abilVisible === i ? 'light':'dark'}>
+                                {t('races.' + race.rid + '.' + a.id + '.label')}</Button>
                             )}
                       </ButtonGroup>
                     </>}

@@ -1287,6 +1287,7 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
     if(!specClick) specClick = ()=>{};
     if(!exhausted) exhausted = {};
 
+    const { t } = useContext(LocalizationContext);
     const { G, playerID, moves } = useContext(StateContext);
     const psArch = haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY');
 
@@ -1311,7 +1312,7 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
                     <Col xs='7'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/legendary_complete.png'}/>:'' } 
                                 {p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1 ? 
                                     <img alt='dmz' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/dmz.png'}/>:'' } 
-                                {p.name}
+                                {t('planets.' + p.name)}
                                 {p.attach && p.attach.length && <><Badge style={{margin: '0 .2rem', padding: '.3rem .5rem'}} color='success' pill id={p.name + '_attach_badge'}>+</Badge>
                                 <UncontrolledTooltip target={'#' + p.name + '_attach_badge'}>{p.attach.join(',')}</UncontrolledTooltip></>}
                     </Col>
