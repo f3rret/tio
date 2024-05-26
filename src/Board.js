@@ -1476,10 +1476,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1]}}>
 
                         {midPanelInfo === 'tokens' && <>
-                        {<h6 style={{textAlign: 'right'}}>{race.tokens.new + tempCt.new || 0} unused</h6>}
+                        {<h6 style={{textAlign: 'right'}}>{race.tokens.new + tempCt.new || 0} {t('board.unused')}</h6>}
                         {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && 
                           <Button size='sm' color='success' style={{position: 'absolute', top: '0', right: '0'}} 
-                            onClick={() => moves.redistTokens(tempCt, exhaustedCards)}>Confirm changes</Button>}
+                            onClick={() => moves.redistTokens(tempCt, exhaustedCards)}>{t('board.confirm_changes')}</Button>}
                         <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
                           <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE} >
                             <h6 style={{fontSize: 50}}>{race.tokens.t + tempCt.t}</h6>
@@ -1487,7 +1487,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                               {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'t'}/>}
                               {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'t'}/>}
                             </>}
-                            <b style={{backgroundColor: race.color[1], width: '100%'}}>tactic</b>
+                            <b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.tactic')}</b>
                           </ListGroupItem>
                           <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE}>
                             <h6 style={{fontSize: 50}}>{race.tokens.f + tempCt.f}</h6>
@@ -1495,7 +1495,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                               {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'f'}/>}
                               {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'f'}/>}
                             </>}
-                            <b style={{backgroundColor: race.color[1], width: '100%'}}>fleet</b>
+                            <b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.fleet')}</b>
                           </ListGroupItem>
                           <ListGroupItem className={race.tokens.new ? 'hoverable':''} tag='button' style={TOKENS_STYLE}>
                             <h6 style={{fontSize: 50}}>{race.tokens.s + tempCt.s}</h6>
@@ -1503,7 +1503,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                               {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'s'}/>}
                               {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'s'}/>}
                             </>}
-                            <b style={{backgroundColor: race.color[1], width: '100%'}}>strategic</b>
+                            <b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.strategic')}</b>
                             </ListGroupItem>
                         </ListGroup>
                         
@@ -1514,22 +1514,26 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('c')} style={{...TOKENS_STYLE, width: '22%'}}>
                             <img alt='fragment' src='icons/cultural_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                             <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.c - purgingFragments.c}</h6>
-                            <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>cultural</b>
+                            <b style={{backgroundColor: race.color[1], width: '100%', wordWrap: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '.9rem'}}>
+                              {t('board.cultural')}</b>
                           </ListGroupItem>
                           <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('h')} style={{...TOKENS_STYLE, width: '22%'}}>
                             <img alt='fragment' src='icons/hazardous_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                             <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.h - purgingFragments.h}</h6>
-                            <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>hazardous</b>
+                            <b style={{backgroundColor: race.color[1], width: '100%', wordWrap: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '.9rem'}}>
+                              {t('board.hazardous')}</b>
                           </ListGroupItem>
                           <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('i')} style={{...TOKENS_STYLE, width: '22%'}}>
                             <img alt='fragment' src='icons/industrial_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                             <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.i - purgingFragments.i}</h6>
-                            <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>industrial</b>
+                            <b style={{backgroundColor: race.color[1], width: '100%', wordWrap: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '.9rem'}}>
+                              {t('board.industrial')}</b>
                           </ListGroupItem>
                           <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('u')} style={{...TOKENS_STYLE, width: '22%'}}>
                             <img alt='fragment' src='icons/unknown_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                             <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.u - purgingFragments.u}</h6>
-                            <b style={{backgroundColor: race.color[1], width: '100%', fontSize: '.9rem'}}>unknown</b>
+                            <b style={{backgroundColor: race.color[1], width: '100%', wordWrap: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '.9rem'}}>
+                              {t('board.unknown')}</b>
                           </ListGroupItem>
                         </ListGroup>
                         <div style={{alignSelf: 'flex-end', margin: '0 1rem'}}>
@@ -1544,7 +1548,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                             })}
                           </span>
                           <Button size='sm' disabled={purgingFragments.c + purgingFragments.i + purgingFragments.h + purgingFragments.u < 3} style={{maxWidth: 'fit-content'}}
-                            color='warning' onClick={()=>{moves.purgeFragments(purgingFragments); setPurgingFragments({c:0,i:0,h:0,u:0})}}>Purge</Button>
+                            color='warning' onClick={()=>{moves.purgeFragments(purgingFragments); setPurgingFragments({c:0,i:0,h:0,u:0})}}>{t('board.purge')}</Button>
                         </div>
                         </>}
                         {midPanelInfo === 'reinforce' && <div style={{padding: '0.5rem 0'}}>
@@ -1559,7 +1563,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                             </div>
                             <div style={{display: 'flex', height: '2rem', marginTop: '.5rem'}}>
                               <Button disabled={!groundUnitSelected.unit} size='sm' color='danger' onClick={() => moves.moveToReinforcements(groundUnitSelected)}
-                                className='bi bi-backspace-reverse-fill'>&nbsp;remove selected from board</Button>
+                                className='bi bi-backspace-reverse-fill'>{' ' + t('board.remove_selected_from_board')}</Button>
                               {groundUnitSelected.unit && 
                                 <div style={{marginLeft: '1rem', display: 'flex'}}>
                                   <div style={{fontSize: '20px', fontFamily: 'Handel Gothic'}}>1 x </div>
@@ -1571,44 +1575,44 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       </Card>
                       
                       <ButtonGroup >
-                        <Button size='sm' onClick={()=>setMidPanelInfo('tokens')} color={midPanelInfo === 'tokens' ? 'light':'dark'} style={{flexBasis: 1}}>TOKENS</Button>
-                        <Button size='sm' onClick={()=>setMidPanelInfo('fragments')} color={midPanelInfo === 'fragments' ? 'light':'dark'} style={{flexBasis: 1}}>FRAGMENTS</Button>
-                        <Button size='sm' onClick={()=>setMidPanelInfo('reinforce')} color={midPanelInfo === 'reinforce' ? 'light':'dark'} style={{flexBasis: 1}}>REINFORCE</Button>
+                        <Button size='sm' onClick={()=>setMidPanelInfo('tokens')} color={midPanelInfo === 'tokens' ? 'light':'dark'} style={{flexBasis: 1}}>{t('board.tokens').toUpperCase()}</Button>
+                        <Button size='sm' onClick={()=>setMidPanelInfo('fragments')} color={midPanelInfo === 'fragments' ? 'light':'dark'} style={{flexBasis: 1}}>{t('board.fragments').toUpperCase()}</Button>
+                        <Button size='sm' onClick={()=>setMidPanelInfo('reinforce')} color={midPanelInfo === 'reinforce' ? 'light':'dark'} style={{flexBasis: 1}}>{t('board.reinforce').toUpperCase()}</Button>
                       </ButtonGroup>
                       </>}
                     {race && subcardVisible === 'persons' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
                         {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
                           <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
-                          <div><CardText>{race.agentAbility}</CardText>
-                          <CardText><b>{'Ready'}</b></CardText></div>
+                          <div><CardText>{t('races.' + race.rid + '.agentAbility')}</CardText>
+                          <CardText><b>{t('board.ready')}</b></CardText></div>
                         </Card>}
                         {agentVisible === 'commander' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
                           <CardImg src={'race/commander/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
-                          <div><CardText>{race.commanderAbility}</CardText>
-                          <CardText><b>{'Unlock: '}</b> {race.commanderUnlock}</CardText></div>
+                          <div><CardText>{t('races.' + race.rid + '.commanderAbility')}</CardText>
+                          <CardText><b>{t('board.unlock') + ': '}</b> {t('races.' + race.rid + '.commanderUnlock')}</CardText></div>
                         </Card>}
                         {agentVisible === 'hero' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
                           <CardImg src={'race/hero/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
-                          <div><CardText><b>{race.heroAbilityType}</b>{' ' + race.heroAbility}</CardText>
-                          <CardText><b>{'Unlock: '}</b> {'complete 3 objectives.'}</CardText></div>
+                          <div><CardText><b>{race.heroAbilityType ? t('board.' + race.heroAbilityType).toUpperCase() : ''}</b>{' ' + t('races.' + race.rid + '.heroAbility')}</CardText>
+                          <CardText><b>{t('board.unlock') + ': '}</b> {t('board.complete_3_objectives')}</CardText></div>
                         </Card>}
                       </Card>
                       <ButtonGroup>
-                          <Button size='sm' onClick={()=>setAgentVisible('agent')} color={agentVisible === 'agent' ? 'light':'dark'} style={{flexBasis: 1}}>AGENT</Button>
-                          <Button size='sm' onClick={()=>setAgentVisible('commander')} color={agentVisible === 'commander' ? 'light':'dark'} style={{flexBasis: 1}}>COMMANDER</Button>
-                          <Button size='sm' onClick={()=>setAgentVisible('hero')} color={agentVisible === 'hero' ? 'light':'dark'} style={{flexBasis: 1}}>HERO</Button>
+                          <Button size='sm' onClick={()=>setAgentVisible('agent')} color={agentVisible === 'agent' ? 'light':'dark'} style={{flexBasis: 1}}>{t('board.agent').toUpperCase()}</Button>
+                          <Button size='sm' onClick={()=>setAgentVisible('commander')} color={agentVisible === 'commander' ? 'light':'dark'} style={{flexBasis: 1}}>{t('board.commander').toUpperCase()}</Button>
+                          <Button size='sm' onClick={()=>setAgentVisible('hero')} color={agentVisible === 'hero' ? 'light':'dark'} style={{flexBasis: 1}}>{t('board.hero').toUpperCase()}</Button>
                       </ButtonGroup>
                     </>}
                     {race && subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
                         {race.abilities.map((a, i) => 
                           <CardText key={i} style={{margin:'1rem 0 0 0', minHeight: '3rem', fontSize: '.8rem', display: abilVisible === i ? 'unset':'none'}}>
-                            {a.type === 'ACTION' ? <b>ACTION</b>:''}{' ' + a.effect}
+                            {a.type === 'action' ? <b>{t('board.action').toUpperCase()}</b>:''}{' ' + t('races.' + race.rid + '.' + a.id + '.effect')}
                           </CardText>
                         )}
                       </Card>
                       <ButtonGroup style={{}}>
                           {race.abilities.map((a, i) => 
-                              <Button key={i} size='sm' onClick={()=>setAbilVisible(i)} color={abilVisible === i ? 'light':'dark'} style={{flexBasis: 1}}>{a.id.replaceAll('_', ' ')}</Button>
+                              <Button key={i} size='sm' onClick={()=>setAbilVisible(i)} color={abilVisible === i ? 'light':'dark'}>{t('races.' + race.rid + '.' + a.id + '.label')}</Button>
                             )}
                       </ButtonGroup>
                     </>}
@@ -1622,9 +1626,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     {race && <Card style={{...CARD_STYLE, backgroundColor: race.color[1], margin: 0}}>
                       <div style={{display: 'flex'}}>
                         <div style={{display: 'flex', flexFlow: 'column'}}>
-                          <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{(race.commodity || 0) + '/' + race.commCap}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>commodity</b></Button>
-                          <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>trade goods</b></Button>
-                          {G.speaker === race.rid && <SpeakerToken />}
+                          <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{(race.commodity || 0) + '/' + race.commCap}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.commodity')}</b></Button>
+                          <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.trade_goods')}</b></Button>
+                          {G.speaker === race.rid && 
+                            <span style={{width: '10rem', borderRadius:'10px', backgroundColor: 'rgba(33, 37, 41, 0.95)', margin: '2rem .5rem', 
+                            border: 'double rgba(255,255,0,.25)', color: 'white', padding: '.5rem', top: '220px', position: 'absolute', 
+                            boxShadow: 'rgba(255,255,255,.15)1px 1px 5px 3px'}}><h5 style={{margin: 0, textAlign: 'center'}}>{t('board.speaker')}</h5></span>}
                         </div>
                         <CardImg src={'race/'+race.rid+'.png'} style={{width: '205px'}}/>
                         
@@ -1642,15 +1649,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           </StateContext.Provider>)
 }
 
-
-
-const SpeakerToken = () => {
-  return <span style={{width: '10rem', borderRadius:'10px', backgroundColor: 'rgba(33, 37, 41, 0.95)', margin: '2rem .5rem',
-          border: 'double rgba(255,255,0,.25)', color: 'white', padding: '.5rem', top: '220px', 
-          position: 'absolute', boxShadow: 'rgba(255,255,255,.15)1px 1px 5px 3px'}}>
-            <h5 style={{margin: 0, textAlign: 'center'}}>SPEAKER</h5>
-          </span>
-}
 
 const getUnitsString = (units) => {
   var s = '';

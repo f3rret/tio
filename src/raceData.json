@@ -1,11 +1,7 @@
 {
     "1": {
         "name": "The Federation of Sol",
-        "agentAbility": "At the start of a ground combat round: You may exhaust this card to choose 1 ground force in the active system; that ground force rolls 1 additional die during this combat round.",
-        "commanderAbility": "At the start of a ground combat on a planet you control: You may place 1 infantry from your reinforcements on that planet.",
-        "commanderUnlock": "Control planets that have a combined total of at least 12 resources.",
-        "heroAbility": "Remove each of your command tokens from the game board and return them to your reinforcements. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{}, {}], "destroyer": [{}]},
             "ground": {"infantry": [{},{},{},{},{}],"spacedock": [{}],"fighter": [{},{},{}]}
@@ -13,8 +9,8 @@
         "knownTechs": ["NEURAL_MOTIVATOR", "ANTIMASS_DEFLECTORS"],
         "commCap": 4,
         "abilities": [
-            {"id": "ORBITAL_DROP", "type": "ACTION", "effect": "Spend 1 token from your strategy pool to place 2 infantry from your reinforcements on 1 planet you control."},
-            {"id": "VERSATILE", "effect": "When you gain command tokens during the status phase, gain 1 additional command token."}
+            {"id": "ORBITAL_DROP", "type": "action"},
+            {"id": "VERSATILE"}
         ],
         "technologies": [
             {
@@ -98,10 +94,6 @@
     },
     "2": {
         "name": "The Mentak Coalition",
-        "agentAbility": "After the faction ability is used against another player: You may exhaust this card; if you do, you and that player each draw 1 action card.",
-        "commanderAbility": "After you win a space combat: You may force your opponent to give you 1 promissory note from their hand.",
-        "commanderUnlock": "Have 4 cruisers on the game board.",
-        "heroAbility": "At the start of a space combat that you are participating in: You may purge this card; if you do, for each other player's ship that is destroyed during this combat, place 1 ship of that type from your reinforcements in the active system.",
         "startingUnits": {
             "fleet": {"carrier": [{}], "cruiser": [{},{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "pds": [{}], "fighter": [{},{},{}]}
@@ -109,8 +101,8 @@
         "knownTechs": ["SARWEEN_TOOLS", "PLASMA_SCORING"],
         "commCap": 2,
         "abilities": [
-            {"id": "AMBUSH", "effect": "At the start of a space combat, you may roll 1 die for each of up to 2 of your cruisers or destroyers in the system. For each result equal to or greater than that ship’s combat value, produce 1 hit; your opponent must assign it to 1 of his ships."},
-            {"id": "PILLAGE", "effect": "After 1 of your neighbors gains trade goods or resolves a transaction, if he has 3 or more trade goods, you may take 1 of his trade goods or commodities."}
+            {"id": "AMBUSH"},
+            {"id": "PILLAGE"}
         ],
         "technologies": [
             {
@@ -160,11 +152,7 @@
     },
     "3": {
         "name": "The Yin Brotherhood",
-        "agentAbility": "After a player's destroyer or cruiser is destroyed: You may exhaust this card; if you do, that player may place up to 2 fighters from their Reinforcements in that unit's system.",
-        "commanderAbility": "This card satisfies a green technology prerequisite. You may produce 1 additional infantry for their cost; these additional infantry do not count against your PRODUCTION limit.",
-        "commanderUnlock": "Use your INDOCTRINATION faction ability",
-        "heroAbility": "For each planet that contains any number of your infantry, either ready that planet or place an equal number of infantry from your reinforcements on that planet. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{},{}], "destroyer": [{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "fighter": [{},{},{},{}]}
@@ -172,8 +160,8 @@
         "knownTechs": ["SARWEEN_TOOLS"],
         "commCap": 2,
         "abilities": [
-            {"id": "INDOCTRINATION", "effect": "At the start of a ground combat, you may spend 2 influence to replace 1 of your opponent’s participating infantry with 1 infantry from your reinforcements."},
-            {"id": "DEVOTION", "effect": "After each space battle round, you may destroy 1 of your cruisers or destroyers in the active system to produce 1 hit and assign it to 1 of your opponent’s ships in that system."}
+            {"id": "INDOCTRINATION"},
+            {"id": "DEVOTION"}
         ],
         "technologies": [
             {
@@ -223,11 +211,6 @@
     },
     "4": {
         "name": "The Embers of Muaat",
-        "agentAbility": "Exhaust this card to choose a player; that player may produce up to 2 units that each have a cost of 4 or less in a system that contains 1 of their war suns or their flagship.",
-        "agentAbilityType": "ACTION",
-        "commanderAbility": "After you spend token from your strategy pool: You may gain 1 trade good.",
-        "commanderUnlock": "Produce a war sun.",
-        "heroAbility": "After you move a war sun into a nonhome system other than Mecatol Rex: You may destroy all other players' units in that system and replace that system tile with the Muaat supernova tile. If you do, purge this card and each planet card that corresponds to the replaced system tile.",
         "startingUnits": {
             "fleet": {"warsun": [{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "fighter": [{},{}]}
@@ -235,8 +218,8 @@
         "knownTechs": ["PLASMA_SCORING"],
         "commCap": 4,
         "abilities": [
-            {"id": "STAR_FORGE", "type": "ACTION", "effect": "Spend 1 token from your strategy pool to place either 2 fighters or 1 destroyer from your reinforcements in a system that contains 1 or more of your war suns."},
-            {"id": "GASHLAI_PHYSIOLOGY", "effect": "Your ships can move through supernovas."}
+            {"id": "STAR_FORGE", "type": "action"},
+            {"id": "GASHLAI_PHYSIOLOGY"}
         ],
         "technologies": [
             {
@@ -309,12 +292,7 @@
     },
     "5": {
         "name": "The Arborec",
-        "agentAbility": "Exhaust this card and choose a player's non-fighter ship; that player may replace that ship with 1 from their reinforcements that costs up to 2 more than the replaced ship",
-        "agentAbilityType": "ACTION",
-        "commanderAbility": "After another player activates a system that has 1 or more of your units that have PRODUCTION: produce 1 unit in that system.",
-        "commanderUnlock": "Have 12 ground forces on planets you control.",
-        "heroAbility": "Produce any number of units in any number of systems that contain or more of your ground forces. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{}], "cruiser": [{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "pds": [{}], "fighter": [{},{}]}
@@ -322,7 +300,7 @@
         "knownTechs": ["MAGEN_DEFENSE_GRID"],
         "commCap": 3,
         "abilities": [
-            {"id": "MITOSIS", "effect": "Your space docks cannot produce infantry. At the start of the status phase, place 1 infantry from your reinforcements on any planet you control."}
+            {"id": "MITOSIS"}
         ],
         "technologies": [
             {
@@ -390,11 +368,7 @@
     },
     "6": {
         "name": "The Lizix Mindnet",
-        "agentAbility": "After a player activates a system: You may exhaust this card to allow that player to replace 1 of their infantry in the active system with 1 mech from their reinforcements.",
-        "commanderAbility": "Units that have PLANETARY SHIELD do not prevent you from using BOMBARDMENT.",
-        "commanderUnlock": "Have 4 dreadnoughts on the game board.",
-        "heroAbility": "Choose system that does not contain other players' ships; you may move your flagship and any number of your dreadnoughts from other systems into the chosen system. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"dreadnought": [{}], "carrier": [{}]},
             "ground": {"infantry": [{},{},{},{},{}], "spacedock": [{}], "pds": [{}], "fighter": [{},{},{}]}
@@ -402,8 +376,8 @@
         "knownTechs": ["NEURAL_MOTIVATOR", "PLASMA_SCORING"],
         "commCap": 2,
         "abilities": [
-            {"id": "ASSIMILATE", "effect": "When you gain control of a planet, replace each PDS and space dock that is on that planet with a matching unit from your reinforcements."},
-            {"id": "HARROW", "effect": "At the end of each round of ground combat, your ships in the active system may use their BOMBARDMENT abilities against your opponent’s ground forces on that planet."}
+            {"id": "ASSIMILATE"},
+            {"id": "HARROW"}
         ],
         "technologies": [
             {
@@ -477,11 +451,7 @@
     },
     "7": {
         "name": "The Winnu",
-        "agentAbility": "When 1 or more of a player's units use PRODUCTION: You may exhaust this card to reduce the combined cost of the produced units by 2.",
-        "commanderAbility": "During combat: Apply +2 to the result of each of your unit's combat rolls in the Mecatol Rex system, your home system, and each system that contains a legendary planet.",
-        "commanderUnlock": "Control Mecatol Rex or enter into a combat in the Mecatol Rex system.",
-        "heroAbility": "Perform the primary ability of any strategy card. Then, choose any number of other players. Those players may perform the secondary ability of that strategy card. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{}], "cruiser": [{}]},
             "ground": {"infantry": [{},{}], "spacedock": [{}], "pds": [{}], "fighter": [{},{}]}
@@ -490,8 +460,8 @@
         "startingTechsChoice": 1,
         "commCap": 3,
         "abilities": [
-            {"id": "BLOOD_TIES", "effect": "You do not have to spend influence to remove the custodians token from Mecatol Rex."},
-            {"id": "RECLAMATION", "effect": "After you resolve a tactical action during which you gained control of Mecatol Rex, you may place 1 PDS and 1 space dock from your reinforcements on Mecatol Rex."}
+            {"id": "BLOOD_TIES"},
+            {"id": "RECLAMATION"}
         ],
         "technologies": [
             {
@@ -540,11 +510,7 @@
     },
     "8": {
         "name": "The Nekro Virus",
-        "agentAbility": "During the action phase: You may exhaust this card to choose a player; that player may discard 1 action card or spend 1 command token from their Rommand sheet to gain 2 trade goods.",
-        "commanderAbility": "After you gain a technology: You may draw 1 action card.",
-        "commanderUnlock": "Own 3 technologies. A Valefar Assimilator technology counts only if its X or Y token is on a technology.",
-        "heroAbility": "Choose a planet that has technology specialty in system that contains your units. Destroy any other player's units on that planet. Gain trade goods equal to the planet's combined resource and influence values and gain 1 technology that matches the specialty of that planet. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"dreadnought": [{}], "carrier": [{}], "cruiser": [{}]},
             "ground": {"infantry": [{},{}], "spacedock": [{}], "fighter": [{},{}]}
@@ -552,9 +518,9 @@
         "knownTechs": ["DACXIVE_ANIMATORS", "VALEFAR_ASSIMILATOR_X", "VALEFAR_ASSIMILATOR_Y"],
         "commCap": 3,
         "abilities": [
-            {"id": "GALACTIC_THREAT", "effect": "You cannot vote on agendas. Once per agenda phase, after an agenda is revealed, you may predict aloud the outcome of that agenda. If your prediction is correct, gain 1 technology that is owned by a player who voted how you predicted."},
-            {"id": "TECHNOLOGICAL_SINGULARITY","effect": "Once per combat, after 1 of your opponent’s units is destroyed, you may gain 1 technology that is owned by that player."},
-            {"id": "PROPAGATION", "effect": "You cannot research technology. When you would research a technology, gain 3 command tokens instead."}
+            {"id": "GALACTIC_THREAT"},
+            {"id": "TECHNOLOGICAL_SINGULARITY"},
+            {"id": "PROPAGATION"}
         ],
         "technologies": [
             {
@@ -603,10 +569,6 @@
     },
     "9": {
         "name": "The Naalu Collective",
-        "agentAbility": "After an agenda is revealed: You may exhaust this card to look at the top card of the agenda deck. Then, you may show that card to 1 other player.",
-        "commanderAbility": "You may produce 1 additional fighter for their cost; these additional units do not count against your PRODUCTION limit.",
-        "commanderUnlock": "Have 12 fighters on the game board.",
-        "heroAbility": "At the end of the status phase: You may force each other player to give you 1 promissory note from their hand. If you do, purge this card.",
         "startingUnits": {
             "fleet": {"carrier": [{}], "cruiser": [{}], "destroyer": [{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "pds": [{}], "fighter": [{},{},{}]}
@@ -614,8 +576,8 @@
         "knownTechs": ["NEURAL_MOTIVATOR", "SARWEEN_TOOLS", "DARK_ENERGY_TAP"],
         "commCap": 3,
         "abilities": [
-            {"id": "TELEPATHIC", "effect": "At the end of the strategy phase, place the Naalu '0' token on your strategy card; you are first in initiative order."},
-            {"id": "FORESIGHT", "effect": "After another player moves ships into a system that contains 1 or more of your ships, you may place 1 token from your strategy pool in an adjacent system that does not contain another player's ships; move your ships from the active system into that system."}
+            {"id": "TELEPATHIC"},
+            {"id": "FORESIGHT"}
         ],
         "technologies": [
             {
@@ -686,11 +648,7 @@
     },
     "10": {
         "name": "The Barony of Letnev",
-        "agentAbility": "At the start of a space combat round: You may exhaust this card to choose 1 ship in the active system; that ship rolls 1 additional die during this combat round.",
-        "commanderAbility": "After 1 of your units uses SUSTAIN DAMAGE: You may gain 1 trade good.",
-        "commanderUnlock": "Have 5 non-fighter ships in 1 system",
-        "heroAbility": "Place this card near the game board; the number of non-fighter ships you have in systems is not limited by laws or by the number of command tokens in your fleet pool during this game round. At the end of that game round, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"dreadnought": [{}], "carrier": [{}], "destroyer": [{}]},
             "ground": {"infantry": [{},{},{}], "spacedock": [{}], "fighter": [{}]}
@@ -698,8 +656,8 @@
         "knownTechs": ["ANTIMASS_DEFLECTORS", "PLASMA_SCORING"],
         "commCap": 2,
         "abilities": [
-            {"id": "MUNITIONS_RESERVES", "effect": "At the start of each round of space combat, you may spend 2 trade goods; you may reroll any number of your dice during that combat round."},
-            {"id": "ARMADA", "effect": "The maximum number of non-fighter ships you can have in each system is equal to 2 more than the number of tokens in your fleet pool."}
+            {"id": "MUNITIONS_RESERVES"},
+            {"id": "ARMADA"}
         ],
         "technologies": [
             {
@@ -747,11 +705,7 @@
     },
     "11": {
         "name": "The Clan of Saar",
-        "agentAbility": "After a player activates a system: You may exhaust this card to increase the move value of 1 of that player's ships to match the move value of the ship on the game board that has the highest move value.",
-        "commanderAbility": "When you produce fighters or infantry: You may place each of those units at any of your space docks that are not blockaded.",
-        "commanderUnlock": "Have 3 space docks on the game board.",
-        "heroAbility": "Choose system hat is adjacent to of your space docks. Destroy all other players' infantry and fighters in that system. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{},{}], "cruiser": [{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "fighter": [{}, {}]}
@@ -759,8 +713,8 @@
         "knownTechs": ["ANTIMASS_DEFLECTORS"],
         "commCap": 3,
         "abilities": [
-            {"id": "SCAVENGE", "effect": "After you gain control of a planet, gain 1 trade good."},
-            {"id": "NOMADIC", "effect": "You can score objectives even if you do not control the planets in your home system."}
+            {"id": "SCAVENGE"},
+            {"id": "NOMADIC"}
         ],
         "technologies": [
             {
@@ -822,11 +776,7 @@
     },
     "12": {
         "name": "The Universities of Jol-Nar",
-        "agentAbility": "When player spends resources to research: You may exhaust this card to allow that player to remove any number of their infantry from the game board. For each unit removed, reduce the resources spent by 1.",
-        "commanderAbility": "After you roll dice for a unit ability: You may reroll any number of those dice.",
-        "commanderUnlock": "Own 8 technologies.",
-        "heroAbility": "For each non-unit upgrade technology you own, you may replace that technology with any technology of the same color from the deck. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"dreadnought": [{}], "carrier": [{},{}]},
             "ground": {"infantry": [{},{}], "spacedock": [{}], "pds": [{},{}], "fighter": [{}]}
@@ -834,9 +784,9 @@
         "knownTechs": ["NEURAL_MOTIVATOR", "ANTIMASS_DEFLECTORS", "SARWEEN_TOOLS", "PLASMA_SCORING"],
         "commCap": 4,
         "abilities": [
-            {"id": "FRAGILE", "effect": "Apply -1 to the result of each of your unit’s combat rolls."},
-            {"id": "BRILLIANT", "effect": "When you spend a command token to resolve the secondary ability of the 'Technology' strategy card, you may resolve the primary ability instead."},
-            {"id": "ANALYTICAL", "effect": "When you research a technology that is not a unit upgrade technology, you may ignore 1 prerequisite."}
+            {"id": "FRAGILE"},
+            {"id": "BRILLIANT"},
+            {"id": "ANALYTICAL"}
         ],
         "technologies": [
             {
@@ -886,10 +836,6 @@
     },
     "13": {
         "name": "Sardakk N'orr",
-        "agentAbility": "At the end of a player's tactical action: You may exhaust this card; if you do, that player may place 2 infantry from their reinforcements on a planet they control in the active system.",
-        "commanderAbility": "During the Commit Ground Forces step: You can commit up to 1 ground force from each planet in the active system and each planet in adjacent systems that do not contain 1 of your command tokens.",
-        "commanderUnlock": "Control 5 planets in nonhome systems.",
-        "heroAbility": "After you move ships into the active system: You may skip directly to the Commit Ground Forces step. If you do, after you commit ground forces to land on planets, purge this card and return each of your ships in the active system to your reinforcements.",
         "startingUnits": {
             "fleet": {"carrier": [{},{}], "cruiser": [{}]},
             "ground": {"infantry": [{},{},{},{},{}], "spacedock": [{}], "pds": [{}]}
@@ -897,7 +843,7 @@
         "knownTechs": [],
         "commCap": 3,
         "abilities": [
-            {"id": "UNRELENTING", "effect": "Apply +1 to the result of each of your unit’s combat rolls."}
+            {"id": "UNRELENTING"}
         ],
         "technologies": [
             {
@@ -970,12 +916,7 @@
     },
     "14": {
         "name": "The Xxcha Kingdom",
-        "agentAbility": "Exhaust this card to ready any planet; if that planet is in a system that is adjacent to a planet you control, you may remove 1 infantry from that planet and return it to its reinforcements.",
-        "agentAbilityType": "ACTION",
-        "commanderAbility": "Each planet that you exhaust to cast votes provides additional vote. Game effects cannot prevent you from voting on an agenda.",
-        "commanderUnlock": "Control planets that have a combined total of at least 12 influence.",
-        "heroAbility": "You may discard 1 law from play. Look at the top 5 cards of the agenda deck. Choose 2 to reveal, and resolve each as if you had cast 1 vote for an outcome of your choice; then discard the rest. Other players cannot resolve abilities during this action.Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{}], "cruiser": [{},{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "pds": [{}], "fighter": [{}, {}, {}]}
@@ -983,8 +924,8 @@
         "knownTechs": ["GRAVITON_LASER_SYSTEM"],
         "commCap": 4,
         "abilities": [
-            {"id": "PEACE_ACCORDS", "effect": "After you resolve the primary or secondary ability of the 'Diplomacy' strategy card, you may gain control of 1 planet other than Mecatol Rex that does not contain any units and is in a system that is adjacent to a planet you control."},
-            {"id": "QUASH", "effect": "When an agenda is revealed, you may spend 1 token from your strategy pool to discard that agenda and reveal 1 agenda from the top of the deck. Players vote on this agenda instead."}
+            {"id": "PEACE_ACCORDS"},
+            {"id": "QUASH"}
         ],
         "technologies": [
             {
@@ -1035,11 +976,7 @@
     },
     "15": {
         "name": "The Yssaril Tribes",
-        "agentAbility": "This card has the text ability of each other player's agent, even if that agent is exhausted.",
-        "commanderAbility": "After another player activates a system that contains your units: You may look at that player's action cards, promissory notes, or secret objectives.",
-        "commanderUnlock": "Have 7 action cards.",
-        "heroAbility": "Each other player you 1 action card from their hand. For each player, you may either take that card or force that player to discard 3 random action cards from their hand. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{},{}], "cruiser": [{}]},
             "ground": {"infantry": [{},{},{},{},{}], "spacedock": [{}], "pds": [{}], "fighter": [{},{}]}
@@ -1047,9 +984,9 @@
         "knownTechs": ["NEURAL_MOTIVATOR"],
         "commCap": 3,
         "abilities": [
-            {"id": "STALL_TACTICS", "type": "ACTION", "effect": "Discard 1 action card from your hand."},
-            {"id": "SCHEMING", "effect": "When you draw 1 or more action cards, draw 1 additional action card. Then, choose and discard 1 action card from your hand."},
-            {"id": "CRAFTY", "effect": "You can have any number of action cards in your hand. Game effects cannot prevent you from using this ability."}
+            {"id": "STALL_TACTICS", "type": "action"},
+            {"id": "SCHEMING"},
+            {"id": "CRAFTY"}
         ],
         "technologies": [
             {
@@ -1099,10 +1036,6 @@
     },
     "16": {
         "name": "The Emirates of Hacan",
-        "agentAbility": "During the action phase: You may exhaust this card to gain 2 commodities or replenish another player's commodities.",
-        "commanderAbility": "When you cast votes: You may spend any number of trade goods. Cast 2 additional votes for each trade good spent.",
-        "commanderUnlock": "Have 10 trade goods.",
-        "heroAbility": "When 1 or more of your units use PRODUCTION: You may reduce the cost of each of your units to 0 during this use of PRODUCTION. If you do, purge this card.",
         "startingUnits": {
             "fleet": {"carrier": [{},{}], "cruiser": [{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "fighter": [{}, {}]}
@@ -1110,9 +1043,9 @@
         "knownTechs": ["ANTIMASS_DEFLECTORS", "SARWEEN_TOOLS"],
         "commCap": 6,
         "abilities": [
-            {"id": "MASTERS_OF_TRADE", "effect": "You do not have to spend a command token to resolve the secondary ability of the 'Trade' strategy card."},
-            {"id": "GUILD_SHIPS", "effect": "You can negotiate transactions with players who are not your neighbors."},
-            {"id": "ARBITERS", "effect": "When you are negotiating a transaction, action cards can be exchanged as part of that transaction."}
+            {"id": "MASTERS_OF_TRADE"},
+            {"id": "GUILD_SHIPS"},
+            {"id": "ARBITERS"}
         ],
         "technologies": [
             {
@@ -1162,11 +1095,7 @@
     },
     "17": {
         "name": "The Ghosts of Creuss",
-        "agentAbility": "After a player activates a system that contains a non-delta wormhole: You may exhaust this card; if you do, that system is adjacent to all other systems that contain a wormhole during this tactical action.",
-        "commanderAbility": "After your ships move: For each ship that has a capacity value and moved through 1 or more wormholes, you may place 1 fighter from your reinforcements with that ship if you have unused capacity in the active system.",
-        "commanderUnlock": "Have 3 units in 3 systems that contain alpha or beta wormholes.",
-        "heroAbility": "Swap the positions of any 2 systems that contain wormholes or your units, other than the Creuss system and the wormhole nexus. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{}], "destroyer": [{},{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "fighter": [{}, {}]}
@@ -1174,9 +1103,9 @@
         "knownTechs": ["GRAVITY_DRIVE"],
         "commCap": 4,
         "abilities": [
-            {"id": "QUANTUM_ENTANGLEMENT", "effect": "You treat all systems that contain either an alpha or beta wormhole as adjacent to each other. Game effects cannot prevent you from using this ability."},
-            {"id": "SLIPSTREAM", "effect": "During your tactical actions, apply +1 to the move value of each of your ships that starts its movement in your home system or in a system that contains either an alpha or beta wormhole."},
-            {"id": "CREUSS_GATE", "effect": "When you create the game board, place the Creuss Gate where your home system would normally be placed. The Creuss Gate is not a home system. Then, place your home system in your play area."}
+            {"id": "QUANTUM_ENTANGLEMENT"},
+            {"id": "SLIPSTREAM"},
+            {"id": "CREUSS_GATE"}
         ],
         "technologies": [
             {
@@ -1226,11 +1155,7 @@
     },
     "52": {
         "name": "The Mahact Gene-sorcerers",
-        "agentAbility": "When you would spend a command token during the secondary ability of a strategic action: You may exhaust this card to remove 1 of the active player's command tokens from the board and use it instead.",
-        "commanderAbility": "During your tactical actions, you can activate systems that contain your command tokens. If you do, return both command tokens to your reinforcements at the end of your turn.",
-        "commanderUnlock": "Have 2 other factions' command tokens in your fleet pool.",
-        "heroAbility": "all units in the space area of any system to an adjacent system that contains a different player's ships. Space combat is resolved in that system; neither player can retreat or resolve abilities that would move their ships. Then,purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"dreadnought": [{}], "carrier": [{}], "cruiser": [{}]},
             "ground": {"infantry": [{},{},{}], "spacedock": [{}], "fighter": [{}, {}]}
@@ -1238,9 +1163,9 @@
         "knownTechs": ["BIO_STIMS", "PREDICTIVE_INTELLIGENCE"],
         "commCap": 3,
         "abilities": [
-            {"id": "EDICT", "effect": "When you win a combat, place 1 command token from your opponent’s reinforcements in your fleet pool if it does not already contain 1; other players’ tokens increase your fleet limit but cannot be redistributed."},
-            {"id": "IMPERIA", "effect": "While another player’s command token is in your fleet pool, you can use the ability of that player’s commander, if it is unlocked."},
-            {"id": "HUBRIS", "effect": "During setup, purge your 'Alliance' promissory note. Other players cannot give you their “Alliance” promissory note."}
+            {"id": "EDICT"},
+            {"id": "IMPERIA"},
+            {"id": "HUBRIS"}
         ],
         "technologies": [
             {
@@ -1304,15 +1229,7 @@
     },
     "53": {
         "name": "The Nomad",
-        "agentAbility": [
-            "When you gain trade goods from the supply: You may exhaust this card to place an equal number of trade goods on this card. When this card readies, gain the trade goods on this card.",
-            "At the end of a player's turn: You may exhaust this card to allow that player to remove 2 of their ground forces from the game board and place them on planets they control in the active system.",
-            "After the Roll Dice step of combat: You may exhaust this card. If you do, hits are not assigned to either player's units. Return to the start of this combat round's Roll Dice step."
-        ],
-        "commanderAbility": "You can produce your flagship without spending resources.",
-        "commanderUnlock": "Have 1 scored secret objective.",
-        "heroAbility": "Place this card near the game board; your flagship and units it transports can move out of systems that contain your command tokens during this game round. At the end of that game round, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"flagship": [{}], "carrier": [{}], "destroyer": [{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "fighter": [{}, {}, {}]}
@@ -1320,8 +1237,8 @@
         "knownTechs": ["SLING_RELAY"],
         "commCap": 4,
         "abilities": [
-            {"id": "THE_COMPANY", "effect": "During setup, take the 2 additional Nomad faction agents and place them next to your faction sheet; you have 3 agents."},
-            {"id": "FUTURE_SIGHT", "effect": "During the agenda phase, after an outcome you voted for or predicted is resolved, gain 1 trade good."}
+            {"id": "THE_COMPANY"},
+            {"id": "FUTURE_SIGHT"}
         ],
         "technologies": [
             {
@@ -1378,11 +1295,7 @@
     },
     "54": {
         "name": "The Vuil'raith Cabal",
-        "agentAbility": "After another player replenishes commodities: You may exhaust this card to convert their commodities to trade goods and capture 1 unit from their reinforcements that has a cost equal to or lower than their commodity value.",
-        "commanderAbility": "When you produce fighter or infantry units: Up 2 of those units do not count against your PRODUCTION limit.",
-        "commanderUnlock": "Have units in 3 gravity rifts.",
-        "heroAbility": "Each player rolls die for each of his non-fighter ships that are in or adjacent to system contains dimensional tear; on a 1-3 capture that unit. If this causes a player's ground forces or fighter to be removed, also capture those units. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{}], "cruiser": [{}], "dreadnought": [{}]},
             "ground": {"infantry": [{},{},{}], "spacedock": [{}], "fighter": [{}, {}, {}]}
@@ -1390,9 +1303,9 @@
         "knownTechs": ["SELF_ASSEMBLY_ROUTINES"],
         "commCap": 2,
         "abilities": [
-            {"id": "DEVOUR", "effect": "Capture your opponent’s non-structure units that are destroyed during combat."},
-            {"id": "AMALGAMATION", "effect": "When you produce a unit, you may return 1 captured unit of that type to produce that unit without spending resources."},
-            {"id": "RIFTMELD", "effect": "When you research a unit upgrade technology, you may return 1 captured unit of that type to ignore all of that technology’s prerequisites."}
+            {"id": "DEVOUR"},
+            {"id": "AMALGAMATION"},
+            {"id": "RIFTMELD"}
         ],
         "technologies": [
             {
@@ -1452,11 +1365,7 @@
     },
     "55": {
         "name": "The Titans of Ul",
-        "agentAbility": "When a hit is produced against a unit: You may exhaust this card to cancel that hit.",
-        "commanderAbility": "When 1 or more of your units use: You may gain 1 trade good.",
-        "commanderUnlock": "Have 5 structures on the game board.",
-        "heroAbility": "Ready Elysium and attach this card to it. Its resource and influence values are each increased by 3, and it gains SPACE CANNON 5 (x3) ability as if it were a unit.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"dreadnought": [{}], "cruiser": [{},{}]},
             "ground": {"infantry": [{},{},{}], "spacedock": [{}], "fighter": [{}, {}]}
@@ -1464,8 +1373,8 @@
         "knownTechs": ["ANTIMASS_DEFLECTORS", "SCANLINK_DRONE_NETWORK"],
         "commCap": 2,
         "abilities": [
-            {"id": "TERRAGENESIS", "effect": "After you explore a planet that does not have a sleeper token, you may place or move 1 sleeper token onto that planet."},
-            {"id": "AWAKEN", "effect": "After you activate a system that contains 1 or more of your sleeper tokens, you may replace each of those tokens with 1 PDS from your reinforcements."}
+            {"id": "TERRAGENESIS"},
+            {"id": "AWAKEN"}
         ],
         "technologies": [
             {
@@ -1551,11 +1460,7 @@
     },
     "56": {
         "name": "The Empyrean",
-        "agentAbility": "After a player moves ships into a system that does not contain any planets: You may exhaust this card; that player gains 1 command token.",
-        "commanderAbility": "After another player moves ships into a system that contains 1 of your command tokens: You may return that token to your reinforcements.",
-        "commanderUnlock": "Be neighbors with all other players.",
-        "heroAbility": "Place 1 frontier token in each system that does not contain any planets and does not already have a frontier token. Then, explore each frontier token that is in system that contains 1 or more of your ships. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{},{}], "destroyer": [{}]},
             "ground": {"infantry": [{},{},{},{}], "spacedock": [{}], "fighter": [{}, {}]}
@@ -1563,9 +1468,9 @@
         "knownTechs": ["DARK_ENERGY_TAP"],
         "commCap": 4,
         "abilities": [
-            {"id": "VOIDBORN", "effect": "Nebulae do not affect your ships’ movement."},
-            {"id": "AETHERPASSAGE", "effect": "After a player activates a system, you may allow that player to move their ships through systems that contain your ships."},
-            {"id": "DARK_WHISPERS", "effect": "During setup, take the additional Empyrean faction promissory note; you have 2 faction promissory notes."}
+            {"id": "VOIDBORN"},
+            {"id": "AETHERPASSAGE"},
+            {"id": "DARK_WHISPERS"}
         ],
         "technologies": [
             {
@@ -1614,11 +1519,7 @@
     },
     "57": {
         "name": "The Naaz-Rokha Alliance",
-        "agentAbility": "At the end of a player's turn: You may exhaust this card to allow that player to explore 1 of their planets.",
-        "commanderAbility": "After you gain control of a planet that was controlled by another player: You may explore that planet.",
-        "commanderUnlock": "Have mechs in 3 systems.",
-        "heroAbility": "Gain 1 relic and perform the secondary ability of up to 2 readied or unchosen strategy cards; during this action, spend command tokens from your reinforcements instead of your strategy pool. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{},{}], "destroyer": [{}]},
             "ground": {"mech": [{}], "infantry": [{},{},{}], "spacedock": [{}], "fighter": [{}, {}]}
@@ -1626,8 +1527,8 @@
         "knownTechs": ["PSYCHOARCHAEOLOGY", "AI_DEVELOPMENT_ALGORITHM"],
         "commCap": 3,
         "abilities": [
-            {"id": "DISTANT_SUNS", "effect": "When you explore a planet that contains 1 of your mechs, you may draw 1 additional card; choose 1 to resolve and discard the rest."},
-            {"id": "FABRICATION", "type": "ACTION", "effect": "Either purge 2 of your relic fragments of the same type to gain 1 relic or purge 1 of your relic fragments to gain 1 command token."}
+            {"id": "DISTANT_SUNS"},
+            {"id": "FABRICATION", "type": "action"}
         ],
         "technologies": [
             {
@@ -1688,11 +1589,7 @@
     },
     "58": {
         "name": "The Argent Flight",
-        "agentAbility": "When a player produces ground forces in a system: You may exhaust this card; that player may place those units on any planets they control in that system and any adjacent systems.",
-        "commanderAbility": "When 1 or more of your units make a roll for a unit ability: You may choose 1 of those units to roll 1 additional die.",
-        "commanderUnlock": "Have 6 units that have ANTI-FIGHTER BARRAGE, SPACE CANNON or BOMBARDMENT on the game board.",
-        "heroAbility": "Move any number of your ships from any systems to any number of other systems that contain 1 of your command tokens and no other player's ships. Then, purge this card.",
-        "heroAbilityType": "ACTION",
+        "heroAbilityType": "action",
         "startingUnits": {
             "fleet": {"carrier": [{}], "destroyer": [{},{}]},
             "ground": {"infantry": [{},{},{},{},{}], "spacedock": [{}], "pds": [{}], "fighter": [{}, {}]}
@@ -1701,8 +1598,8 @@
         "startingTechsChoice": 2,
         "commCap": 3,
         "abilities": [
-            {"id": "ZEAL", "effect": "You always vote first during the agenda phase. When you cast at least 1 vote, cast 1 additional vote for each player in the game, including you."},
-            {"id": "RAID_FORMATION", "effect": "When 1 or more of your units use ANTI-FIGHTER BARRAGE, for each hit produced in excess of your opponent’s fighters, choose 1 of your opponent’s ships that has SUSTAIN DAMAGE to become damaged."}
+            {"id": "ZEAL"},
+            {"id": "RAID_FORMATION"}
         ],
         "technologies": [
             {

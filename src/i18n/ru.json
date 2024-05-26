@@ -157,7 +157,31 @@
             "combat": "бой",
             "move": "движ.",
             "capacity": "мест",
-            "shot": "выстр."
+            "shot": "выстр.",
+            "agent": "агент",
+            "commander": "командир",
+            "hero": "герой",
+            "tokens": "жетоны",
+            "fragments": "фрагменты",
+            "reinforce": "подкрепление",
+            "commodity": "продукция",
+            "trade_goods": "товары",
+            "remove_selected_from_board": "убрать с доски",
+            "purge": "изгнать",
+            "ready": "готов",
+            "unlock": "разблокировка",
+            "complete_3_objectives": "выполните 3 цели",
+            "action": "действие",
+            "unused": "неиспользованных",
+            "confirm_changes": "подтв. изменения",
+            "tactic": "тактика",
+            "fleet": "флот",
+            "strategic": "стратегия",
+            "cultural": "культурный",
+            "hazardous": "опасный",
+            "industrial": "индустриальный",
+            "unknown": "неизвестный",
+            "speaker": "председатель"
         },
         "cards": {
             "strategy": {
@@ -571,8 +595,8 @@
                 "commanderUnlock": "Одновременно контролируйте планеты с суммарным значением ресурсов хотя бы в 12 очков.",
                 "heroAbility": "Верните каждый ваш жетон приказа с игровой доски в ваше снабжение. Затем изгоните эту карту.",
                 
-                "ORBITAL_DROP": {"label": "ORBITAL DROP", "effect": "Spend 1 token from your strategy pool to place 2 infantry from your reinforcements on 1 planet you control."},
-                "VERSATILE": {"label": "VERSATILE", "effect": "When you gain command tokens during the status phase, gain 1 additional command token."},
+                "ORBITAL_DROP": {"label": "ОРБИТАЛЬНЫЙ ДЕСАНТ", "effect": "Потратьте 1 жетон из вашего стратегического резерва, чтобы разместить 2 отряда пехоты из вашего снабжения на 1 подконтрольной вам планете."},
+                "VERSATILE": {"label": "ГИБКОСТЬ", "effect": "Когда вы получаете жетоны во время фазы статуса, получите 1 дополнительный жетон."},
                 
                 "FLAGSHIP": {"label": "ГЕНЕЗИС", "effect": "В конце фазы статуса разместите 1 отряд пехоты из вашего снабжения в космосе этой системы."},
                 "MECH": {"label": "ZS «МОЛНИЯ» М2", "deploy": "После того как вы использовали фракционную способность «ОРБИТАЛЬНЫЙ ДЕСАНТ», вы можете потратить 3 очка ресурсов чтобы разместить 1 мех на этой планете."},
@@ -588,8 +612,8 @@
                 "commanderUnlock": "Имейте 4 крейсера на игровом поле.",
                 "heroAbility": "В начале космического боя в котором вы участвуете: Вы можете изгнать эту карту; если вы это делаете, за каждый уничтоженный корабль другого игрока во время этого боя разместите 1 корабль этого типа из вашего снабжения в активную систему.",
                 
-                "AMBUSH": {"label": "AMBUSH", "effect": "At the start of a space combat, you may roll 1 die for each of up to 2 of your cruisers or destroyers in the system. For each result equal to or greater than that ship’s combat value, produce 1 hit; your opponent must assign it to 1 of his ships."},
-                "PILLAGE": {"label": "PILLAGE", "effect": "After 1 of your neighbors gains trade goods or resolves a transaction, if he has 3 or more trade goods, you may take 1 of his trade goods or commodities."},
+                "AMBUSH": {"label": "ЗАСАДА", "effect": "В начале космического боя вы можете бросить 1 кость за каждый свой крейсер или эсминец в этой системе (но не более двух костей). За каждый результат броска, который больше или равен значению боя этого корабля, нанесите 1 попадание. Ваш противник должен присвоить его одному из своих кораблей."},
+                "PILLAGE": {"label": "МАРОДЕРСТВО", "effect": "После того как один из ваших соседей получил товар или заключил сделку, если у него есть хотя бы 3 товара, вы можете забрать 1 его товар или продукцию себе."},
                 
                 "FLAGSHIP": {"label": "ЧЕТВЕРТАЯ ЛУНА", "effect": "Корабли других игроков в этой системе не могут использовать «ПОГЛОЩЕНИЕ УРОНА»."},
                 "MECH": {"label": "МОЛЛ ТЕРМИНУС", "effect": "Наземные войска других игроков на этой планете теряют способность «ПОГЛОЩЕНИЕ УРОНА»."},
@@ -604,8 +628,8 @@
                 "commanderUnlock": "Используйте фракционную способность «ПРОПАГАНДА».",
                 "heroAbility": "Для каждой планеты, которая содержит хотя бы 1 ваш отряд пехоты: либо подготовьте эту планету, либо бесплатно удвойте количество отрядов пехоты на ней. Затем изгоните эту карту.",
                 
-                "INDOCTRINATION": {"label": "INDOCTRINATION", "effect": "At the start of a ground combat, you may spend 2 influence to replace 1 of your opponent’s participating infantry with 1 infantry from your reinforcements."},
-                "DEVOTION": {"label": "DEVOTION", "effect": "After each space battle round, you may destroy 1 of your cruisers or destroyers in the active system to produce 1 hit and assign it to 1 of your opponent’s ships in that system."},
+                "INDOCTRINATION": {"label": "ПРОПАГАНДА", "effect": "В начале наземного боя вы можете потратить 2 очка влияния, чтобы заменить 1 отряд пехоты противника, участвующий в этом бою, на 1 отряд пехоты из вашего снабжения."},
+                "DEVOTION": {"label": "ФАНАТИЗМ", "effect": "После каждого раунда космического боя вы можете уничтожить 1 свой крейсер или эсминец в активной системе, чтобы нанести 1 попадание и присвоить его одному из кораблей противника в этой системе."},
                 
                 "FLAGSHIP": {"label": "ВАН ХОГ", "effect": "Когда этот корабль уничтожен, уничтожьте все корабли в этой системе."},
                 "MECH": {"label": "ПРАХ МОЙИНЬ", "deploy": "Когда вы используете фракционную способность «ПРОПАГАНДА», вы можете потратить 1 дополнительное очко влияния чтобы заменить 1 отряд пехоты противника на 1 мех (вместо 1 отряда пехоты) из вашего снабжения."},
@@ -620,8 +644,8 @@
                 "commanderUnlock": "Произведите Солнце войны.",
                 "heroAbility": "После того как вы перемещаете Солнце войны в систему (кроме родных систем и Мекатол-Рекса): Вы можете уничтожить все отряды других игроков в этой системе и заменить её тайлом Супернова (тайл № 81). Если вы это делаете, изгоните эту карту и карты всех планет системы которую заменили.",
 
-                "STAR_FORGE": {"label": "STAR FORGE", "effect": "Spend 1 token from your strategy pool to place either 2 fighters or 1 destroyer from your reinforcements in a system that contains 1 or more of your war suns."},
-                "GASHLAI_PHYSIOLOGY": {"label": "GASHLAI PHYSIOLOGY", "effect": "Your ships can move through supernovas."},
+                "STAR_FORGE": {"label": "ЗВЕЗДНАЯ КУЗНЯ", "effect": "Потратьте 1 жетон из вашего стратегического резерва, чтобы разместить 2 истребителя или один эсминец из вашего снабжения в системе, где есть хотя бы 1 ваше солнце войны."},
+                "GASHLAI_PHYSIOLOGY": {"label": "ФИЗИОЛОГИЯ ГАШЛАЙ", "effect": "Ваши корабли могут передвигаться через сверхновые."},
                 
                 "FLAGSHIP": {"label": "ПРЕИСПОДНЯЯ", "action": "Потратьте 1 жетон из вашего стратегического резерва, чтобы разместить 1 крейсер в системе с этим отрядом."},
                 "MECH": {"label": "ТЛЕЮЩИЙ КОЛОСС", "effect": "Когда вы используете фракционную способность «ЗВЁЗДНАЯ КУЗНЯ» в этой или смежной системе, вы можете разместить 1 пехоту из вашего снабжения рядом с этим отрядом."},
@@ -637,7 +661,7 @@
                 "commanderUnlock": "Имейте 12 отрядов наземных войск на подконтрольных вам планетах.",
                 "heroAbility": "Произведите любое количество отрядов в любом количестве систем, в которых есть хотя бы 1 ваше наземное войско. Затем изгоните эту карту.",
                 
-                "MITOSIS": {"label": "MITOSIS", "effect": "Your space docks cannot produce infantry. At the start of the status phase, place 1 infantry from your reinforcements on any planet you control."},
+                "MITOSIS": {"label": "МИТОЗ", "effect": "Ваши базы не могут производить пехоту. В начале фазы статуса разместите 1 отряд пехоты из вашего снабжения на любой подконтрольной вам планете."},
                 
                 "FLAGSHIP": {"label": "ДУХА МЕНАЙМОН", "effect": "После того как вы активировали эту систему, вы можете произвести до 5 отрядов в этой системе."},
                 "INFANTRY": {"label": "ВОИН ЛЕТАНИ I"},
@@ -653,8 +677,8 @@
                 "commanderUnlock": "Имейте 4 дредноута на игровом поле.",
                 "heroAbility": "Выберите 1 систему, которая не содержит кораблей других игроков; вы можете переместить ваш Флагман и любое количество дредноутов из других систем в выбранную систему. Затем изгоните эту карту.",
                 
-                "ASSIMILATE": {"label": "ASSIMILATE", "effect": "When you gain control of a planet, replace each PDS and space dock that is on that planet with a matching unit from your reinforcements."},
-                "HARROW": {"label": "HARROW", "effect": "At the end of each round of ground combat, your ships in the active system may use their BOMBARDMENT abilities against your opponent’s ground forces on that planet."},
+                "ASSIMILATE": {"label": "АССИМИЛЯЦИЯ", "effect": "Когда вы получаете контроль над планетой, замените каждую ПСО и базу на этой планете соответствующими отрядами из своего снабжения."},
+                "HARROW": {"label": "КОВРОВАЯ БОМБАРДИРОВКА", "effect": "После каждого раунда наземного боя ваши корабли в активной системе могут использовать способность бомбардировка против наземных войск вашего противника, находящихся на этой планете."},
                 
                 "FLAGSHIP": {"label": "0.0.1", "effect": "Во время космического боя попадания, нанесенные этим кораблем и вашими дредноутами в этой системе, должны быть присвоены любым кораблям, кроме истребителей (при возможности)."},
                 "MECH": {"label": "АННИГИЛЯТОР", "effect": "Пока этот отряд не участвует в наземном бою, он может использовать способность «БОМБАРДИРОВКА» на планетах в своей системе, как если бы он был кораблём."},
@@ -670,8 +694,8 @@
                 "commanderUnlock": "Контролируйте Мекатол-Рекс или вступите в бой в его системе.",
                 "heroAbility": "Примените основную способность любой карты стратегии. Затем выберите любое количество других игроков. Эти игроки могут  применить второстепенную способность этой карты стратегии. Затем изгоните эту карту.",
                 
-                "BLOOD_TIES": {"label": "BLOOD TIES", "effect": "You do not have to spend influence to remove the custodians token from Mecatol Rex."},
-                "RECLAMATION": {"label": "RECLAMATION", "effect": "After you resolve a tactical action during which you gained control of Mecatol Rex, you may place 1 PDS and 1 space dock from your reinforcements on Mecatol Rex."},
+                "BLOOD_TIES": {"label": "КРОВНЫЕ УЗЫ", "effect": "Вам не нужно тратить очки влияния, чтобы убрать жетон хранителей с Мекатол-Рекса."},
+                "RECLAMATION": {"label": "ВОЗВРАЩЕНИЕ", "effect": "После того, как вы совершили тактическое действие, во время которого вы получили контроль над Мекатол-Рекс, вы можете разместить 1 ПСО и 1 базу из вашего снабжения на Мекатол-Рекс."},
                 
                 "FLAGSHIP": {"label": "САЛАЙ САЙ КОРИАН", "effect": "Когда этот корабль проходит боевую проверку, бросьте столько кубиков, сколько кораблей противника в этой системе (кроме истребителей)."},
                 "MECH": {"label": "ВОССТАНОВИТЕЛЬ", "effect": "После того, как вы выполните тактическое действие, во время которого вы получили контроль над этой планетой, вы можете разместить 1 ПСО или 1 Базу из вашего снабжения на этой планете."},
@@ -686,9 +710,9 @@
                 "commanderUnlock": "Имейте 3 технологии. Технология Ассимилятор Валефара учитывается только если её жетон ассимиляции находится на технологии.",
                 "heroAbility": "Выберите планету, имеющую технологическую специализацию, в системе которая содержит ваши отряды. Уничтожьте все отряды других игроков на этой планете. Получите Товары в количестве равном сумме значения ресурсов и влияния планеты и получите 1 технологию, которая соответствует специализации этой планеты. Затем изгоните эту карту.",
                 
-                "GALACTIC_THREAT": {"label": "GALACTIC THREAT", "effect": "You cannot vote on agendas. Once per agenda phase, after an agenda is revealed, you may predict aloud the outcome of that agenda. If your prediction is correct, gain 1 technology that is owned by a player who voted how you predicted."},
-                "TECHNOLOGICAL_SINGULARITY": {"label": "TECHNOLOGICAL SINGULARITY", "effect": "Once per combat, after 1 of your opponent’s units is destroyed, you may gain 1 technology that is owned by that player."},
-                "PROPAGATION": {"label": "PROPAGATION", "effect": "You cannot research technology. When you would research a technology, gain 3 command tokens instead."},
+                "GALACTIC_THREAT": {"label": "ГАЛАКТИЧЕСКАЯ УГРОЗА", "effect": "Вы не можете голосовать. Один раз за фазу политики, после раскрытия карты политики, вы можете в слух предсказать результат голосования по этой карте. Если ваше предсказание верно, получите 1 технологию, который владеет игрок, проголосовавший согласно вашему предсказанию."},
+                "TECHNOLOGICAL_SINGULARITY": {"label": "ТЕХНОЛОГИЧЕСКАЯ СИНГУЛЯРНОСТЬ", "effect": "Один раз за бой, после уничтожения 1 отряда противника, вы можете получить 1 технологию, которой владеет игрок."},
+                "PROPAGATION": {"label": "РАСПРОСТРАНЕНИЕ", "effect": "Вы не можете исследовать технологии. Когда вы должны исследовать технологию, вместо этого вы получаете 3 жетонов приказов."},
                 
                 "FLAGSHIP": {"label": "АЛАСТОР", "effect": "В начале космического боя выберите любое количество ваших наземных войск в этой системе. Они участвуют в этом бою как корабли."},
                 "MECH": {"label": "МОРДРЕД", "effect": "Во время боя с противником, который имеет Х или Y жетоны на хотя бы 1 его технологии, добавляйте +2 к результатам всех боевых проверок этого отряда."},
@@ -703,8 +727,8 @@
                 "commanderUnlock": "Имейте 12 истребителей на игровом поле.",
                 "heroAbility": "В конце фазы статуса: Вы можете заставить каждого другого игрока отдать вам 1 карту обещания с руки. Если вы это делаете, изгоните эту карту.",
 
-                "TELEPATHIC": {"label": "TELEPATHIC", "effect": "At the end of the strategy phase, place the Naalu '0' token on your strategy card; you are first in initiative order."},
-                "FORESIGHT": {"label": "FORESIGHT", "effect": "After another player moves ships into a system that contains 1 or more of your ships, you may place 1 token from your strategy pool in an adjacent system that does not contain another player's ships; move your ships from the active system into that system."},
+                "TELEPATHIC": {"label": "ТЕЛЕПАТИЯ", "effect": "В конце фазы стратегии положите жетон «0» на свою карту стратегии, вы ходите первым в порядке инициативы."},
+                "FORESIGHT": {"label": "ПРЕДВИДЕНИЕ", "effect": "После того, как другой игрок передвинет свои корабли в систему, где есть хотя бы 1 ваш корабль, вы можете положить 1 жетон из вашего стратегического резерва в смежную систему, где нет кораблей других игроков; передвиньте свои корабли из активной системы в эту систему."},
                 
                 "FLAGSHIP": {"label": "МАТРИАРХ", "effect": "Во время вторжения в этой системе вы можете использовать истребители на планете, как если бы это были наземные войска. Когда бой закончится, верните эти истребители в космос."},
                 "MECH": {"label": "ИКОНОКЛАСТ", "effect": "Во время боя с противником, у которого есть хотя бы 1 фрагмент реликвии, добавляйте +2 к результатам боевых проверок этого отряда."},
@@ -720,8 +744,8 @@
                 "commanderUnlock": "Имейте 5 кораблей (кроме истребителей) в 1 системе.",
                 "heroAbility": "Выложите эту карту рядом с игровым полем; количество кораблей (кроме истребителей) которое вы можете иметь в системе не ограничивается законами или количеством жетонов приказов в резерве флота во время этого раунда. В конце этого раунда изгоните эту карту.",
                 
-                "MUNITIONS_RESERVES": {"label": "MUNITIONS RESERVES", "effect": "At the start of each round of space combat, you may spend 2 trade goods; you may reroll any number of your dice during that combat round."},
-                "ARMADA": {"label": "ARMADA", "effect": "The maximum number of non-fighter ships you can have in each system is equal to 2 more than the number of tokens in your fleet pool."},
+                "MUNITIONS_RESERVES": {"label": "РЕЗЕРВНЫЙ БОЕКОМПЛЕКТ", "effect": "В начале каждого раунда космического боя вы можете потратить 2 товара, чтобы перебросить любое количество своих костей во время этого раунда космического боя."},
+                "ARMADA": {"label": "АРМАДА", "effect": "Максимальное количество ваших кораблей (не считая истребителей), которое может находиться в каждой системе, равняется количеству жетонов в вашем резерве флота +2."},
                 
                 "FLAGSHIP": {"label": "АРК СЕКУНДУС", "effect": "Отряды других игроков в этой системе теряют ПЛАНЕТАРНЫЙ ЩИТ. В начале каждого раунда космического боя ремонтируйте этот корабль."},
                 "MECH": {"label": "ЖНЕЦ ДАНЛЕЙНА", "deploy": "В начале раунда наземного боя, вы можете потратить 2 очка ресурсов, чтобы заменить 1 отряд пехоты в этом бою на 1 мех."},
@@ -736,8 +760,8 @@
                 "commanderUnlock": "Имейте 3 базы на игровом поле.",
                 "heroAbility": "Выберите 1 систему смежную с одной из ваших баз. Уничтожьте все истребители и все отряды пехоты других игроков в этой системе. Затем изгоните эту карту.",
                 
-                "SCAVENGE": {"label": "SCAVENGE", "effect": "After you gain control of a planet, gain 1 trade good."},
-                "NOMADIC": {"label": "NOMADIC", "effect": "You can score objectives even if you do not control the planets in your home system."},
+                "SCAVENGE": {"label": "МУСОРЩИКИ", "effect": "После того, как вы получили контроль над планетой, получите 1 товар."},
+                "NOMADIC": {"label": "КОЧЕВНИКИ", "effect": "Вы можете выполнять цели, даже если не контролируете планеты в вашей родной системе."},
                 
                 "FLAGSHIP": {"label": "СЫН РАГА"},
                 "MECH": {"label": "СБОРЩИК ЗЕТА", "deploy": "После того как вы получили контроль над планетой, вы можете потратить 1 товар чтобы разместить на этой планете 1 мех."},
@@ -753,9 +777,9 @@
                 "commanderUnlock": "У вас должно быть 8 технологий.",
                 "heroAbility": "Для каждой технологии, которой вы владеете(кроме технологий улучшения отрядов); Вы можете заменить эту технологию на любую технологию того же цвета из колоды. Затем изгоните эту карту.",
                 
-                "FRAGILE": {"label": "FRAGILE", "effect": "Apply -1 to the result of each of your unit’s combat rolls."},
-                "BRILLIANT": {"label": "BRILLIANT", "effect": "When you spend a command token to resolve the secondary ability of the 'Technology' strategy card, you may resolve the primary ability instead."},
-                "ANALYTICAL": {"label": "ANALYTICAL", "effect": "When you research a technology that is not a unit upgrade technology, you may ignore 1 prerequisite."},
+                "FRAGILE": {"label": "ХРУПКОСТЬ", "effect": "Добавляйте -1 к результатам боевых проверок каждого вашего отряда."},
+                "BRILLIANT": {"label": "ГЕНИАЛЬНОСТЬ", "effect": "Когда вы тратите жетон приказа, чтобы применить второстепенную способность карты стратегии «Исследование», вы можете вместо этого применить основную способность карты."},
+                "ANALYTICAL": {"label": "АНАЛИТИЧЕСКИЙ УМ", "effect": "Исследуя технологию (кроме улучшения отрядов), вы можете проигнорировать 1 требование."},
                 
                 "FLAGSHIP": {"label": "Ж.Н.З. ХИЛАРИМ", "effect": "Когда этот корабль проходит боевую проверку, каждый результат броска 9 или 10 (до применения модификаторов) наносит два дополнительных попадания."},
                 "MECH": {"label": "ОГРАЖДАЮЩИЙ ЩИТ", "effect": "Ваша фракционная способность «ХРУПКОСТЬ» не воздействует на вашу пехоту на этой планете."},
@@ -770,7 +794,7 @@
                 "commanderUnlock": "Контролируйте одновременно 5 планет вне родных систем.",
                 "heroAbility": "После того как вы перемещаете корабли в активную систему: Вы можете сразу перейти к шагу «Высадка наземных войск». Если вы это делаете, после высадки наземных войск на планеты, изгоните эту карту и верните каждый ваш корабль из активной системы в ваше снабжение.",
                 
-                "UNRELENTING": {"label": "UNRELENTING", "effect": "Apply +1 to the result of each of your unit’s combat rolls."},
+                "UNRELENTING": {"label": "БЕЗЖАЛОСТНОСТЬ", "effect": "Добавляйте +1 к результатам боевых проверок всех ваших отрядов."},
                 
                 "FLAGSHIP": {"label": "К'МОРРАН Н'ОРР", "effect": "Добавляйте +1 к результатам боевых проверок всех ваших других кораблей в этой системе."},
                 "MECH": {"label": "ЭКЗОСКЕЛЕТ «ВАЛЬКИРИЯ»", "effect": "После того, как этот отряд использует способность «ПОГЛОЩЕНИЕ УРОНА» во время наземного боя, он наносит 1 попадание наземным войскам вашего оппонента на этой планете."},
@@ -786,8 +810,8 @@
                 "commanderUnlock": "Одновременно контролируйте планеты с суммарным значением влияния хотя бы в 12 очков.",
                 "heroAbility": "Вы можете сбросить 1 действующий Закон из игры. Посмотрите 5 верхних карт колоды политики. Выберите 2 (остальные 3 сбросьте) и разыграйте каждую как если бы вы отдали 1 голос за вариант по вашему выбору. Другие игроку не могут использовать способности во время этого действия. Затем изгоните эту карту.",
                 
-                "PEACE_ACCORDS": {"label": "PEACE ACCORDS", "effect": "After you resolve the primary or secondary ability of the 'Diplomacy' strategy card, you may gain control of 1 planet other than Mecatol Rex that does not contain any units and is in a system that is adjacent to a planet you control."},
-                "QUASH": {"label": "QUASH", "effect": "When an agenda is revealed, you may spend 1 token from your strategy pool to discard that agenda and reveal 1 agenda from the top of the deck. Players vote on this agenda instead."},
+                "PEACE_ACCORDS": {"label": "МИРНЫЕ СОГЛАШЕНИЯ", "effect": "После того как вы применили основную или второстепенную способность карты стратегии «Дипломатия», вы можете получить контроль над 1 планетой (кроме Мекатол-Рекс), если на ней нет никаких отрядов и она находится в системе, смежной с подконтрольной вам планетой."},
+                "QUASH": {"label": "АННУЛИРОВАНИЕ", "effect": "После раскрытия карты политики вы можете потратить 1 жетон из вашего стратегического резерва, чтобы сбросить эту карту и раскрыть новую с верха колоды политики. Игроки голосуют по новой карте."},
                 
                 "FLAGSHIP": {"label": "ЛОНКАРА ССОДУ", "effect": "Вы можете использовать способность «КОСМИЧЕСКАЯ ПУШКА» этого отряда против кораблей в смежных системах."},
                 "MECH": {"label": "ИНДОМИТУС", "effect": "Вы можете использовать способность «КОСМИЧЕСКАЯ ПУШКА» этого отряда против кораблей в смежных системах."},
@@ -802,9 +826,9 @@
                 "commanderUnlock": "Имейте 7 карт действий.",
                 "heroAbility": "Каждый другой игрок показывает вам 1 карту действия со своей руки. Для каждого игрока: вы можете либо взять показанную карту, либо заставить этого игрока сбросить 3 случайные карты действий с руки. Затем изгоните эту карту.",
                 
-                "STALL_TACTICS": {"label": "STALL TACTICS", "effect": "Discard 1 action card from your hand."},
-                "SCHEMING": {"label": "SCHEMING", "effect": "When you draw 1 or more action cards, draw 1 additional action card. Then, choose and discard 1 action card from your hand."},
-                "CRAFTY": {"label": "CRAFTY", "effect": "You can have any number of action cards in your hand. Game effects cannot prevent you from using this ability."},
+                "STALL_TACTICS": {"label": "ОТВЛЕКАЮЩИЙ МАНЕВР", "effect": "Сбросьте 1 карту действия с руки."},
+                "SCHEMING": {"label": "ИНТРИГИ", "effect": "Когда вы берете одну или несколько карт действий, возьмите 1 дополнительную карту действия. Затем сбросьте 1 любую карту действия с руки."},
+                "CRAFTY": {"label": "КОВАРСТВО", "effect": "Вы можете держать на руке любое количество карт действий. игровые эффекты не могут помешать вам использовать эту способность."},
                 
                 "FLAGSHIP": {"label": "И'СИЯ ИССРИЛА", "effect": "Этот корабль может передвигаться через системы, в которых есть корабли других игроков."},
                 "MECH": {"label": "ЛАЗУТЧИК ЧЁРНОЙ ТЕНИ", "deploy": "После того как вы использовали фракционную способность «ОТВЛЕКАЮЩИЙ МАНЁВР», вы можете разместить 1 мех на подконтрольной вам планете."},
@@ -819,9 +843,9 @@
                 "commanderUnlock": "Имейте 10 Товаров.",
                 "heroAbility": "После того как хотя бы 1 ваш отряд использует способность «ПРОИЗВОДСТВО»: Вы можете уменьшить цену каждого производимого отряда до 0 во время этого Производства. Если вы это делаете, изгоните эту карту.",
                 
-                "MASTERS_OF_TRADE": {"label": "MASTERS OF TRADE", "effect": "You do not have to spend a command token to resolve the secondary ability of the 'Trade' strategy card."},
-                "GUILD_SHIPS": {"label": "GUILD SHIPS", "effect": "You can negotiate transactions with players who are not your neighbors."},
-                "ARBITERS": {"label": "ARBITERS", "effect": "When you are negotiating a transaction, action cards can be exchanged as part of that transaction."},
+                "MASTERS_OF_TRADE": {"label": "ВИРТУОЗНЫЕ ТОРГОВЦЫ", "effect": "Вам не нужно тратить жетоны приказов, чтобы применить второстепенную способность карты стратегии «Торговля»."},
+                "GUILD_SHIPS": {"label": "ЗВЕЗДОЛЕТЫ ГИЛЬДИИ", "effect": "Вы можете договариваться о сделке с любым игроком, а не только с соседом."},
+                "ARBITERS": {"label": "АРБИТРЫ", "effect": "Когда вы договариваетесь о сделке, вы можете обмениваться картами действий в рамках сделки."},
                 
                 "FLAGSHIP": {"label": "ГНЕВ КЕНАРЫ", "effect": "После того как вы бросили кубик во время космического боя в этой системе, вы можете потратить 1 товар, чтобы добавить +1 к результату броска."},
                 "MECH": {"label": "ГОРДОСТЬ КЕНАРЫ", "effect": "Карта этой планеты может быть частью сделки; если вы это делаете, переместите все ваши отряды с этой планеты на другую подконтрольную вам планету."},
@@ -836,9 +860,9 @@
                 "commanderUnlock": "Имейте 3 отряда в системах, которые содержат альфа- или бета- червоточины.",
                 "heroAbility": " Поменяйте местами любые две системы, которые содержат червоточины или ваши отряды (кроме Ядра червоточин и родной системы Креусов).  Затем изгоните эту карту.",
                 
-                "QUANTUM_ENTANGLEMENT": {"label": "QUANTUM ENTANGLEMENT", "effect": "You treat all systems that contain either an alpha or beta wormhole as adjacent to each other. Game effects cannot prevent you from using this ability."},
-                "SLIPSTREAM": {"label": "SLIPSTREAM", "effect": "During your tactical actions, apply +1 to the move value of each of your ships that starts its movement in your home system or in a system that contains either an alpha or beta wormhole."},
-                "CREUSS_GATE": {"label": "CREUSS GATE", "effect": "When you create the game board, place the Creuss Gate where your home system would normally be placed. The Creuss Gate is not a home system. Then, place your home system in your play area."},
+                "QUANTUM_ENTANGLEMENT": {"label": "КВАНТОВАЯ ЗАПУТАННОСТЬ", "effect": "Вы можете считать все системы с альфа или бета червоточинами, смежными друг с другом. Игровые эффекты не могут помешать вам использовать эту способность."},
+                "SLIPSTREAM": {"label": "ГРАВИТАЦИОННЫЙ МАНЕВР", "effect": "Во время ваших тактических действий добавляйте +1 к значению полета каждого вашего корабля, начинающего ваше движение в вашей родной системе или системе с альфа или бета червоточинами."},
+                "CREUSS_GATE": {"label": "ВРАТА КРЕУССА", "effect": "При создании игрового поля положите Врата Креусса (17) на место, где должна находиться ваша родная система. Затем положите вашу родную систему (51) перед собой. Врата Креусса не считаются вашей родной системой."},
                 
                 "FLAGSHIP": {"label": "ХИЛ КОЛИШ", "effect": "В системе с этим кораблем есть дельта-червоточина. ХИЛ КОЛИШ может передвигаться до или после ваших остальных кораблей."},
                 "MECH": {"label": "ДВИГАТЕЛЬ ИКАРА", "effect": "После того как любой игрок активировал систему, вы можете  убрать этот отряд с игрового поля, чтобы поместить или переместить жетон червоточины призраков Креусса в эту систему."},
@@ -853,9 +877,9 @@
                 "commanderUnlock": "Имейте 2 жетона приказов других фракций в своем резерве флота.",
                 "heroAbility": "Переместите все отряды из космоса любой системы в смежную систему, которая содержит корабли другого игрока. В этой системе происходит космический бой. Ни один из игроков не может отступить или использовать способности, которые могут двигать их корабли. Затем изгоните эту карту.",
                 
-                "EDICT": {"label": "EDICT", "effect": "When you win a combat, place 1 command token from your opponent’s reinforcements in your fleet pool if it does not already contain 1; other players’ tokens increase your fleet limit but cannot be redistributed."},
-                "IMPERIA": {"label": "IMPERIA", "effect": "While another player’s command token is in your fleet pool, you can use the ability of that player’s commander, if it is unlocked."},
-                "HUBRIS": {"label": "HUBRIS", "effect": "During setup, purge your 'Alliance' promissory note. Other players cannot give you their “Alliance” promissory note."},
+                "EDICT": {"label": "ЭДИКТ", "effect": "Когда вы выигрываете бой, поместите 1 жетон командования из подкреплений вашего противника в свой пул флота, если в нем еще не содержится жетона этого игрока; жетоны других игроков увеличивают лимит вашего флота, но не могут быть перераспределены."},
+                "IMPERIA": {"label": "ИМПЕРИЯ", "effect": "Пока жетон командования другого игрока находится в вашем пуле флота, вы можете использовать способность командира этого игрока, если она разблокирована."},
+                "HUBRIS": {"label": "ВЫСОКОМЕРИЕ", "effect": "Во время подготовки игры изгоните свою карту обещания АЛЬЯНС. Другие игроки не могут передавать вам свои карты карты обещаний АЛЬЯНС."},
                 
                 "FLAGSHIP": {"label": "АРВИКОН РЕКС", "effect": "Во время битвы с противником, чей жетон приказа не находится в вашем резерве флота, добавляйте +2 к результатам боевых проверок этого юнита."},
                 "MECH": {"label": "ЗВЁЗДНЫЙ КОПЬЕНОСЕЦ", "effect": "После того как игрок, чей жетон приказа находится в вашем резерве флота, активирует эту систему, вы можете потратить его жетон из вашего резерва флота; этот игрок получает этот жетон и завершает свой ход."},
@@ -873,8 +897,8 @@
                 "commanderUnlock": "Имейте 1 выполненную секретную цель.",
                 "heroAbility": "Разместите эту карту рядом с игровым полем; ваш флагман и отряды, которые он перевозит, может перемещаться из системы, которая содержит ваш жетон приказа во время этого игрового раунда. В конце этого игрового раунда изгоните эту карту.",
                 
-                "THE_COMPANY": {"label": "THE COMPANY", "effect": "During setup, take the 2 additional Nomad faction agents and place them next to your faction sheet; you have 3 agents."},
-                "FUTURE_SIGHT": {"label": "FUTURE SIGHT", "effect": "During the agenda phase, after an outcome you voted for or predicted is resolved, gain 1 trade good."},
+                "THE_COMPANY": {"label": "КОМПАНИЯ", "effect": "Во время подготовки игры возьмите двух дополнительных агентов фракции Кочевников и поместите их рядом с листом фракции; у вас есть 3 агента."},
+                "FUTURE_SIGHT": {"label": "ВЗГЛЯД В БУДУЩЕЕ", "effect": "В фазе политики, после того, как результат, за который вы проголосовали или предсказали, решен, получите 1 товар."},
                 
                 "FLAGSHIP": {"label": "МЕМОРИЯ I", "effect": "Вы можете считать этот отряд смежным к системам, которые содержат хотя бы 1 ваш мех."},
                 "MECH": {"label": "КВАНТОВЫЙ МАНИПУЛЯТОР", "effect": "Пока этот отряд находится в космосе во время боя, вы можете использовать его способность «ПОГЛОЩЕНИЕ УРОНА» для отмены попаданий нанесённых вашим кораблям в этой системе."},
@@ -889,9 +913,9 @@
                 "commanderUnlock": "Имейте отряды в 3 гравитационных разломах.",
                 "heroAbility": "Каждый другой игрок бросает кубик за каждый из своих кораблей (кроме истребителей), которые находятся в системе с Пространственным Разрывом или в смежной системе; при результате 1-3, захватите этот отряд. Если это приводит к удалению отрядов наземных войск или истребителей, также захватите и эти отряды. Затем изгоните эту карту.",
                 
-                "DEVOUR": {"label": "DEVOUR", "effect": "Capture your opponent’s non-structure units that are destroyed during combat."},
-                "AMALGAMATION": {"label": "AMALGAMATION", "effect": "When you produce a unit, you may return 1 captured unit of that type to produce that unit without spending resources."},
-                "RIFTMELD": {"label": "RIFTMELD", "effect": "When you research a unit upgrade technology, you may return 1 captured unit of that type to ignore all of that technology’s prerequisites."},
+                "DEVOUR": {"label": "ПОЖИРАНИЕ", "effect": "Захватывайте подразделения противника (кроме построек), уничтоженные во время боя."},
+                "AMALGAMATION": {"label": "ОБЪЕДИНЕНИЕ", "effect": "Когда вы производите отряд, вы можете вернуть 1 захваченный отряд этого типа, чтобы произвести этот отряд, не тратя ресурсы."},
+                "RIFTMELD": {"label": "РАЗРЫВ СЛИЯНИЯ", "effect": "Когда вы исследуете технологию улучшения отряда, вы можете вернуть 1 захваченный отряд этого типа, чтобы игнорировать все обязательные условия этой технологии."},
                 
                 "FLAGSHIP": {"label": "ГЛУБИННЫЙ УЖАС", "effect": "Захватывайте все другие отряды (кроме сооружений), которые были уничтожены в этой системе, в том числе ваши."},
                 "MECH": {"label": "РЕАНИМАТОР", "effect": "Когда ваша пехота на этой планете уничтожена, поместите её на свой планшет фракции; эти отряды захвачены."},
@@ -907,8 +931,8 @@
                 "commanderUnlock": "Имейте 5 сооружений на игровом поле.",
                 "heroAbility": "ДЕЙСТВИЕ: Подготовьте карту планеты Элизиум и прикрепите эту карту к ней. Значение ресурсов и влияния этой планеты увеличивается на 3, и она получает способность «КОСМИЧЕСКАЯ ПУШКА 5 (х3)», как если бы это был 1 из ваших отрядов.",
                 
-                "TERRAGENESIS": {"label": "TERRAGENESIS", "effect": "After you explore a planet that does not have a sleeper token, you may place or move 1 sleeper token onto that planet."},
-                "AWAKEN": {"label": "AWAKEN", "effect": "After you activate a system that contains 1 or more of your sleeper tokens, you may replace each of those tokens with 1 PDS from your reinforcements."},
+                "TERRAGENESIS": {"label": "ТЕРРАГЕНЕЗ", "effect": "После того как вы исследуете планету, на которой нет жетона спящего, вы можете разместить или переместить на эту планету 1 жетон спящего."},
+                "AWAKEN": {"label": "ПРОБУЖДЕНИЕ", "effect": "После того, как вы активируете систему, содержащую 1 или более ваших жетонов спящих, вы можете заменить каждый из этих жетонов на 1 ПСО из вашего подкрепления."},
                 
                 "FLAGSHIP": {"label": "УРАН", "deploy": "После того как вы активировали ситему, в которой есть хотя бы 1 ваш ПСО, вы можете заменить 1 ваш ПСО этим юнитом."},
                 "MECH": {"label": "ГЕКАТОНХЕЙР", "deploy": "Вместо размещения ПСО на планете, вы можете разместить 1 мех и 1 пехоту на этой планете."},
@@ -924,9 +948,9 @@
                 "commanderUnlock": "Будьте соседом со всеми другими игроками.",
                 "heroAbility": "Разместите 1 жетон пограничья в каждую систему, которая не содержит планет или другой жетон пограничья. Затем разведайте каждый жетон пограничья в системах, которые содержат хотя бы 1 ваш корабль. Затем изгоните эту карту.",
                 
-                "VOIDBORN": {"label": "VOIDBORN", "effect": "Nebulae do not affect your ships’ movement."},
-                "AETHERPASSAGE": {"label": "AETHERPASSAGE", "effect": "After a player activates a system, you may allow that player to move their ships through systems that contain your ships."},
-                "DARK_WHISPERS": {"label": "DARK WHISPERS", "effect": "During setup, take the additional Empyrean faction promissory note; you have 2 faction promissory notes."},
+                "VOIDBORN": {"label": "РОЖДЕННЫЕ БЕЗДНОЙ", "effect": "Туманности не влияют на движение ваших кораблей."},
+                "AETHERPASSAGE": {"label": "ЭФИРНЫЙ ПРОХОД", "effect": "После того, как игрок активирует систему, вы можете разрешить этому игроку перемещать свои корабли через системы, содержащие ваши корабли."},
+                "DARK_WHISPERS": {"label": "ТЕМНЫЙ ШЕПОТ", "effect": "Во время подготовки игры возьмите дополнительную карту обещания Возвышенных; у вас есть 2 фракционных обещания."},
                 
                 "FLAGSHIP": {"label": "ДИНАМО", "effect": "После того как юнит любого игрока в этой или смежной системе использовал ПОГЛОЩЕНИЕ УРОНА, вы можете потратить 2 влияния, чтобы отремонтировать его."},
                 "MECH": {"label": "СМОТРИТЕЛЬ", "effect": "Вы можете убрать этот отряд в снабжение из системы, которая содержит отряд другого игрока (или смежная с ним), чтобы отменить карту действия, сыгранную этим игроком."},
@@ -941,8 +965,8 @@
                 "commanderUnlock": "Имейте хотя бы по 1 меху в 3 системах.",
                 "heroAbility": "Получите 1 реликвию и примените второстепенные способности до 2 карт стратегий (не перевернутых или не выбранных); во время этого действия тратьте жетоны приказов из вашего снабжения а не из стратегического резерва. Затем изгоните эту карту.",
                 
-                "DISTANT_SUNS": {"label": "DISTANT SUNS", "effect": "When you explore a planet that contains 1 of your mechs, you may draw 1 additional card; choose 1 to resolve and discard the rest."},
-                "FABRICATION": {"label": "FABRICATION",   "effect": "Either purge 2 of your relic fragments of the same type to gain 1 relic or purge 1 of your relic fragments to gain 1 command token."},
+                "DISTANT_SUNS": {"label": "ДАЛЕКИЕ СОЛНЦА", "effect": "Когда вы исследуете планету, на которой находится хотя бы 1 ваш мех, вы можете взять 1 дополнительную карту; выберите одну из них и отбросьте остальные."},
+                "FABRICATION": {"label": "ИЗГОТОВЛЕНИЕ",   "effect": "Изгоните 2 фрагмента реликвии одного типа, чтобы получить 1 реликвию, либо изгоните 1 фрагмент реликвии, чтобы получить 1 жетон командования."},
                 
                 "FLAGSHIP": {"label": "ВИЗ-ЭЛЬ-ВИР", "effect": "Ваши мехи в этой системе бросают 1 дополнительный кубик во время боя."},
                 "MECH": {"label": "ЭЙДОЛОН", "effect": "Если этот отряд находится в космосе активной системы в начале космического боя, переверните эту карту."},
@@ -958,8 +982,8 @@
                 "commanderUnlock": "У вас должно быть 6 отрядов на игровом поле со способностями «ЗАГРАДИТЕЛЬНЫЙ ОГОНЬ», «КОСМИЧЕСКАЯ ПУШКА» или «БОМБАРДИРОВКА».",
                 "heroAbility": "Переместите любое количество кораблей из любого количества систем в любое количество других систем, которые  содержат 1 из ваших жетонов приказа и не содержат кораблей других игроков. Затем изгоните эту карту.",
                 
-                "ZEAL": {"label": "ZEAL", "effect": "You always vote first during the agenda phase. When you cast at least 1 vote, cast 1 additional vote for each player in the game, including you."},
-                "RAID_FORMATION": {"label": "RAID FORMATION", "effect": "When 1 or more of your units use ANTI-FIGHTER BARRAGE, for each hit produced in excess of your opponent’s fighters, choose 1 of your opponent’s ships that has SUSTAIN DAMAGE to become damaged."},
+                "ZEAL": {"label": "РВЕНИЕ", "effect": "Вы всегда голосуете первым в фазе политики. Если вы отдадите хотя бы 1 голос, прибавьте по 1 дополнительному голосу за каждого игрока в игре, включая вас."},
+                "RAID_FORMATION": {"label": "БОЕВОЕ ПОСТРОЕНИЕ", "effect": "Когда один или несколько ваших отрядов используют ЗАГРАДИТЕЛЬНЫЙ ОГОНЬ, и вы наносите больше попаданий чем истребителей противника находится в бою, за каждое лишнее попадание выберите 1 из кораблей вашего противника, у которого есть ПОГЛОЩЕНИЕ УРОНА, и присвойте ему это попадание."},
                 
                 "FLAGSHIP": {"label": "КЕТСАЛЬКОАТЛЬ", "effect": "Другие игроки не могут использовать КОСМИЧЕСКУЮ ПУШКУ против ваших кораблей в этой системе."},
                 "MECH": {"label": "СТРАЖ ГНЕЗДА", "effect": "Этот отряд не занимает места на корабле при транспортировке или при нахождении в космосе с хотя бы 1 вашим кораблём, у которого есть значение мест на борту."},
