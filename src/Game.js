@@ -150,9 +150,10 @@ export const TIO = {
           if(!G.secretObjDeck.length){
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
             G.races.forEach(r => {
-              r.secretObjectives.push(...G.secretObjDeck.slice(-2)); //pop & players []
+              r.secretObjectives.push(...G.secretObjDeck.slice(-2)); //2!
+              //r.mustDropSecObj = true;
+
               //r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Drive the Debate'), players: []});
-              r.mustDropSecObj = true;
             });
           }
 
@@ -174,7 +175,7 @@ export const TIO = {
           });
         },
         endIf: ({ G, ctx }) => {
-          const cardsCount = ctx.numPlayers > 4 ? 1 : 2; // more than 4!
+          const cardsCount = ctx.numPlayers > 0 ? 1 : 2; // more than 4!
           return ctx.playOrder.every( r => G.races[r].strategy.length === cardsCount );
         }
       },

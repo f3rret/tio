@@ -9,6 +9,7 @@ import { checkObjective, StateContext, LocalizationContext, haveTechnology, UNIT
 
 export function PaymentDialog(args) {
     
+    const { t } = useContext(LocalizationContext);
     let objective = args.G.pubObjectives.find(o => o.id === args.oid);
     if(!objective) objective = args.race.secretObjectives.find(o => o.id === args.oid);
     const [payment, setPayment] = useState({});
@@ -33,14 +34,14 @@ export function PaymentDialog(args) {
 
     return (
         <Modal style={{maxWidth: '35rem'}} isOpen={args.isOpen} toggle={()=>args.toggle()}>
-        <ModalHeader toggle={()=>args.toggle()} style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>{args.oid}</ModalHeader>
+        <ModalHeader toggle={()=>args.toggle()} style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>{t('cards.objectives.' + args.oid + '.label')}</ModalHeader>
         <ModalBody style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>
-            {objective.title}
+            {t('cards.objectives.' + args.oid + '.title')}
             <PaymentCard {...args} onPayment={setPayment} objective={objective}/>
         </ModalBody>
         <ModalFooter style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>
             <Button disabled={!acceptable} color='success' onClick={()=>args.toggle(payment)}>
-                Confirm
+                {t('board.confirm')}
             </Button>
         </ModalFooter>
         </Modal>
@@ -1125,12 +1126,12 @@ export const ObjectivesList = ({onSelect, selected, mustSecObj}) => {
                             <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', right: '0', top: '0', position: 'absolute'}}>{t('board.drop')}</b>}
                   </ListGroupItem>})
         }
-      
     </ListGroup>
 }
 
 const PaymentCard = (args) => {
 
+    const { t } = useContext(LocalizationContext);
     const [payment, setPayment] = useState({ influence: { planets: [], tg: 0 }, resources: { planets: [], tg: 0 }, 
         tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0} });
     const [paid, setPaid] = useState({}); //exhausted
@@ -1210,8 +1211,8 @@ const PaymentCard = (args) => {
         </div>}
         {objKeys.indexOf('token') > -1 && <div style={{width: '20rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
             <Row>
-                <Col xs='6' style={TOKENS_STYLE}><b>tactic</b></Col>
-                <Col xs='6' style={TOKENS_STYLE}><b>strategic</b></Col>
+                <Col xs='6' style={TOKENS_STYLE}><b>{t('board.tactic')}</b></Col>
+                <Col xs='6' style={TOKENS_STYLE}><b>{t('board.strategic')}</b></Col>
             </Row>
             <Row>
                 <Col xs='6' className='hoverable' style={TOKENS_STYLE}><h6 style={{fontSize: '50px'}}>{tokens.t}</h6></Col>
@@ -1229,22 +1230,22 @@ const PaymentCard = (args) => {
                 <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('c', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
                     <img alt='fragment' src='icons/cultural_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                     <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.c}</h6>
-                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>cultural</b>
+                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>{t('board.cultural')}</b>
                 </ListGroupItem>
                 <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('h', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
                     <img alt='fragment' src='icons/hazardous_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                     <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.h}</h6>
-                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>hazardous</b>
+                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>{t('board.hazardous')}</b>
                 </ListGroupItem>
                 <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('i', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
                     <img alt='fragment' src='icons/industrial_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                     <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.i}</h6>
-                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>industrial</b>
+                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>{t('board.industrial')}</b>
                 </ListGroupItem>
                 <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('u', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
                     <img alt='fragment' src='icons/unknown_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
                     <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.u}</h6>
-                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>unknown</b>
+                    <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>{t('board.unknown')}</b>
                 </ListGroupItem>
             </ListGroup>
         </div>}
@@ -1264,10 +1265,10 @@ const PaymentCard = (args) => {
                             </h5>}
                             
                             <div style={{display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap'}}>
-                                <h6 style={{textAlign: 'end'}}>{'Total ' + k + ': '}
+                                <h6 style={{textAlign: 'end'}}>{t('board.total') + ' ' + t('board.' + k) + ': '}
                                     {payment[k].planets && payment[k].planets.reduce((a,b) => b[k] + a, 0)}
                                     {!payment[k].planets && k!=='token' && k!=='fragment' && tg}
-                                    {k!=='token' && k!=='fragment' && payment[k].tg > 0 && '+' + payment[k].tg + ' tg'}
+                                    {k!=='token' && k!=='fragment' && payment[k].tg > 0 && '+' + payment[k].tg + ' ' + t('board.tg')}
                                     {k==='token' && payment[k].t + payment[k].s}
                                     {k==='fragment' && payment[k].h + payment[k].i + payment[k].u + payment[k].c}
                                     {' / '}{args.objective.req[k]}
@@ -1439,6 +1440,7 @@ const RaceList = ({races, selected, speaker, onClick}) => {
 export const TradePanel = ({ onTrade }) => {
 
     const { G, playerID } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const races =  useMemo(() => G.races.filter(r => r.rid !== G.races[playerID].rid), [G.races, playerID]);
     const [srid, setSrid] = useState(races[0].rid);
     const [tradeItem, setTradeItem] = useState(undefined);
@@ -1459,15 +1461,20 @@ export const TradePanel = ({ onTrade }) => {
             {races.length > 0 && <>
                 <Row style={{margin: '1rem'}}>
                     <Col style={{textAlign: 'right', alignSelf: 'center'}}>
-                        {tradeItem && <b>{tradeItem === 'commodity' ? '1 commodity' : tradeItem === 'tg' ? '1 trade good' : 
-                        tradeItem === 'fragment.c' ? '1 cultural fragment' :
-                        tradeItem === 'fragment.h' ? '1 hazardous fragment' :
-                        tradeItem === 'fragment.i' ? '1 industrial fragment' :
-                        tradeItem === 'fragment.u' ? '1 unknown fragment' :
-                        tradeItem.substr(tradeItem.indexOf('.') + 1).replaceAll('_', ' ') }</b>}
+                        {tradeItem && <b>{tradeItem === 'commodity' ? ('1 ' + t('board.commodity')) : tradeItem === 'tg' ? ('1 ' + t('board.trade_good')) : 
+                        tradeItem === 'fragment.c' ? ('1 ' + t('board.cultural') + t('board.fragment')) :
+                        tradeItem === 'fragment.h' ? ('1 ' + t('board.hazardous') + t('board.fragment')) :
+                        tradeItem === 'fragment.i' ? ('1 ' + t('board.industrial') + t('board.fragment')) :
+                        tradeItem === 'fragment.u' ? ('1 ' + t('board.unknown') + t('board.fragment')) :
+                        tradeItem.indexOf('relic') === 0 ? t('cards.relics.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
+                        tradeItem.indexOf('action') === 0 ? t('cards.actions.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
+                        tradeItem.indexOf('promissory') === 0 ? t('cards.promissory.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
+                        tradeItem.substr(tradeItem.indexOf('.') + 1) }</b>}
                     </Col>
-                    <Col xs={3} style={{textAlign: 'center'}}>
-                        <Button onClick={()=>tradeClick()} disabled={!tradeItem} className='bi-arrow-down-circle' style={{fontSize: '1rem'}} size='sm' color='success'>{' Send'}</Button>
+                    <Col xs={4} style={{textAlign: 'center', padding: 0}}>
+                        <Button onClick={()=>tradeClick()} disabled={!tradeItem} className='bi-arrow-down-circle' style={{fontSize: '1rem'}} size='sm' color='success'>
+                            {' ' + t('board.send')}
+                        </Button>
                     </Col>
                 </Row>
                 <RacePanel rid={srid} />

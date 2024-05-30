@@ -2,13 +2,14 @@
 import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
 import { useMemo, useCallback, useState, useEffect, useRef, useContext } from 'react';
 import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip,/*UncontrolledAccordion, 
-  AccordionItem, AccordionBody, AccordionHeader,*/ CardBody, 
+  AccordionItem, AccordionBody, AccordionHeader,*/ CardBody, Tooltip, 
   CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont, Row, Col, 
   UncontrolledAccordion,
   AccordionItem,
   AccordionHeader,
   AccordionBody} from 'reactstrap';
-import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, /*getTechType,*/ ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog } from './dialogs';
+import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, /*getTechType,*/ 
+ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog } from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
@@ -886,7 +887,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
         {ctx.phase === 'acts' && isMyTurn && selectedTile === index && race.actions.length < maxActs &&  
         element.tdata.type !== 'hyperlane' && !(element.tdata.tokens && element.tdata.tokens.indexOf(race.rid) > -1) && 
-          <Text text='► Activate system' x={element.w/4 - 10} y={element.w/2 + 90} interactive={true} pointerdown={()=>moves.activateTile(index)} 
+          <Text text={'► ' + t('board.activate_system')} x={element.w/4 - 10} y={element.w/2 + 90} interactive={true} pointerdown={()=>moves.activateTile(index)} 
             style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}>
           </Text>}
         
@@ -1183,16 +1184,27 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }, [G.races, ctx.currentPlayer]);
 
+  /**
+   * {mustSecObj && ctx.phase === 'acts' && 
+      <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '30%', position: 'absolute', margin: '20rem 30rem', zIndex: 1}}>
+        <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>You must drop secret objective</h3></CardTitle>
+        <CardBody style={{display: 'flex', color: 'black'}}>
+          Game starts with 1 secret objective. You can't have more than 3 secret objectives.
+        </CardBody>
+      </Card>}
+   */
+
   return (
           <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>      
             <MyNavbar />
             <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem', zIndex: '1'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && !race.isSpectator && <>
                 {techVisible && <TechnologyDialog />}
-                {objVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.nav.objectives')} <span style={{float: 'right'}}>{t('board.you_have') + ' ' + VP + ' ' + t('board.vp')}</span></h6></CardTitle>
-                  <ObjectivesList mustSecObj={mustSecObj} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective: mustSecObj ? dropSecretObjective: ()=>{}}/>
-                </Card>}
+                {objVisible && <Card id='objListMain' style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                    <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.nav.objectives')} <span style={{float: 'right'}}>{t('board.you_have') + ' ' + VP + ' ' + t('board.vp')}</span></h6></CardTitle>
+                    <ObjectivesList mustSecObj={mustSecObj} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective: mustSecObj ? dropSecretObjective: ()=>{}}/>
+                  </Card>}
+                
                 {planetsVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                   <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.nav.planets')}</h6></CardTitle>
                     <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
@@ -1207,7 +1219,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 </Card>}
               </>}
               {!race.isSpectator && tradeVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Trade</h6></CardTitle>
+                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.nav.trade')}</h6></CardTitle>
                 <TradePanel onTrade={moves.trade}/>
               </Card>}
               {!race.isSpectator && producing && <ProducingPanel 
@@ -1235,7 +1247,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       return <ListGroupItem key={idx} style={{background: 'none', display:'flex', justifyContent: 'flex-end', border: 'none', padding: '1rem'}}>
                         <div style={{width: 'auto'}}>
                           {r && r!== true && <div style={{position: 'absolute', left: '0', width: '100%'}}>
-                                  <img alt='race icon' src={'race/icons/'+r.rid+'.png'} style={{marginTop: '-.5rem', float: 'left', width: '3rem'}}/>
+                                  <img alt='race icon' src={'race/icons/'+r.rid+'.png'} style={{marginTop: '-.5rem', float: 'left', width: '3rem', maxHeight: '3rem'}}/>
                                   <h5 style={{marginLeft: '4rem', color: 'black'}}>{r.name}</h5>
                                 </div>}
                         </div>
@@ -1285,13 +1297,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </CardBody>
             </Card>}
 
-            {mustSecObj && ctx.phase === 'acts' && 
-            <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '30%', position: 'absolute', margin: '20rem 30rem', zIndex: 1}}>
-              <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>You must drop secret objective</h3></CardTitle>
-              <CardBody style={{display: 'flex', color: 'black'}}>
-                Game starts with 1 secret objective. You can't have more than 3 secret objectives.
-              </CardBody>
-            </Card>}
+            
 
             <Stage style={{border: 'double 1rem', borderColor: race ? race.color[1]:'black'}} width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport home={G.tiles.find(t => t.tid === G.races[playerID].rid)}>
@@ -1646,6 +1652,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             {payObj !== null && <PaymentDialog oid={payObj} G={G} race={race} planets={PLANETS} 
                             isOpen={payObj !== null} toggle={(payment)=>togglePaymentDialog(payment)}/>}
          
+          {ctx.phase === 'acts' && objVisible && mustSecObj && 
+            <Tooltip isOpen={document.getElementById('objListMain')} target='objListMain' placement='right' className='todoTooltip'>
+              <b>{t('board.tooltips.drop_secret_obj_header')}</b>
+              <p>{t('board.tooltips.drop_secret_obj_body')}</p>
+            </Tooltip>}
+
           </StateContext.Provider>)
 }
 

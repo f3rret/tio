@@ -163,9 +163,11 @@
             "hero": "герой",
             "tokens": "жетоны",
             "fragments": "фрагменты",
+            "fragment": "фрагмент",
             "reinforce": "подкрепление",
             "commodity": "продукция",
             "trade_goods": "товары",
+            "trade_good": "товар",
             "remove_selected_from_board": "убрать с доски",
             "purge": "изгнать",
             "ready": "готов",
@@ -184,7 +186,18 @@
             "speaker": "председатель",
             "players_move": "Ход игрока",
             "you_have": "у вас",
-            "vp": "ПО"
+            "vp": "ПО",
+            "send": "отправить",
+            "activate_system": "активировать",
+            "tooltips": {
+                "drop_secret_obj_header": "Сбросьте карту",
+                "drop_secret_obj_body": "Выберите карту секретной цели чтобы сбросить."
+            },
+            "total": "всего",
+            "influence": "влияния",
+            "resources": "ресурсы",
+            "token": "жетон",
+            "tg": "товаров"
         },
         "cards": {
             "strategy": {

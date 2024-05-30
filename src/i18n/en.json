@@ -164,9 +164,11 @@
             "hero": "hero",
             "tokens": "tokens",
             "fragments": "fragments",
+            "fragment": "fragment",
             "reinforce": "reinforce",
             "commodity": "commodity",
             "trade_goods": "trade goods",
+            "trade_good": "trade good",
             "remove_selected_from_board": "remove selected from board",
             "purge": "purge",
             "ready": "ready",
@@ -185,7 +187,18 @@
             "speaker": "speaker",
             "players_move": "Player's move",
             "you_have": "you have",
-            "vp": "VP"
+            "vp": "VP",
+            "send": "send",
+            "activate_system": "activate system",
+            "tooltips": {
+                "drop_secret_obj_header": "Drop a card",
+                "drop_secret_obj_body": "Choose a secret objective card to drop it."
+            },
+            "total": "total",
+            "influence": "influence",
+            "resources": "resources",
+            "token": "token",
+            "tg": "tg"
         },
         "cards": {
             "strategy": {

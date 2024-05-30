@@ -131,6 +131,20 @@ li.list-group-item{
     background-color: transparent;
 }
 
+.todoTooltip{
+    margin: .5rem;
+}
+.todoTooltip .tooltip-inner{
+    background-color: var(--bs-warning);
+    font-size: 150%;
+    color: black;
+    text-align: left;
+}
+.todoTooltip .tooltip-arrow::before{
+    border-right-color: var(--bs-warning)!important;
+    border-width: 1rem!important;
+}
+
 @import "../../node_modules/bootstrap/scss/bootstrap";
 
 
