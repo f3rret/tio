@@ -9,7 +9,7 @@ import MapOptionsRO from './map generator/options/MapOptionsRO';
 import raceData from './map generator/data/raceData.json';
 import { App } from './App';
 import { PrematchApp } from './prematch/prematchApp';
-import { LocalizationContext } from './utils';
+import { LocalizationContext, shuffle } from './utils';
 import { colors, trueColors } from './colors';
 
 import './scss/custom.scss';
@@ -21,6 +21,10 @@ export const Lobby = ()=> {
     const { t, locale, setLocale } = useContext(LocalizationContext);
     const playerNames = useMemo(() => ['Alice', 'Bob', 'Cecil', 'David', 'Eva', 'Frank', 'Gregory', 'Heilen'], []);
     const races = useMemo(() => [...raceData.races, ...raceData.pokRaces], []);
+    const sortedRacesList = useMemo(() =>
+        races.map(r => {const idx = raceData.raceToHomeSystemMap[r]; return [idx, t('races.' + idx + '.name')]})
+            .sort((a,b) => { if(a[1]>b[1]){return 1} else if(a[1]<b[1]){ return -1} else return 0; })
+    , [races, t]);
 
     const [gameList, setGameList] = useState();
     const [prematchInfo, setPrematchInfo] = useState();
@@ -33,6 +37,9 @@ export const Lobby = ()=> {
     //const [playerName, setPlayerName] = useState(playerNames[0]);
     
     const lobbyClient = useMemo(() => new LobbyClient({ server: 'http://localhost:8000' }), []);
+    const prematchInfoString = useMemo(() => {
+        return JSON.stringify(prematchInfo);
+    }, [prematchInfo]); //for optimization memo recalc
 
     const iAmReady = useMemo(() => {
         if(!playerID) return false;
@@ -42,7 +49,34 @@ export const Lobby = ()=> {
         if(!prematchInfo.players[playerID]) return false;
 
         return prematchInfo.players[playerID].data && prematchInfo.players[playerID].data.ready;
-    }, [prematchInfo, playerID]);
+    // eslint-disable-next-line
+    }, [prematchInfoString, playerID]);
+
+    const currentRaces = useMemo(() => {
+        if(prematchInfo && prematchInfo.players && prematchInfo.players.length){
+            let selectedRaces = prematchInfo.players.map(p => {
+                if(p.data && p.data.race && p.data.race !== '0'){
+                    return raceData.homeSystemToRaceMap[p.data.race];
+                }
+                else{
+                    return '0';
+                }
+            });
+            
+            let unselectedRaces = shuffle(races.filter(r => !selectedRaces.includes(r)));
+            selectedRaces = selectedRaces.map(r => {
+                if(r === '0'){
+                    return unselectedRaces.pop();
+                }
+                else{
+                    return r;
+                }
+            });
+
+            return selectedRaces;
+        }
+    // eslint-disable-next-line
+    }, [prematchInfoString]);
 
     const refreshMatchList = useCallback(() => {
         lobbyClient.listMatches('prematch')
@@ -103,7 +137,7 @@ export const Lobby = ()=> {
         lobbyClient.joinMatch(prematchInfo.gameName, param || prematchID, {
             playerName: playerName || playerNames[nameId],
             playerID: '' + nameId,
-            data: {ready: false}
+            data: {ready: false, race: '0'}
         })
         .then(data => {
             data.playerCredentials && setPlayerCreds(data.playerCredentials);
@@ -118,7 +152,8 @@ export const Lobby = ()=> {
             }
         })
         .catch(console.err);
-    }, [prematchID, prematchInfo, playerNames, lobbyClient, playerName, setCookie]);
+    // eslint-disable-next-line
+    }, [prematchID, prematchInfoString, playerNames, lobbyClient, playerName, setCookie]);
 
     const leavePrematch = useCallback(() => {
         lobbyClient.leaveMatch('prematch', prematchID, {
@@ -145,7 +180,8 @@ export const Lobby = ()=> {
             }
         })
         .catch(console.err);
-    }, [prematchInfo, lobbyClient, refreshMatchList, joinPrematch]);
+    // eslint-disable-next-line
+    }, [prematchInfoString, lobbyClient, refreshMatchList, joinPrematch]);
 
     const changeOption = useCallback((optName, input) => {
         setPrematchInfo(produce(prematchInfo, draft => {
@@ -153,7 +189,8 @@ export const Lobby = ()=> {
                 draft.setupData[optName] = input.value;
             }
         }));
-    }, [prematchInfo]);
+    // eslint-disable-next-line
+    }, [prematchInfoString]);
 
     const rowClick = useCallback((mid) => {
         if(mid){
@@ -166,7 +203,7 @@ export const Lobby = ()=> {
         }
     }, [prematchID]);
 
-    const readyToPlay = useCallback(() => {
+    /*const readyToPlay = useCallback(() => {
         lobbyClient.updatePlayer('prematch', prematchID, {
             playerID: playerID,
             credentials: playerCreds,
@@ -178,7 +215,20 @@ export const Lobby = ()=> {
             console.log(data);
         })
         .catch(console.err);
-    }, [lobbyClient, playerID, playerCreds, prematchID]);
+    }, [lobbyClient, playerID, playerCreds, prematchID]);*/
+
+    const updatePlayerInfo = useCallback((info) => {
+        lobbyClient.updatePlayer('prematch', prematchID, {
+            playerID: playerID,
+            credentials: playerCreds,
+            data: {...prematchInfo.players[playerID].data, ...info}
+        })
+        .then(data => {
+            //console.log(data);
+        })
+        .catch(console.err);
+    // eslint-disable-next-line
+    }, [lobbyClient, playerID, playerCreds, prematchID, prematchInfoString]);
 
     const joinMatch = useCallback((mid) => {
 
@@ -213,8 +263,8 @@ export const Lobby = ()=> {
             }
         })
         .catch(console.err);
-
-    }, [lobbyClient, prematchInfo, playerID, playerCreds, prematchID, playerName, setCookie]);
+    // eslint-disable-next-line
+    }, [lobbyClient, prematchInfoString, playerID, playerCreds, prematchID, playerName, setCookie]);
 
     const reconnect = useCallback(() => {
         setPlayerCreds(cookie.playerCreds);
@@ -224,7 +274,8 @@ export const Lobby = ()=> {
         if(prematchInfo.gameName === 'TIO'){
             setMatchID(prematchInfo.matchID);
         }
-    }, [cookie, prematchInfo]);
+    // eslint-disable-next-line
+    }, [cookie, prematchInfoString]);
 
     const runGame = useCallback((tiles) => {
         
@@ -274,7 +325,8 @@ export const Lobby = ()=> {
             }
         })
         .catch(console.err);
-    }, [playerID, prematchID, lobbyClient, playerCreds, prematchInfo]);
+    // eslint-disable-next-line
+    }, [playerID, prematchID, lobbyClient, playerCreds, prematchInfoString]);
 
     useEffect(() => {
         if(!matchID && prematchInfo && prematchInfo.players && prematchInfo.players.length && prematchInfo.gameName === 'prematch'){
@@ -404,10 +456,13 @@ export const Lobby = ()=> {
                                     {p.name && !p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
                                     {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ ' + t('lobby.open') + ' ]'}</Col>}
                                     {p.name && <Col xs='7' style={{color: p.data && p.data.ready ? 'lime' : 'none'}}>
-                                        {String(playerID) === String(p.id) && <Input style={{color: 'inherit'}} disabled={p.data && p.data.ready} type='select'>
-                                            <option value='random'>{t('lobby.random_race')}</option>
+                                        {String(playerID) === String(p.id) && <Input style={{color: 'inherit'}} disabled={p.data && p.data.ready} type='select' onChange={(e) => updatePlayerInfo({race: e.target.value})}>
+                                            <option value='0'>{'--' + t('lobby.random_race') + '--'}</option>
+                                            {sortedRacesList.map(([idx, label]) => <option key={idx} value={idx}>{label}</option>)}
                                         </Input>}
-                                        {String(playerID) !== String(p.id) && <div style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem .75rem'}}>{t('lobby.random_race')}</div>}
+                                        {String(playerID) !== String(p.id) && <div style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem .75rem'}}>{
+                                            p.data.race === '0' ? t('lobby.random_race'): t('races.' + p.data.race + '.name')
+                                        }</div>}
                                     </Col>}
                                     {!p.name && <Col xs='7' style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem 1.5rem'}}></Col>}
                                 </Row>)}
@@ -422,11 +477,11 @@ export const Lobby = ()=> {
                         {!playerCreds && !playerID && prematchInfo && prematchInfo.players &&
                             <Button color='success' disabled={prematchInfo.gameName !== 'prematch' || !prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>{t('lobby.join_game')} <b className='bi-caret-right-square-fill' ></b></Button>}
                         {playerCreds && <Button color='danger' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> {t('lobby.leave')}</Button>}
-                        {playerID && playerID !== '0' && !iAmReady && <Button color='success' onClick={readyToPlay}>{t('lobby.ready_to_play')} <b className='bi-check-square-fill' ></b></Button>}
+                        {playerID && playerID !== '0' && !iAmReady && <Button color='success' onClick={() => updatePlayerInfo({ready: true})}>{t('lobby.ready_to_play')} <b className='bi-check-square-fill' ></b></Button>}
                     </CardFooter>
                 </Card>}
                 {playerCreds && prematchInfo && prematchInfo.players && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
-                    {playerID === '0' && <MapOptions visible={true} useProphecyOfKings={true} currentRaces={races} excludedTiles={[]} includedTiles={[]} lockedTiles={[]}
+                    {playerID === '0' && <MapOptions visible={true} useProphecyOfKings={true} currentRaces={currentRaces} excludedTiles={[]} includedTiles={[]} lockedTiles={[]}
                         numberOfPlayers={prematchInfo.players.length} updateTiles={runGame} updateRaces={()=>{}} toggleProphecyOfKings={()=>{}}
                         currentPlayerNames={[]} updatePlayerNames={()=>{}} playerID={playerID} updateMapOptionsCallback={updateMapOptionsCallback}/>}
                     {playerID && playerID !== '0' && prematchInfo.players[0] && prematchInfo.players[0].data && 

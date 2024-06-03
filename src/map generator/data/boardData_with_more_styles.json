@@ -41,6 +41,15 @@
                 "secondary_tiles": [4, 3, 5, 27, 26, 30, 29, 32, 24],
                 "tertiary_tiles": [12, 10, 16, 14, 6, 2, 1],
                 "hyperlane_tiles": []
+            },
+            "rex": {
+                "description": "A competitive map with adjacencies.",
+                "source": "rex",
+                "home_worlds": [7, 11, 15],
+                "primary_tiles": [8, 12, 16, 6, 4, 2],
+                "secondary_tiles": [18, 10, 14, 31, 25, 19],
+                "tertiary_tiles": [9, 13, 17, 34, 28, 22],
+                "hyperlane_tiles": [[1, "90A", 0], [3, "90A", 2], [5, "90A", 1], [20, "85A", 4], [24, "85A", 4], [26, "85A", 0], [30, "85A", 0], [32, "85A", 2], [36, "85A", 2]]
             }
         },
         "4": {
@@ -79,6 +88,33 @@
                 "secondary_tiles": [6, 5, 3, 2, 20, 27, 29, 36, 17, 15, 11, 9],
                 "tertiary_tiles": [16, 10, 7, 13],
                 "hyperlane_tiles": []
+            },
+            "warp": {
+                "description": "A smaller than normal board aligned vertically, but filled two hyperlanes to facilitate getting across the board.",
+                "source": "Unknown",
+                "home_worlds": [21, 26, 30, 35],
+                "primary_tiles": [8, 12, 14, 18],
+                "secondary_tiles": [6, 5, 3, 2, 20, 27, 29, 36, 17, 15, 11, 9],
+                "tertiary_tiles": [16, 10, 7, 13],
+                "hyperlane_tiles": [[1, "87A", 1], [4, "88A", 2]]
+            },
+            "double warp": {
+                "description": "Split sides of the galaxy with many hyperlanes connecting the sides.",
+                "source": "Unknown",
+                "home_worlds": [22, 25, 31, 34],
+                "primary_tiles": [9, 11, 15, 17, 7, 13],
+                "secondary_tiles": [6, 5, 3, 2, 35, 30, 26, 21, 23, 24, 32, 33],
+                "tertiary_tiles": [10, 16],
+                "hyperlane_tiles": [[8, "89B", 5], [12, "87B", 4], [14, "90B", 2], [18, "91B", 1]]
+            },
+            "mini warp": {
+                "description": "S more standard 4 player map, but with 4 hyperlanes to bring neighbors closer.",
+                "source": "Captbrownshoes",
+                "home_worlds": [36, 23, 27, 32],
+                "primary_tiles": [7, 10, 13, 15, 16, 12, 9, 18],
+                "secondary_tiles": [1, 2, 4, 5, 17, 11],
+                "tertiary_tiles": [24, 26, 33, 35, 6, 3, 19, 31, 28, 22, 21, 29, 30, 20],
+                "hyperlane_tiles": [[8, "91A", 2], [14, "84B", 5], [25, "85A", 5], [34, "86A", 2]]
             }
         },
         "5": {
@@ -196,6 +232,15 @@
                 "secondary_tiles": [2, 3, 4, 5, 6, 1, 7, 18, 16, 14, 13, 12, 10, 8],
                 "tertiary_tiles": [60, 57, 54, 51, 48, 45, 42, 39, 41, 44, 47, 50, 53, 56, 59, 38, 36, 20, 27, 29, 17, 15, 11, 9, 34, 32, 31, 25, 23, 22],
                 "hyperlane_tiles": []
+            },
+            "warp": {
+                "description": "The alternate map to use with 8 players which uses hyperlanes.",
+                "source": "Game Rules",
+                "home_worlds": [37, 40, 43, 46, 49, 52, 55, 58, 37],
+                "primary_tiles": [19, 21, 10, 26, 28, 30, 16, 35],
+                "secondary_tiles": [18, 6, 14, 13, 12, 3, 8, 7, 60, 39, 23, 25, 48, 51, 32, 34, 59, 56, 31, 50, 47, 44, 22, 38],
+                "tertiary_tiles": [20, 9, 11, 27, 29, 15, 17, 36],
+                "hyperlane_tiles": [[1, "87A", 1], [2, "90B", 3], [4, "88A", 2], [5, "89B", 0], [24, "85B", 5], [33, "83B", 5]]
             }
         }
     }

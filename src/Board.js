@@ -768,7 +768,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         )}
         
         
-        {element.tdata.planets.map((p,i) => {  
+        {element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map((p,i) => { 
           return p.hitCenter && <Sprite image={'icons/empty.png'} scale={1} key={i} width={p.hitRadius * 2} height={p.hitRadius * 2} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}
             interactive={true} pointerdown={ (e)=>tileClick(e, index, i) }>
               
@@ -1317,7 +1317,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                                 { element.tdata.occupied!==undefined && <Text style={{fontSize: 22, fill: 'green'}} 
                                 text={element.tdata.occupied + ':' + (element.tdata.fleet ? getUnitsString(element.tdata.fleet) : '-')} 
                                 x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2 + element.w/1.5} /> }
-                                { element.tdata.planets.map( (p, i) => 
+                                { element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map( (p, i) => 
                                   <Text key={i} 
                                     text={ (p.specialty ? '[' + p.specialty[0] + '] ':'') + p.name + (p.trait ? ' [' + p.trait[0] + '] ':'') + ' ' + p.resources + '/' + p.influence + 
                                     (p.occupied !== undefined ? ' [' + p.occupied + ':' + (p.units ? getUnitsString(p.units) : '-') + ']':'') } 

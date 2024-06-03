@@ -194,6 +194,7 @@ class MapOptions extends React.Component {
     }
 
     updateBoardStyle(event) {
+        
         this.setState({
             currentBoardStyle: event.target.value,
         }, () => {
@@ -210,6 +211,7 @@ class MapOptions extends React.Component {
     updateBoardStyleOptions(event) {
 
         let boardOptions = this.state.optionsPossible.boardStyles;
+
         if (this.props.useProphecyOfKings) {
             boardOptions = this.state.optionsPossible.boardStylesPok;
         }
@@ -447,20 +449,21 @@ class MapOptions extends React.Component {
         }
 
         if(this.props.useProphecyOfKings) this.updatePok(event);
-        this.updatePlayerCount(event);
+        //this.updatePlayerCount(event);
 
-        // Create a random seed to use unless the user has specified one
-        let currentSeed = this.state.currentSeed
+        // Create a random seed to use unless the user has specified one //03.06.24
+        /*let currentSeed = this.state.currentSeed
         if (!this.state.userSetSeed) {
             currentSeed = Math.floor(Math.random() * Math.floor(9999));
-        }
-
-        this.setState({
+        }*/
+        this.props.updateTiles(this.getNewTileSet());
+        
+        /*this.setState({
             currentSeed: currentSeed,
             generated: true,
         }, () => {
             this.props.updateTiles(this.getNewTileSet(), this.encodeSettings(), true);
-        });
+        });*/
 
     }
 
@@ -483,7 +486,7 @@ class MapOptions extends React.Component {
             currentRaces = [...currentRaces]
         }
   
-        this.shuffle(currentRaces)
+        //this.shuffle(currentRaces) /// 02.06.24 get already shuffled as param
         currentRaces = currentRaces.slice(0, this.state.currentNumberOfPlayers)
 
         // Get a set of systems to make the board with, ordered based on user supplied weights
@@ -1343,7 +1346,13 @@ class MapOptions extends React.Component {
         })
     }
 //<form id="generateForm" onSubmit={this.generateBoard} style={{padding: '2rem'}}>
+
+    componentDidMount() {
+        this.updatePlayerCount();
+    }
+
     render() {
+        
         const t = this.props.t;
         return (
             <>

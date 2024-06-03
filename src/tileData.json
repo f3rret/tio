@@ -114,7 +114,7 @@
             "wormhole": null,
             "planets": [
                 {
-                    "name": "[0.0.0]",
+                    "name": "0-0-0",
                     "resources": 5,
                     "influence": 0,
                     "trait": null,

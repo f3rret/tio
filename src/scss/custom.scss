@@ -159,7 +159,7 @@ li.list-group-item{
     perspective: 1600px;
     -webkit-perspective: 1600px;
     z-index: 0;
-}
+}/*
 .star-field .layer {
     box-shadow: -411px -476px #cccccc, 777px -407px #d4d4d4, -387px -477px #fcfcfc, -91px -235px #d4d4d4, 491px -460px #f7f7f7, 892px -128px #f7f7f7, 758px -277px #ededed, 596px 378px #cccccc, 647px 423px whitesmoke, 183px 389px #c7c7c7,
         524px -237px #f0cb26, 679px -535px #e3e3e3, 158px 399px #f0b5b5, 157px 249px #ededed, 81px -450px #ebebeb, 719px -360px #c2c2c2, -499px 473px #f0b5b5, -158px -349px #d4d4d4, 870px -134px #cfcfcf, 446px 404px #c2c2c2,
@@ -222,17 +222,10 @@ li.list-group-item{
 .star-field .layer:nth-child(1) {
     animation: sf-fly-by-1 26s linear infinite;
 }
-/*.star-field .layer:nth-child(2) {
-    opacity: 0;
-    animation: sf-fly-by-2 13s linear infinite;
-}*/
+
 .star-field .layer:nth-child(2) {
     opacity: 0;
     animation: sf-fly-by-2 26s linear infinite;
     animation-delay: 13s;
 }
-/*.star-field .layer:nth-child(4) {
-    opacity: 0;
-    animation: sf-fly-by-3 .5s linear infinite;
-}*/
-
+*/
