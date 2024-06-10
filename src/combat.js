@@ -1,7 +1,7 @@
 import { Card, CardBody, CardTitle, CardFooter, CardText, CardImg, Button, ButtonGroup, Container, Row, Col,
 UncontrolledDropdown, DropdownMenu, DropdownItem, DropdownToggle, Badge } from 'reactstrap'; 
 import { useContext, useMemo, useCallback, useState, useEffect } from 'react';
-import { StateContext, getUnitsTechnologies, haveTechnology, wormholesAreAdjacent, enemyHaveCombatAC } from './utils';
+import { LocalizationContext, StateContext, getUnitsTechnologies, haveTechnology, wormholesAreAdjacent, enemyHaveCombatAC } from './utils';
 import { neighbors } from './Grid';
 import { produce } from 'immer';
 import { ActionCardDialog } from './actionCardDialog';
@@ -9,6 +9,7 @@ import { ActionCardDialog } from './actionCardDialog';
 export const SpaceCannonAttack = () => {
 
     const { G, ctx, playerID, moves } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const activeTile = G.tiles.find(t => t.active === true);
     
     const spaceCannons = useMemo(() =>{
@@ -221,7 +222,7 @@ export const SpaceCannonAttack = () => {
     return (<>
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
-        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Space cannon: attack</h3></CardTitle>
+        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{t('board.space_cannon_attack')}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             {ctx.activePlayers[playerID] === 'spaceCannonAttack' && <>
                 <CombatantForces race={G.races[ctx.currentPlayer]} units={fleet} owner={ctx.currentPlayer} combatAbility='spaceCannon'/>
@@ -239,14 +240,14 @@ export const SpaceCannonAttack = () => {
         </CardBody>
         <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
             {ctx.activePlayers[playerID] === 'spaceCannonAttack' && <>
-                <Button color='warning' disabled= {playerID === ctx.currentPlayer && !isLastOnStage} onClick={moves.nextStep}>Next</Button>
-                <span style={{fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>{hits + ' hits '}</span>
+                <Button color='warning' disabled= {playerID === ctx.currentPlayer && !isLastOnStage} onClick={() => moves.nextStep()}>{t('board.next')}</Button>
+                <span style={{fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>{hits + ' ' + t('board.hits') + ' '}</span>
             </>}
             {ctx.activePlayers[playerID] === 'spaceCannonAttack_step2' && <>
                 <Button color='warning' disabled= {(playerID === ctx.currentPlayer && !allHitsAssigned) || 
-                    (playerID !== ctx.currentPlayer && ctx.activePlayers[ctx.currentPlayer])}  onClick={()=>moves.nextStep(ahits)}>Next</Button>
+                    (playerID !== ctx.currentPlayer && ctx.activePlayers[ctx.currentPlayer] !== undefined)}  onClick={()=>moves.nextStep(ahits)}>{t('board.next')}</Button>
                 <span style={{fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
-                    {playerID === ctx.currentPlayer ? assigned + ' / ' + hits + ' hits assigned ' + (nonFighterHits ? ' (' + nonFighterHits + ' non-fighter)':''): hits + ' hits '}
+                    {playerID === ctx.currentPlayer ? assigned + ' / ' + hits + ' ' + t('board.hits_assigned') +  ' ' + (nonFighterHits ? ' (' + nonFighterHits + ' ' + t('board.non_fighters') + ')':''): hits + ' ' + t('board.hits') + ' '}
                 </span>
             </>}
         </CardFooter>
@@ -259,6 +260,7 @@ export const SpaceCannonAttack = () => {
 const HitAssign = (args) => {
 
     const { playerID } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const {race, units, hits, setHits, owner, allowRepair} = args;
     
     const technologies = useMemo(()=>{
@@ -409,7 +411,7 @@ const HitAssign = (args) => {
         <div style={{display: 'flex', position: 'relative', flexDirection: 'row', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             border: String(playerID) === String(owner) ? 'solid 1px rgba(255,255,0,.5)':'solid 1px rgba(255,255,255,.25)'}}>
             <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
-            {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: race.retreat === 'cancel' ? 'gray':'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
+            {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: race.retreat === 'cancel' ? 'gray':'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>{t('board.retreat')}</CardText>}
             <div style={{display: 'flex', flexWrap: 'wrap'}}>
                 {Object.keys(units).map((u, i) => {
                     return <div key={i} style={{marginLeft: '1rem', display: 'flex', flexWrap: 'wrap'}}>
@@ -427,7 +429,7 @@ const HitAssign = (args) => {
                                         <img alt='unit' src={'units/' + u.toUpperCase() + '.png'} style={{width: '100%'}}/>
                                     </Button>
                                     {duranium && technologies[u].sustain && hh > 0 &&
-                                    <Button disabled={canRep !== 1} size='sm' color={canRep > 1 ? 'success':'light'} onClick={()=> hitAssign('-'+u, j)} style={{padding: 0}}>repair</Button> }
+                                    <Button disabled={canRep !== 1} size='sm' color={canRep > 1 ? 'success':'light'} onClick={()=> hitAssign('-'+u, j)} style={{padding: 0}}>{t('board.repair')}</Button> }
                                 </div>
                                 <div style={{display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', maxWidth: '10rem'}}>
                                     {t.payload && t.payload.map((p, l) =>{
@@ -445,10 +447,10 @@ const HitAssign = (args) => {
                                             </Button>
                                             {duranium && technologies[p.id].sustain && hh2 > 0 && 
                                             <Button disabled={canRep2 !== 1} size='sm' color={canRep2 > 1 ? 'success':'light'} onClick={() => hitAssign('-'+u, j, l, p.id)} 
-                                                style={{padding: 0, fontSize: '70%'}}>repair</Button> }
+                                                style={{padding: 0, fontSize: '70%'}}>{t('board.repair')}</Button> }
                                             </div>
                                         }
-                                        return <></>
+                                        return <div key={l}></div>
                                     })}
                                 </div>
                             </div>})}
@@ -468,6 +470,7 @@ const HitAssign = (args) => {
 const CombatantForces = (args) => {
 
     const { G, moves, playerID, ctx, prevStages } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const {race, units: fleet, owner, combatAbility, isInvasion} = args;
     const [plasmaScoringUsed, setPlasmaScoringUsed] = useState(false);
 
@@ -546,7 +549,7 @@ const CombatantForces = (args) => {
         <div style={{display: 'flex', padding: '1rem', position: 'relative', flexDirection: 'row', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             border: String(playerID) === String(owner) ? 'solid 1px rgba(255,255,0,.5)':'solid 1px rgba(255,255,255,.25)'}}>
             <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
-            {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: race.retreat === 'cancel' ? 'gray':'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
+            {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: race.retreat === 'cancel' ? 'gray':'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>{t('board.retreat').toUpperCase()}</CardText>}
             <Container>
                 <Row className='row-cols-auto'>
                     {Object.keys(units).map((u, i) => {
@@ -573,7 +576,7 @@ const CombatantForces = (args) => {
                         const injury = unitsInjury(u);
                         let adj = 0;
 
-                        if(!combatAbility && u === 'pds'){ //spaceCannon: defence
+                        if(!combatAbility && u === 'pds'){ //spaceCannon: defense
                             if(G.races[ctx.currentPlayer].combatActionCards.indexOf('Disable') > -1){
                                 ability = null;
                             }
@@ -612,26 +615,26 @@ const CombatantForces = (args) => {
                                 <CardImg style={{width: '5rem'}} src={'units/' + u.toUpperCase() + '.png'} />
                                 {ucount > 1 && <span style={{fontSize: 30, position: 'absolute', right: 0, bottom: 0, textShadow: '-2px 2px 3px black'}}>{ucount}</span>}
                             </span>
-                            <span style={{fontSize: 16, marginLeft: '1rem', minWidth: 'max-content'}}>
+                            <span style={{fontSize: 16, marginLeft: '1rem', minWidth: '7rem'}}>
                                 {ability && <>
-                                    <p style={{margin: 0}}>{'combat: ' + ability.value} 
+                                    <p style={{margin: 0}}>{t('board.combat') + ': ' + ability.value} 
                                         {adj !==0 ? <span style={{color: adj<0 ? 'red':'yellowgreen'}}>
                                             {' (' + (ability.value - adj) + ')'}
                                         </span> : ''}
                                     </p>
-                                    <p style={{margin: 0}}>{'shots: ' + ability.count}</p>
+                                    <p style={{margin: 0}}>{t('board.shot') + ': ' + ability.count}</p>
                                 </>}
                                 
                                 {!G.dice[owner][u] && ability && String(playerID) === String(owner) &&
                                         <UncontrolledDropdown group> 
-                                            <Button size='sm' onClick={()=>fireClick(u)} color='danger' style={{width: '5rem'}}>Fire</Button>
+                                            <Button size='sm' onClick={()=>fireClick(u)} color='danger' style={{width: '5rem'}}>{t('board.fire')}</Button>
                                             {(dropdown_ps || dropdown_gls) && <><DropdownToggle caret color='danger' style={{padding: '0.25rem 0.5rem 0 0.25rem'}}/>
-                                            <DropdownMenu>
+                                            <DropdownMenu dark>
                                                 {dropdown_ps && <DropdownItem onClick={()=>fireClick(u, 'PLASMA_SCORING')}>
-                                                    <img alt='warfare' src='icons/warfare.png' style={{width: '1rem', marginRight: '.5rem'}}/>Plasma scoring
+                                                    <img alt='warfare' src='icons/warfare.png' style={{width: '1rem', marginRight: '.5rem'}}/>{t('cards.techno.PLASMA_SCORING.label')}
                                                 </DropdownItem>}
                                                 {dropdown_gls && <DropdownItem onClick={()=>fireClick(u, 'GRAVITON_LASER_SYSTEM')}>
-                                                    <img alt='warfare' src='icons/cybernetic.png' style={{width: '1rem', marginRight: '.5rem'}}/>Graviton laser system
+                                                    <img alt='warfare' src='icons/cybernetic.png' style={{width: '1rem', marginRight: '.5rem'}}/>{t('cards.techno.GRAVITON_LASER_SYSTEM.label')}
                                                 </DropdownItem>}
                                             </DropdownMenu></>}
                                         </UncontrolledDropdown>}
@@ -657,7 +660,7 @@ const CombatantForces = (args) => {
             </Container>
         </div>
         {race.combatActionCards && <div style={{display: 'flex', flexDirection: 'row-reverse'}}>
-            {race.combatActionCards.map((ca, i) => <Badge key={i} color='warning' style={{color: 'black'}}>{ca}</Badge>)}
+            {race.combatActionCards.map((ca, i) => <Badge key={i} color='warning' style={{color: 'black'}}>{t('cards.actions.' + ca + '.label')}</Badge>)}
             </div>
         }
         </div>
@@ -668,6 +671,7 @@ const CombatantForces = (args) => {
 export const AntiFighterBarrage = (args) => {
 
     const { G, ctx, moves, playerID } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const { selectedTile } = args;
     const activeTile = G.tiles.find(t => t.active === true);
 
@@ -727,22 +731,22 @@ export const AntiFighterBarrage = (args) => {
     return (<>
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
-        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Antifighter barrage</h3></CardTitle>
+        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{t('board.antifighter_barrage')}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             <CombatantForces race={G.races[ctx.currentPlayer]} units={activeTile.tdata.attacker} owner={ctx.currentPlayer} combatAbility='barrage'/>
             <CombatantForces race={G.races[activeTile.tdata.occupied]} units={activeTile.tdata.fleet} owner={activeTile.tdata.occupied} combatAbility='barrage'/>
         </CardBody>
         <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-            <Button color='warning' disabled = {!everyoneRolls} onClick={moves.nextStep}>Next</Button>
+            <Button color='warning' disabled = {!everyoneRolls} onClick={() => moves.nextStep()}>{t('board.next')}</Button>
             <span style={{display: 'flex', justifyContent: 'space-around', fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
                 {Object.keys(hits).map((h, i) => {
                     return <span key={i}>
                         <img alt='race' src={'race/icons/' + G.races[h].rid + '.png'} style={{width: '2rem'}}/>
-                        {' does ' + hits[h] + ' hits '}
+                        {' ' + t('board.does') + ' ' + hits[h]}
                     </span>
                 })}
             </span>
-            <Button color='danger' disabled = {everyoneRolls || enemyRetreat} onClick={moves.retreat}>Retreat</Button>
+            <Button color='danger' disabled = {everyoneRolls || enemyRetreat} onClick={() => moves.retreat()}>{t('board.Retreat')}</Button>
         </CardFooter>
     </Card>
     {G.currentCombatActionCard && <ActionCardDialog selectedTile={selectedTile}/>}
@@ -753,6 +757,7 @@ export const AntiFighterBarrage = (args) => {
 export const SpaceCombat = ({selectedTile}) => {
 
     const { G, ctx, moves, playerID, prevStages } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const activeTile = G.tiles.find(t => t.active === true);
     const [ahitsA, setAhitsA] = useState({});
     const [ahitsD, setAhitsD] = useState({});
@@ -933,7 +938,7 @@ export const SpaceCombat = ({selectedTile}) => {
                     {Object.keys(hits).map((h, i) => {
                         return <span key={i}>
                             <img alt='race' src={'race/icons/' + G.races[h].rid + '.png'} style={{width: '2rem'}}/>
-                            {' does ' + hits[h] + ' hits '}
+                            {' ' + t('board.does') + ' ' + hits[h]}
                         </span>
                     })}
                 </span>
@@ -974,7 +979,7 @@ export const SpaceCombat = ({selectedTile}) => {
     return (<>
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
-        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{assaultCannon ? 'Assault cannon': 'Space combat'}</h3></CardTitle>
+        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{assaultCannon ? t('board.Assault_cannon'): t('board.Space_combat')}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             {(ctx.activePlayers[playerID] === 'spaceCombat' || ctx.activePlayers[playerID] === 'spaceCombat_await') && <>
                 {!needAwait && <>
@@ -982,10 +987,10 @@ export const SpaceCombat = ({selectedTile}) => {
                     <CombatantForces race={G.races[activeTile.tdata.occupied]} units={activeTile.tdata.fleet} owner={activeTile.tdata.occupied}/>
                 </>}
                 {needAwait && <>
-                    {winner === undefined && <h5 style={{margin: '5rem', textAlign: 'center'}}>Awaiting opponent...</h5>}
+                    {winner === undefined && <h5 style={{margin: '5rem', textAlign: 'center'}}>{t('board.awaiting_opponent')}...</h5>}
                     {winner !== undefined && <>
-                        {String(winner) === String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'yellowgreen'}}>Enemy's fleet was defeated!</h5>}
-                        {String(winner) !== String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'red'}}>Your fleet was defeated.</h5>}
+                        {String(winner) === String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'yellowgreen'}}>{t('board.enemys_fleet_defeated')}</h5>}
+                        {String(winner) !== String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'red'}}>{t('board.your_fleet_defeated')}</h5>}
                     </>}
                 </>}
             </>}
@@ -1001,15 +1006,15 @@ export const SpaceCombat = ({selectedTile}) => {
             </>}
         </CardBody>
         {(!needAwait || winner !== undefined) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-            {needAwait && winner !== undefined && <Button color='warning' onClick={() => moves.endBattle()}>Next</Button>}
+            {needAwait && winner !== undefined && <Button color='warning' onClick={() => moves.endBattle()}>{t('board.next')}</Button>}
             {ctx.activePlayers[playerID] === 'spaceCombat' && <>
-                <Button color='warning' disabled = {!everyoneRolls || haveACDialog} onClick={() => moves.nextStep(hits)}>Next</Button>
+                <Button color='warning' disabled = {!everyoneRolls || haveACDialog} onClick={() => moves.nextStep(hits)}>{t('board.next')}</Button>
                 <HitsInfo />
-                <Button color='danger' disabled = {everyoneRolls || (anyoneRetreat !== undefined) || haveACDialog} onClick={()=>moves.retreat()}>Retreat</Button>
+                <Button color='danger' disabled = {everyoneRolls || (anyoneRetreat !== undefined) || haveACDialog} onClick={()=>moves.retreat()}>{t('board.Retreat')}</Button>
             </>}
             {ctx.activePlayers[playerID] === 'spaceCombat_step2' && <>
-                {!assaultCannon && <Button color='warning' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD)}>Next</Button>}
-                {assaultCannon && <Button color='warning' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(ahitsA, true)}>Next</Button>}
+                {!assaultCannon && <Button color='warning' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD)}>{t('board.next')}</Button>}
+                {assaultCannon && <Button color='warning' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(ahitsA, true)}>{t('board.next')}</Button>}
                 <HitsInfo />
             </>}
         </CardFooter>}
@@ -1021,6 +1026,7 @@ export const SpaceCombat = ({selectedTile}) => {
 
 export const CombatRetreat = (args) => {
     const { G, moves, playerID, ctx } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const { selectedTile } = args;
     const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
     const race = useMemo(()=> G.races[playerID], [G.races, playerID]);
@@ -1167,16 +1173,16 @@ export const CombatRetreat = (args) => {
     return (
         <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             position: 'absolute', margin: '5rem', color: 'white'}}>
-            <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Retreat</h3></CardTitle>
+            <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{t('board.Retreat')}</h3></CardTitle>
             <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
                 <div style={{display: 'flex', position: 'relative', flexDirection: 'row', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', border: 'solid 1px rgba(255,255,255,.15)'}}>
                 <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
                 <Container>
                     <Row>
-                        <Col xs={1} className='bi bi-hexagon-half' style={{color: acceptableTile ? 'yellowgreen':'red'}}></Col><Col style={{padding: 0}}>Select adjacent system your control where retreat to.</Col>
+                        <Col xs={1} className='bi bi-hexagon-half' style={{color: acceptableTile ? 'yellowgreen':'red'}}></Col><Col style={{padding: 0}}>{t('board.select_retreat_system')}</Col>
                     </Row>
                     <Row>
-                        <Col xs={1} className='bi bi-shield-shaded' style={{color: Object.keys(escFleet).length > 0 ? 'yellowgreen':'red'}}></Col><Col style={{padding: 0}}>Select units to escape:</Col>
+                        <Col xs={1} className='bi bi-shield-shaded' style={{color: Object.keys(escFleet).length > 0 ? 'yellowgreen':'red'}}></Col><Col style={{padding: 0}}>{t('board.select_escape_units')}:</Col>
                     </Row>
                     <Row style={{padding: '1rem', display: 'flex', flexDirection: 'column'}}>
                         <div style={{marginLeft: '.5rem', display: 'flex', width: 'fit-content', flexWrap: 'wrap'}}>
@@ -1238,6 +1244,7 @@ export const CombatRetreat = (args) => {
 export const Bombardment = () => {
 
     const { G, ctx, moves } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const activeTile = G.tiles.find(t => t.active === true);
 
     const getTechnology = useCallback((k) => {
@@ -1314,18 +1321,18 @@ export const Bombardment = () => {
     return (<>
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
-        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Bombardment</h3></CardTitle>
+        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{t('board.Bombardment')}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             <CombatantForces race={G.races[ctx.currentPlayer]} units={activeTile.tdata.fleet} owner={ctx.currentPlayer} combatAbility='bombardment'/>
             <CombatantForces race={G.races[activePlanet.occupied]} units={defenderForces} owner={activePlanet.occupied} combatAbility='bombardment'/>
         </CardBody>
         <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-            <Button color='warning' disabled = {!everyoneRolls || haveACDialog} onClick={()=>moves.nextStep(hits)}>Next</Button>
+            <Button color='warning' disabled = {!everyoneRolls || haveACDialog} onClick={()=>moves.nextStep(hits)}>{t('board.next')}</Button>
             <span style={{display: 'flex', justifyContent: 'space-around', fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
                 {Object.keys(hits).map((h, i) => {
                     return <span key={i}>
                         <img alt='race' src={'race/icons/' + G.races[h].rid + '.png'} style={{width: '2rem'}}/>
-                        {' does ' + hits[h] + ' hits '}
+                        {' ' + t('board.does') + ' ' + hits[h]}
                     </span>
                 })}
             </span>
@@ -1339,6 +1346,7 @@ export const Bombardment = () => {
 const LandingForces = (args) => {
 
     const { G, playerID } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const {race, owner, units, troops, setTroops} = args;
     
     const technologies = useMemo(()=>{
@@ -1379,7 +1387,7 @@ const LandingForces = (args) => {
         <div style={{display: 'flex', position: 'relative', flexDirection: 'row', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
             border: String(playerID) === String(owner) ? 'solid 1px rgba(255,255,0,.5)':'solid 1px rgba(255,255,255,.25)'}}>
             <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
-            {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: 'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
+            {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: 'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>{t('board.retreat').toUpperCase()}</CardText>}
             <div style={{display: 'flex', flexWrap: 'wrap'}}>
                 {Object.keys(units).filter(u => technologies[u] && technologies[u].capacity).map((u, i) => {
                     return <div key={i} style={{marginLeft: '1rem', display: 'flex', flexWrap: 'wrap'}}>
@@ -1426,6 +1434,7 @@ const LandingForces = (args) => {
 export const Invasion = () => {
 
     const { G, ctx, moves, playerID, prevStages } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
     const activePlanet = useMemo(()=> {
         let ap = activeTile.tdata.planets.find(p => p.invasion);
@@ -1638,7 +1647,7 @@ export const Invasion = () => {
                     {Object.keys(hits).map((h, i) => {
                         return <span key={i}>
                             <img alt='race' src={'race/icons/' + G.races[h].rid + '.png'} style={{width: '2rem'}}/>
-                            {' does ' + hits[h] + ' hits '}
+                            {' ' + t('board.does') + ' ' + hits[h]}
                         </span>
                     })}
                 </span>
@@ -1695,7 +1704,7 @@ export const Invasion = () => {
     return (<>
     <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
         position: 'absolute', margin: '5rem', color: 'white'}}>
-        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{landing ? 'Landing': magen ? 'Magen defence grid' : 'Invasion'}</h3></CardTitle>
+        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{landing ? t('board.Landing'): magen ? t('board.Magen_defense_grid') : t('board.Invasion')}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             {(ctx.activePlayers[playerID] === 'invasion' || ctx.activePlayers[playerID] === 'invasion_await') && <>
                 {!needAwait && <>
@@ -1709,10 +1718,10 @@ export const Invasion = () => {
                     <HitAssign race={G.races[ctx.currentPlayer]} units={activePlanet.invasion.troops} owner={String(activePlanet.occupied)} hits={ahitsA} setHits={setAhitsA}/>
                 </>}
                 {!landing && !magen && needAwait && <>
-                    {winner === undefined && <h5 style={{margin: '5rem', textAlign: 'center'}}>Awaiting opponent...</h5>}
+                    {winner === undefined && <h5 style={{margin: '5rem', textAlign: 'center'}}>{t('board.awaiting_opponent')}...</h5>}
                     {winner !== undefined && <>
-                        {String(winner) === String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'yellowgreen'}}>Enemy's forces was defeated!</h5>}
-                        {String(winner) !== String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'red'}}>Your forces was defeated.</h5>}
+                        {String(winner) === String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'yellowgreen'}}>{t('board.enemys_forces_defeated')}!</h5>}
+                        {String(winner) !== String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'red'}}>{t('board.your_forces_defeated')}</h5>}
                     </>}
                 </>}
             </>}
@@ -1722,17 +1731,17 @@ export const Invasion = () => {
             </>}
         </CardBody>
         {(!needAwait || magen || landing || (needAwait && winner !== undefined)) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-            {landing && <Button color='warning' onClick={() => moves.landTroops(troops)}>{troops.length > 0 ? 'Next':'Cancel'}</Button>}
-            {!landing && !magen && needAwait && winner !== undefined && <Button disabled={haveACDialog || enemyMakeReroll} color='warning' onClick={() => moves.endBattle()}>Next</Button>}
-            {magen && <Button color='warning' onClick={() => moves.magenDefense(ahitsA)}>Next</Button>}
+            {landing && <Button color='warning' onClick={() => moves.landTroops(troops)}>{troops.length > 0 ? t('board.next'):t('board.cancel')}</Button>}
+            {!landing && !magen && needAwait && winner !== undefined && <Button disabled={haveACDialog || enemyMakeReroll} color='warning' onClick={() => moves.endBattle()}>{t('board.next')}</Button>}
+            {magen && <Button color='warning' onClick={() => moves.magenDefense(ahitsA)}>{t('board.next')}</Button>}
             {ctx.activePlayers[playerID] === 'invasion' && <>
-                <Button color='warning' disabled = {!everyoneRolls || haveACDialog || enemyMakeReroll} onClick={() => moves.nextStep(hits, true)}>Next</Button>
+                <Button color='warning' disabled = {!everyoneRolls || haveACDialog || enemyMakeReroll} onClick={() => moves.nextStep(hits, true)}>{t('board.next')}</Button>
                 <HitsInfo />
             </>}
             {ctx.activePlayers[playerID] === 'invasion_step2' && <>
                 <Button color='warning' disabled = {!allHitsAssigned || haveACDialog || enemyMakeReroll} 
                 onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD, prevStages[playerID])}>
-                    Next</Button>
+                    {t('board.next')}</Button>
                 <HitsInfo />
             </>}
         </CardFooter>}
@@ -1746,6 +1755,7 @@ export const Invasion = () => {
 export const ChooseAndDestroy = () => {
 
     const { G, playerID, moves } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const [destroyed, setDestroyed] = useState({});
 
     const units = useMemo(() => {
@@ -1885,11 +1895,11 @@ export const ChooseAndDestroy = () => {
     return (
         <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '50%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(160, 160, 160, 0.85)', 
             position: 'absolute', margin: '10rem', color: 'black'}}>
-            <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>Choose and destroy {' ' + G.races[playerID].mustChooseAndDestroy.count + ' ships'}</h3></CardTitle>
+            <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{t('board.Choose') + ' ' + G.races[playerID].mustChooseAndDestroy.count + ' ' + t('board.ships_to_destroy')}</h3></CardTitle>
             <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
                 <div style={{display: 'flex', position: 'relative', flexDirection: 'row', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', border: 'solid 1px rgba(255,255,0,.5)'}}>
                     <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
-                    {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: race.retreat === 'cancel' ? 'gray':'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>RETREAT</CardText>}
+                    {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: race.retreat === 'cancel' ? 'gray':'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>{t('board.retreat').toUpperCase()}</CardText>}
                     <div style={{display: 'flex', flexWrap: 'wrap'}}>
                         {Object.keys(units).map((u, i) => {
                             return <div key={i} style={{marginLeft: '1rem', display: 'flex', flexWrap: 'wrap'}}>
@@ -1932,7 +1942,7 @@ export const ChooseAndDestroy = () => {
                 </div>
             </CardBody>
             <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-                <Button disabled={!canNext} color='warning' onClick={() => moves.chooseAndDestroy(destroyed)}>Done</Button>
+                <Button disabled={!canNext} color='warning' onClick={() => moves.chooseAndDestroy(destroyed)}>{t('board.done')}</Button>
             </CardFooter>
         </Card>
 

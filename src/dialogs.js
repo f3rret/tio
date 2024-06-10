@@ -1549,6 +1549,7 @@ export const ProducingPanel = (args) => {
 
     const { pname, onCancel, R_UNITS, R_UPGRADES } = args;
     const { G, playerID, moves, exhaustedCards, exhaustTechCard, PLANETS, UNITS } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
     const [currentUnit, setCurrentUnit] = useState('FLAGSHIP');
     const [ex2, setEx2] = useState({});
     const [tg, setTg] = useState(0);
@@ -1709,7 +1710,7 @@ export const ProducingPanel = (args) => {
     }, [UNITS, deploy]);
 
     return <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', width: '70rem'}}>
-                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>Producing</h6></CardTitle>
+                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.Producing')}</h6></CardTitle>
                 <div style={{display: 'flex', flexDirection: 'row', flexWrap:'wrap', justifyContent:'space-between', width: '100%', margin: '1rem'}}>
                     <div style={{width:'30rem', overflowY: 'auto', height: '22rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                         <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex2}/>
@@ -1719,31 +1720,31 @@ export const ProducingPanel = (args) => {
                         <div style={{display: 'flex', justifyContent: 'flex-end'}}>
                             <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' 
                                 disabled={bannedUnits.indexOf(currentUnit) > -1 || exceedLimit(currentUnit)}>
-                                <b>Deploy</b></Button>
+                                <b>{t('board.deploy')}</b></Button>
                         </div>
                     </div>
                     <div style={{width:'29rem', margin: '1rem'}}>
                         <h5 style={{fontSize: '50px', display: 'flex', justifyContent: 'flex-end'}}>{'+'}{tg}{' '}<Button tag='img' onClick={tgClick} src='/icons/trade_good_1.png' color='warning' 
                             style={{marginLeft: '1rem', width: '4rem', padding: '.5rem', borderTopLeftRadius: '5px', borderBottomLeftRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} />
                             <Button disabled={tg < 1} color='warning' style={{width: '1.5rem', borderLeft: 'none', color:'orange', backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: 0}} onClick={()=>setTg(tg-1)}>▼</Button></h5>
-                        <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{'You mean to spend ' + result + ' resources'}</h6>
-                        <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{deployPrice + ' needed'}</h6>
+                        <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{t('board.you_mean_spend') + ' ' + result + ' ' + t('board.resources')}</h6>
+                        <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{deployPrice + ' ' + t('board.needed')}</h6>
                     </div>
                     <div style={{width: '33rem', margin: '1rem'}}>
-                        {maxDeployUnits >= 0 && <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{'Max units count: ' + maxDeployUnits}</h6>}
-                        {maxDeployUnits < 0 && <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{'Max summary units cost: ' + (-maxDeployUnits)}</h6>}
+                        {maxDeployUnits >= 0 && <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{t('board.max_units_count') + ': ' + maxDeployUnits}</h6>}
+                        {maxDeployUnits < 0 && <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{t('board.max_units_cost') + ': ' + (-maxDeployUnits)}</h6>}
                         {deploy && Object.keys(deploy).map((k, i) => {
                             return (<p style={{margin: 0}} key={i}>
                             <Button size='sm' color='warning' style={{padding: '0 .25rem', fontSize: '.75rem'}} onClick={()=>deployUnit(-1, k)}>▼</Button>
-                            <b>{' '}{k}{' : '}{deploy[k]}</b></p>)
+                            <b>{' ' + t('cards.techno.' + k + '.label') + ' : ' + deploy[k]}</b></p>)
                         })}
                     </div>
                 </div>
                 <CardFooter style={{background: 'none', borderTop: '1px solid rgba(74, 111, 144, 0.42)', display: 'flex', justifyContent: 'space-between'}}>
-                    <Button color='danger' onClick={onCancelClick}>Cancel</Button>
+                    <Button color='danger' onClick={onCancelClick}>{t('board.cancel')}</Button>
                     <Button color='success' disabled={deployPrice > result} 
                         onClick={() => {moves.producing(pname, deploy, Object.keys(ex2), tg, exhaustedCards); onCancelClick(true)}}>
-                        Finish</Button>
+                        {t('board.finish')}</Button>
                 </CardFooter>
             </Card>
 
@@ -1823,8 +1824,10 @@ export const UnmeetReqs = (args) => {
 export const ChoiceDialog = ({args, onSelect}) => {
 
     const { t } = useContext(LocalizationContext);
-    const title = args.type === 'exploration' ? t('cards.exploration.' + args.id + '.label') : args.title;
-    const text = args.type === 'exploration' ? t('cards.exploration.' + args.id + '.effect') : args.text;
+    const title = args.type === 'exploration' ? t('cards.exploration.' + args.id + '.label') : 
+                    args.type === 'secret objective' ? t('cards.objectives.' + args.oid + '.label') :args.title;
+    const text = args.type === 'exploration' ? t('cards.exploration.' + args.id + '.effect') : 
+                    args.type === 'secret objective' ? t('cards.objectives.' + args.oid + '.title') :args.text;
 
 
     return  <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', position: 'absolute', padding: '1rem', margin: '10rem', 

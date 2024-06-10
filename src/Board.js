@@ -790,7 +790,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       {p.units[u].length > 1 && <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
                       x={40} y={25} text={p.units[u].length}/>}
                       {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
-                        <Text text='► Production' x={0} y={-10} interactive={true} pointerdown={()=>setProducing(p.name)} 
+                        <Text text={'► ' + t('board.Production')} x={0} y={-10} interactive={true} pointerdown={()=>setProducing(p.name)} 
                             style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>}
                     </Sprite>
                   }
@@ -799,7 +799,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 {p.invasion && <Sprite scale={.75} x={p.hitRadius * 2} y={-30} image='icons/invader.png' alpha={0.85}>
                   <Container x={45} y={15}>
                     <Sprite image={'race/icons/'+ G.races[ctx.currentPlayer].rid +'.png'} scale={1}></Sprite>
-                    <Text x={70} y={10} style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white'}} text='Under attack' />
+                    <Text x={70} y={10} style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white'}} text={t('board.planet_under_attack')} />
                   </Container>
                   <Container y={75} x={100}>
                     <InvasionForce fleet={p.invasion.troops} w={element.w/2}/>
@@ -836,10 +836,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           }
         )}
 
-        {element.tdata.attacker && <Sprite scale={.75} x={-element.w/2} y={0} image='icons/attacker.png' alpha={0.85}>
+        {element.tdata.attacker && <Sprite scale={0.75} x={-element.w/2} y={0} image='icons/attacker.png' alpha={0.85}>
           <Container x={35} y={35}>
             <Sprite image={'race/icons/'+ G.races[ctx.currentPlayer].rid +'.png'} scale={1}></Sprite>
-            <Text x={70} y={10} style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white'}} text='Under attack' />
+            <Text x={70} y={10} style={{fontSize: 25, fontFamily:'Handel Gothic', fill: 'white'}} text={t('board.sector_under_attack')} />
           </Container>
           <Container y={125} x={-10}>
             <AttackerForce fleet={element.tdata.attacker} w={element.w}/>
@@ -1291,9 +1291,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
             {mustAction && 
             <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '30%', position: 'absolute', margin: '20rem 30rem'}}>
-              <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>You must drop action card</h3></CardTitle>
+              <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>{t('board.tooltips.drop_ac_header')}</h3></CardTitle>
               <CardBody style={{display: 'flex', color: 'black'}}>
-                You can't have more than 7 action cards.
+                {t('board.tooltips.drop_ac_body')}
               </CardBody>
             </Card>}
 

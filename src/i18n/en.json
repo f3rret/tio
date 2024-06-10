@@ -168,6 +168,9 @@
             "range": "range",
             "upgradable": "upgradable",
             "production": "production",
+            "Production": "Production",
+            "sector_under_attack": "Under attack",
+            "planet_under_attack": "Under attack",
             "cost": "cost",
             "combat": "combat",
             "move": "move",
@@ -206,13 +209,50 @@
             "activate_system": "activate system",
             "tooltips": {
                 "drop_secret_obj_header": "Drop a card",
-                "drop_secret_obj_body": "Choose a secret objective card to drop it."
+                "drop_secret_obj_body": "Choose a secret objective card to drop it.",
+                "drop_ac_header": "Drop a card",
+                "drop_ac_body": "Choose an action card to drop it."
             },
             "total": "total",
             "influence": "influence",
             "resources": "resources",
             "token": "token",
-            "tg": "tg"
+            "tg": "tg",
+            "space_cannon_attack": "Space cannon: attack",
+            "hits": "hits",
+            "hits_assigned": "hits_assigned",
+            "non_fighters": "non-fighters",
+            "retreat": "retreat",
+            "Retreat": "Retreat",
+            "fire": "fire",
+            "repair": "repair",
+            "antifighter_barrage": "Antifighter barrage",
+            "awaiting_opponent": "Awaiting opponent",
+            "enemys_fleet_defeated": "Enemy's fleet was defeated",
+            "your_fleet_defeated": "Your fleet was defeated",
+            "select_retreat_system": "Select adjacent system your control where retreat to.",
+            "select_escape_units": "Select units to escape",
+            "Bombardment": "Bombardment",
+            "Landing": "Landing",
+            "Magen_defense_grid": "Magen defense grid",
+            "Invasion": "Invasion",
+            "enemys_forces_defeated": "Enemy's forces was defeated",
+            "your_forces_defeated": "Your forces was defeated",
+            "Choose": "Choose",
+            "ships_to_destroy": "ships to destroy",
+            "Assault_cannon": "Assault cannon",
+            "Space_combat": "Space combat",
+            "does": "does",
+            "do_it_immediately": "Do it immediately",
+            "next_time": "Next time",
+            "Producing": "Producing",
+            "deploy": "deploy",
+            "you_mean_spend": "You mean to spend",
+            "resources2": "resources",
+            "needed": "needed",
+            "max_units_count": "Max units count",
+            "max_units_cost": "Max summary units cost",
+            "finish": "Finish"
         },
         "cards": {
             "strategy": {
@@ -430,7 +470,9 @@
                 "Political Stability": {"label": "Political Stability", "description":"You do not return your strategy card(s) during this phase and do not choose new strategy cards in the next strategy phase."},
                 "Public Disgrace": {"label": "Public Disgrace", "description":"When another player chooses a strategy card: That player must choose a different strategy cards instead, if able."},
                 "Summit": {"label": "Summit", "description":"Gain 2 command tokens."},
-                "Enigmatic Device": {"label": "Enigmatic Device", "description": "Action: You may spend 6 resources and purge this card to research 1 technology."}
+                "Enigmatic Device": {"label": "Enigmatic Device", "description": "Action: You may spend 6 resources and purge this card to research 1 technology."},
+
+                "PLANETARY SHIELD": {"label": "PLANETARY SHIELD"}
             },
             "agenda": {
                 "Anti-Intellectual Revolution": {"label": "Anti-Intellectual Revolution", "for": "After a player researches a technology, they must destroy one of their non-fighter ships.", "against": "At the start of the next strategy phase each player exhausts one planet for each technology they have researched."},  

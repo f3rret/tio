@@ -555,8 +555,8 @@ export const checkSecretObjective = (G, playerID, oid, param) => {
   if(objective.players && objective.players.length) return;
 
   const makeDialog = () => {
-    G.races[playerID].secretObjectiveConfirm = {oid, text: 'SECRET OBJECTIVE: ' + oid + '. ' + objective.title, 
-    options: [{label: 'Do it immediately'}, {label : 'Next time'}]};
+    G.races[playerID].secretObjectiveConfirm = {oid, type: 'secret objective', text: 'SECRET OBJECTIVE: ' + oid + '. ' + objective.title, 
+    options: [{label: 'do_it_immediately'}, {label : 'next_time'}]};
   }
 
   if(['Become a Martyr', 'Destroy Their Greatest Ship', 'Make an Example of Their World', 

@@ -1159,7 +1159,7 @@ export const ACTS_STAGES = {
             }
             else if(car.payload && car.payload.length){
               car.payload.forEach((p, j) => {
-                if(p.hit){
+                if(p && p.hit){
                   if(p.hit > 1 || !technologies[p.id].sustain){
                     delete fleet[f][i].payload[j];
                     if(p.id === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
@@ -1437,7 +1437,7 @@ export const ACTS_STAGES = {
           }
           else if(car.payload && car.payload.length){
             car.payload.forEach((p, idx) => {
-              if(p.hit > 1 || (p.hit === 1 && !technologies[p.id].sustain)){
+              if(p && (p.hit > 1 || (p.hit === 1 && !technologies[p.id].sustain))){
                 G.races[playerID].destroyedUnits.push(p.id);
                 delete fleet[f][i].payload[idx];
                 if(p.id === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
