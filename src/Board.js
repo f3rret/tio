@@ -193,7 +193,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           <div className='mb-corner mb-right'></div>
    */
   const MyNavbar = () =>
-    <div style={{ position: 'fixed', height: 0, width: '100%', zIndex: '1', display: 'flex', justifyContent: 'space-between', padding: '1rem 1rem 0 1rem'}}>
+    <div style={{ position: 'fixed', height: 0, width: '100%', zIndex: '1', display: 'flex', justifyContent: 'space-between', padding: '0'}}>
       <ButtonGroup style={{height: '2.5rem', opacity: '80%', fontFamily:'Handel Gothic'}}>
         <Button color={objVisible ? 'light':'dark'} style={{width: '8rem'}} onClick={()=>setObjVisible(!objVisible)}>{t("board.nav.objectives")}</Button>
         <Button color={planetsVisible ? 'light':'dark'} style={{width: '8rem'}} onClick={()=>setPlanetsVisible(!planetsVisible)}>{t("board.nav.planets")}</Button>
@@ -203,17 +203,17 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       </ButtonGroup>
     
       <Nav style={{marginTop: '0'}}>
-        <UncontrolledAccordion open='0' defaultOpen='0' id='turnLine' style={{minWidth: '30rem', opacity: '.95'}}>
-          <AccordionItem style={{border: 'none', backgroundColor: 'rgba(0,0,0,.75)'}}>
-            <AccordionHeader style={{}} targetId='1'>
-              <span style={{display: 'flex', width: '100%', padding: '1rem', backgroundColor: G.races[ctx.currentPlayer].color[1]}}>
+        <UncontrolledAccordion open='0' defaultOpen='0' id='turnLine' style={{minWidth: '30rem', opacity: '.95', background: 'transparent'}}>
+          <AccordionItem style={{border: 'none', background: 'transparent'}}>
+            <AccordionHeader targetId='1' style={{border: 'none', background: 'transparent'}}>
+              <span style={{display: 'flex', width: '100%', padding: '1rem', background: 'transparent'}}>
                 <CardImg style={{width: '2rem', maxHeight: '2rem', marginRight: '1rem'}} src={'race/icons/'+G.races[ctx.currentPlayer].rid+'.png'} />
                 <h5 style={{margin: 0, alignSelf: 'center', flex: 'auto'}}>{t('board.players_move') + ': ' + t('races.' + G.races[ctx.currentPlayer].rid + '.name')}</h5>
               </span>
             </AccordionHeader>
             <AccordionBody style={{padding: '0', overflow: 'hidden'}} accordionId='1'>
               {[...ctx.playOrder.slice(ctx.playOrderPos+1), ...ctx.playOrder.slice(0, ctx.playOrderPos)].map((pid, idx) => 
-                <Row key={idx} style={{backgroundColor: G.races[pid].color[1]}}>
+                <Row key={idx} style={{background: 'transparent'}}>
                   <Col xs='1' style={{}}>
                     <CardImg style={{width: '2rem', maxHeight: '2rem', margin: '.5rem'}} src={'race/icons/'+G.races[pid].rid+'.png'} />
                   </Col>
@@ -1299,7 +1299,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
             
 
-            <Stage style={{border: 'double 1rem', borderColor: race ? race.color[1]:'black'}} width={stagew} height={stageh} options={{ resizeTo: window, antialias: true, autoDensity: true }}>
+            <Stage width={stagew} height={stageh} options={{ backgroundAlpha: 0, resizeTo: window, antialias: true, autoDensity: true }}>
               <PixiViewport home={G.tiles.find(t => t.tid === G.races[playerID].rid)}>
                 
                 {G.tiles.map((element, index) => {
@@ -1457,7 +1457,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </ListGroupItem>)}
                   </ListGroup>}
                 </div>
-                <ButtonGroup style={{alignSelf: 'flex-end', opacity: '80%', fontFamily:'Handel Gothic', marginBottom: '1rem', position: 'fixed', bottom: 0}}>
+                <ButtonGroup style={{alignSelf: 'flex-end', opacity: '80%', fontFamily:'Handel Gothic', position: 'fixed', bottom: 0}}>
                     <Button color={rightBottomVisible.includes('promissory') ? 'light':'dark'} onClick={()=>rightBottomSwitch('promissory')} 
                       style={{width: '7rem'}}>{t("board.nav.promissory")}</Button>
                     <Button color={rightBottomVisible.includes('relics') ? 'light':'dark'} onClick={()=>rightBottomSwitch('relics')} 

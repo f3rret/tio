@@ -9,24 +9,40 @@ $border-radius: 0;
 
 //$body-bg: #141b24;
 $body-color: #fff;
-$body-bg: #141b24;
+$card-bg: none;
+$body-bg: #0d1426;
 $modal-content-bg: rgba(74, 111, 144, 0.95);
 $tooltip-color: white;
 $tooltip-max-width: 300px;
 $nav-link-color: none;
 $accordion-btn-focus-box-shadow: none;
 
+html{
+    height: 100%;
+    min-height: 100%;
+}
 #root{
     width: 100%;
     height: 100%;
 }
 body{
     overflow: hidden;
-    background-color: #141b24;
+    height: 100%;
+    min-height: 100%;
+    background: no-repeat 0% 0% / 100% 100% url('../../public/bg.png');//radial-gradient(ellipse, #0d1731, #010102);
     user-select: none;
 }
+#lobbyMain{
+    display: flex;
+    justify-content: space-between;
+    background: none; 
+    width: 100%;
+    height: calc(100% - 3rem);
+    padding: 0 2rem 2rem 2rem;
+    font-family: 'Handel Gothic'
+}
 h3, h4, h5, h6 {
-    font-family: Handel Gothic, Slider, sans-serif;;
+    font-family: 'Handel Gothic', Slider, sans-serif;;
 }
 li.list-group-item{
     border: none;
@@ -115,6 +131,7 @@ li.list-group-item{
 }
 #turnLine button {
     padding: 0;
+    background-color: transparent;
 }
 #turnLine button::after{
     display:none;
@@ -123,7 +140,6 @@ li.list-group-item{
     box-shadow:none;
 }
 #turnLine button:not(.collapsed){
-    background-color: var(--bs-accordion-btn-bg);
     color: var(--bs-accordion-btn-color);
 }
 
@@ -150,7 +166,7 @@ li.list-group-item{
 
 //new animation
 
-.star-field {
+/*.star-field {
     position: fixed;
     top: 0;
     left: 0;
@@ -159,8 +175,8 @@ li.list-group-item{
     perspective: 1600px;
     -webkit-perspective: 1600px;
     z-index: 0;
-}/*
-.star-field .layer {
+}
+/*.star-field .layer {
     box-shadow: -411px -476px #cccccc, 777px -407px #d4d4d4, -387px -477px #fcfcfc, -91px -235px #d4d4d4, 491px -460px #f7f7f7, 892px -128px #f7f7f7, 758px -277px #ededed, 596px 378px #cccccc, 647px 423px whitesmoke, 183px 389px #c7c7c7,
         524px -237px #f0cb26, 679px -535px #e3e3e3, 158px 399px #f0b5b5, 157px 249px #ededed, 81px -450px #ebebeb, 719px -360px #c2c2c2, -499px 473px #f0b5b5, -158px -349px #d4d4d4, 870px -134px #cfcfcf, 446px 404px #c2c2c2,
         440px 490px #d4d4d4, 414px 507px #e6e6e6, -12px 246px #fcfcfc, -384px 369px #e3e3e3, 641px -413px #f0cb26, 822px 516px #dbdbdb, 449px 132px #c2c2c2, 727px 146px #f7f7f7, -315px -488px #e6e6e6, 952px -70px #e3e3e3,
@@ -199,6 +215,7 @@ li.list-group-item{
         opacity: 0.35;
     }
 }
+
 @keyframes sf-fly-by-3 {
     from {
         transform: translateZ(-4200px);

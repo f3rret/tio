@@ -379,10 +379,9 @@ export const Lobby = ()=> {
                         <Button color={locale === 'ru' ? 'secondary':''} onClick={() => setLocale('ru')}>RU</Button>
                     </ButtonGroup>
                 </div>
-                <div id='lobbyMain' style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: 'calc(100% - 3rem)', 
-                        padding: '0 2rem 2rem 2rem', fontFamily:'Handel Gothic'}}>
+                <div id='lobbyMain'>
                 
-                {(!playerCreds || !prematchID) && <Card style={{flex: 'auto', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
+                {(!playerCreds || !prematchID) && <Card style={{flex: 'auto', maxWidth: '49%', padding: '2rem', border: 'outset 1px rgba(255,255,255,.25)'}}>
                     <CardTitle style={{display: 'flex'}}>
                         <h3 style={{flex: 'auto'}}>{t('lobby.matches_list_label')}</h3>
                         <Button className='bi-repeat' style={{backgroundColor: 'transparent', marginRight: '.25rem'}} onClick={refreshMatchList}/>
@@ -403,7 +402,7 @@ export const Lobby = ()=> {
                         </Container>
                     </CardBody>
                 </Card>}
-                {prematchInfo && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
+                {prematchInfo && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'outset 1px rgba(255,255,255,.25)'}}>
                     <CardTitle>
                         {!playerCreds && !prematchInfo.players && <>
                             <Input valid placeholder={prematchInfo.setupData.matchName} onChange={(e) => changeOption('matchName', e.target)}/>
@@ -480,7 +479,7 @@ export const Lobby = ()=> {
                         {playerID && playerID !== '0' && !iAmReady && <Button color='success' onClick={() => updatePlayerInfo({ready: true})}>{t('lobby.ready_to_play')} <b className='bi-check-square-fill' ></b></Button>}
                     </CardFooter>
                 </Card>}
-                {playerCreds && prematchInfo && prematchInfo.players && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'solid 1px rgba(255,255,255,.25)'}}>
+                {playerCreds && prematchInfo && prematchInfo.players && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'outset 1px rgba(255,255,255,.25)'}}>
                     {playerID === '0' && <MapOptions visible={true} useProphecyOfKings={true} currentRaces={currentRaces} excludedTiles={[]} includedTiles={[]} lockedTiles={[]}
                         numberOfPlayers={prematchInfo.players.length} updateTiles={runGame} updateRaces={()=>{}} toggleProphecyOfKings={()=>{}}
                         currentPlayerNames={[]} updatePlayerNames={()=>{}} playerID={playerID} updateMapOptionsCallback={updateMapOptionsCallback}/>}
