@@ -29,9 +29,106 @@ body{
     overflow: hidden;
     height: 100%;
     min-height: 100%;
-    background: no-repeat 0% 0% / 100% 100% url('../../public/bg.png');//radial-gradient(ellipse, #0d1731, #010102);
+    background: no-repeat 0% 0% / 100% 100% url('../../public/bg1.png');//radial-gradient(ellipse, #0d1731, #010102);
     user-select: none;
 }
+#border-left{
+    position: fixed;
+    z-index: 99;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 3rem;
+    background: no-repeat 0% 0% / auto 100% url('../../public/border-left.png');
+}
+#border-right{
+    position: fixed;
+    z-index: 99;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 3rem;
+    background: no-repeat right 0% / auto 100% url('../../public/border-right.png');
+}
+#border-bottom{
+    pointer-events: none;
+    position: fixed;
+    z-index: 100;
+    bottom: 0;
+    left: 0;
+    height: 8.5rem;
+    width: 100%;
+    background: no-repeat 0% bottom / 100% auto url('../../public/border-bottom.png');
+}
+#border-top{
+    pointer-events: none;
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    left: 0;
+    height: 8.5rem;
+    width: 100%;
+    background: no-repeat 0% 0% / 100% auto url('../../public/border-top.png');
+}
+.borderedPanel{
+    border-image: url('../../public/window-borders.png') 50 18 / 2rem / 2rem stretch !important;
+    background: 0% 0% / auto auto url('../../public/panel-bg.png');
+}
+
+.styledButton{
+    min-height: 2.5rem;
+    opacity: .75;
+    display: inline-block;
+    outline: 0;
+    cursor: pointer;
+    padding: 5px 16px;
+    font-weight: 500;
+    line-height: 20px;
+    vertical-align: middle;
+    border: none;
+    color: antiquewhite;
+    background: transparent;
+}
+.styledButton[disabled]{
+    color: rgba(0,0,0,.5);
+}
+.styledButton.green{
+    background: 0% 0% / 200% 100% no-repeat url('../../public/button-bg-green.png');
+}
+.styledButton.green:not([disabled]):hover {
+    background: 100% 0% / 200% 100% no-repeat url('../../public/button-bg-green.png');
+}
+.styledButton.black{
+    background: 0% 0% / 200% 100% no-repeat url('../../public/button-bg-black.png');
+}
+.styledButton.black:not([disabled]):hover {
+    background: 100% 0% / 200% 100% no-repeat url('../../public/button-bg-black.png');
+}
+.styledButton.red{
+    background: 0% 0% / 200% 100% no-repeat url('../../public/button-bg-red.png');
+}
+.styledButton.red:not([disabled]):hover {
+    background: 100% 0% / 200% 100% no-repeat url('../../public/button-bg-red.png');
+}
+.styledButton.yellow{
+    background: 0% 0% / 200% 100% no-repeat url('../../public/button-bg-yellow.png');
+}
+.styledButton.yellow:not([disabled]):hover {
+    background: 100% 0% / 200% 100% no-repeat url('../../public/button-bg-yellow.png');
+}
+.styledButton.white{
+    background: 0% 0% / 200% 100% no-repeat url('../../public/button-bg-white.png');
+}
+.styledButton.white:not([disabled]):hover {
+    background: 100% 0% / 200% 100% no-repeat url('../../public/button-bg-white.png');
+}
+.styledButton.blue{
+    background: 0% 0% / 200% 100% no-repeat url('../../public/button-bg-blue.png');
+}
+.styledButton.blue:not([disabled]):hover {
+    background: 100% 0% / 200% 100% no-repeat url('../../public/button-bg-blue.png');
+}
+
 #lobbyMain{
     display: flex;
     justify-content: space-between;
@@ -42,7 +139,7 @@ body{
     font-family: 'Handel Gothic'
 }
 h3, h4, h5, h6 {
-    font-family: 'Handel Gothic', Slider, sans-serif;;
+    font-family: 'Handel Gothic', Slider, sans-serif;
 }
 li.list-group-item{
     border: none;

@@ -3,7 +3,7 @@ import boardData from "../data/boardData.json";
 import tileData from "../data/tileData.json";
 import raceData from "../data/raceData.json";
 import adjacencyData from "../data/adjacencyData.json";
-import {CardTitle, CardBody, CardFooter, Button, FormGroup, UncontrolledTooltip, Input, Label} from 'reactstrap';
+import {CardTitle, CardBody, CardFooter, FormGroup, UncontrolledTooltip, Input, Label} from 'reactstrap';
 import Markdown from 'react-markdown';
 import { LocalizationContext } from "../../utils";
 
@@ -1467,7 +1467,7 @@ class MapOptions extends React.Component {
                     
                 </CardBody>
                 {this.props.playerID === '0' && <CardFooter style={{display: 'flex', justifyContent: 'right'}}>
-                    <Button color='success' onClick={this.generateBoard}>{t('lobby.start_game')} <b className='bi-caret-right-square-fill' ></b></Button>
+                    <button className='styledButton green' onClick={this.generateBoard}>{t('lobby.start_game')} <b className='bi-caret-right-square-fill' ></b></button>
                 </CardFooter>}
             </>
         );

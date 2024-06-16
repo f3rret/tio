@@ -1,7 +1,7 @@
 import { LobbyClient } from 'boardgame.io/client';
 import { useCallback, useState, useMemo, useEffect, useContext } from 'react';
 import { Card, CardBody, CardTitle, CardFooter, CardText, Container, Row, Col, 
-    Input, ButtonGroup, Button, FormFeedback, FormGroup, Label } from 'reactstrap';
+    Input, ButtonGroup, FormFeedback, FormGroup, Label } from 'reactstrap';
 import { produce } from 'immer';
 import { useCookies } from 'react-cookie';
 import MapOptions from './map generator/options/MapOptions';
@@ -373,19 +373,19 @@ export const Lobby = ()=> {
     return <>
             {playerID && matchID && playerCreds && <App playerID={playerID} matchID={matchID} credentials={playerCreds}/>}
             {(!playerID || !matchID || !playerCreds) && <>
-                <div id='topPanel' style={{width: '100%', padding: '0 2rem .5rem 0', display: 'flex', flexFlow: 'row-reverse'}}>
+                <div id='topPanel' style={{width: '100%', padding: '2rem 10rem 0', display: 'flex', flexFlow: 'row-reverse'}}>
                     <ButtonGroup>
-                        <Button color={locale === 'en' ? 'secondary':''} onClick={() => setLocale('en')}>EN</Button>
-                        <Button color={locale === 'ru' ? 'secondary':''} onClick={() => setLocale('ru')}>RU</Button>
+                        <button className={'styledButton ' + (locale === 'en' ? 'blue':'black')} onClick={() => setLocale('en')}>ENG</button>
+                        <button className={'styledButton ' + (locale === 'ru' ? 'blue':'black')} onClick={() => setLocale('ru')}>РУС</button>
                     </ButtonGroup>
                 </div>
                 <div id='lobbyMain'>
                 
-                {(!playerCreds || !prematchID) && <Card style={{flex: 'auto', maxWidth: '49%', padding: '2rem', border: 'outset 1px rgba(255,255,255,.25)'}}>
+                {(!playerCreds || !prematchID) && <Card className='borderedPanel' style={{flex: 'auto', margin: '6rem 0 6rem 6rem', maxWidth: '42%', padding: '2rem'}}>
                     <CardTitle style={{display: 'flex'}}>
                         <h3 style={{flex: 'auto'}}>{t('lobby.matches_list_label')}</h3>
-                        <Button className='bi-repeat' style={{backgroundColor: 'transparent', marginRight: '.25rem'}} onClick={refreshMatchList}/>
-                        <Button color='warning' onClick={newPrematch}>{t('lobby.create_new')}</Button>
+                        <button className='bi-repeat styledButton black' style={{marginRight: '.25rem'}} onClick={refreshMatchList}/>
+                        <button className='styledButton yellow' onClick={newPrematch}>{t('lobby.create_new')}</button>
                     </CardTitle>
                     <CardBody style={{paddingTop: '5rem', overflowY: 'auto'}}>
                         <Container style={{fontSize: '80%'}}>
@@ -402,7 +402,7 @@ export const Lobby = ()=> {
                         </Container>
                     </CardBody>
                 </Card>}
-                {prematchInfo && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'outset 1px rgba(255,255,255,.25)'}}>
+                {prematchInfo && <Card className='borderedPanel' style={{flex: 'auto', margin: '6rem', overflowY: 'hidden', maxWidth: '42%', padding: '2rem'}}>
                     <CardTitle>
                         {!playerCreds && !prematchInfo.players && <>
                             <Input valid placeholder={prematchInfo.setupData.matchName} onChange={(e) => changeOption('matchName', e.target)}/>
@@ -470,16 +470,16 @@ export const Lobby = ()=> {
                         {playerCreds && <PrematchApp playerID={playerID} matchID={prematchID} credentials={playerCreds}/>}
                     </CardBody>
                     <CardFooter style={{display: 'flex', justifyContent: 'space-between'}}>
-                        {!playerCreds && !prematchInfo.players && <Button color='success' onClick={createPrematch}>{t('lobby.create_game')} <b className='bi-caret-right-square-fill' ></b></Button>}
+                        {!playerCreds && !prematchInfo.players && <button className='styledButton yellow' onClick={createPrematch}>{t('lobby.create_game')} <b className='bi-caret-right-square-fill' ></b></button>}
                         {!playerCreds && !playerID && prematchInfo && prematchInfo.players && cookie.matchID === prematchID &&
-                            <Button color='success' onClick={()=>reconnect()}>{t('lobby.reconnect')} <b className='bi-caret-right-square-fill' ></b></Button>}
+                            <button className='styledButton yellow' onClick={()=>reconnect()}>{t('lobby.reconnect')} <b className='bi-caret-right-square-fill' ></b></button>}
                         {!playerCreds && !playerID && prematchInfo && prematchInfo.players &&
-                            <Button color='success' disabled={prematchInfo.gameName !== 'prematch' || !prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>{t('lobby.join_game')} <b className='bi-caret-right-square-fill' ></b></Button>}
-                        {playerCreds && <Button color='danger' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> {t('lobby.leave')}</Button>}
-                        {playerID && playerID !== '0' && !iAmReady && <Button color='success' onClick={() => updatePlayerInfo({ready: true})}>{t('lobby.ready_to_play')} <b className='bi-check-square-fill' ></b></Button>}
+                             <button className='styledButton yellow' disabled={prematchInfo.gameName !== 'prematch' || !prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>{t('lobby.join_game')} <b className='bi-caret-right-square-fill' ></b></button>}
+                        {playerCreds && <button className='styledButton red' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> {t('lobby.leave')}</button>}
+                        {playerID && playerID !== '0' && !iAmReady &&  <button className='styledButton green' onClick={() => updatePlayerInfo({ready: true})}>{t('lobby.ready_to_play')} <b className='bi-check-square-fill' ></b></button>}
                     </CardFooter>
                 </Card>}
-                {playerCreds && prematchInfo && prematchInfo.players && <Card style={{flex: 'auto', overflowY: 'hidden', maxWidth: '49%', padding: '2rem', border: 'outset 1px rgba(255,255,255,.25)'}}>
+                {playerCreds && prematchInfo && prematchInfo.players && <Card className='borderedPanel' style={{flex: 'auto', overflowY: 'hidden', maxWidth: '42%', margin: '6rem 6rem 6rem 0', padding: '2rem'}}>
                     {playerID === '0' && <MapOptions visible={true} useProphecyOfKings={true} currentRaces={currentRaces} excludedTiles={[]} includedTiles={[]} lockedTiles={[]}
                         numberOfPlayers={prematchInfo.players.length} updateTiles={runGame} updateRaces={()=>{}} toggleProphecyOfKings={()=>{}}
                         currentPlayerNames={[]} updatePlayerNames={()=>{}} playerID={playerID} updateMapOptionsCallback={updateMapOptionsCallback}/>}
