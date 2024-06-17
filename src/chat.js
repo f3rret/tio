@@ -1,4 +1,4 @@
-import { Card, CardBody, CardFooter, Input, ButtonGroup, Button } from 'reactstrap';
+import { Card, CardBody, CardFooter, Input, ButtonGroup } from 'reactstrap';
 import { useState, useMemo, useCallback, useContext } from 'react';
 import { StateContext, LocalizationContext } from './utils';
 
@@ -26,7 +26,7 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
           style={{borderRadius: '5px', fontSize: '2rem', padding: '0 1rem', background:'none', borderColor: 'transparent'}}/>
       </ButtonGroup>
  */
-    return <div style={{position: 'fixed', bottom: '1rem', left: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
+    return <div style={{position: 'fixed', bottom: '3rem', left: '3rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
       
       {chatVisible && <Card style={{margin: '0 0 1rem 0', backgroundColor: 'rgba(0,0,0,.3)', border: 'solid 1px rgba(255,255,255,.7)', width: '40rem', height: '20rem'}}>
         <CardBody style={{overflowY: 'auto'}}>
@@ -42,9 +42,9 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
         {messages[0]}
         </div>}
 
-      <ButtonGroup style={{opacity: '80%'}}>
-        <Button color={chatVisible ? 'light': 'dark'} onClick={()=>{setChatVisible(!chatVisible)}} 
-          style={{fontFamily: 'Handel Gothic'}}>{t("board.nav.chat")}</Button>
+      <ButtonGroup>
+        <button className={'styledButton ' + (chatVisible ? 'white': 'blue')} onClick={()=>{setChatVisible(!chatVisible)}} 
+          style={{fontFamily: 'Handel Gothic'}}>{t("board.nav.chat")}</button>
       </ButtonGroup>
     </div>
   }

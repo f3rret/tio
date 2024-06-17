@@ -7,6 +7,7 @@
             "prophecy_of_kings": "Prophecy of Kings",
             "edition_PoK": "PoK",
             "name_acceptable": "this name acceptable",
+            "name_inacceptable": "this name not acceptable",
             "random_map": "random map",
             "map_type_random": "random",
             "players": "Players",
