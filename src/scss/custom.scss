@@ -76,8 +76,11 @@ body{
 }
 
 .comboPanel-left{
-    border-image: url('../../public/comboPanel-left.png') fill 50 18 / 2rem / 2rem stretch !important;
+    border-image: url('../../public/comboPanel-left.png') fill 50 50 / 1rem  stretch !important;
 }
+/*.subPanel{
+    border-image: url('../../public/subPanel.png') fill 40 60 / 2rem / 2rem stretch !important;
+}*/
 
 .styledButton{
     min-height: 2.5rem;
