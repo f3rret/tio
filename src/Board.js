@@ -193,7 +193,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
    */
   const MyNavbar = () =>
     <div style={{ position: 'fixed', height: 0, width: '100%', zIndex: '2', display: 'flex', justifyContent: 'space-between', padding: '0'}}>
-      <ButtonGroup className='borderedPanel' style={{height: '4.5rem', margin: '0 0 0 6rem', paddingTop:'2rem', fontFamily:'Handel Gothic'}}>
+      <ButtonGroup className='borderedPanel' style={{height: '4.5rem', margin: '0 0 0 2rem', paddingTop:'2rem', fontFamily:'Handel Gothic'}}>
         <button className={'styledButton ' + (objVisible ? 'white':'black')} style={{width: '8rem'}} onClick={()=>setObjVisible(!objVisible)}>{t("board.nav.objectives")}</button>
         <button className={'styledButton ' + (planetsVisible ? 'white':'black')} style={{width: '8rem'}} onClick={()=>setPlanetsVisible(!planetsVisible)}>{t("board.nav.planets")}</button>
         <button className={'styledButton ' + (unitsVisible ? 'white':'black')} style={{width: '8rem'}} onClick={()=>setUnitsVisible(!unitsVisible)}>{t("board.nav.units")}</button>
@@ -208,7 +208,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               <AccordionHeader targetId='1' style={{border: 'none', background: 'transparent'}}>
                 <span style={{display: 'flex', width: '100%', background: 'transparent'}}>
                   <CardImg style={{width: '2rem', maxHeight: '2rem', marginRight: '1rem'}} src={'race/icons/'+G.races[ctx.currentPlayer].rid+'.png'} />
-                  <h5 style={{margin: 0, alignSelf: 'center', flex: 'auto'}}>{t('board.players_move') + ': ' + t('races.' + G.races[ctx.currentPlayer].rid + '.name')}
+                  <h5 style={{margin: 0, alignSelf: 'center', flex: 'auto'}}>{t('races.' + G.races[ctx.currentPlayer].rid + '.name')}
                   {G.speaker === G.races[ctx.currentPlayer].rid ? ' (' + t('board.speaker') + ')': ''}
                   </h5>
                 </span>
@@ -1213,11 +1213,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   return (
           <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>      
             <MyNavbar />
-            <CardColumns style={{margin: '5rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem', zIndex: '1'}}>
+            <CardColumns style={{margin: '4rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem', zIndex: '1'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && !race.isSpectator && <>
                 {techVisible && <TechnologyDialog />}
-                {objVisible && <Card id='objListMain' style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                    <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.nav.objectives')} <span style={{float: 'right'}}>{t('board.you_have') + ' ' + VP + ' ' + t('board.vp')}</span></h6></CardTitle>
+                {objVisible && <Card id='objListMain' className='subPanel' style={{ padding: '3rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                    <CardTitle><h6 style={{textAlign: 'right', margin: 0}}>{t('board.victory_points').toUpperCase() + ': ' + VP}</h6></CardTitle>
                     <ObjectivesList mustSecObj={mustSecObj} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective: mustSecObj ? dropSecretObjective: ()=>{}}/>
                   </Card>}
                 
@@ -1473,7 +1473,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </ListGroupItem>)}
                   </ListGroup>}
                 </div>
-                <ButtonGroup className='borderedPanel' style={{alignSelf: 'flex-end', fontFamily:'Handel Gothic', position: 'fixed', bottom: '0', paddingBottom: '2rem', marginRight: '4rem'}}>
+                <ButtonGroup className='comboPanel-left-vertical' style={{alignSelf: 'flex-end', fontFamily:'Handel Gothic', position: 'fixed', bottom: '1.5rem', padding: '.5rem', right: '35%'}}>
                     <button className={'styledButton ' + (rightBottomVisible.includes('promissory') ? 'white':'black')} onClick={()=>rightBottomSwitch('promissory')} 
                       style={{width: '7rem'}}>{t("board.nav.promissory")}</button>
                     <button className={'styledButton ' + (rightBottomVisible.includes('relics') ? 'white':'black')} onClick={()=>rightBottomSwitch('relics')} 
@@ -1490,11 +1490,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               <CardColumns style={{paddingRight: '2rem', display: 'flex', height: 'max-content', 
                           width: '100%', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
                   
-                  {race && race.strategy.length > 0 && ctx.phase !== 'strat' && <div className='comboPanel-left' style={{display: 'flex', position: 'absolute', padding: '.5rem', top: '-7rem'}}>
+                  {race && race.strategy.length > 0 && ctx.phase !== 'strat' && <div className='comboPanel-left-vertical' style={{display: 'flex', position: 'absolute', padding: '.5rem', top: '-4rem', right: '3rem'}}>
                     {race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
                   </div>}
-                  <div className='borderedPanel' style={{display: 'flex', height: 'max-content', backgroundColor: 'rgba(0,0,0,.75)',
-                          width: '100%', flexDirection: 'column', justifyContent: 'flex-end', marginBottom: '2rem'}}>
+                  <div className='borderedPanel-vertical' style={{display: 'flex', height: 'max-content', backgroundColor: 'rgba(33, 37, 41, 0.95)',
+                          width: '100%', flexDirection: 'column', justifyContent: 'flex-end', margin: '0 -.5rem 2rem 0', zIndex: 1}}>
                     {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0}}>
 
                         {midPanelInfo === 'tokens' && <>

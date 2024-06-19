@@ -205,6 +205,7 @@
             "players_move": "Ход игрока",
             "you_have": "у вас",
             "vp": "ПО",
+            "victory_points": "победных очков",
             "send": "отправить",
             "activate_system": "активировать",
             "tooltips": {
