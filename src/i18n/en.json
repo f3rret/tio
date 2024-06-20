@@ -254,7 +254,9 @@
             "needed": "needed",
             "max_units_count": "Max units count",
             "max_units_cost": "Max summary units cost",
-            "finish": "Finish"
+            "finish": "Finish",
+            "explore_one": "Explore one of",
+            "ready_one": "Ready one of"
         },
         "cards": {
             "strategy": {
@@ -654,6 +656,7 @@
                 "FIGHTER": {"label": "FIGHTER"},
                 "FIGHTER2": {"label": "Advanced fighters", "effect": "This unit may move without being transported. Fighters in excess of your ships’ capacity count against your eet pool."},
                 "MECH": {"label": "MECH"},
+                "MECH Z-GRAV": {"label": "MECH Z-GRAV"},
                 "INFANTRY": {"label": "INFANTRY"},
                 "INFANTRY2": {"label": "Gen synthesis", "effect": "After this unit is destroyed, roll 1 die. If result ≥ 6: place the unit on this card (even when it is captured, in which case both capture and this ability take effect). At the start of your next turn, place each unit on this card on a planet you control in your HS."},
                 "PDS": {"label": "PDS"},

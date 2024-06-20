@@ -1009,12 +1009,12 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect, rid}) => {
     return <div style={{display: 'flex'}}>
         <div style={{display:'flex', flexFlow:'column', width: '30%', border: 'none'}}>
           {R_UNITS.map((u, i) =>
-            <Button key={i} size='sm' color={showUnit === u.id ? 'light':'dark'} onClick={()=>setShowUnit(u.id)}>
-              <div style={{display: 'flex', justifyContent: 'space-between'}}>
+            <button key={i} className={'styledButton ' + (showUnit === u.id ? 'white':'black')} onClick={()=>setShowUnit(u.id)}>
+              <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '80%'}}>
                 <div>{u.alreadyUpgraded && <span style={{color: 'coral', marginRight: '.5rem'}}>▲</span>}{t('cards.techno.' + u.id + '.label')}</div>
                 <div>{UNITS[u.id.toLowerCase()]}</div>
               </div>
-            </Button>)}
+            </button>)}
         </div>
 
         {R_UNITS[showUnit] && <div style={{paddingLeft: '1rem', flex: 'auto', width: '70%'}}>
@@ -1308,14 +1308,14 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
         }
         
         return (<Row className='hoverable' onClick={()=>onClick(p.name)} key={i} 
-                        style={{cursor: 'default', paddingRight: '1rem', fontSize: '1.25rem', marginTop: '.25rem', lineHeight: '2.2rem', height: '2.5rem', background: exhausted[p.name] ? 'green':'',
+                        style={{cursor: 'default', paddingRight: '1rem', fontSize: '1.25rem', marginTop: '.25rem', lineHeight: '2.2rem', height: '2.75rem', background: exhausted[p.name] ? 'green':'',
                         opacity: opac, color: 'white'}}>
                     <Col xs='7'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/legendary_complete.png'}/>:'' } 
                                 {p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1 ? 
                                     <img alt='dmz' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/dmz.png'}/>:'' } 
                                 {t('planets.' + p.name)}
-                                {p.attach && p.attach.length && <><Badge style={{margin: '0 .2rem', padding: '.3rem .5rem'}} color='success' pill id={p.name + '_attach_badge'}>+</Badge>
-                                <UncontrolledTooltip target={'#' + p.name + '_attach_badge'}>{p.attach.join(',')}</UncontrolledTooltip></>}
+                                {p.attach && p.attach.length && <><Badge style={{margin: '0 .2rem', padding: '.3rem .5rem'}} color='success' pill id={p.name.replaceAll(' ', '_') + '_attach_badge'}>+</Badge>
+                                <UncontrolledTooltip target={'#' + p.name.replaceAll(' ', '_') + '_attach_badge'}>{p.attach.join(',')}</UncontrolledTooltip></>}
                     </Col>
                     <Col xs='1' onClick={(e)=>specClick(e, p)} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
                     <Col xs='1' style={{padding: 0}}>{trait}</Col>
@@ -1324,8 +1324,10 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
                     <Col xs='1' onClick={(e)=>infClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b>{p.influence}</b></Col>
                     
                     {(!psArch || p.exhausted) && <Col />}
-                    {psArch && !p.exhausted && <Col className='bi bi-box-arrow-in-right' style={{padding: 0, cursor: 'pointer', position: 'relative'}}> 
-                        <img style={{width: '1.5rem', position: 'absolute', top: '.25rem', left: '1rem'}} onClick={(e)=>{e.stopPropagation(); moves.exhaustForTg(p.name)}} src='icons/trade_good_1.png' alt='tg'/> 
+                    {psArch && !p.exhausted && <Col style={{padding: 0, cursor: 'pointer', position: 'relative'}}>
+                        <button className='styledButton green' style={{width: '3rem', padding: 0, position: 'absolute', left: '.5rem', boxShadow: '-2px 0px 10px gold'}} onClick={(e)=>{e.stopPropagation(); moves.exhaustForTg(p.name)}}>
+                            <img style={{width: '1.5rem'}} src='icons/trade_good_1.png' alt='tg'/> 
+                        </button>
                     </Col>}
                     </>}
                 </Row>)
@@ -1452,14 +1454,18 @@ export const TradePanel = ({ onTrade }) => {
         }
     }, [onTrade, srid, tradeItem]);
 
-    return <div style={{display: 'flex', flexDirection: 'row', alignItems: 'flex-start'}}>
-        <ButtonGroup vertical style={{width: '10%', paddingRight: '.5rem'}}>
-            {races.map((r, i) => <Button onClick={()=>setSrid(r.rid)} style={{padding: '.25rem',marginBottom: '.5rem', minHeight: '2.5rem'}} color='dark' key={i} tag='img' src={'/race/icons/' + r.rid + '.png'}/>)}
-        </ButtonGroup>
-        <div style={{width: '90%'}}>
+    return <>
+            <CardTitle>
+            <ButtonGroup>
+                {races.map((r, i) => <button onClick={()=>setSrid(r.rid)} className={'styledButton ' + (r.rid === srid ? 'white':'black')} 
+                    style={{padding: '.5rem', width: '4rem'}} 
+                    key={i}><img alt={r.rid} style={{height: '1.5rem'}} src={'/race/icons/' + r.rid + '.png'}/></button>)}
+            </ButtonGroup>
+            </CardTitle>
+
             <RacePanel rid={G.races[playerID].rid} onSelect={setTradeItem}/>
             {races.length > 0 && <>
-                <Row style={{margin: '1rem'}}>
+                <Row style={{marginBottom: '2rem '}}>
                     <Col style={{textAlign: 'right', alignSelf: 'center'}}>
                         {tradeItem && <b>{tradeItem === 'commodity' ? ('1 ' + t('board.commodity')) : tradeItem === 'tg' ? ('1 ' + t('board.trade_good')) : 
                         tradeItem === 'fragment.c' ? ('1 ' + t('board.cultural') + t('board.fragment')) :
@@ -1471,16 +1477,15 @@ export const TradePanel = ({ onTrade }) => {
                         tradeItem.indexOf('promissory') === 0 ? t('cards.promissory.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
                         tradeItem.substr(tradeItem.indexOf('.') + 1) }</b>}
                     </Col>
-                    <Col xs={4} style={{textAlign: 'center', padding: 0}}>
-                        <Button onClick={()=>tradeClick()} disabled={!tradeItem} className='bi-arrow-down-circle' style={{fontSize: '1rem'}} size='sm' color='success'>
+                    <Col xs={4} style={{textAlign: 'right', padding: 0}}>
+                        <button onClick={()=>tradeClick()} className='bi-arrow-down-circle styledButton green' disabled={!tradeItem} style={{fontSize: '1rem'}}>
                             {' ' + t('board.send')}
-                        </Button>
+                        </button>
                     </Col>
                 </Row>
-                <RacePanel rid={srid} />
+            <RacePanel rid={srid} />
             </>}
-        </div>
-    </div>
+        </>
 }
 
 const RacePanel = ({rid, onSelect}) => {
@@ -1841,5 +1846,41 @@ export const ChoiceDialog = ({args, onSelect}) => {
                     )}
                 </div>
             </Card>
+
+}
+
+export const CardsPager = ({children}) => {
+
+    return <ListGroup horizontal style={{position: 'absolute', pointerEvents: 'none', bottom: '3rem', right: '3rem', fontSize: '65%', background: 'none', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', width: '60rem'}}>
+        {children}
+    </ListGroup>
+
+}
+
+export const CardsPagerItem = ({children, tag}) => {
+
+    let url = '/card0.png';
+    let shadow = '#999999';
+
+    if(tag === 'context'){
+        url = '/card1.png';
+        shadow = '#05f2f0';
+    }
+    if(tag === 'action'){
+        url = '/card2.png';
+        shadow = '#d91c63';
+    }
+    else if(tag === 'relic'){
+        url='/card3.png';
+        shadow = '#ffeb12';
+    }
+    else if(tag === 'agenda'){
+        url='/card4.png';
+        shadow = '#4dad60';
+    }
+
+    return <ListGroupItem style={{background: 'url(' + url + ') no-repeat 0% 0%/100% 100%', padding: '1.5rem', width: '14rem', margin: '.25rem', boxShadow: '0px 0px 10px ' + shadow, pointerEvents: 'all', height: '20rem'}}>
+        {children}
+    </ListGroupItem>
 
 }

@@ -9,7 +9,7 @@ import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText,
   AccordionHeader,
   AccordionBody} from 'reactstrap';
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, /*getTechType,*/ 
-ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog } from './dialogs';
+ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem } from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
 import { PixiViewport } from './viewport';
 import cardData from './cardData.json';
@@ -38,21 +38,22 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   const [exhaustedCards, setExhaustedCards] = useState([]);
   const [producing, setProducing] = useState(null);
-  const [objVisible, setObjVisible] = useState(false);
+  const [leftPanel, setLeftPanel] = useState(null);
+  /*const [objVisible, setObjVisible] = useState(false);
   const [techVisible, setTechVisible] = useState(false);
   const [tradeVisible, setTradeVisible] = useState(false)
-  const [planetsVisible, setPlanetsVisible] = useState(false);
+  const [planetsVisible, setPlanetsVisible] = useState(false);*/
   const [advUnitView, setAdvUnitView] = useState(undefined);
   const [groundUnitSelected, setGroundUnitSelected] = useState({});
   const [payloadCursor, setPayloadCursor] = useState({i:0, j:0});
   const [tilesPng, setTilesPng] = useState(true);
   const [tilesTxt, setTilesTxt] = useState(false);
-  const [unitsVisible, setUnitsVisible] = useState(false);
+  //const [unitsVisible, setUnitsVisible] = useState(false);
   const [agentVisible, setAgentVisible] = useState('agent');
   const [subcardVisible, setSubcardVisible] = useState('stuff');
   const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
   //const [stratUnfold, setStratUnfold] = useState(0);
-  const [rightBottomVisible, setRightBottomVisible] = useState([]);
+  const [rightBottomVisible, setRightBottomVisible] = useState(null);
   const [rightBottomSubVisible, setRightBottomSubVisible] = useState(null);
   const [selectedTile, setSelectedTile] = useState(-1);
   const [selectedPlanet, setSelectedPlanet] = useState(-1);
@@ -160,49 +161,30 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return result;
   }, [race, G.pubObjectives, playerID]);
 
-  /**
-   * 
-        <div style={{display: 'flex'}}>
-   * <Nav style={{marginRight: '2rem'}}>
-          
-            <NavItem onClick={()=>setObjVisible(!objVisible)} style={{cursor: 'pointer'}}>
-              <h5>Objectives</h5>
-            </NavItem>
-          </Nav>
-          <Nav style={{marginRight: '2rem'}}>
-            <NavItem onClick={()=>setTechVisible(!techVisible)} style={{cursor: 'pointer'}}>
-              <h5>Technologies</h5>
-            </NavItem>
-          </Nav>
-          <Nav style={{marginRight: '2rem'}}>
-            <NavItem onClick={()=>setPlanetsVisible(!planetsVisible)} style={{cursor: 'pointer'}}>
-              <h5>Planets</h5>
-            </NavItem>
-          </Nav>
-          <Nav style={{marginRight: '2rem'}}>
-            <NavItem onClick={()=>setUnitsVisible(!unitsVisible)} style={{cursor: 'pointer'}}>
-              <h5>Units</h5>
-            </NavItem>
-          </Nav>
-          <Nav>
-            <NavItem onClick={()=>{ if(G.races.length > 1) setTradeVisible(!tradeVisible) }} style={{cursor: 'pointer'}}>
-              <h5>Trade</h5>
-            </NavItem>
-          </Nav>
-          <div className='mb-corner mb-right'></div>
-   */
+  const leftPanelClick = useCallback((label) => {
+    if(leftPanel === label){
+      setLeftPanel(null);
+    }
+    else{
+      if(label !== 'trade' || (G.races.length > 1)){
+        setLeftPanel(label);
+      }
+    }
+  //eslint-disable-next-line
+  }, [leftPanel]);
+
   const MyNavbar = () =>
     <div style={{ position: 'fixed', height: 0, width: '100%', zIndex: '2', display: 'flex', justifyContent: 'space-between', padding: '0'}}>
       <ButtonGroup className='borderedPanel' style={{height: '4.5rem', margin: '0 0 0 2rem', paddingTop:'2rem', fontFamily:'Handel Gothic'}}>
-        <button className={'styledButton ' + (objVisible ? 'white':'black')} style={{width: '8rem'}} onClick={()=>setObjVisible(!objVisible)}>{t("board.nav.objectives")}</button>
-        <button className={'styledButton ' + (planetsVisible ? 'white':'black')} style={{width: '8rem'}} onClick={()=>setPlanetsVisible(!planetsVisible)}>{t("board.nav.planets")}</button>
-        <button className={'styledButton ' + (unitsVisible ? 'white':'black')} style={{width: '8rem'}} onClick={()=>setUnitsVisible(!unitsVisible)}>{t("board.nav.units")}</button>
-        <button className={'styledButton ' + (techVisible ? 'white':'black')} style={{width: '8rem'}} onClick={()=>setTechVisible(!techVisible)}>{t("board.nav.technologies")}</button>
-        <button className={'styledButton ' + (tradeVisible ? 'white':'black')} style={{width: '8rem'}} onClick={()=>{ if(G.races.length > 1) setTradeVisible(!tradeVisible) }}>{t("board.nav.trade")}</button>
+        <button className={'styledButton ' + (leftPanel === 'objectives' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('objectives')}>{t("board.nav.objectives")}</button>
+        <button className={'styledButton ' + (leftPanel === 'planets' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('planets')}>{t("board.nav.planets")}</button>
+        <button className={'styledButton ' + (leftPanel === 'units' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('units')}>{t("board.nav.units")}</button>
+        <button className={'styledButton ' + (leftPanel === 'techno' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('techno')}>{t("board.nav.technologies")}</button>
+        <button className={'styledButton ' + (leftPanel === 'trade' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('trade')}>{t("board.nav.trade")}</button>
       </ButtonGroup>
     
-      <div style={{marginTop: '4.5rem', marginRight: '5rem', display: 'flex'}}>
-        <Nav className='comboPanel-left' style={{height: '5rem', marginTop: '-1rem', padding: '1rem 3rem 1rem 1rem'}}>
+      <div style={{marginTop: '2rem', marginRight: '3rem', display: 'flex'}}>
+        <Nav className='comboPanel-left' style={{height: '5.5rem', marginTop: '-1rem', padding: '1.5rem 3rem 1rem 1rem'}}>
           <UncontrolledAccordion open='0' defaultOpen='0' id='turnLine' style={{width: '30rem', opacity: '.75', marginTop: '.5rem', background: 'transparent'}}>
             <AccordionItem style={{border: 'none', background: 'transparent'}}>
               <AccordionHeader targetId='1' style={{border: 'none', background: 'transparent'}}>
@@ -233,7 +215,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           </UncontrolledAccordion>
         </Nav>
 
-        <Nav className='comboPanel-right' style={{height: '3rem', zIndex: 1, padding: '0 1.5em 0 .5rem', minWidth: '30rem', display: 'flex', justifyContent: 'flex-end'}}>
+        <Nav className='comboPanel-right' style={{height: '3.5rem', zIndex: 1, padding: '.5rem 1.5em 0 .5rem', minWidth: '30rem', display: 'flex', justifyContent: 'flex-end'}}>
           {false && <><NavItem style={{marginRight: '1rem'}}>
             <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
           </NavItem>
@@ -290,11 +272,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }, [race, isMyTurn]);
 
   const rightBottomSwitch = useCallback((val) => {
-    if(rightBottomVisible.includes(val)){
-      setRightBottomVisible(rightBottomVisible.filter(v => v !== val))
+    if(rightBottomVisible === val){
+      setRightBottomVisible(null);
     }
     else{
-      setRightBottomVisible([...rightBottomVisible, val]);
+      setRightBottomVisible(val);
     }
   }, [rightBottomVisible]);
 
@@ -382,8 +364,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       draft.new++;
     }))}
     };
-    return (<div size='sm' onClick={()=>clickFn()} style={{position: 'absolute', top: '2rem', right: 0, width:'2rem', backgroundColor: 'rgba(242, 183, 7, 1)'}}>
-      <h5 style={{margin: '.25rem .5rem'}}>-</h5></div>);
+    return (<button className='styledButton red' onClick={()=>clickFn()} style={{position: 'absolute', top: '3rem', right: 0, width:'2rem', padding: 0, boxShadow: '-2px 0px 10px gold'}}>
+      <h5 style={{margin: '.25rem .5rem'}}>-</h5></button>);
   }
 
   const tileClick = (e, index, planetIndex) => {
@@ -971,11 +953,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   },[stratUnfold, rightBottomVisible]);*/
 
   useEffect(()=>{
-    if(mustSecObj || (ctx.phase === 'stats' && !objVisible && !mustAction)){
-      setObjVisible(true);
+    if(mustSecObj || (ctx.phase === 'stats' && leftPanel !== 'objectives' && !mustAction)){
+      setLeftPanel('objectives');
     }
     
-  }, [ctx.phase, objVisible, mustAction, mustSecObj]);
+  }, [ctx.phase, leftPanel, mustAction, mustSecObj]);
 
   const PREV_EXPLORATION = useRef([]);
 
@@ -1138,17 +1120,52 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         exhaustTechCard(args.techId);
       }
     }
-//                {techData.find(t => t.id === args.techId).description}
-    return  <ListGroupItem style={{background: 'none', padding: 0}}>
-              <Button size='sm' style={{width: '100%'}} disabled={disabled} id={'context_'+args.techId}
-                  color={exhaustedCards.indexOf(args.techId) > -1 || disabled ? 'secondary':'warning'} onClick={onClick}>
-                <img alt='propulsion' src={'icons/'+icon+'.png'} style={{width: '1rem', marginRight: '.5rem'}}/>
+
+    return  <CardsPagerItem tag='context'>
+              <button style={{width: '100%', marginBottom: '1rem'}} disabled={disabled} 
+                  className = {'styledButton ' + (exhaustedCards.indexOf(args.techId) > -1 ? 'white':'yellow')} onClick={onClick}>
+                <img alt='tech type' src={'icons/'+icon+'.png'} style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}}/>
                 {t('cards.techno.' + args.techId + '.label')}
-              </Button>
-              <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#context_'+args.techId}>
-                {t('cards.techno.' + args.techId + '.description')}
-              </UncontrolledTooltip>
-            </ListGroupItem>
+              </button>
+
+              {args.techId === 'SCANLINK_DRONE_NETWORK' && rightBottomSubVisible === 'context2' && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
+                <b>{t('board.explore_one')+ ':'}</b>
+                {activeTile.tdata.planets.map((p, i) => {
+                  if(p.trait){
+                    return <button key={i} onClick={() => {moves.explorePlanet(p.name, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton yellow'>
+                      {t('planets.' + p.name)}
+                    </button>
+                  }
+                  return <div key={i}></div>
+                })}
+                <button onClick={() => {setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton black'>
+                          {t('board.cancel')}
+                        </button>
+              </ListGroup>}
+
+              {args.techId === 'BIO_STIMS' && rightBottomSubVisible === 'context' && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
+                      <b>{t('board.ready_one') + ':'}</b>
+                      {PLANETS.map((p, i) => {
+                        if(p.specialty && p.exhausted){
+                          return <button key={i} onClick={() => {moves.readyPlanet(p.name, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton yellow'>
+                            {t('planets.' + p.name)}
+                          </button>
+                        }
+                        return <div key={i}></div>
+                      })}
+                      {race.exhaustedCards.map((c, i)=>{
+                        return <button key={i} onClick={() => {moves.readyTechnology(c, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton blue'>
+                          {t('cards.techno.' + c + '.label')}
+                        </button>
+                      })}
+                      <button onClick={() => {setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton black'>
+                          {t('board.cancel')}
+                        </button>
+                    </ListGroup>}
+                    
+
+              {t('cards.techno.' + args.techId + '.description')}
+            </CardsPagerItem>
   }
 
   const AttackerForce = useCallback((args) => {
@@ -1213,29 +1230,28 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   return (
           <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>      
             <MyNavbar />
-            <CardColumns style={{margin: '4rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '35rem', zIndex: '1'}}>
+            <CardColumns style={{margin: '4rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '42rem', zIndex: '1'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && !race.isSpectator && <>
-                {techVisible && <TechnologyDialog />}
-                {objVisible && <Card id='objListMain' className='subPanel' style={{ padding: '3rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                {leftPanel === 'techno' && <TechnologyDialog />}
+                {leftPanel === 'objectives' && <Card id='objListMain' className='subPanel' style={{ padding: '3rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                     <CardTitle><h6 style={{textAlign: 'right', margin: 0}}>{t('board.victory_points').toUpperCase() + ': ' + VP}</h6></CardTitle>
                     <ObjectivesList mustSecObj={mustSecObj} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective: mustSecObj ? dropSecretObjective: ()=>{}}/>
                   </Card>}
                 
-                {planetsVisible && <Card style={{ ...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.nav.planets')}</h6></CardTitle>
+                {leftPanel === 'planets' && <Card className='subPanel' style={{ padding: '3rem 1rem 2rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                  <CardTitle></CardTitle>
                     <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
                       <Cont style={{border: 'none'}}>
                         {<PlanetsRows PLANETS={PLANETS} />}
                       </Cont>
                     </div>
                 </Card>}
-                {unitsVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                  <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.nav.units')}</h6></CardTitle>
+                {leftPanel === 'units' && <Card className='subPanel' style={{ padding: '3rem 1rem 2rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                  <CardTitle></CardTitle>
                   <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} rid={G.races[playerID].rid}/>
                 </Card>}
               </>}
-              {!race.isSpectator && tradeVisible && <Card style={{...CARD_STYLE, backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.nav.trade')}</h6></CardTitle>
+              {!race.isSpectator && leftPanel === 'trade' && <Card className='subPanel' style={{ padding: '2rem 2rem 2rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                 <TradePanel onTrade={moves.trade}/>
               </Card>}
               {!race.isSpectator && producing && <ProducingPanel 
@@ -1357,8 +1373,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               flexDirection: 'column', justifyContent: 'space-between', alignSelf: 'flex-start'}}>
 
                 <div style={{display: 'flex', flexDirection: 'column', position: 'fixed', bottom: '4rem', width: '13rem'}}>
-                  {rightBottomVisible && rightBottomVisible.includes('context') && <>
-                    <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
+                  {rightBottomVisible === 'context' && <>
+                    <CardsPager>
                       {haveTechnology(race, 'GRAVITY_DRIVE') && <TechAction techId='GRAVITY_DRIVE'/>}
                       {haveTechnology(race, 'SLING_RELAY') && <TechAction techId='SLING_RELAY'/>}
                       {haveTechnology(race, 'BIO_STIMS') && <TechAction techId='BIO_STIMS'/>}
@@ -1368,50 +1384,24 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       {haveTechnology(race, 'PREDICTIVE_INTELLIGENCE') && <TechAction techId='PREDICTIVE_INTELLIGENCE'/>}
                       {haveTechnology(race, 'TRANSIT_DIODES') && <TechAction techId='TRANSIT_DIODES'/>}
                       {haveTechnology(race, 'INTEGRATED_ECONOMY') && <TechAction techId='INTEGRATED_ECONOMY'/>}
-                    </ListGroup>
-                    {rightBottomSubVisible === 'context' && <ListGroup style={{background: 'none', bottom: '2.5rem', position: 'absolute', right: '14rem', width: '13rem'}}>
-                      <b>Ready one of:</b>
-                      {PLANETS.map((p, i) => {
-                        if(p.specialty && p.exhausted){
-                          return <Button key={i} onClick={() => {moves.readyPlanet(p.name, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} size='sm' color='warning'>
-                            {p.name}
-                          </Button>
-                        }
-                        return <div key={i}></div>
-                      })}
-                      {race.exhaustedCards.map((c, i)=>{
-                        return <Button key={i} onClick={() => {moves.readyTechnology(c, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} size='sm' color='warning'>
-                          {c.replaceAll('_', ' ')}
-                        </Button>
-                      })}
-                    </ListGroup>}
-                    {rightBottomSubVisible === 'context2' && <ListGroup style={{background: 'none', bottom: '2.5rem', position: 'absolute', right: '14rem', width: '13rem'}}>
-                      <b>Explore one of:</b>
-                      {activeTile.tdata.planets.map((p, i) => {
-                        if(p.trait){
-                          return <Button key={i} onClick={() => {moves.explorePlanet(p.name, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} size='sm' color='warning'>
-                            {p.name}
-                          </Button>
-                        }
-                        return <div key={i}></div>
-                      })}
-                    </ListGroup>}
+                    </CardsPager>
+                    
                   </>}
-                  {rightBottomVisible.includes('promissory') && race.promissory.length > 0 && <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
-                    {race.promissory.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
-                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id+pr.color}>
-                        {pr.sold ? <img alt='to other player' style={{width: '1rem', position: 'absolute', left: '.5rem', top: '.4rem'}} src={'race/icons/' + pr.sold + '.png'} />:''}
+                  {rightBottomVisible === 'promissory' && race.promissory.length > 0 && <CardsPager>
+                    {race.promissory.map((pr, i) => <CardsPagerItem key={i} tag='promissory'>
+                      <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
+                        {pr.sold ? <img alt='to other player' style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}} src={'race/icons/' + pr.sold + '.png'} />:''}
                         <b style={{textDecoration: pr.sold ? 'line-through':''}}>{t('cards.promissory.' + pr.id + '.label').toUpperCase()}</b>
-                        {pr.racial && !pr.owner ? <img alt='racial' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.4rem'}} src={'race/icons/' + race.rid + '.png'} />:''}
-                        {pr.owner ? <img alt='from other player' style={{width: '1rem', position: 'absolute', marginLeft: '.5rem', top: '.4rem'}} src={'race/icons/' + pr.owner + '.png'} />:''}
-                      </Button>
-                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id+pr.color}>
-                        {t('cards.promissory.' + pr.id + '.effect').replaceAll('[color of card]', t('board.colors.' + pr.color))}
-                      </UncontrolledTooltip> 
-                    </ListGroupItem>)}
-                  </ListGroup>}
+                        {pr.racial && !pr.owner ? <img alt='racial' style={{width: '2rem', position: 'absolute', bottom: '1rem'}} src={'race/icons/' + race.rid + '.png'} />:''}
+                        {pr.owner ? <img alt='from other player' style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}} src={'race/icons/' + pr.owner + '.png'} />:''}
+                      </button>
+            
+                        <p>{t('cards.promissory.' + pr.id + '.effect').replaceAll('[color of card]', t('board.colors.' + pr.color))}</p>
 
-                  {((rightBottomVisible.includes('actions') && race.actionCards.length > 0) || race.actionCards.length > 7) && <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
+                    </CardsPagerItem>)}
+                  </CardsPager>}
+
+                  {((rightBottomVisible === 'actions' && race.actionCards.length > 0) || race.actionCards.length > 7) && <CardsPager>
                     {race.actionCards.map((pr, i) => {
                       let disabled = !mustAction && !(pr.when === 'ACTION' && ctx.phase === 'acts' && ctx.currentPlayer === playerID) && 
                                                       !(pr.when === 'AGENDA' && ctx.phase === 'agenda') &&
@@ -1438,51 +1428,48 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         if(ctx.phase === 'strat') disabled = false;
                       }
 
-                      return <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
-                        <Button style={{width: '100%'}} onClick={()=> { 
-                                  if(mustAction){moves.dropActionCard(pr.id)}
-                        else if(!disabled){ moves.playActionCard(pr); /*setRightBottomVisible(null)*/}}} 
-                                  size='sm' color={disabled || mustAction ? 'dark':'warning'} id={pr.id.replaceAll(' ', '_')} >
+                      return <CardsPagerItem key={i} tag='action'>
+                        <button disabled={disabled} style={{width: '100%', marginBottom: '1rem'}} onClick={()=> { if(mustAction){moves.dropActionCard(pr.id)} else if(!disabled){ moves.playActionCard(pr);}}} className={'styledButton ' + (mustAction ? 'red':'yellow')} >
                           {mustAction && race.actionCards.length > 7 && 
                             <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', left: '0', top: '0', position: 'absolute'}}>{t('board.drop')}</b>}
                           <b>{t('cards.actions.' + pr.id + '.label').toUpperCase()}</b>
-                        </Button>
-                        <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>
-                          {t('cards.actions.' + pr.id + '.description')}</UncontrolledTooltip> 
-                      </ListGroupItem>}
+                        </button>
+
+                        {t('cards.actions.' + pr.id + '.description')}
+                      </CardsPagerItem>}
                     )}
-                  </ListGroup>}
+                  </CardsPager>}
 
-                  {rightBottomVisible.includes('relics') && race.relics.length > 0 && <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
-                    {race.relics.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
-                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_')}>
+                  {rightBottomVisible === 'relics' && race.relics.length > 0 && <CardsPager>
+                    {race.relics.map((pr, i) => <CardsPagerItem key={i} tag='relic'>
+                      <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
                         <b>{t('cards.relics.' + pr.id + '.label').toUpperCase()}</b>
-                      </Button>
-                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_')}>
-                        {t('cards.relics.' + pr.id + '.effect')}
-                      </UncontrolledTooltip> 
-                    </ListGroupItem>)}
-                  </ListGroup>}
+                      </button>
 
-                  {rightBottomVisible.includes('agenda') && G.laws.length > 0 && <ListGroup style={{background: 'none', margin: '.5rem 0'}}>
-                    {G.laws.map((pr, i) => <ListGroupItem key={i} style={{background: 'none', padding: 0}}>
-                      <Button style={{width: '100%'}} size='sm' color='dark' id={pr.id.replaceAll(' ', '_').replaceAll(':', '_')}>
+                        {t('cards.relics.' + pr.id + '.effect')}
+                    </CardsPagerItem>)}
+                  </CardsPager>}
+
+                  {rightBottomVisible === 'agenda' && G.laws.length > 0 && <CardsPager>
+                    {G.laws.map((pr, i) => <CardsPagerItem key={i} tag='agenda'>
+                      <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
                         <b>{t('cards.agenda.' + pr.id + '.label').toUpperCase()}</b>
-                      </Button>
-                      <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#'+pr.id.replaceAll(' ', '_').replaceAll(':', '_')}>{t('cards.agenda.' + pr.id + '.for')}</UncontrolledTooltip> 
-                    </ListGroupItem>)}
-                  </ListGroup>}
+                      </button>
+
+                      {t('cards.agenda.' + pr.id + '.for')}
+                    </CardsPagerItem>)}
+                  </CardsPager>}
                 </div>
                 <ButtonGroup className='comboPanel-left-vertical' style={{alignSelf: 'flex-end', fontFamily:'Handel Gothic', position: 'fixed', bottom: '1.5rem', padding: '.5rem', right: '35%'}}>
-                    <button className={'styledButton ' + (rightBottomVisible.includes('promissory') ? 'white':'black')} onClick={()=>rightBottomSwitch('promissory')} 
+                    <button className={'styledButton ' + (rightBottomVisible === 'promissory' ? 'white':'black')} onClick={()=>rightBottomSwitch('promissory')} 
                       style={{width: '7rem'}}>{t("board.nav.promissory")}</button>
-                    <button className={'styledButton ' + (rightBottomVisible.includes('relics') ? 'white':'black')} onClick={()=>rightBottomSwitch('relics')} 
+                    <button className={'styledButton ' + (rightBottomVisible === 'relics' ? 'white':'black')} onClick={()=>rightBottomSwitch('relics')} 
                       style={{width: '7rem'}}>{t("board.nav.relics")}</button> 
-                    <button className={'styledButton ' + (rightBottomVisible.includes('agenda') ? 'white':'black')} onClick={()=>rightBottomSwitch('agenda')} 
+                    <button className={'styledButton ' + (rightBottomVisible === 'agenda' ? 'white':'black')} onClick={()=>rightBottomSwitch('agenda')} 
                       style={{width: '7rem'}}>{t("board.nav.agenda")}</button>
-                    <button className={'styledButton ' + (rightBottomVisible.includes('actions') ? 'white':'black')} onClick={()=>rightBottomSwitch('actions')} 
+                    <button className={'styledButton ' + (rightBottomVisible === 'actions' ? 'white':'black')} onClick={()=>rightBottomSwitch('actions')} 
                       style={{width: '7rem'}}>{t("board.nav.actions")}</button>
-                    <button className={'styledButton ' + (rightBottomVisible.includes('context') ? 'white':'black')} onClick={()=>rightBottomSwitch('context')} 
+                    <button className={'styledButton ' + (rightBottomVisible === 'context' ? 'white':'black')} onClick={()=>rightBottomSwitch('context')} 
                       style={{width: '7rem'}}>{t("board.nav.context")}</button>
                 </ButtonGroup>
               </CardColumns>
@@ -1494,41 +1481,42 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     {race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
                   </div>}
                   <div className='borderedPanel-vertical' style={{display: 'flex', height: 'max-content', backgroundColor: 'rgba(33, 37, 41, 0.95)',
-                          width: '100%', flexDirection: 'column', justifyContent: 'flex-end', margin: '0 -.5rem 2rem 0', zIndex: 1}}>
+                          width: '100%', flexDirection: 'column', justifyContent: 'flex-end', margin: '0 0 2rem 0', zIndex: 1}}>
                     {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0}}>
 
                         {midPanelInfo === 'tokens' && <>
-                        {<h6 style={{textAlign: 'right'}}>{race.tokens.new + tempCt.new || 0} {t('board.unused')}</h6>}
-                        {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && 
-                          <Button size='sm' color='success' style={{position: 'absolute', top: '0', right: '0'}} 
-                            onClick={() => moves.redistTokens(tempCt, exhaustedCards)}>{t('board.confirm_changes')}</Button>}
-                        <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
-                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} style={TOKENS_STYLE} >
-                            <h6 style={{fontSize: 50}}>{race.tokens.t + tempCt.t}</h6>
-                            {ctx.phase === 'acts' && <>
-                              {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'t'}/>}
-                              {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'t'}/>}
-                            </>}
-                            <b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.tactic')}</b>
-                          </ListGroupItem>
-                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} style={TOKENS_STYLE}>
-                            <h6 style={{fontSize: 50}}>{race.tokens.f + tempCt.f}</h6>
-                            {ctx.phase === 'acts' && <>
-                              {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'f'}/>}
-                              {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'f'}/>}
-                            </>}
-                            <b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.fleet')}</b>
-                          </ListGroupItem>
-                          <ListGroupItem className={race.tokens.new ? 'hoverable':''} style={TOKENS_STYLE}>
-                            <h6 style={{fontSize: 50}}>{race.tokens.s + tempCt.s}</h6>
-                            {ctx.phase === 'acts' && <>
-                              {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'s'}/>}
-                              {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'s'}/>}
-                            </>}
-                            <b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.strategic')}</b>
+                          {<h6 style={{textAlign: 'right'}}>{race.tokens.new + tempCt.new || 0} {t('board.unused')}</h6>}
+                          
+                          <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
+                            <ListGroupItem className={race.tokens.new ? 'hoverable':''} style={TOKENS_STYLE} >
+                              <h6 style={{fontSize: 50}}>{race.tokens.t + tempCt.t}</h6>
+                              {ctx.phase === 'acts' && <>
+                                {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'t'}/>}
+                                {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'t'}/>}
+                              </>}
+                              <b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.tactic')}</b>
                             </ListGroupItem>
-                        </ListGroup>
-                        
+                            <ListGroupItem className={race.tokens.new ? 'hoverable':''} style={TOKENS_STYLE}>
+                              <h6 style={{fontSize: 50}}>{race.tokens.f + tempCt.f}</h6>
+                              {ctx.phase === 'acts' && <>
+                                {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'f'}/>}
+                                {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'f'}/>}
+                              </>}
+                              <b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.fleet')}</b>
+                            </ListGroupItem>
+                            <ListGroupItem className={race.tokens.new ? 'hoverable':''} style={TOKENS_STYLE}>
+                              <h6 style={{fontSize: 50}}>{race.tokens.s + tempCt.s}</h6>
+                              {ctx.phase === 'acts' && <>
+                                {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'s'}/>}
+                                {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'s'}/>}
+                              </>}
+                              <b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.strategic')}</b>
+                              </ListGroupItem>
+                          </ListGroup>
+
+                          {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && 
+                            <button className='styledButton green' style={{alignSelf: 'center', width: 'fit-content'}} 
+                              onClick={() => moves.redistTokens(tempCt, exhaustedCards)}>{t('board.confirm_changes')}</button>}
                         </>}
                         {midPanelInfo === 'fragments' && <>
                         
@@ -1658,7 +1646,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             {payObj !== null && <PaymentDialog oid={payObj} G={G} race={race} planets={PLANETS} 
                             isOpen={payObj !== null} toggle={(payment)=>togglePaymentDialog(payment)}/>}
          
-          {ctx.phase === 'acts' && objVisible && mustSecObj && 
+          {ctx.phase === 'acts' && leftPanel === 'objectives' && mustSecObj && 
             <Tooltip isOpen={document.getElementById('objListMain')} target='objListMain' placement='right' className='todoTooltip'>
               <b>{t('board.tooltips.drop_secret_obj_header')}</b>
               <p>{t('board.tooltips.drop_secret_obj_body')}</p>
