@@ -7,7 +7,7 @@ import { useCookies } from 'react-cookie';
 import MapOptions from './map generator/options/MapOptions';
 import MapOptionsRO from './map generator/options/MapOptionsRO';
 import raceData from './map generator/data/raceData.json';
-import { App } from './App';
+
 import { PrematchApp } from './prematch/prematchApp';
 import { LocalizationContext, shuffle } from './utils';
 import { colors, trueColors } from './colors';
@@ -16,7 +16,7 @@ import './scss/custom.scss';
 
 let interval = null;
 
-export const Lobby = ()=> {
+export const Lobby = (args)=> {
 
     const { t, locale, setLocale } = useContext(LocalizationContext);
     const playerNames = useMemo(() => ['Alice', 'Bob', 'Cecil', 'David', 'Eva', 'Frank', 'Gregory', 'Heilen'], []);
@@ -26,13 +26,13 @@ export const Lobby = ()=> {
             .sort((a,b) => { if(a[1]>b[1]){return 1} else if(a[1]<b[1]){ return -1} else return 0; })
     , [races, t]);
 
-    const [gameList, setGameList] = useState();
-    const [prematchInfo, setPrematchInfo] = useState();
-    const [prematchID, setPrematchID] = useState();
-    const [playerCreds, setPlayerCreds] = useState();
-    const [playerID, setPlayerID] = useState();
-    const [playerName, setPlayerName] = useState();
-    const [matchID, setMatchID] = useState();
+    const [gameList, setGameList] = useState(null);
+    const [prematchInfo, setPrematchInfo] = useState(null);
+    const [prematchID, setPrematchID] = useState(null);
+    const [playerCreds, setPlayerCreds] = useState(null);
+    const [playerID, setPlayerID] = useState(null);
+    const [playerName, setPlayerName] = useState(null);
+    const [matchID, setMatchID] = useState(null);
     const [cookie, setCookie] = useCookies(['matchID', 'playerID', 'playerCreds']);
     //const [playerName, setPlayerName] = useState(playerNames[0]);
     
@@ -277,6 +277,10 @@ export const Lobby = ()=> {
                 setCookie('playerID', playerID);
                 setCookie('playerCreds', data.playerCredentials);
                 setCookie('playerName', playerName);
+
+                args.setPlayerID(playerID);
+                args.setMatchID(mid);
+                args.setPlayerCreds(data.playerCredentials);
             }
         })
         .catch(console.err);
@@ -389,7 +393,6 @@ export const Lobby = ()=> {
 
 
     return <>
-            {playerID && matchID && playerCreds && <App playerID={playerID} matchID={matchID} credentials={playerCreds}/>}
             {(!playerID || !matchID || !playerCreds) && <>
                 <div id='topPanel' style={{width: '100%', padding: '3rem 3rem 0', display: 'flex', flexFlow: 'row-reverse'}}>
                     <ButtonGroup>

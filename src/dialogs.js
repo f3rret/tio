@@ -1,9 +1,9 @@
 
-import { Card, CardImg,  CardTitle, CardBody, CardText, CardFooter, Button, ButtonGroup, Row, Col, UncontrolledCollapse, UncontrolledTooltip,
+import { Card, CardImg,  CardTitle, CardSubtitle, CardBody, CardText, CardFooter, Button, ButtonGroup, Row, Col, UncontrolledCollapse, UncontrolledTooltip,
     Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Input, Label, Badge } from 'reactstrap';
 import { useState, useMemo, useCallback, useEffect, useRef, useContext } from 'react';
 import { produce } from 'immer';
-//import cardData from './cardData.json';
+import cardData from './cardData.json';
 import techData from './techData.json';
 import { checkObjective, StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT } from './utils';
 
@@ -1882,5 +1882,67 @@ export const CardsPagerItem = ({children, tag}) => {
     return <ListGroupItem style={{background: 'url(' + url + ') no-repeat 0% 0%/100% 100%', padding: '1.5rem', width: '14rem', margin: '.25rem', boxShadow: '0px 0px 10px ' + shadow, pointerEvents: 'all', height: '20rem'}}>
         {children}
     </ListGroupItem>
+
+}
+
+export const Overlay = () => {
+
+    const { ctx } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
+    const [ mem, setMem ] = useState(null);
+
+    return <div id='overlay'  onClick={() => setMem(ctx.phase)} className={ctx.phase === mem ? 'none':'block'} >
+        <div id='overlay-text'>{t('board.phase_begin_' + ctx.phase)}</div>
+    </div>
+
+}
+
+
+export const StrategyPick = ({actionCardStage}) => {
+
+    const { G, playerID, moves } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
+    const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
+    const race = G.races[playerID];
+
+    return <Card className='borderedPanel' style={{background: 'none antiquewhite', padding: '1rem', width: actionCardStage ? '35%':'60%', position: 'absolute', margin: actionCardStage ? '5rem 0 0 40%':'', bottom: '10rem', left: '5rem' }}>
+                <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>{t("board.strategy_pick")}</h3></CardTitle>
+                <CardBody style={{display: 'flex'}}>
+                <ListGroup style={{background: 'none', width: actionCardStage ? '100%':'60%'}}>
+                    {Object.keys(cardData.strategy).map((key, idx) => {
+                        let r = G.races.find( r => r.strategy.length && r.strategy.find(s => s.id === key));
+                        if(!r && race.forbiddenStrategy && race.forbiddenStrategy.find(s => s.id === key)){
+                        let sum = 0;
+                        G.races.forEach(r => sum += r.strategy.length);
+                        if(sum < 7) r = true;
+                        }
+
+                        return <ListGroupItem key={idx} style={{background: 'none', display:'flex', justifyContent: 'flex-end', border: 'none', padding: '.25rem'}}>
+                        <div style={{width: 'auto'}}>
+                            {r && r!== true && <div style={{position: 'absolute', left: '0', width: '100%', display: 'flex', alignItems: 'flex-end'}}>
+                                    <img alt='race icon' src={'race/icons/'+r.rid+'.png'} style={{width: '3rem', maxHeight: '3rem'}}/>
+                                    <h5 style={{marginLeft: '1rem', color: 'black'}}>{t('races.' + r.rid + '.name')}</h5>
+                                </div>}
+                        </div>
+                        <button className='styledButton black' onMouseEnter={()=>setStrategyHover(key)} onClick={() => moves.pickStrategy(key)} 
+                            style={{opacity: r ? '.5':'1', width: '12rem', height: '3.5rem', fontFamily: "Handel gothic"}}>
+                                <b style={{backgroundColor: getStratColor(key, .6), border: 'solid 1px', width: '1.5rem', height: '1.5rem', display: 'inline-block', fontSize: '1.25rem', float: 'inline-start'}}>{idx+1}</b>
+                                {' ' + t('cards.strategy.' + key + '.label')}
+                        </button>
+                        </ListGroupItem>
+                    })}
+                    </ListGroup>
+                    {!actionCardStage && <Card style={{width: '40%', background: 'none', border: 'none', color: 'black'}}>
+                    <CardBody>
+                        <CardTitle><h4>{t("cards.strategy." + strategyHover + ".label")}</h4></CardTitle>
+                        <CardSubtitle style={{margin: '2rem 0'}}>{t("cards.strategy." + strategyHover + ".hit")}</CardSubtitle>
+                        <h5>{t("board.primary")}:</h5>
+                        <p>{t("cards.strategy." + strategyHover + ".primary")}</p>
+                        <h5>{t("board.secondary")}:</h5>
+                        <p>{t("cards.strategy." + strategyHover + ".secondary")}</p>
+                    </CardBody>
+                    </Card>}
+                </CardBody>
+            </Card>
 
 }

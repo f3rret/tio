@@ -1,5 +1,6 @@
 import React from 'react';
 import { Lobby } from './lobby';
+import { App } from './App';
 import ReactDOM from 'react-dom/client';
 
 import { I18n } from 'i18n-js';
@@ -23,10 +24,18 @@ const LangWrapper = () => {
     }),
     [locale]
   );
+  const [playerID, setPlayerID] = React.useState(null);
+  const [matchID, setMatchID] = React.useState(null);
+  const [playerCreds, setPlayerCreds] = React.useState(null);
+
+  const ready = React.useMemo(() => {
+    return playerID !== null && matchID !== null && playerCreds !== null
+  }, [playerID, matchID, playerCreds]);
 
   return (
     <LocalizationContext.Provider value={localizationContext}>
-      <Lobby />
+      {ready && <App playerID={playerID} matchID={matchID} credentials={playerCreds}/>}
+      {!ready && <Lobby setPlayerID={(p) => setPlayerID(p)} setMatchID={(p) => setMatchID(p)} setPlayerCreds={(p) => setPlayerCreds(p)}/>}
     </LocalizationContext.Provider>
   );
 }

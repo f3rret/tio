@@ -82,6 +82,10 @@
                 "space_combat": "Space combat",
                 "space_cannon": "Space cannon"
             },
+            "phase_begin_strat": "Strategy phase",
+            "phase_begin_acts": "Actions phase",
+            "phase_begin_stats": "Stats phase",
+            "phase_begin_agenda": "Agenda phase",
             "strategy_pick": "Strategy pick",
             "primary": "Primary",
             "secondary": "Secondary",

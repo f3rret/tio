@@ -2,17 +2,15 @@
 import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
 import { useMemo, useCallback, useState, useEffect, useRef, useContext } from 'react';
 import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip,/*UncontrolledAccordion, 
-  AccordionItem, AccordionBody, AccordionHeader,*/ CardBody, Tooltip, 
-  CardSubtitle, CardColumns, ListGroup, ListGroupItem, Container as Cont, Row, Col, 
+  AccordionItem, AccordionBody, AccordionHeader,*/ CardBody, Tooltip, ListGroup, ListGroupItem, Container as Cont, Row, Col, CardColumns,
   UncontrolledAccordion,
   AccordionItem,
   AccordionHeader,
   AccordionBody} from 'reactstrap';
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, /*getTechType,*/ 
-ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem } from './dialogs';
+ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick } from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
 import { PixiViewport } from './viewport';
-import cardData from './cardData.json';
 import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT, wormholesAreAdjacent, LocalizationContext } from './utils';
 import { lineTo, pathFromCoordinates } from './Grid';
 import { ChatBoard } from './chat';
@@ -51,7 +49,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   //const [unitsVisible, setUnitsVisible] = useState(false);
   const [agentVisible, setAgentVisible] = useState('agent');
   const [subcardVisible, setSubcardVisible] = useState('stuff');
-  const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
+  
   //const [stratUnfold, setStratUnfold] = useState(0);
   const [rightBottomVisible, setRightBottomVisible] = useState(null);
   const [rightBottomSubVisible, setRightBottomSubVisible] = useState(null);
@@ -185,7 +183,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     
       <div style={{marginTop: '2rem', marginRight: '3rem', display: 'flex'}}>
         <Nav className='comboPanel-left' style={{height: '5.5rem', marginTop: '-1rem', padding: '1.5rem 3rem 1rem 1rem'}}>
-          <UncontrolledAccordion open='0' defaultOpen='0' id='turnLine' style={{width: '30rem', opacity: '.75', marginTop: '.5rem', background: 'transparent'}}>
+          <UncontrolledAccordion open='0' defaultOpen='0' id='turnLine' style={{width: '30rem', opacity: '.9', marginTop: '.5rem', background: 'transparent'}}>
             <AccordionItem style={{border: 'none', background: 'transparent'}}>
               <AccordionHeader targetId='1' style={{border: 'none', background: 'transparent'}}>
                 <span style={{display: 'flex', width: '100%', background: 'transparent'}}>
@@ -195,7 +193,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   </h5>
                 </span>
               </AccordionHeader>
-              <AccordionBody style={{padding: '0', overflow: 'hidden'}} accordionId='1'>
+              <AccordionBody style={{padding: '1rem', overflow: 'hidden', background: '0% 0% / 100% auto url(/bg1.png)', backgroundColor: 'rgba(33, 37, 41, 1)', marginTop: '1rem', marginRight: '-1rem', border: 'solid 5px #424242'}} accordionId='1'>
                 {[...ctx.playOrder.slice(ctx.playOrderPos+1), ...ctx.playOrder.slice(0, ctx.playOrderPos)].map((pid, idx) => 
                   <Row key={idx} style={{background: 'transparent'}}>
                     <Col xs='1' style={{}}>
@@ -1228,7 +1226,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
    */
 
   return (
-          <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>      
+          <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>
+            <Overlay/>      
             <MyNavbar />
             <CardColumns style={{margin: '4rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '42rem', zIndex: '1'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && !race.isSpectator && <>
@@ -1263,45 +1262,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
             <ChatBoard sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
 
-            {!race.isSpectator && ctx.phase === 'strat' && 
-            <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: actionCardStage ? '35%':'60%', position: 'absolute', margin: actionCardStage ? '5rem 0 0 40%':'5% 10%'}}>
-              <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>{t("board.strategy_pick")}</h3></CardTitle>
-              <CardBody style={{display: 'flex'}}>
-                <ListGroup style={{background: 'none', width: actionCardStage ? '100%':'60%'}}>
-                    {Object.keys(cardData.strategy).map((key, idx) => {
-                      let r = G.races.find( r => r.strategy.length && r.strategy.find(s => s.id === key));
-                      if(!r && race.forbiddenStrategy && race.forbiddenStrategy.find(s => s.id === key)){
-                        let sum = 0;
-                        G.races.forEach(r => sum += r.strategy.length);
-                        if(sum < 7) r = true;
-                      }
-
-                      return <ListGroupItem key={idx} style={{background: 'none', display:'flex', justifyContent: 'flex-end', border: 'none', padding: '1rem'}}>
-                        <div style={{width: 'auto'}}>
-                          {r && r!== true && <div style={{position: 'absolute', left: '0', width: '100%'}}>
-                                  <img alt='race icon' src={'race/icons/'+r.rid+'.png'} style={{marginTop: '-.5rem', float: 'left', width: '3rem', maxHeight: '3rem'}}/>
-                                  <h5 style={{marginLeft: '4rem', color: 'black'}}>{r.name}</h5>
-                                </div>}
-                        </div>
-                        <Button className='btn_hoverable' onMouseEnter={()=>setStrategyHover(key)} disabled = {r !== undefined} onClick={() => moves.pickStrategy(key)} size='sm' color='dark' 
-                            style={{opacity: r ? '.5':'1', width: '11rem', height: '2rem', backgroundColor: getStratColor(key, '.3'), borderRadius: '3px'}}>
-                          <img alt='strategy' style={{width:'12rem', position: 'relative', top: '-1.1rem', left: '-.5rem'}} src={'strategy/'+ key + '.png'} />
-                        </Button>
-                      </ListGroupItem>
-                    })}
-                  </ListGroup>
-                  {!actionCardStage && <Card style={{width: '40%', background: 'none', border: 'none', color: 'black'}}>
-                    <CardBody>
-                      <CardTitle><h4>{t("cards.strategy." + strategyHover + ".label")}</h4></CardTitle>
-                      <CardSubtitle style={{margin: '2rem 0'}}>{t("cards.strategy." + strategyHover + ".hit")}</CardSubtitle>
-                      <h5>{t("board.primary")}:</h5>
-                      <p>{t("cards.strategy." + strategyHover + ".primary")}</p>
-                      <h5>{t("board.secondary")}:</h5>
-                      <p>{t("cards.strategy." + strategyHover + ".secondary")}</p>
-                    </CardBody>
-                  </Card>}
-              </CardBody>
-            </Card>}
+            {!race.isSpectator && ctx.phase === 'strat' && <StrategyPick actionCardStage={actionCardStage}/>}
+            
 
             {race.explorationDialog && <ChoiceDialog args={race.explorationDialog} onSelect={(i)=>moves.choiceDialog(i)}/>}
             {!race.isSpectator && ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote} mini={actionCardStage}/>}
