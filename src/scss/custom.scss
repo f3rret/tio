@@ -11,12 +11,17 @@ $border-radius: 0;
 $body-color: #fff;
 $card-bg: none;
 $body-bg: rgb(9, 9, 9);//#0d1426;
-$modal-content-bg: rgba(74, 111, 144, 0.95);
+
 $tooltip-color: white;
 $tooltip-max-width: 300px;
 $nav-link-color: none;
 $accordion-btn-focus-box-shadow: none;
 $accordion-transition: none;
+$modal-bg: transparent;
+$modal-content-bg: transparent;
+$modal-header-border-color: transparent;
+$modal-footer-border-color: transparent;
+
 
 #root{
     width: 100%;
@@ -312,6 +317,14 @@ li.list-group-item{
     border-right-color: var(--bs-warning)!important;
     border-width: 1rem!important;
 }
+.bigDialog{
+    background: none antiquewhite!important; 
+    padding: 1rem; 
+    position: absolute!important; 
+    bottom: 9rem;
+    left: 5rem 
+}
+
 
 @import "../../node_modules/bootstrap/scss/bootstrap";
 

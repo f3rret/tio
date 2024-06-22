@@ -33,17 +33,19 @@ export function PaymentDialog(args) {
     }, [payment, args, objective])
 
     return (
-        <Modal style={{maxWidth: '35rem'}} isOpen={args.isOpen} toggle={()=>args.toggle()}>
-        <ModalHeader toggle={()=>args.toggle()} style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>{t('cards.objectives.' + args.oid + '.label')}</ModalHeader>
-        <ModalBody style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>
-            {t('cards.objectives.' + args.oid + '.title')}
-            <PaymentCard {...args} onPayment={setPayment} objective={objective}/>
-        </ModalBody>
-        <ModalFooter style={{background: 'rgba(255,255,255,.8)', color: 'black'}}>
-            <Button disabled={!acceptable} color='success' onClick={()=>args.toggle(payment)}>
-                {t('board.confirm')}
-            </Button>
-        </ModalFooter>
+        <Modal className='borderedPanel' style={{maxWidth: '35rem', margin: '10rem', background: "no-repeat 0% 0% / 100% 100% url('/bg1.png')"}} isOpen={args.isOpen} toggle={()=>args.toggle()}>
+            <ModalHeader toggle={()=>args.toggle()} style={{backgroundColor: 'rgba(255,215,0,.75)', color: 'black'}}>
+                {t('cards.objectives.' + args.oid + '.label')}
+            </ModalHeader>
+            <ModalBody style={{color: 'white'}}>
+                <p style={{fontSize: '75%', fontWeight: 'normal'}}>{t('cards.objectives.' + args.oid + '.title')}</p>
+                <PaymentCard {...args} onPayment={setPayment} objective={objective}/>
+            </ModalBody>
+            <ModalFooter style={{color: 'white'}}>
+                <button disabled={!acceptable} className='styledButton green' onClick={()=>args.toggle(payment)}>
+                    {t('board.confirm')}
+                </button>
+            </ModalFooter>
         </Modal>
     );
 }
@@ -560,25 +562,28 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
             }
         }
         else if(sid === 'IMPERIAL'){
-            if(isMine && step === 1 && selectedRace > -1){
-                if(G.pubObjectives[selectedRace] && G.pubObjectives[selectedRace].type !== 'SPEND' ){
-                    stopThere = !checkObjective(G, playerID, selectedRace)
+            if(isMine && selectedRace){
+                let obj = G.pubObjectives.find(o => o.id === selectedRace);
+                if(step === 1){
+                    if(obj && obj.type !== 'SPEND' ){
+                        stopThere = !checkObjective(G, playerID, selectedRace)
+                    }
                 }
-            }
-            if(isMine && step === 2){
-                if(G.pubObjectives[selectedRace].type === 'SPEND'){
-                    stopThere = !Object.keys(G.pubObjectives[selectedRace].req).every((k) => {
-                        if(k === 'influence' || k === 'resources'){
-                            return deploy[k] && deploy[k].planets.reduce((a,b) => b[k] + a, 0) + deploy[k].tg >= G.pubObjectives[selectedRace].req[k]
-                        }
-                        else if(k === 'tg'){
-                            return G.races[playerID].tg >= G.pubObjectives[selectedRace].req[k]
-                        }
-                        else if(k === 'token'){
-                            return deploy[k] && deploy[k].t + deploy[k].s >= G.pubObjectives[selectedRace].req[k]
-                        }
-                        else return false;
-                    });
+                if(step === 2){
+                    if(obj && obj.type === 'SPEND'){
+                        stopThere = !Object.keys(obj.req).every((k) => {
+                            if(k === 'influence' || k === 'resources'){
+                                return deploy[k] && deploy[k].planets.reduce((a,b) => b[k] + a, 0) + deploy[k].tg >= obj.req[k]
+                            }
+                            else if(k === 'tg'){
+                                return G.races[playerID].tg >= obj.req[k]
+                            }
+                            else if(k === 'token'){
+                                return deploy[k] && deploy[k].t + deploy[k].s >= obj.req[k]
+                            }
+                            else return false;
+                        });
+                    }
                 }
             }
         }
@@ -663,8 +668,11 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
             }
             else if(isMine && step === 1){
                 inc = 2;
-                if(selectedRace > -1){
-                    if(G.pubObjectives[selectedRace] && G.pubObjectives[selectedRace].type === 'SPEND'){
+
+                if(selectedRace){
+                    let obj = G.pubObjectives.find(o => o.id === selectedRace);
+
+                    if(obj && obj.type === 'SPEND'){
                         inc = 1;
                     }
                 }
@@ -684,9 +692,9 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
             }
             else if(isMine && step === 3){
                 inc = 2;
-                if(selectedRace > -1){
+                /*if(selectedRace){
                     inc = 1;
-                }
+                }*/
             }
         }
         setStep(step-inc)
@@ -735,7 +743,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
     }, [step]);
 
     return (
-        <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute', margin: '5rem'}}>
+        <Card className='borderedPanel bigDialog' style={{maxWidth: '60%'}}>
               <CardTitle style={{borderBottom: '1px solid ' + getStratColor(sid, '.6'), color: 'black'}}><h3>{t('cards.strategy.' + sid + '.label')}</h3></CardTitle>
               <CardBody style={{display: 'flex', color: 'black', width: sid === 'WARFARE' && step === 2 && !isMine ? '':'min-content'}}>
                     {step === 0 && <>
@@ -763,21 +771,21 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                                 <h5 style={{fontSize: '50px', display: 'flex', justifyContent: 'flex-end'}}>{'+'}{tg}{' '}<Button tag='img' onClick={tgClick} src='/icons/trade_good_1.png' color='warning' 
                                     style={{marginLeft: '1rem', width: '4rem', padding: '.5rem', borderTopLeftRadius: '5px', borderBottomLeftRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} />
                                     <Button disabled={tg < 1} color='warning' style={{width: '1.5rem', borderLeft: 'none', color:'orange', backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: 0}} onClick={()=>setTg(tg-1)}>▼</Button></h5>
-                                <h5 style={{display: 'flex', justifyContent: 'flex-end'}}>You gain:</h5>
+                                <h5 style={{display: 'flex', justifyContent: 'flex-end'}}>{t('board.you_gain') + ': '}</h5>
                                 <div style={{display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap'}}><Tokens count={result}/></div>
                             </div>
                         </div>}
                         {sid === 'DIPLOMACY' && <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
                             <div style={{width: '60%', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                                {selectedTile === -1 && <h5 style={{margin: '2rem'}}>Select system on map</h5>}
+                                {selectedTile === -1 && <h5 style={{margin: '2rem'}}>{t('board.select_system')}</h5>}
                                 {selectedTile > -1 && <CardImg style={{width: '75%'}} src={'tiles/ST_'+G.tiles[selectedTile].tid+'.png'} />}
                             </div>
                         </div>}
-                        {sid === 'POLITICS' && <div style={{width: '60%', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                        {sid === 'POLITICS' && <div style={{margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                             <RaceList races={G.races} onClick={raceRowClick} selected={selectedRace} speaker={G.speaker}/>
                         </div>}
                         {sid === 'CONSTRUCTION' && <div style={{display: 'flex', flexDirection: 'row', marginTop: '2rem'}}>
-                            {selectedTile === -1 && <h5 style={{margin: '2rem'}}>Select system on map</h5>}
+                            {selectedTile === -1 && <h5 style={{margin: '2rem'}}>{t('board.select_system')}</h5>}
                             {selectedTile > -1 && <><div style={{width: '60%', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                                 {selectedTile > -1 && <CardImg style={{width: '75%'}} src={'tiles/ST_'+G.tiles[selectedTile].tid+'.png'} />}
                             </div>
@@ -795,7 +803,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                             </>}
                         </div>}
                         {sid === 'TRADE' && <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column', padding: '2rem'}}>
-                            <h5 style={{margin: '1rem'}}>You gain:</h5>
+                            <h5 style={{margin: '1rem'}}>{t('board.you_gain') + ': '}</h5>
                             <Row style={{height: '5rem', width: '25rem', justifyContent: 'center'}}>
                                 {isMine && <><Col xs='3' style={{display: 'flex', alignItems: 'center'}}><h5 style={{fontSize: '50px'}}>+3</h5></Col>
                                 <Col xs='3' style={{padding: 0, display: 'flex', alignItems: 'center'}}><img style={{width: '5rem', height: '5rem', borderRadius: '5px', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} alt='tg' src='icons/trade_good_1.png'/></Col></>}
@@ -803,16 +811,16 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                                 <Col xs='3' style={{padding: 0, display: 'flex', alignItems: 'center'}}><img  style={{width: '5rem', height: '5rem', borderRadius: '5px', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} alt='tg' src='icons/commodity_1.png'/></Col>
                             </Row>
                             {!isMine && <p style={{marginTop: '1rem', fontSize: '.8rem'}}>
-                                {Object.keys(ctx.activePlayers).indexOf(ctx.currentPlayer) > -1 && <>Awaiting TRADE owner decision...</>}
+                                {Object.keys(ctx.activePlayers).indexOf(ctx.currentPlayer) > -1 && <>{t('board.awaiting_trade_owner') + '...'}</>}
                                 {Object.keys(ctx.activePlayers).indexOf(ctx.currentPlayer) === -1 && <>
-                                    {G.races[ctx.currentPlayer].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES.indexOf(G.races[playerID].rid) > -1 && <b style={{color: 'green'}}>TRADE owner allow you make this free.</b>}
-                                    {G.races[ctx.currentPlayer].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES.indexOf(G.races[playerID].rid) === -1 && <b>TRADE owner don't allow you make this free.</b>}
+                                    {G.races[ctx.currentPlayer].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES.indexOf(G.races[playerID].rid) > -1 && <b style={{color: 'green'}}>{t('board.trade_owner_allow')}</b>}
+                                    {G.races[ctx.currentPlayer].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES.indexOf(G.races[playerID].rid) === -1 && <b>{t('board.trade_owner_disallow')}</b>}
                                 </>}
                             </p>}
                         </div>}
                         {sid === 'WARFARE' && <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
                             {isMine && <div style={{width: '60%', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                                {selectedTile === -1 && <h5 style={{margin: '2rem'}}>Select system on map</h5>}
+                                {selectedTile === -1 && <h5 style={{margin: '2rem'}}>{t('board.select_system')}</h5>}
                                 {selectedTile > -1 && <CardImg style={{width: '75%'}} src={'tiles/ST_'+G.tiles[selectedTile].tid+'.png'} />}
                             </div>}
                             {!isMine && <div style={{ width: '60%', overflowY: 'auto', padding: '1rem', margin:'2rem',borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
@@ -830,17 +838,17 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                                     <Button disabled={tg < 1} color='warning' style={{width: '1.5rem', borderLeft: 'none', color:'orange', backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: 0}} onClick={()=>setTg(tg-1)}>▼</Button></h5>
                                 
                                 <div style={{display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap'}}>
-                                    <h5 style={{textAlign: 'end'}}>{'You can learn '}</h5>
-                                    <h5 style={{textAlign: 'end'}}>{result + (result === 1 ? ' technology':' technologies')}</h5>
-                                    {adjSpec.length > 0 && <h6>and ignore {adjSpec.map((pname, pi) =>{
+                                    <h5 style={{textAlign: 'end'}}>{t('board.you_can_learn') + ' '}</h5>
+                                    <h5 style={{textAlign: 'end'}}>{result + (result === 1 ? (' ' + t('board.technology')):(' ' + t('board.technologies')))}</h5>
+                                    {adjSpec.length > 0 && <h6>{t('board.and_ignore') + ' '} {adjSpec.map((pname, pi) =>{
                                         const p = PLANETS.find(p => p.name === pname);
                                         return <img alt='specialty' key={pi} style={{width: '1rem'}} src={'icons/' + p.specialty + '.png'}/>
-                                    })} requirements</h6>}
+                                    })} {' ' + t('board.requirements')}</h6>}
                                 </div>
                             </div>
                         </div>}
                         {sid === 'IMPERIAL' && <div style={{display: 'flex', borderRadius: '5px', width: '35rem', margin: '1rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                            <ObjectivesList G={G} playerID={playerID} onSelect={selectObjective} selected={selectedRace} />
+                            <ObjectivesList G={G} playerID={playerID} onSelect={selectObjective} selected={selectedRace} maxHeight='20rem'/>
                         </div>}
                     </div>}
                     {step === 2 && lastStep > 1 && <div style={{width: '100%', display: 'flex', flexFlow: 'column'}}>
@@ -849,16 +857,16 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                             {<PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>}
                         </div>}
                         {sid === 'POLITICS' && <div style={{display: 'flex', padding: '1rem', flexDirection: 'column', fontSize: '.8rem'}}>
-                            <h5 style={{margin: '.5rem'}}>You gain 2 action cards:</h5>
+                            <h5 style={{margin: '.5rem'}}>{t('board.you_gain_2_ac') + ': '}</h5>
                             {G.actionsDeck.slice(-2 * (parseInt(playerID)+1)).slice(0, 2).map((a,i) => 
                                 <div key={i} style={{border: 'solid 1px', padding: '1rem', marginBottom: '1rem',  borderRadius: '5px'}}>
-                                    <img alt='action card' style={{width: '3rem', float: 'right', margin: '.5rem'}} src='icons/action_card_black.png'/>
-                                    <h6>{a.id}</h6><p>{a.description}</p>
+                                    <img alt='action card' style={{width: '3rem', float: 'left', margin: '0 1rem 1rem 0'}} src='icons/action_card_black.png'/>
+                                    <h6>{t('cards.actions.' + a.id + '.label')}</h6><p>{t('cards.actions.' + a.id + '.description')}</p>
                                 </div>
                             )}
                         </div>}
                         {sid === 'CONSTRUCTION' && <div style={{display: 'flex', flexDirection: 'row', marginTop: '2rem'}}>
-                            {selectedTile === -1 && <h5 style={{margin: '2rem'}}>Select system on map</h5>}
+                            {selectedTile === -1 && <h5 style={{margin: '2rem'}}>{t('board.select_system')}</h5>}
                             {selectedTile > -1 && <><div style={{width: '60%', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                                 {selectedTile > -1 && <CardImg style={{width: '75%'}} src={'tiles/ST_'+G.tiles[selectedTile].tid+'.png'} />}
                             </div>
@@ -872,16 +880,16 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                             </div>
                             </>}
                         </div>}
-                        {sid === 'TRADE' && <div style={{width: '60%', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                        {sid === 'TRADE' && <div style={{margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                             <RaceList races={G.races.filter(r => r.rid !== G.races[playerID].rid)} onClick={raceMultiRowClick} selected={selectedRace}/>
                         </div>}
                         {sid === 'WARFARE' && <>
                             {isMine && <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem'}}>
                                 <div style={{display: 'flex', padding: '1rem', borderRadius: '5px', flexDirection: 'column', color:'white', justifyContent: 'center', width: '60%', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                     <Row>
-                                        <Col xs='4' style={TOKENS_STYLE}><b>tactic</b></Col>
-                                        <Col xs='4' style={TOKENS_STYLE}><b>fleet</b></Col>
-                                        <Col xs='4' style={TOKENS_STYLE}><b>strategic</b></Col>
+                                        <Col xs='4' style={TOKENS_STYLE}><b>{t('board.tactic')}</b></Col>
+                                        <Col xs='4' style={TOKENS_STYLE}><b>{t('board.fleet')}</b></Col>
+                                        <Col xs='4' style={TOKENS_STYLE}><b>{t('board.strategic')}</b></Col>
                                     </Row>
                                     <Row>
                                         <Col xs='4' style={TOKENS_STYLE}><h6 style={{fontSize: '50px'}}>{ct.t}</h6></Col>
@@ -896,32 +904,37 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                                         <Col xs='2' style={{...TOKENS_STYLE, alignItems: 'flex-end'}}><Button onClick={()=>redistCt('s', +1)} color='dark' style={{ opacity: '.5', width:'3rem', padding: 0,fontSize: '30px'}}>+</Button></Col>
                                         <Col xs='2' style={{...TOKENS_STYLE}}><Button onClick={()=>redistCt('s', -1)} color='dark' style={{ opacity: '.5', width:'3rem', padding: 0,fontSize: '30px'}}>-</Button></Col>
                                     </Row>
-                                    <h6 style={{textAlign: 'center', marginTop: '1rem'}}>{ct.new || 0} {' unused'}</h6>
+                                    <h6 style={{textAlign: 'center', marginTop: '1rem'}}>{ct.new || 0} {' ' + t('board.unused')}</h6>
                                 </div>
                             </div>}
-                            {!isMine && <div style={{display: 'flex', flexDirection: 'row', flexWrap:'wrap', justifyContent:'space-between', width: '100%', margin: '1rem'}}>
+                            {!isMine && <div style={{display: 'flex', flexDirection: 'row', flexWrap:'wrap', justifyContent:'space-between',  width: '100%'}}>
                                 <div style={{width:'30rem', overflowY: 'auto', height: '22rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                     <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex2}/>
                                 </div>
-                                <div style={{width: '35rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)', color: 'white', padding: '0 1rem 0 0'}}>
+                                <div style={{width: '35rem', position: 'relative', maxHeight: '25rem', overflowY: 'auto', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)', color: 'white', padding: '0 1rem 0 0'}}>
                                     <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} rid={G.races[playerID].rid} onSelect={(u)=>setCurrentUnit(u)}/>
-                                    <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                        <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' disabled={['PDS', 'SPACEDOCK'].indexOf(currentUnit) > -1 || exceedLimit(currentUnit)}><b>Deploy</b></Button>
+                                    <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', position: 'absolute', bottom: 0, right: 0}}>
+                                        <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{t('board.max_units_count') + ': ' + maxDeployUnits}</h6>
+                                        <button className='styledButton yellow' style={{margin: '.5rem'}} onClick={()=>deployUnit(+1)} disabled={['PDS', 'SPACEDOCK'].indexOf(currentUnit) > -1 || exceedLimit(currentUnit)}><b>{t('board.deploy')}</b></button>
                                     </div>
                                 </div>
-                                <div style={{width:'29rem', margin: '1rem'}}>
-                                    <h5 style={{fontSize: '50px', display: 'flex', justifyContent: 'flex-end'}}>{'+'}{tg}{' '}<Button tag='img' onClick={tgClick} src='/icons/trade_good_1.png' color='warning' 
-                                        style={{marginLeft: '1rem', width: '4rem', padding: '.5rem', borderTopLeftRadius: '5px', borderBottomLeftRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} />
-                                        <Button disabled={tg < 1} color='warning' style={{width: '1.5rem', borderLeft: 'none', color:'orange', backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: 0}} onClick={()=>setTg(tg-1)}>▼</Button></h5>
-                                    <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{'You mean to spend ' + result + ' resources'}</h6>
-                                    <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{deployPrice + ' needed'}</h6>
+                                <div style={{display: 'flex', width: '29rem'}}>
+                                    <h6 style={{display: 'flex', justifyContent: 'flex-end', flexDirection: 'column', alignItems: 'flex-end', flex: '85%'}}>
+                                        {'+'}{tg}{' '}
+                                        <p style={{display: 'flex', justifyContent: 'flex-end'}}>{t('board.you_mean_spend') + ' ' + result + ' ' + t('board.resources2')} / {deployPrice + ' ' + t('board.needed')}</p>
+                                    </h6>
+                                    <span style={{display: 'flex', alignItems: 'flex-start', flex: '15%'}}>
+                                        <Button tag='img' onClick={tgClick} src='/icons/trade_good_1.png' color='warning' 
+                                        style={{marginLeft: '1rem', width: '3rem', padding: '.5rem', borderTopLeftRadius: '5px', borderBottomLeftRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} />
+                                        <Button disabled={tg < 1} color='warning' style={{width: '1.5rem', borderLeft: 'none', color:'orange', backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: 0}} onClick={()=>setTg(tg-1)}>▼</Button>
+                                    </span>
                                 </div>
-                                <div style={{width: '33rem', margin: '1rem'}}>
-                                    <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{'Max units count: ' + maxDeployUnits}</h6>
+                                <div style={{width: '33rem', marginTop: '1rem'}}>
+                                    
                                     {deploy && Object.keys(deploy).map((k, i) => {
-                                        return (<p style={{margin: 0}} key={i}>
+                                        return (<span style={{marginRight: '1rem'}} key={i}>
                                         <Button size='sm' color='warning' style={{padding: '0 .25rem', fontSize: '.75rem'}} onClick={()=>deployUnit(-1, k)}>▼</Button>
-                                        <b>{' '}{k}{' : '}{deploy[k]}</b></p>)
+                                        <b>{' ' + t('cards.techno.' + k + '.label') + ': ' + deploy[k]}</b></span>)
                                     })}
                                 </div>
                             </div>}
@@ -935,13 +948,14 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                                 {GetTechType('unit', G.races[playerID], true, techOnSelect, Object.keys(ex2))}
                             </div>
                         </div>
-                        <div><UnmeetReqs G={G} playerID={playerID} PLANETS={PLANETS} adjSpec={adjSpec} ex2={ex2}/></div>
+                        <div style={{position: 'absolute', bottom: '1rem', left: '10rem'}}><UnmeetReqs G={G} playerID={playerID} PLANETS={PLANETS} adjSpec={adjSpec} ex2={ex2}/></div>
                         </>}
                         {sid === 'IMPERIAL' && <>
-                            {isMine && selectedRace > -1 && <>
-                                <p><b>{G.pubObjectives[selectedRace].id}</b>{' '+G.pubObjectives[selectedRace].title}</p>
+                            {isMine && selectedRace && <>
+                                <p><b>{t('cards.objectives.' + selectedRace + '.label') + ' '}</b>
+                                {t('cards.objectives.' + selectedRace + '.title')}</p>
                                 <div style={{display: 'flex', flexDirection: 'row'}}>
-                                    <PaymentCard race={G.races[playerID]} planets={PLANETS} objective={G.pubObjectives[selectedRace]} onPayment={setDeploy}/>
+                                    <PaymentCard race={G.races[playerID]} planets={PLANETS} objective={G.pubObjectives.find((o) => o.id === selectedRace)} onPayment={setDeploy}/>
                                 </div>
                             </>}
                         </>}
@@ -952,42 +966,43 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                             {agendaCards.map((a, i) => 
                                 <div key={i} style={{border: 'solid 1px', position: 'relative', padding: '1rem', marginBottom: '1rem', borderRadius: '5px'}}>
                                     <img alt='agenda card' style={{width: '3rem', float: 'right', margin: '.5rem'}} src='icons/agenda_black.png'/>
-                                    <h6>{a.id + ' ' + a.type}</h6>
-                                    {a.elect && <b>{'Elect: ' + a.elect}</b>}
-                                    <p style={{margin: 0}}>{a.for && <>{a.against ? <b>{'For: '}</b> :''} {a.for}</>}</p>
-                                    <p>{a.against && <><b>{'Against: '}</b>{a.against}</>}</p>
-                                    <Input style={{margin: '0.25rem'}} type='checkbox' checked={agendaCards[i].bottom === true} onChange={()=>placeAgendaTopOrBottom(i)}/><b>Place at deck bottom</b>
+                                    <h6>{t('cards.agenda.' + a.id + '.label') + ' ' + t('board.agenda_' + a.type)}</h6>
+                                    {a.elect && <b>{t('board.elect') + ': ' + t('board.elect_type.' + a.elect)}</b>}
+                                    <p style={{margin: 0}}>{a.for && <>{a.against ? <b>{t('board.for') + ': '}</b> :''} {t('cards.agenda.' + a.id + '.for')}</>}</p>
+                                    <p>{a.against && <><b>{t('board.against') + ': '}</b>{t('cards.agenda.' + a.id + '.against')}</>}</p>
+                                    <Input id={'place_deck_bottom_'+i} style={{margin: '0.25rem', backgroundColor: 'darkgray'}} type='checkbox' checked={agendaCards[i].bottom === true} onChange={()=>placeAgendaTopOrBottom(i)}/>
+                                    <Label for={'place_deck_bottom_'+i} check>{t('board.place_deck_bottom')}</Label>
                                     {i === 0 && <Button color='dark' onClick={()=>setAgendaCards([...agendaCards].reverse())} size='sm' style={{position: 'absolute', right: 0, bottom: 0 }}>▼</Button>}
                                 </div>
                             )}
                         </div>}
                         {sid === 'IMPERIAL' && <>
                             {isMine && G.tiles[0].tdata.planets[0].occupied === playerID && <div style={{display: 'flex', padding: '1rem', flexDirection: 'column'}}>
-                                <h5 style={{textAlign: 'center'}}>You gain 1 VP</h5>
+                                <h5 style={{textAlign: 'center'}}>{t('board.you_gain_1_vp')}</h5>
                             </div>}
                             {(!isMine || (G.tiles[0].tdata.planets[0].occupied !== playerID)) && <div style={{display: 'flex', padding: '1rem', flexDirection: 'column', fontSize: '.8rem'}}>
-                                <h5 style={{margin: '.5rem'}}>You gain secret objective:</h5>
+                                <h5 style={{margin: '.5rem'}}>{t('board.you_gain_so') + ': '}</h5>
                                 {G.secretObjDeck.slice(-1 * (parseInt(playerID)+1)).slice(0, 1).map((a,i) => 
-                                    <div key={i} style={{border: 'solid 1px', padding: '1rem', marginBottom: '1rem',  borderRadius: '5px'}}>
-                                        <img alt='action card' style={{width: '3rem', float: 'right', margin: '.5rem'}} src='icons/secret_regular.png'/>
-                                        <h6>{a.id}{a.type ? ' ' + a.type:''}</h6><p>{a.title}</p>
+                                    <div key={i} style={{border: 'solid 1px', padding: '1rem', marginBottom: '1rem'}}>
+                                        <img alt='action card' style={{width: '3rem', float: 'left', margin: '0 1rem 1rem 0'}} src='icons/secret_regular.png'/>
+                                        <h6>{t('cards.objectives.' + a.id + '.label')}</h6><p>{t('cards.objectives.' + a.id + '.title')}</p>
                                     </div>
                                 )}
                             </div>}
                         </>}
                     </div>}
                     {step > lastStep && <div style={{width: '100%', display: 'flex', minWidth: '30rem', flexFlow: 'column'}}>
-                        <h5>Awaiting other players:</h5>
+                        <h5>{t('board.awaiting_other_players') + ': '}</h5>
                         {Object.keys(ctx.activePlayers).map((a,i) => {
-                            return <h6 key={i}>{G.races[a].name}</h6>
+                            return <h6 key={i}>{t('races.' + G.races[a].rid + '.name')}</h6>
                         })}
                     </div>}
               </CardBody>
               {step <= lastStep && <CardFooter style={{background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid ' + getStratColor(sid, '.6'),}}>
-                  {step === 0 && <Button color='danger' disabled={isMine} onClick={()=>{onDecline(); setStep(lastStep+1)}}>{t('board.decline')}</Button> }
-                  {step > 0 && step <= lastStep && <Button onClick={backButtonClick}>{t('board.back')}</Button>}
-                  {step < lastStep && <Button disabled={cantNext} color='success' onClick={nextButtonClick}>{step === 0 && !isMine ? t('board.accept'):t('board.next')}</Button>}
-                  {step === lastStep && <Button disabled={cantNext} color='success' onClick={doneButtonClick}>{t('board.done')}</Button>}
+                  {step === 0 && <button className='styledButton red' style={{opacity: isMine ? 0:1}} onClick={()=>{onDecline(); setStep(lastStep+1)}}>{t('board.decline')}</button>}
+                  {step > 0 && step <= lastStep && <button className='styledButton black' onClick={backButtonClick}>{t('board.back')}</button>}
+                  {step < lastStep && <button className='styledButton green' disabled={cantNext} onClick={nextButtonClick}>{step === 0 && !isMine ? t('board.accept'):t('board.next')}</button>}
+                  {step === lastStep && <button className='styledButton green' disabled={cantNext} onClick={doneButtonClick}>{t('board.done')}</button>}
               </CardFooter>}
         </Card>
     );  
@@ -1017,7 +1032,7 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect, rid}) => {
             </button>)}
         </div>
 
-        {R_UNITS[showUnit] && <div style={{paddingLeft: '1rem', flex: 'auto', width: '70%'}}>
+        {R_UNITS[showUnit] && <div style={{paddingLeft: '1rem', flex: 'auto', width: '70%', position: 'relative'}}>
             <CardImg src={'units/' + showUnit + '.png'} style={{width: 'auto', float: 'left'}}/>
             <div style={{padding: '1rem', position: 'absolute', right: '1rem', textAlign: 'end'}}>
             {R_UNITS[showUnit].racial && <h5>{t('races.' + rid + '.' + R_UNITS[showUnit].id + '.label')}</h5>}
@@ -1093,7 +1108,7 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect, rid}) => {
 
 }
 
-export const ObjectivesList = ({onSelect, selected, mustSecObj}) => {
+export const ObjectivesList = ({onSelect, selected, mustSecObj, maxHeight}) => {
     const { G, playerID } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
     /*const mustSecObj = useMemo(() => {
@@ -1102,7 +1117,7 @@ export const ObjectivesList = ({onSelect, selected, mustSecObj}) => {
 
     if(!onSelect) onSelect = ()=>{}
 
-    return <ListGroup style={{maxHeight: '30rem', overflowY: 'auto', border: 'none', width: '100%', paddingRight: '1rem'}}>
+    return <ListGroup style={{maxHeight: maxHeight ? maxHeight:'30rem', overflowY: 'auto', border: 'none', width: '100%', paddingRight: '1rem'}}>
       {G.pubObjectives && G.pubObjectives.length > 0 &&
         G.races[playerID].secretObjectives.concat(G.pubObjectives).map((o, i) => {
           const completed = o.players && o.players.length > 0 && o.players.indexOf(playerID) > -1;
@@ -1205,7 +1220,7 @@ const PaymentCard = (args) => {
     const TOKENS_STYLE = { cursor:'pointer', display: 'flex', textAlign: 'center', padding: 0, flexFlow: 'column', background: 'none', color: 'white', border: 'solid 1px transparent'}
 
     return <>
-        {objKeys.indexOf('influence') + objKeys.indexOf('resources') > -2 && <div style={{width: '30rem', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+        {objKeys.indexOf('influence') + objKeys.indexOf('resources') > -2 && <div style={{overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
             <PlanetsRows PLANETS={args.planets} exhausted={paid} onClick={(p)=>cancelPlanet(p)}
             resClick={objKeys.indexOf('resources') > -1 ? (e, p)=>payPlanet(e, p, 'resources'):undefined} infClick={objKeys.indexOf('influence') >-1? (e, p)=>payPlanet(e, p, 'influence'):undefined}/>
         </div>}
@@ -1249,21 +1264,10 @@ const PaymentCard = (args) => {
                 </ListGroupItem>
             </ListGroup>
         </div>}
-        <div style={{width: '20rem', margin: '1rem', display: 'flex', flexDirection: 'column'}}>
+        <div style={{margin: '1rem', display: 'flex', flexDirection: 'column'}}>
             {objKeys.map((k, i) =>{
                 
-                return <div key={i} style={{display: 'flex', justifyContent: 'flex-start'}}>
-                            {(k === 'influence' || k === 'resources') && <h5 style={{width: '4rem', display: 'flex', justifyContent: 'flex-start'}}>
-                                <Button disabled={args.objective.req['tg'] ? (tg <= args.objective.req['tg']) : (tg < 1)} tag='img' onClick={()=>payTg(k, 1)} src='/icons/trade_good_1.png' color='warning' 
-                                    style={{width: '2rem', padding: '.5rem', borderTopLeftRadius: '5px', 
-                                    borderBottomLeftRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}/>
-                                
-                                <Button disabled={payment[k].tg === 0} color='warning' 
-                                    style={{width: '1.5rem', borderLeft: 'none', color:'orange', backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: 0}} 
-                                    onClick={()=>payTg(k, -1)}>▼
-                                </Button>
-                            </h5>}
-                            
+                return <div key={i} style={{display: 'flex', justifyContent: 'space-between'}}> 
                             <div style={{display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap'}}>
                                 <h6 style={{textAlign: 'end'}}>{t('board.total') + ' ' + t('board.' + k) + ': '}
                                     {payment[k].planets && payment[k].planets.reduce((a,b) => b[k] + a, 0)}
@@ -1274,6 +1278,15 @@ const PaymentCard = (args) => {
                                     {' / '}{args.objective.req[k]}
                                 </h6>
                             </div>
+                            {(k === 'influence' || k === 'resources') && <h5 style={{width: '4rem', display: 'flex', justifyContent: 'flex-start'}}>
+                                <Button disabled={args.objective.req['tg'] ? (tg <= args.objective.req['tg']) : (tg < 1)} tag='img' onClick={()=>payTg(k, 1)} src='/icons/trade_good_1.png' color='warning' 
+                                    style={{width: '2rem', padding: '.5rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}/>
+                                
+                                <Button disabled={payment[k].tg === 0} color='warning' 
+                                    style={{width: '1.5rem', borderLeft: 'none', color:'orange', backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: 0}} 
+                                    onClick={()=>payTg(k, -1)}>▼
+                                </Button>
+                            </h5>}
                     </div>
             })}
         </div>
@@ -1317,7 +1330,7 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
                                 {p.attach && p.attach.length && <><Badge style={{margin: '0 .2rem', padding: '.3rem .5rem'}} color='success' pill id={p.name.replaceAll(' ', '_') + '_attach_badge'}>+</Badge>
                                 <UncontrolledTooltip target={'#' + p.name.replaceAll(' ', '_') + '_attach_badge'}>{p.attach.join(',')}</UncontrolledTooltip></>}
                     </Col>
-                    <Col xs='1' onClick={(e)=>specClick(e, p)} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
+                    <Col xs='1' onClick={(e)=>{if(specialty) specClick(e, p)}} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
                     <Col xs='1' style={{padding: 0}}>{trait}</Col>
                     {variant !== 'small' && <>
                     <Col xs='1' onClick={(e)=>resClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
@@ -1426,6 +1439,7 @@ export const GetTechType = (typ, race, tooltipMode, onSelect, selected) => {
   )};
 //{race.knownTechs.indexOf(t.id) > -1 && t.action === true && race.exhaustedCards.indexOf(t.id) === -1 && <Button size='sm' color='warning' onClick={()=>onAction(t.id)}>Action</Button>}
 const RaceList = ({races, selected, speaker, onClick}) => {
+    const { t } = useContext(LocalizationContext);
     if(!onClick) onClick = ()=>{};
 
     return races.map((r,i) => {
@@ -1434,7 +1448,7 @@ const RaceList = ({races, selected, speaker, onClick}) => {
                     background: selected === r.rid || (Array.isArray(selected) && selected.indexOf(r.rid) > -1) ? 'green':'', color: 'white'}}>
                     <Col xs='1'></Col>
                     <Col xs='2'><img alt='race icon' style={{width: '1.5rem'}} src={'race/icons/'+r.rid+'.png'}/></Col>
-                    <Col xs='9'>{r.name}{speaker === r.rid && <> (speaker)</>}</Col>
+                    <Col xs='9'>{t('races.' + r.rid + '.name')}{speaker === r.rid && <>{' (' + t('board.speaker') + ')'}</>}</Col>
                 </Row>)
     });
   }
@@ -1714,42 +1728,41 @@ export const ProducingPanel = (args) => {
         return d + u >= UNITS_LIMIT[unit];
     }, [UNITS, deploy]);
 
-    return <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', width: '70rem'}}>
-                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.Producing')}</h6></CardTitle>
-                <div style={{display: 'flex', flexDirection: 'row', flexWrap:'wrap', justifyContent:'space-between', width: '100%', margin: '1rem'}}>
+    return <Card className='borderedPanel' style={{padding: '1rem', position: 'absolute', bottom: '9rem', left: '5rem', width: '70rem'}}>
+                <div style={{display: 'flex', flexDirection: 'row', flexWrap:'wrap', justifyContent:'space-between', width: '100%'}}>
                     <div style={{width:'30rem', overflowY: 'auto', height: '22rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                         <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex2}/>
                     </div>
                     <div style={{width: '35rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)', color: 'white', padding: '0 1rem 0 0'}}>
                         <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} rid={G.races[playerID].rid} onSelect={(u)=>setCurrentUnit(u)}/>
-                        <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                            <Button size='sm' onClick={()=>deployUnit(+1)} color='warning' 
+                        <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end'}}>
+                        {maxDeployUnits >= 0 && <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{t('board.max_units_count') + ': ' + maxDeployUnits}</h6>}
+                        {maxDeployUnits < 0 && <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{t('board.max_units_cost') + ': ' + (-maxDeployUnits)}</h6>}
+                            <button style={{marginLeft: '1rem'}} onClick={()=>deployUnit(+1)} className='styledButton yellow' 
                                 disabled={bannedUnits.indexOf(currentUnit) > -1 || exceedLimit(currentUnit)}>
-                                <b>{t('board.deploy')}</b></Button>
+                                <b>{t('board.deploy')}</b></button>
                         </div>
                     </div>
-                    <div style={{width:'29rem', margin: '1rem'}}>
+                    <div style={{width:'29rem'}}>
                         <h5 style={{fontSize: '50px', display: 'flex', justifyContent: 'flex-end'}}>{'+'}{tg}{' '}<Button tag='img' onClick={tgClick} src='/icons/trade_good_1.png' color='warning' 
                             style={{marginLeft: '1rem', width: '4rem', padding: '.5rem', borderTopLeftRadius: '5px', borderBottomLeftRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} />
                             <Button disabled={tg < 1} color='warning' style={{width: '1.5rem', borderLeft: 'none', color:'orange', backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: 0}} onClick={()=>setTg(tg-1)}>▼</Button></h5>
                         <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{t('board.you_mean_spend') + ' ' + result + ' ' + t('board.resources')}</h6>
                         <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{deployPrice + ' ' + t('board.needed')}</h6>
                     </div>
-                    <div style={{width: '33rem', margin: '1rem'}}>
-                        {maxDeployUnits >= 0 && <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{t('board.max_units_count') + ': ' + maxDeployUnits}</h6>}
-                        {maxDeployUnits < 0 && <h6 style={{display: 'flex', justifyContent: 'flex-end'}}>{t('board.max_units_cost') + ': ' + (-maxDeployUnits)}</h6>}
+                    <div style={{width: '33rem', marginTop: '1rem'}}>
                         {deploy && Object.keys(deploy).map((k, i) => {
-                            return (<p style={{margin: 0}} key={i}>
+                            return (<span style={{marginRight: '1rem'}} key={i}>
                             <Button size='sm' color='warning' style={{padding: '0 .25rem', fontSize: '.75rem'}} onClick={()=>deployUnit(-1, k)}>▼</Button>
-                            <b>{' ' + t('cards.techno.' + k + '.label') + ' : ' + deploy[k]}</b></p>)
+                            <b>{' ' + t('cards.techno.' + k + '.label') + ' : ' + deploy[k]}</b></span>)
                         })}
                     </div>
                 </div>
-                <CardFooter style={{background: 'none', borderTop: '1px solid rgba(74, 111, 144, 0.42)', display: 'flex', justifyContent: 'space-between'}}>
-                    <Button color='danger' onClick={onCancelClick}>{t('board.cancel')}</Button>
-                    <Button color='success' disabled={deployPrice > result} 
+                <CardFooter style={{background: 'none', display: 'flex', justifyContent: 'space-between'}}>
+                    <button className='styledButton red' onClick={onCancelClick}>{t('board.cancel')}</button>
+                    <button className='styledButton green' disabled={deployPrice > result} 
                         onClick={() => {moves.producing(pname, deploy, Object.keys(ex2), tg, exhaustedCards); onCancelClick(true)}}>
-                        {t('board.finish')}</Button>
+                        {t('board.finish')}</button>
                 </CardFooter>
             </Card>
 
@@ -1759,6 +1772,7 @@ export const ProducingPanel = (args) => {
 export const UnmeetReqs = (args) => {
 
     const {separate, PLANETS, ex2, adjSpec, G, playerID} = args;
+    const { t } = useContext(LocalizationContext);
     const keys = Object.keys(ex2);
     let result=[];
 
@@ -1811,7 +1825,13 @@ export const UnmeetReqs = (args) => {
                 }
             });
 
-            if(pre.length)result.push(<p key={i}><b>{ex2[k].id.replaceAll('_', ' ').replace('2', ' II')}</b><span>{' have unmeet requirements: '}</span>{pre}</p>);
+            if(pre.length){
+                result.push(<p key={i} style={{margin: 0}}>
+                                <b>{ex2[k].racial ? t('races.' + G.races[playerID].rid + '.' + ex2[k].id + '.label') : t('cards.techno.' + ex2[k].id + '.label')}</b>
+                                <span>{' ' + t('board.have_unmeet_requirements') + ': '}</span>
+                                {pre}
+                            </p>);
+            }
         }
         else{
             if(learning[ex2[k].type] !== undefined) learning[ex2[k].type]++;
@@ -1905,7 +1925,7 @@ export const StrategyPick = ({actionCardStage}) => {
     const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
     const race = G.races[playerID];
 
-    return <Card className='borderedPanel' style={{background: 'none antiquewhite', padding: '1rem', width: actionCardStage ? '35%':'60%', position: 'absolute', margin: actionCardStage ? '5rem 0 0 40%':'', bottom: '10rem', left: '5rem' }}>
+    return <Card className='borderedPanel bigDialog' style={{width: actionCardStage ? '35%':'60%', margin: actionCardStage ? '5rem 0 0 40%':''}}>
                 <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>{t("board.strategy_pick")}</h3></CardTitle>
                 <CardBody style={{display: 'flex'}}>
                 <ListGroup style={{background: 'none', width: actionCardStage ? '100%':'60%'}}>
@@ -1925,9 +1945,9 @@ export const StrategyPick = ({actionCardStage}) => {
                                 </div>}
                         </div>
                         <button className='styledButton black' onMouseEnter={()=>setStrategyHover(key)} onClick={() => moves.pickStrategy(key)} 
-                            style={{opacity: r ? '.5':'1', width: '12rem', height: '3.5rem', fontFamily: "Handel gothic"}}>
-                                <b style={{backgroundColor: getStratColor(key, .6), border: 'solid 1px', width: '1.5rem', height: '1.5rem', display: 'inline-block', fontSize: '1.25rem', float: 'inline-start'}}>{idx+1}</b>
-                                {' ' + t('cards.strategy.' + key + '.label')}
+                            style={{opacity: r ? '.5':'1', width: '12rem', height: '3.5rem', fontFamily: 'Handel Gothic', display: 'flex', alignItems: 'center'}}>
+                                <b style={{backgroundColor: getStratColor(key, .6), border: 'solid 1px', width: '1.5rem', height: '1.5rem', fontSize: '1.25rem'}}>{idx+1}</b>
+                                <span style={{flex: 'auto'}}>{' ' + t('cards.strategy.' + key + '.label')}</span>
                         </button>
                         </ListGroupItem>
                     })}

@@ -255,7 +255,7 @@
             {"id": "Found a Golden Age", "vp": 2, "base": true, "type":"SPEND", "req": {"resources": 16, "tg": 0}},
             {"id": "Galvanize the People", "vp": 2, "base": true, "type":"SPEND", "req": {"token": 6}},
             {"id": "Hold Vast Reserves", "vp": 2, "type": "SPEND", "req": {"influence": 6, "resources": 6, "tg": 6}},
-            {"id": "Manipulate Galactic Law", "vp": 2, "base": true, "type": "SPEND", "req": {"influence": 8, "tg": 0}},
+            {"id": "Manipulate Galactic Law", "vp": 2, "base": true, "type": "SPEND", "req": {"influence": 16, "tg": 0}},
             {"id": "Master of Sciences", "vp": 2, "base": true, "type": "HAVE", "req": {"technology": {"color": 4, "count": 2}}},
             {"id": "Patrol Vast Territories", "vp": 2, "type": "HAVE", "req": {"system": 5, "fleet": true, "noPlanet": true}},
             {"id": "Protect the Border", "vp": 2, "type": "HAVE", "req": {"planet": 5, "ground": ["spacedock", "pds"], "nhs": true}},

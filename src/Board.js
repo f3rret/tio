@@ -278,11 +278,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }, [rightBottomVisible]);
 
-  const StrategyCard = ({card, idx, style}) => {
+  const StrategyCard = ({card, idx}) => {
 
     return <>
-            <button id={'strategyCard_'+card.id} className={'styledButton ' + (card.exhausted ? 'white':'green')} disabled={card.exhausted} style={{borderColor: getStratColor(card.id, '.6'), width: '100%', textWrap:'nowrap', fontFamily: 'Handel gothic'}} onClick={(e)=>{e.stopPropagation(); moves.useStrategy(idx)}}>
-              <b style={{border: 'solid 1px', width: '1.5rem', height: '1.5rem', display: 'inline-block', fontSize: '1.25rem'}}>{card.init+1}</b>{' ' + t('cards.strategy.' + card.id + '.label')}
+            <button id={'strategyCard_'+card.id} className={'styledButton ' + (card.exhausted ? 'white':'black')} disabled={card.exhausted} 
+              style={{width: '12rem', height: '3.5rem', fontFamily: 'Handel Gothic', display: 'flex', alignItems: 'center'}} onClick={(e)=>{e.stopPropagation(); moves.useStrategy(idx)}}>
+              <b style={{backgroundColor: getStratColor(card.id, .6), border: 'solid 1px', width: '1.5rem', height: '1.5rem', fontSize: '1.25rem'}}>{card.init+1}</b>
+              <span style={{flex: 'auto'}}>{' ' + t('cards.strategy.' + card.id + '.label')}</span>
             </button>
             <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#strategyCard_' + card.id}>
               <h6 style={{marginTop: '.5rem'}}>{t('board.primary')}:</h6>
@@ -291,22 +293,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               <CardText>{t('cards.strategy.' + card.id + '.secondary')}</CardText>
           </UncontrolledTooltip>
         </>
-
-    /*return <Card style={{...style, opacity: '.95', border: 'none', background: 'none', position: 'relative', 
-              marginTop: idx > 0 ? '0.5rem':'0rem', alignItems: 'end'}}>
-              <CardImg id={'strategyCard_'+card.id} src={'strategy/'+ card.id + '.png'} style={{position: 'relative', cursor: 'default', width: '40%'}}></CardImg>
-              <div style={{width:'40%', borderRadius: '3px', paddingTop: '2rem', background: 'rgba(33, 37, 41, 0.65)', 
-                          marginRight: '.5rem', marginTop: '-2.3rem', border: 'solid 1px ' + getStratColor(card.id, '.6')}}>
-                <Button disabled={card.exhausted} size='sm' style={{opacity: card.exhausted ? 0:1, backgroundColor: getStratColor(card.id, '.6'), width: '100%', fontFamily: 'Handel gothic'}} 
-                  onClick={(e)=>{e.stopPropagation(); moves.useStrategy(idx)}}>{t('board.activate')}</Button>
-              </div>
-            <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#strategyCard_' + card.id}>
-              <h6 style={{marginTop: '.5rem'}}>{t('board.primary')}:</h6>
-              <CardText>{t('cards.strategy.' + card.id + '.primary')}</CardText>
-              <h6>{t('board.secondary')}:</h6>
-              <CardText>{t('cards.strategy.' + card.id + '.secondary')}</CardText>
-            </UncontrolledTooltip>
-          </Card>*/
   }
 
   const strategyStage = useMemo(()=> {
@@ -1253,15 +1239,15 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               {!race.isSpectator && leftPanel === 'trade' && <Card className='subPanel' style={{ padding: '2rem 2rem 2rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                 <TradePanel onTrade={moves.trade}/>
               </Card>}
-              {!race.isSpectator && producing && <ProducingPanel 
-                onCancel={(finish)=>{setProducing(null); if(finish && justOccupied && exhaustedCards.indexOf('INTEGRATED_ECONOMY')>-1){setJustOccupied(null)}}} 
-                pname={producing} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
 
               
             </CardColumns>
 
             <ChatBoard sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
 
+            {!race.isSpectator && producing && <ProducingPanel 
+                onCancel={(finish)=>{setProducing(null); if(finish && justOccupied && exhaustedCards.indexOf('INTEGRATED_ECONOMY')>-1){setJustOccupied(null)}}} 
+                pname={producing} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
             {!race.isSpectator && ctx.phase === 'strat' && <StrategyPick actionCardStage={actionCardStage}/>}
             
 
@@ -1439,7 +1425,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               <CardColumns style={{paddingRight: '2rem', display: 'flex', height: 'max-content', 
                           width: '100%', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
                   
-                  {race && race.strategy.length > 0 && ctx.phase !== 'strat' && <div className='comboPanel-left-vertical' style={{display: 'flex', position: 'absolute', padding: '.5rem', top: '-4rem', right: '3rem'}}>
+                  {race && race.strategy.length > 0 && ctx.phase !== 'strat' && <div className='comboPanel-left-vertical' style={{display: 'flex', position: 'absolute', padding: '.5rem', top: '-5rem', right: '3rem'}}>
                     {race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
                   </div>}
                   <div className='borderedPanel-vertical' style={{display: 'flex', height: 'max-content', backgroundColor: 'rgba(33, 37, 41, 0.95)',

@@ -294,6 +294,10 @@ export const Lobby = (args)=> {
 
         if(prematchInfo.gameName === 'TIO'){
             setMatchID(prematchInfo.matchID);
+
+            args.setPlayerID(cookie.playerID);
+            args.setMatchID(prematchInfo.matchID);
+            args.setPlayerCreds(cookie.playerCreds);
         }
     // eslint-disable-next-line
     }, [cookie, prematchInfoString]);
