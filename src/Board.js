@@ -1,5 +1,5 @@
 /* eslint eqeqeq: 0 */
-import { Stage, Graphics, Text, Container, Sprite } from '@pixi/react';
+import { useApp, Stage, Text, Container, Sprite } from '@pixi/react';
 import { useMemo, useCallback, useState, useEffect, useRef, useContext } from 'react';
 import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip,/*UncontrolledAccordion, 
   AccordionItem, AccordionBody, AccordionHeader,*/ CardBody, Tooltip, ListGroup, ListGroupItem, Container as Cont, Row, Col, CardColumns,
@@ -18,6 +18,8 @@ import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bomb
 import { produce } from 'immer';
 import techData from './techData.json';
 import tileData from './tileData.json';
+import { SelectedHex, ActiveHex } from './animated';
+
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
 
@@ -449,7 +451,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
 
-  const draw = useCallback((g) => {
+  /*const draw = useCallback((g) => {
     g.clear();
 
     G.tiles.forEach((element, index) => {
@@ -461,10 +463,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         //g.beginFill('lightblue', .25);
         g.lineStyle(3,  'lightblue');
       }
-      /*else if(element.selected === true){
-        g.beginFill('lightblue', .15);
-        g.lineStyle(10,  'lightblue');
-      }*/
+
       else{
         //g.lineStyle(3,  0x999999);
         g.lineStyle(0,  'black');
@@ -480,7 +479,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
 
     });
-  }, [G.tiles, stageh, stagew, selectedTile]);
+  }, [G.tiles, stageh, stagew, selectedTile]);*/
 
 
   const getMovePath = useMemo(() => {
@@ -744,8 +743,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier_bg.png'}/>}
         {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
             
-            return <Sprite tint={getColorByRid(t)[0]} alpha={1} key={i} x={element.w/2 + element.w/4 + 20 - i*15} y={element.w/4 + 20 - i*20} scale={.3} image={'icons/ct.png'}>
-                    <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={55} y={55} alpha={.85}></Sprite>
+            return <Sprite tint={getColorByRid(t)[0]} alpha={.9} key={i} x={element.w/2 + element.w/4 - i*15} y={element.w/4 - i*20} scale={.4} image={'icons/ct.png'}>
+                    <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={47} y={65} alpha={.85}></Sprite>
                   </Sprite>}
         )}
         
@@ -767,14 +766,15 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     <Sprite tint={'red'} pointerdown={()=>moves.invasion(p)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={1} alpha={.85}/>}
                 </>}
                 {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) => {
-                  return <Sprite zIndex={u === 'spacedock' ? 3:1} key={ui} x={40 + ui*55} y={-10} scale={1} anchor={0} image={'icons/unit_ground_bg.png'}>
-                      <Sprite tint={G.races[p.occupied].color[0]} image={'units/' + u.toUpperCase() + '.png'} x={-5} y={-5} scale={.4} alpha={1}/>
-                      {p.units[u].length > 1 && <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
-                      x={40} y={25} text={p.units[u].length}/>}
+                  return <Container x={-10 + ui*100} y={-10} zIndex={u === 'spacedock' ? 3:1}> 
+                      <Sprite  tint={G.races[p.occupied].color[0]} key={ui}  scale={.5} anchor={0} image={'icons/unit_ground_bg.png'}/>
+                      <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-10} scale={.4} alpha={1}/>
+                      {p.units[u].length > 1 && <Text style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
+                      x={70} y={0} text={p.units[u].length}/>}
                       {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
-                        <Text text={'► ' + t('board.Production')} x={0} y={-10} interactive={true} pointerdown={()=>setProducing(p.name)} 
+                      <Text text={'► ' + t('board.Production')} x={0} y={-10} interactive={true} pointerdown={()=>setProducing(p.name)} 
                             style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>}
-                    </Sprite>
+                    </Container>
                   }
                 )}
                 
@@ -789,14 +789,15 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 </Sprite>}
               </Container>
 
-              <Container x={50} y={100}>
+              <Container x={50} y={110}>
               {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>{
                 const isSelected = groundUnitSelected && groundUnitSelected.tile === index && groundUnitSelected.unit === u;
 
-                return <Sprite tint={isSelected ? '#f44336':'0xFFFFFF'} x={-30 + ui*55} key={ui} alpha={.85} scale={.65} interactive={true} pointerdown={(e)=>loadUnit({tile: index, planet: i, unit: u, e})} image={'icons/unit_inf_bg.png'}>
-                   <Sprite tint={G.races[p.occupied].color[0]} image={'units/' + u.toUpperCase() + '.png'} x={0} y={-5} scale={.35} alpha={1}/>
-                  <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={50} y={25} text={p.units[u].length}/>
-                </Sprite>}
+                return <Container x={-30 + ui*55} y={-20} key={ui} interactive={true} pointerdown={(e)=>loadUnit({tile: index, planet: i, unit: u, e})} >
+                          <Sprite tint={isSelected ? '#f44336':G.races[p.occupied].color[0]} scale={.25}  image={'icons/unit_inf_bg.png'}/>
+                          <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={0} scale={.25} alpha={1}/>
+                          <Text style={{fontSize: 13, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={18} y={40} text={p.units[u].length}/>
+                      </Container>}
               )}
               {element.tdata.producing_done === true && exhaustedCards.indexOf('SELF_ASSEMBLY_ROUTINES') > -1 &&
                 <Text interactive={true} pointerdown={()=>moves.fromReinforcement(p.name, {mech: 1}, exhaustedCards)} y={40} x={-30} style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} 
@@ -810,9 +811,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               </Container>
 
               {p.occupied !== undefined && (!p.units || Object.keys(p.units).length === 0) && 
-              <Sprite tint={G.races[p.occupied].color[0]} x={50} y={50} scale={.3} image={'icons/control_token.png'}>
-                <Sprite alpha={.85} x={50} y={20} image={'race/icons/'+G.races[p.occupied].rid+'.png'}/>
-              </Sprite>}
+                <Container x={100} y={50} alpha={.9}>
+                  <Sprite anchor={0.5} rotation={45} tint={G.races[p.occupied].color[0]} scale={.2} image={'icons/ct.png'}/>
+                  <Sprite alpha={.85} scale={.25} x={-10} y={-7} image={'race/icons/'+G.races[p.occupied].rid+'.png'}/>
+                </Container>}
   
             </Sprite>
           }
@@ -840,14 +842,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
           {Object.keys(element.tdata.fleet).map((f, i) => {
             const isCurrentAdvUnit = advUnitView && advUnitView.tile === index && advUnitView.unit === f;
-            return <Sprite tint={isCurrentAdvUnit ? 'gold':'0xFFFFFF'} 
-              interactive={true} key={i} x={element.w/4 - 50 + i*65} y={0} scale={{ x: 1, y: 1}} anchor={0}
-              pointerdown={()=>isCurrentAdvUnit ? setAdvUnitView({}):setAdvUnitView({tile: index, unit: f})}  image={'icons/unit_bg.png'}>
-                
-                <Sprite tint={G.races[element.tdata.occupied].color[0]} image={'units/' + f.toUpperCase() + '.png'} x={5} y={10} scale={{ x: .3, y: .3}} alpha={1}/>
-                <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: '#4e7172', dropShadow: true, dropShadowDistance: 1}} 
-                  x={35} y={25} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
-            </Sprite>
+            return <Container interactive={true} key={i} x={element.w/4 - 50 + i*100} y={0} pointerdown={()=>isCurrentAdvUnit ? setAdvUnitView({}):setAdvUnitView({tile: index, unit: f})} >
+                    <Sprite tint={isCurrentAdvUnit ? 'gold':G.races[element.tdata.occupied].color[0]} scale={.25} anchor={0} image={'icons/unit_bg.png'}/>
+                    <Sprite image={'units/' + f.toUpperCase() + '.png'} x={30} y={5} scale={.3} alpha={1}/>
+                    <Text style={{fontSize: 25, fontFamily:'Handel Gothic', fill: '#FFFFFF', dropShadow: true, dropShadowDistance: 1}} 
+                      x={60} y={53} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
+                </Container>
           })}
         </Container>}
 
@@ -857,10 +857,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             const row = [];
 
             for(let j=0; j<cap; j++){
-              row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? 'gold':'0xFFFFFF'} 
-                  pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*25} y={-i*30} scale={{ x: .4, y: .4}} anchor={0} image={'icons/unit_bg.png'}>
-                    {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite tint={G.races[element.tdata.occupied].color[0]} image={'units/' + ship.payload[j].id.toUpperCase() + '.png'} 
-                    x={0} y={0} scale={{ x: .4, y: .4}} alpha={.85}/>}
+              row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? 'gold':G.races[element.tdata.occupied].color[0]} 
+                  pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*50} y={-30-i*60} scale={.3} anchor={0} image={'icons/unit_inf_bg.png'}>
+                    {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite image={'units/' + ship.payload[j].id.toUpperCase() + '.png'} 
+                    x={20} y={20} scale={1} alpha={.85}/>}
               </Sprite>);
             }
             return row;
@@ -1211,6 +1211,17 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       </Card>}
    */
 
+// <Graphics draw={draw}/>
+//{G.tiles.map((element, index) =>  )}
+  /**
+   * <Container key={index}>
+                              {selectedTile === index && <Sprite cacheAsBitmap={true} 
+                                          image={'/selected.png'} anchor={0} scale={.65} alpha={.5}
+                                          x={firstCorner.x + stagew/2 - element.w/2 - element.w/4 - 10} y={firstCorner.y + stageh/2 - 50}>
+                                          </Sprite>}
+                              <TileContent key={index} element={element} index={index} />
+                            </Container>
+   */
   return (
           <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>
             <Overlay/>      
@@ -1279,37 +1290,51 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
             
 
-            <Stage width={stagew} height={stageh} options={{ backgroundAlpha: 0, resizeTo: window, antialias: true, autoDensity: true }}>
+            <Stage width={stagew} height={stageh} options={{antialias: true, backgroundAlpha: 0, resizeTo: window, autoDensity: true }}>
+              <TickerSettings fps={30}/>
               <PixiViewport home={G.tiles.find(t => t.tid === G.races[playerID].rid)}>
                 
                 {G.tiles.map((element, index) => {
-                    const [firstCorner] = element.corners;
-                    const fill = element.tdata.type !== 'hyperlane' ? element.tdata.type: 'gray';
-                    
-                    return <Container key={index}>
-                            {tilesPng && <Sprite interactive={true} pointerdown={ (e)=>tileClick(e, index) } 
-                                        image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }}
-                                        x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
-                                        </Sprite>}
-                            {tilesTxt && <>
-                              <Text style={{fontSize: 20, fill:'white'}} text={'(' + element.q + ',' + element.r + ')'} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
-                              <Text style={{fontSize: 25, fill: fill}} text={ element.tid } x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2}/>
-                                { element.tdata.occupied!==undefined && <Text style={{fontSize: 22, fill: 'green'}} 
-                                text={element.tdata.occupied + ':' + (element.tdata.fleet ? getUnitsString(element.tdata.fleet) : '-')} 
-                                x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2 + element.w/1.5} /> }
-                                { element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map( (p, i) => 
-                                  <Text key={i} 
-                                    text={ (p.specialty ? '[' + p.specialty[0] + '] ':'') + p.name + (p.trait ? ' [' + p.trait[0] + '] ':'') + ' ' + p.resources + '/' + p.influence + 
-                                    (p.occupied !== undefined ? ' [' + p.occupied + ':' + (p.units ? getUnitsString(p.units) : '-') + ']':'') } 
-                                    style={{ fontSize: 20, fill: 'white' }} 
-                                    x={firstCorner.x + stagew/2 - element.w/1.5} y={firstCorner.y + stageh/2 + element.w/6 + element.w/8 * (i+1)} />
-                                  )}
-                            </>}
-                          </Container>
-                  })}
+                      const [firstCorner] = element.corners;
+                      const fill = element.tdata.type !== 'hyperlane' ? element.tdata.type: 'gray';
+                      
+                      return <Container key={index}>
+                              
+                              {tilesPng && <Sprite cacheAsBitmap={true} interactive={true} pointerdown={ (e)=>tileClick(e, index) } 
+                                          image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }}
+                                          x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5} alpha={.9}>
+                                          </Sprite>}
+                              {tilesTxt && <>
+                                <Text style={{fontSize: 20, fill:'white'}} text={'(' + element.q + ',' + element.r + ')'} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
+                                <Text style={{fontSize: 25, fill: fill}} text={ element.tid } x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2}/>
+                                  { element.tdata.occupied!==undefined && <Text style={{fontSize: 22, fill: 'green'}} 
+                                  text={element.tdata.occupied + ':' + (element.tdata.fleet ? getUnitsString(element.tdata.fleet) : '-')} 
+                                  x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2 + element.w/1.5} /> }
+                                  { element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map( (p, i) => 
+                                    <Text key={i} 
+                                      text={ (p.specialty ? '[' + p.specialty[0] + '] ':'') + p.name + (p.trait ? ' [' + p.trait[0] + '] ':'') + ' ' + p.resources + '/' + p.influence + 
+                                      (p.occupied !== undefined ? ' [' + p.occupied + ':' + (p.units ? getUnitsString(p.units) : '-') + ']':'') } 
+                                      style={{ fontSize: 20, fill: 'white' }} 
+                                      x={firstCorner.x + stagew/2 - element.w/1.5} y={firstCorner.y + stageh/2 + element.w/6 + element.w/8 * (i+1)} />
+                                    )}
+                              </>}
+                              
+                            </Container>
 
-                <Graphics draw={draw}/>
-                {G.tiles.map((element, index) => <TileContent key={index} element={element} index={index} /> )}
+                    })}
+
+                {G.tiles.map((element, index) => {
+                      const [firstCorner] = element.corners;
+                      
+                      return <Container key={index}>
+                              {selectedTile === index && element.active !== true && <SelectedHex x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2 + element.w/2 - 20}/>}
+                              {element.active === true && <ActiveHex x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2 + element.w/2 - 20}/>}
+                              <TileContent key={index} element={element} index={index} />
+                            </Container>
+
+                })}
+               
+                
                 
 
               </PixiViewport> 
@@ -1646,5 +1671,13 @@ const getUnitsString = (units) => {
     }
   });
   return s;
+}
+
+const TickerSettings = (args) => {
+  
+  const app = useApp();
+  app.ticker.maxFPS = args.fps;
+
+  return <></>
 }
 

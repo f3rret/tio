@@ -1728,7 +1728,7 @@ export const ProducingPanel = (args) => {
         return d + u >= UNITS_LIMIT[unit];
     }, [UNITS, deploy]);
 
-    return <Card className='borderedPanel' style={{padding: '1rem', position: 'absolute', bottom: '9rem', left: '5rem', width: '70rem'}}>
+    return <Card className='borderedPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '1rem', position: 'absolute', bottom: '9rem', left: '5rem', width: '70rem'}}>
                 <div style={{display: 'flex', flexDirection: 'row', flexWrap:'wrap', justifyContent:'space-between', width: '100%'}}>
                     <div style={{width:'30rem', overflowY: 'auto', height: '22rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                         <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex2}/>
@@ -1855,14 +1855,14 @@ export const ChoiceDialog = ({args, onSelect}) => {
                     args.type === 'secret objective' ? t('cards.objectives.' + args.oid + '.title') :args.text;
 
 
-    return  <Card style={{border: 'solid 1px rgba(74, 111, 144, 0.42)', position: 'absolute', padding: '1rem', margin: '10rem', 
+    return  <Card className='subPanel' style={{position: 'absolute', padding: '2rem', margin: '10rem', 
                             backgroundColor: 'rgba(33, 37, 41, 0.95)', width: '30rem'}}>
                 <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{title}</h6></CardTitle>
                 <div style={{display: 'flex', flexDirection: 'column', margin: '1rem'}}>
                     <CardText>{text}</CardText>
 
                     {args.options && args.options.map((o, i) => 
-                        <Button style={{width: '75%', marginTop: '.5rem'}} key={i} color='light' onClick={() => onSelect(i)}>{t('board.' + o.label)}</Button>
+                        <button style={{width: '75%', marginTop: '.5rem'}} key={i} className='styledButton yellow' onClick={() => onSelect(i)}>{t('board.' + o.label)}</button>
                     )}
                 </div>
             </Card>
