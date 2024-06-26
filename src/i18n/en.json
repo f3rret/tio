@@ -275,7 +275,11 @@
             "place_deck_bottom": "place at deck bottom",
             "you_gain_1_vp": "you gain 1 VP",
             "you_gain_so": "you gain secret objective",
-            "have_unmeet_requirements": "have unmeet requirements"
+            "have_unmeet_requirements": "have unmeet requirements",
+            "move_path_distance": "Distance",
+            "move_power_reserve": "Power reserve",
+            "move_boost": "Boost",
+            "go": "Send"
         },
         "cards": {
             "strategy": {

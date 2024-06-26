@@ -274,7 +274,11 @@
             "place_deck_bottom": "поместить вниз колоды",
             "you_gain_1_vp": "вы получаете 1 ПО",
             "you_gain_so": "вы получаете карту секретной цели",
-            "have_unmeet_requirements": "имеет неудовлетворенные требования"
+            "have_unmeet_requirements": "имеет неудовлетворенные требования",
+            "move_path_distance": "Дистанция",
+            "move_power_reserve": "Запас хода",
+            "move_boost": "Ускорение",
+            "go": "Отправить"
         },
         "cards": {
             "strategy": {

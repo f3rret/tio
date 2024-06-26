@@ -18,7 +18,7 @@ import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bomb
 import { produce } from 'immer';
 import techData from './techData.json';
 import tileData from './tileData.json';
-import { SelectedHex, ActiveHex } from './animated';
+import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep } from './animated';
 
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
@@ -609,11 +609,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
       if(exhaustedCards.indexOf('GRAVITY_DRIVE')>-1) adj++;
       if(race.moveBoost) adj += race.moveBoost;
-      return (advUnitViewTechnology.move + adj) + '/' + (getPureMovePath.length-1);
+      return [t('board.move_path_distance') + ': ' + (getPureMovePath.length-1), 
+              t('board.move_power_reserve') + ': ' + advUnitViewTechnology.move, 
+              t('board.move_boost') + ': ' + adj];
     }
     else{
-      return '';
+      return ['-', '-', '-'];
     }
+  //eslint-disable-next-line
   }, [advUnitViewTechnology, getPureMovePath, exhaustedCards, race]);
 
   const moveToClick = useCallback((idx) => {
@@ -729,11 +732,17 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   
   const TileContent = ({element, index}) => {
 
-    const pathIdx = getPureMovePath.indexOf(String(element.tid));
+    //eslint-disable-next-line
+    const pathIdxs = getPureMovePath.reduce((acc, p, i) => ( (i > 0 && String(p) === String(element.tid)) && acc.push(i), acc), []);
     const [firstCorner] = element.corners;
-    let moveTint = element.tdata.type === 'blue' ? 'lightblue' :  element.tdata.type !== 'hyperlane' ? element.tdata.type: 'white';
-    if(element.tdata.occupied && String(element.tdata.occupied)!==String(playerID)) moveTint = 'purple';
-    if(moveTint === 'red' && canMoveThatPath) moveTint = 'lightblue';
+    const moveTint = useMemo(() => {
+      let tint = element.tdata.type === 'blue' ? 'lightblue' :  element.tdata.type !== 'hyperlane' ? element.tdata.type: 'white';
+      if(element.tdata.occupied && String(element.tdata.occupied)!==String(playerID)) tint = 'purple';
+      if(tint === 'red' && canMoveThatPath) tint = 'lightblue';
+
+      return tint;
+    }, [element.tdata]);
+
 
     return <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
         {element.tdata.mirage && <Sprite x={element.w/4} y={element.w/6} scale={.35} alpha={.9} image={'icons/mirage_token.webp'}/>}
@@ -757,27 +766,28 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 {isDMZ(p) &&
                     <Sprite image={'icons/dmz.png'} x={0} y={35} scale={1} alpha={.75}/>
                   }
-                {advUnitView && advUnitView.tile === index && (p.occupied === undefined || String(element.tdata.occupied) === String(p.occupied)) &&
-                  !isDMZ(p) &&
-                    <Sprite pointerdown={()=>unloadUnit(i)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={.5} alpha={.85}/>
-                  }
-                {activeTile && element.tdata.occupied == playerID && !G.spaceCannons && element.tdata.fleet && <>
-                  {p.occupied !== undefined && String(element.tdata.occupied) !== String(p.occupied) && !isDMZ(p) &&
-                    <Sprite tint={'red'} pointerdown={()=>moves.invasion(p)} interactive={true} image={'icons/move_to.png'} angle={-90} x={0} y={35} scale={1} alpha={.85}/>}
-                </>}
+                
                 {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) => {
-                  return <Container x={-10 + ui*100} y={-10} zIndex={u === 'spacedock' ? 3:1}> 
-                      <Sprite  tint={G.races[p.occupied].color[0]} key={ui}  scale={.5} anchor={0} image={'icons/unit_ground_bg.png'}/>
+                  return <Container x={-10 + ui*100} y={-10} zIndex={u === 'spacedock' ? 3:1} key={ui}  > 
+                      <Sprite  tint={G.races[p.occupied].color[0]} scale={.5} anchor={0} image={'icons/unit_ground_bg.png'}/>
                       <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-10} scale={.4} alpha={1}/>
-                      {p.units[u].length > 1 && <Text style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
-                      x={70} y={0} text={p.units[u].length}/>}
+                      <Text style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
+                      x={65} y={5} text={p.units[u].length}/>
                       {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
                       <Text text={'► ' + t('board.Production')} x={0} y={-10} interactive={true} pointerdown={()=>setProducing(p.name)} 
                             style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>}
                     </Container>
                   }
                 )}
-                
+
+                {advUnitView && advUnitView.tile === index && (p.occupied === undefined || String(element.tdata.occupied) === String(p.occupied)) &&
+                  !isDMZ(p) && <LandingGreen pointerdown={()=>unloadUnit(i)} x={0} y={0}/>
+                  }
+                {activeTile && element.tdata.occupied == playerID && !G.spaceCannons && element.tdata.fleet && 
+                  p.occupied !== undefined && String(element.tdata.occupied) !== String(p.occupied) && !isDMZ(p) &&
+                    <LandingRed pointerdown={()=>moves.invasion(p)} x={0} y={0}/>
+                }
+
                 {p.invasion && <Sprite scale={.75} x={p.hitRadius * 2} y={-30} image='icons/invader.png' alpha={0.85}>
                   <Container x={45} y={15}>
                     <Sprite image={'race/icons/'+ G.races[ctx.currentPlayer].rid +'.png'} scale={1}></Sprite>
@@ -831,14 +841,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         </Sprite>}
 
         {element.tdata.fleet && <Container x={10} y={-30}>
-          {activeTile && advUnitView && advUnitView.tile === index && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 &&
-          <Container y={5} x={-10}>
-            <Sprite interactive={true} pointerdown={()=>moveToClick(index)} scale={.75} image={'icons/move_to.png'}
-              alpha={canMoveThatPath ? 1:.5} >
-                <Text text={distanceInfo(element, activeTile)} x={-100} y={10} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
-            </Sprite>
-            
-          </Container>}
+          {activeTile && advUnitView && advUnitView.tile === index && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 && 
+          <MoveDialog  x={-240} y={-100} canMoveThatPath={canMoveThatPath} pointerdown={()=>moveToClick(index)} 
+                      distanceInfo={distanceInfo(element, activeTile)} buttonLabel={t('board.go')}/>}
 
           {Object.keys(element.tdata.fleet).map((f, i) => {
             const isCurrentAdvUnit = advUnitView && advUnitView.tile === index && advUnitView.unit === f;
@@ -858,9 +863,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
             for(let j=0; j<cap; j++){
               row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? 'gold':G.races[element.tdata.occupied].color[0]} 
-                  pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*50} y={-30-i*60} scale={.3} anchor={0} image={'icons/unit_inf_bg.png'}>
+                  pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*50} y={-30-i*50} scale={.3} anchor={0} image={'icons/unit_pl_bg.png'}>
                     {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite image={'units/' + ship.payload[j].id.toUpperCase() + '.png'} 
-                    x={20} y={20} scale={1} alpha={.85}/>}
+                    x={10} y={10} scale={1} alpha={.85}/>}
               </Sprite>);
             }
             return row;
@@ -869,25 +874,21 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
         {ctx.phase === 'acts' && isMyTurn && selectedTile === index && race.actions.length < maxActs &&  
         element.tdata.type !== 'hyperlane' && !(element.tdata.tokens && element.tdata.tokens.indexOf(race.rid) > -1) && 
-          <Text text={'► ' + t('board.activate_system')} x={element.w/4 - 10} y={element.w/2 + 90} interactive={true} pointerdown={()=>moves.activateTile(index)} 
-            style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}>
-          </Text>}
+          <Container x={30} y={element.w/2 + 90} anchor={0.5} >
+            <Sprite x={20} y={-20} scale={.7} image={'label.png'} alpha={.95}/>
+            <Text x={80} y={17} cursor='pointer' interactive={true} pointerdown={()=>moves.activateTile(index)} text={t('board.activate_system')} 
+              alpha={.6} mouseover={(e) => e.target.alpha = .85} mouseout={(e) => e.target.alpha = .6} style={{fontSize: 22, fontFamily:'Handel Gothic', fill: '#faebd7', dropShadow: true, dropShadowDistance: 1}}>
+            </Text>
+          </Container>}
         
-        {activeTile && advUnitView && pathIdx > 0 && 
-          <Sprite tint={moveTint} interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} image={'icons/move_step.png'}>
-            <Text text={pathIdx} x={pathIdx === 1 ? 30:22} y={3} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
-          </Sprite>
-        }
+        {activeTile && advUnitView && pathIdxs.length > 0 && <MoveStep tint={moveTint} text={pathIdxs.join(',')} pointerdown={()=>modifyMoveStep(index)} y={element.w * .66} x={element.w * .58} />}
 
         {activeTile && advUnitView && element.tdata.type === 'hyperlane' && getMovePath.find(p => String(p.tileId) === String(element.tid)) && 
-          <Sprite tint={moveTint} interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} image={'icons/move_step.png'}>
-          </Sprite>
+          <MoveStep tint={moveTint} pointerdown={()=>modifyMoveStep(index)} y={element.w * .66} x={element.w * .58} />
         }
 
-        {activeTile && advUnitView && advUnitView.tile !== undefined && pathIdx === -1 && selectedTile === index &&
-          <Sprite interactive={true} pointerdown={()=>modifyMoveStep(index)} scale={1} y={element.w * .66} x={element.w * .58} alpha={.5} image={'icons/move_step.png'}>
-            <Text text={'+'} x={17} y={0} style={{fontSize: 50, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}}/>
-          </Sprite>
+        {activeTile && advUnitView && advUnitView.tile !== undefined && advUnitView.tile !== index && pathIdxs.length === 0 && selectedTile === index &&
+           <MoveStep tint={moveTint} text={'+'} pointerdown={()=>modifyMoveStep(index)} y={element.w * .66} x={element.w * .58} />
         }
 
     </Container>
