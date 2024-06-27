@@ -47,7 +47,7 @@ class MapOptions extends React.Component {
             currentBoardStyle: startingValues["boardStyles"][startingPlayers][0],
             currentPickStyle: startingValues["pickStyles"][0],
             currentPlacementStyle: startingValues["placementStyles"][0],
-            currentSeed: "",
+            currentSeed: Math.floor(Math.random() * Math.floor(9999)), //""
             userSetSeed: false,
             pickRaces: true,
             pickMultipleRaces: false,
@@ -75,6 +75,8 @@ class MapOptions extends React.Component {
             wormholeWeight: 25,
 
             shuffleThreshold: 5,
+            startCounter: -1,
+            startInterval: null
         };
 
         this.handleInputChange = this.handleInputChange.bind(this);
@@ -106,6 +108,7 @@ class MapOptions extends React.Component {
         this.toggleShufflePriorityHelp = this.toggleShufflePriorityHelp.bind(this);
         this.toggleReversePlacementOrderHelp = this.toggleReversePlacementOrderHelp.bind(this);
         this.toggleEnsureRacialAnomaliesHelp = this.toggleEnsureRacialAnomaliesHelp.bind(this);
+        this.startClick = this.startClick.bind(this);
     }
 
     handleInputChange(event) {
@@ -1351,6 +1354,21 @@ class MapOptions extends React.Component {
         this.updatePlayerCount();
     }
 
+    startClick(e) {
+        let int = setInterval(() => {
+            console.log('intervl');
+            if(this.state.startCounter < 1){
+                clearInterval(this.state.startInterval);
+                this.generateBoard(e);
+            }
+            else{
+                this.setState({ startCounter: this.state.startCounter-1 })
+            }
+        },1000);
+
+        this.setState({ startCounter: 5, startInterval: int})
+    }
+
     render() {
         
         const t = this.props.t;
@@ -1467,7 +1485,9 @@ class MapOptions extends React.Component {
                     
                 </CardBody>
                 {this.props.playerID === '0' && <CardFooter style={{display: 'flex', justifyContent: 'right'}}>
-                    <button className='styledButton green' onClick={this.generateBoard}>{t('lobby.start_game')} <b className='bi-caret-right-square-fill' ></b></button>
+                    <button className='styledButton green' style={{minWidth: '8rem'}} 
+                        onClick={(e) => this.state.startInterval === null ? this.startClick(e) : ''}>{t('lobby.start_game')} 
+                        {' '}{this.state.startInterval !== null ? '(' + this.state.startCounter + ') ' : <b className='bi-caret-right-square-fill' />}</button>
                 </CardFooter>}
             </>
         );

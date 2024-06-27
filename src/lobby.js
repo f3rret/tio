@@ -41,7 +41,7 @@ export const Lobby = (args)=> {
         return JSON.stringify(prematchInfo);
     }, [prematchInfo]); //for optimization memo recalc
 
-    const iAmReady = useMemo(() => {
+    /*const iAmReady = useMemo(() => {
         if(!playerID) return false;
         if(playerID === '0') return false;
         if(!prematchInfo) return false;
@@ -50,7 +50,7 @@ export const Lobby = (args)=> {
 
         return prematchInfo.players[playerID].data && prematchInfo.players[playerID].data.ready;
     // eslint-disable-next-line
-    }, [prematchInfoString, playerID]);
+    }, [prematchInfoString, playerID]);*/
 
     const currentRaces = useMemo(() => {
         if(prematchInfo && prematchInfo.players && prematchInfo.players.length){
@@ -505,7 +505,7 @@ export const Lobby = (args)=> {
                         {!playerCreds && !playerID && prematchInfo && prematchInfo.players &&
                              <button className='styledButton yellow' disabled={prematchInfo.gameName !== 'prematch' || !prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>{t('lobby.join_game')} <b className='bi-caret-right-square-fill' ></b></button>}
                         {playerCreds && <button className='styledButton yellow' onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> {t('lobby.leave')}</button>}
-                        {playerID && playerID !== '0' && !iAmReady &&  <button className='styledButton green' onClick={() => updatePlayerInfo({ready: true})}>{t('lobby.ready_to_play')} <b className='bi-check-square-fill' ></b></button>}
+                       
                     </CardFooter>
                 </Card>}
                 {playerCreds && prematchInfo && prematchInfo.players && <Card className='borderedPanel' style={{flex: 'auto', overflowY: 'hidden', maxWidth: '42%', margin: '4rem 4rem 6rem 0', padding: '2rem'}}>
@@ -519,3 +519,4 @@ export const Lobby = (args)=> {
             </>}
         </>;
 }
+// {playerID && playerID !== '0' && !iAmReady &&  <button className='styledButton green' onClick={() => updatePlayerInfo({ready: true})}>{t('lobby.ready_to_play')} <b className='bi-check-square-fill' ></b></button>}

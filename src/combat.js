@@ -331,7 +331,8 @@ const HitAssign = (args) => {
             }
         }
 
-        if(playerID === owner){
+        if(String(playerID) === String(owner)){
+
             if(hits[tag]){
                 const ship = hits[tag].find(ship => ship.idx === idx);
                 if(ship){
@@ -729,15 +730,14 @@ export const AntiFighterBarrage = (args) => {
     }, [playerID, ctx.activePlayers, G.races]);
 
     return (<>
-    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
-        position: 'absolute', margin: '5rem', color: 'white'}}>
+    <Card className='borderedPanel combatPanel' style={{minWidth: '40%', maxWidth: '60%'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{t('board.antifighter_barrage')}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             <CombatantForces race={G.races[ctx.currentPlayer]} units={activeTile.tdata.attacker} owner={ctx.currentPlayer} combatAbility='barrage'/>
             <CombatantForces race={G.races[activeTile.tdata.occupied]} units={activeTile.tdata.fleet} owner={activeTile.tdata.occupied} combatAbility='barrage'/>
         </CardBody>
         <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-            <Button color='warning' disabled = {!everyoneRolls} onClick={() => moves.nextStep()}>{t('board.next')}</Button>
+            <button className='styledButton yellow' disabled = {!everyoneRolls} onClick={() => moves.nextStep()}>{t('board.next')}</button>
             <span style={{display: 'flex', justifyContent: 'space-around', fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
                 {Object.keys(hits).map((h, i) => {
                     return <span key={i}>
@@ -746,7 +746,7 @@ export const AntiFighterBarrage = (args) => {
                     </span>
                 })}
             </span>
-            <Button color='danger' disabled = {everyoneRolls || enemyRetreat} onClick={() => moves.retreat()}>{t('board.Retreat')}</Button>
+            <button className='styledButton red' disabled = {everyoneRolls || enemyRetreat} onClick={() => moves.retreat()}>{t('board.Retreat')}</button>
         </CardFooter>
     </Card>
     {G.currentCombatActionCard && <ActionCardDialog selectedTile={selectedTile}/>}
@@ -977,8 +977,7 @@ export const SpaceCombat = ({selectedTile}) => {
     }, [activeTile.tdata.fleet]);
 
     return (<>
-    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
-        position: 'absolute', margin: '5rem', color: 'white'}}>
+    <Card className='borderedPanel combatPanel' style={{minWidth: '40%', maxWidth: '60%'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{assaultCannon ? t('board.Assault_cannon'): t('board.Space_combat')}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             {(ctx.activePlayers[playerID] === 'spaceCombat' || ctx.activePlayers[playerID] === 'spaceCombat_await') && <>
@@ -1006,15 +1005,15 @@ export const SpaceCombat = ({selectedTile}) => {
             </>}
         </CardBody>
         {(!needAwait || winner !== undefined) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-            {needAwait && winner !== undefined && <Button color='warning' onClick={() => moves.endBattle()}>{t('board.next')}</Button>}
+            {needAwait && winner !== undefined && <button className='styledButton yellow' onClick={() => moves.endBattle()}>{t('board.next')}</button>}
             {ctx.activePlayers[playerID] === 'spaceCombat' && <>
-                <Button color='warning' disabled = {!everyoneRolls || haveACDialog} onClick={() => moves.nextStep(hits)}>{t('board.next')}</Button>
+                <button className='styledButton yellow' disabled = {!everyoneRolls || haveACDialog} onClick={() => moves.nextStep(hits)}>{t('board.next')}</button>
                 <HitsInfo />
-                <Button color='danger' disabled = {everyoneRolls || (anyoneRetreat !== undefined) || haveACDialog} onClick={()=>moves.retreat()}>{t('board.Retreat')}</Button>
+                <button className='styledButton red' disabled = {everyoneRolls || (anyoneRetreat !== undefined) || haveACDialog} onClick={()=>moves.retreat()}>{t('board.Retreat')}</button>
             </>}
             {ctx.activePlayers[playerID] === 'spaceCombat_step2' && <>
-                {!assaultCannon && <Button color='warning' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD)}>{t('board.next')}</Button>}
-                {assaultCannon && <Button color='warning' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(ahitsA, true)}>{t('board.next')}</Button>}
+                {!assaultCannon && <button className='styledButton yellow' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD)}>{t('board.next')}</button>}
+                {assaultCannon && <button className='styledButton yellow' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(ahitsA, true)}>{t('board.next')}</button>}
                 <HitsInfo />
             </>}
         </CardFooter>}
@@ -1319,15 +1318,14 @@ export const Bombardment = () => {
     }, [G.currentCombatActionCard]);
 
     return (<>
-    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
-        position: 'absolute', margin: '5rem', color: 'white'}}>
+    <Card className='borderedPanel combatPanel' style={{minWidth: '40%', maxWidth: '60%'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{t('board.Bombardment')}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             <CombatantForces race={G.races[ctx.currentPlayer]} units={activeTile.tdata.fleet} owner={ctx.currentPlayer} combatAbility='bombardment'/>
             <CombatantForces race={G.races[activePlanet.occupied]} units={defenderForces} owner={activePlanet.occupied} combatAbility='bombardment'/>
         </CardBody>
         <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-            <Button color='warning' disabled = {!everyoneRolls || haveACDialog} onClick={()=>moves.nextStep(hits)}>{t('board.next')}</Button>
+            <button className='styledButton yellow' disabled = {!everyoneRolls || haveACDialog} onClick={()=>moves.nextStep(hits)}>{t('board.next')}</button>
             <span style={{display: 'flex', justifyContent: 'space-around', fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
                 {Object.keys(hits).map((h, i) => {
                     return <span key={i}>
@@ -1702,8 +1700,7 @@ export const Invasion = () => {
     }, [activePlanet.units]);
 
     return (<>
-    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
-        position: 'absolute', margin: '5rem', color: 'white'}}>
+    <Card className='borderedPanel combatPanel' style={{minWidth: '40%', maxWidth: '60%'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{landing ? t('board.Landing'): magen ? t('board.Magen_defense_grid') : t('board.Invasion')}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             {(ctx.activePlayers[playerID] === 'invasion' || ctx.activePlayers[playerID] === 'invasion_await') && <>
@@ -1731,17 +1728,17 @@ export const Invasion = () => {
             </>}
         </CardBody>
         {(!needAwait || magen || landing || (needAwait && winner !== undefined)) && <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-            {landing && <Button color='warning' onClick={() => moves.landTroops(troops)}>{troops.length > 0 ? t('board.next'):t('board.cancel')}</Button>}
-            {!landing && !magen && needAwait && winner !== undefined && <Button disabled={haveACDialog || enemyMakeReroll} color='warning' onClick={() => moves.endBattle()}>{t('board.next')}</Button>}
-            {magen && <Button color='warning' onClick={() => moves.magenDefense(ahitsA)}>{t('board.next')}</Button>}
+            {landing && <button className='styledButton yellow' onClick={() => moves.landTroops(troops)}>{troops.length > 0 ? t('board.next'):t('board.cancel')}</button>}
+            {!landing && !magen && needAwait && winner !== undefined && <button className='styledButton yellow' disabled={haveACDialog || enemyMakeReroll} onClick={() => moves.endBattle()}>{t('board.next')}</button>}
+            {magen && <button className='styledButton yellow' onClick={() => moves.magenDefense(ahitsA)}>{t('board.next')}</button>}
             {ctx.activePlayers[playerID] === 'invasion' && <>
-                <Button color='warning' disabled = {!everyoneRolls || haveACDialog || enemyMakeReroll} onClick={() => moves.nextStep(hits, true)}>{t('board.next')}</Button>
+                <button className='styledButton yellow' disabled = {!everyoneRolls || haveACDialog || enemyMakeReroll} onClick={() => moves.nextStep(hits, true)}>{t('board.next')}</button>
                 <HitsInfo />
             </>}
             {ctx.activePlayers[playerID] === 'invasion_step2' && <>
-                <Button color='warning' disabled = {!allHitsAssigned || haveACDialog || enemyMakeReroll} 
+                <button className='styledButton yellow' disabled = {!allHitsAssigned || haveACDialog || enemyMakeReroll} 
                 onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD, prevStages[playerID])}>
-                    {t('board.next')}</Button>
+                    {t('board.next')}</button>
                 <HitsInfo />
             </>}
         </CardFooter>}

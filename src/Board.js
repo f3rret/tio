@@ -18,7 +18,7 @@ import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bomb
 import { produce } from 'immer';
 import techData from './techData.json';
 import tileData from './tileData.json';
-import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep } from './animated';
+import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep, SectorUnderAttack, PlanetUnderAttack } from './animated';
 
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
@@ -730,6 +730,20 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }, [G.races]);
   
+  const TileContent2 = ({element, index}) => {
+    const [firstCorner] = element.corners;
+
+    return  <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
+             
+              {element.tdata.attacker && <SectorUnderAttack w={element.w} rid={G.races[ctx.currentPlayer].rid} rname={t('races.' + G.races[ctx.currentPlayer].rid + '.name')} 
+                                  text={t('board.sector_under_attack')} fleet={element.tdata.attacker} color={G.races[ctx.currentPlayer].color[0]}/>}
+
+              {isMyTurn && activeTile && advUnitView && advUnitView.tile === index && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 && 
+                            <MoveDialog  x={-240} y={-50} canMoveThatPath={canMoveThatPath} pointerdown={() => moveToClick(index)} 
+                                        distanceInfo={distanceInfo(element, activeTile)} buttonLabel={t('board.go')}/>}
+            </Container>
+  }
+
   const TileContent = ({element, index}) => {
 
     //eslint-disable-next-line
@@ -788,15 +802,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     <LandingRed pointerdown={()=>moves.invasion(p)} x={0} y={0}/>
                 }
 
-                {p.invasion && <Sprite scale={.75} x={p.hitRadius * 2} y={-30} image='icons/invader.png' alpha={0.85}>
-                  <Container x={45} y={15}>
-                    <Sprite image={'race/icons/'+ G.races[ctx.currentPlayer].rid +'.png'} scale={1}></Sprite>
-                    <Text x={70} y={10} style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white'}} text={t('board.planet_under_attack')} />
-                  </Container>
-                  <Container y={75} x={100}>
-                    <InvasionForce fleet={p.invasion.troops} w={element.w/2}/>
-                  </Container>
-                </Sprite>}
+                {p.invasion && <PlanetUnderAttack w={element.w} x={p.hitRadius * 1.5} y={-p.hitRadius * 1.5} text={t('board.planet_under_attack')} rid={G.races[ctx.currentPlayer].rid} 
+                            rname={t('races.' + G.races[ctx.currentPlayer].rid + '.name')} fleet={p.invasion.troops} color={G.races[ctx.currentPlayer].color[0]}/>}
               </Container>
 
               <Container x={50} y={110}>
@@ -829,21 +836,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             </Sprite>
           }
         )}
-
-        {element.tdata.attacker && <Sprite scale={0.75} x={-element.w/2} y={0} image='icons/attacker.png' alpha={0.85}>
-          <Container x={35} y={35}>
-            <Sprite image={'race/icons/'+ G.races[ctx.currentPlayer].rid +'.png'} scale={1}></Sprite>
-            <Text x={70} y={10} style={{fontSize: 25, fontFamily:'Handel Gothic', fill: 'white'}} text={t('board.sector_under_attack')} />
-          </Container>
-          <Container y={125} x={-10}>
-            <AttackerForce fleet={element.tdata.attacker} w={element.w}/>
-          </Container>
-        </Sprite>}
+        
 
         {element.tdata.fleet && <Container x={10} y={-30}>
-          {activeTile && advUnitView && advUnitView.tile === index && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 && 
-          <MoveDialog  x={-240} y={-100} canMoveThatPath={canMoveThatPath} pointerdown={()=>moveToClick(index)} 
-                      distanceInfo={distanceInfo(element, activeTile)} buttonLabel={t('board.go')}/>}
+          
 
           {Object.keys(element.tdata.fleet).map((f, i) => {
             const isCurrentAdvUnit = advUnitView && advUnitView.tile === index && advUnitView.unit === f;
@@ -872,12 +868,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           })}
         </Container>}
 
-        {ctx.phase === 'acts' && isMyTurn && selectedTile === index && race.actions.length < maxActs &&  
+
+
+        {ctx.phase === 'acts' && isMyTurn && selectedTile === index && race.actions.length < maxActs && !activeTile && 
         element.tdata.type !== 'hyperlane' && !(element.tdata.tokens && element.tdata.tokens.indexOf(race.rid) > -1) && 
-          <Container x={30} y={element.w/2 + 90} anchor={0.5} >
+          <Container x={30} y={element.w/2 + 60} alpha={.8} anchor={0.5} cursor='pointer' interactive={true} pointerdown={()=>moves.activateTile(index)} 
+              mouseover={(e) => e.target.alpha = 1} mouseout={(e) => e.target.alpha = .8} >
             <Sprite x={20} y={-20} scale={.7} image={'label.png'} alpha={.95}/>
-            <Text x={80} y={17} cursor='pointer' interactive={true} pointerdown={()=>moves.activateTile(index)} text={t('board.activate_system')} 
-              alpha={.6} mouseover={(e) => e.target.alpha = .85} mouseout={(e) => e.target.alpha = .6} style={{fontSize: 22, fontFamily:'Handel Gothic', fill: '#faebd7', dropShadow: true, dropShadowDistance: 1}}>
+            <Text x={80} y={17} text={t('board.activate_system')} style={{fontSize: 22, fontFamily:'Handel Gothic', fill: '#faebd7', dropShadow: true, dropShadowDistance: 1}}>
             </Text>
           </Container>}
         
@@ -1153,54 +1151,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             </CardsPagerItem>
   }
 
-  const AttackerForce = useCallback((args) => {
-    const {w, fleet} = args;
-    const payload = {infantry: [], fighter: [], mech: []}
-  
-    Object.keys(fleet).forEach(tag => {
-      fleet[tag].forEach(ship => {
-        ship.payload && ship.payload.forEach(p => {
-          if(p && p.id) payload[p.id].push({});
-        });
-      })
-    });
-  
-    Object.keys(payload).forEach(k => {if(!payload[k].length) delete payload[k]});
-  
-    return [...Object.keys(fleet), ...Object.keys(payload)].map((f, i) => {
-      const rowLength = 5;
-      const y = ( i<rowLength ? 0:70 );
-      const x = ( i<rowLength ? w/4 - 50 + i*65 : w/4 - 50 + (i-rowLength)*65);
-      let text = fleet[f] ? fleet[f].length : payload[f].length;
-      if(text === 1) text = ' 1';
-  
-      return <Sprite key={i} x={x} y={y} anchor={0} image={fleet[f] ? 'icons/unit_bg.png':'icons/unit_inf_bg.png'}>
-          <Sprite tint={G.races[ctx.currentPlayer].color[0]} image={'units/' + f.toUpperCase() + '.png'} x={5} y={fleet[f] ? 10:0} scale={{x: .3, y: .3}} alpha={1}/>
-          <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
-            x={35} y={25} text={text}/>
-      </Sprite>
-    })
-  }, [G.races, ctx.currentPlayer]);
-  
-  const InvasionForce = useCallback((args) => {
-    const {w, fleet} = args;
-  
-    if(fleet){
-      return Object.keys(fleet).map((f, i) => {
-        const rowLength = 5;
-        const y = ( i<rowLength ? 0:70 );
-        const x = ( i<rowLength ? w/4 - 50 + i*65 : w/4 - 50 + (i-rowLength)*65);
-        let text = fleet[f].length;
-        if(text === 1) text = ' 1';
-  
-        return <Sprite key={i} x={x} y={y} anchor={0} image='icons/unit_inf_bg.png'>
-                  <Sprite tint={G.races[ctx.currentPlayer].color[0]} image={'units/' + f.toUpperCase() + '.png'} x={5} y={0} scale={{x: .3, y: .3}} alpha={1}/>
-                  <Text style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
-                    x={45} y={25} text={text}/>
-              </Sprite>
-      })
-    }
-  }, [G.races, ctx.currentPlayer]);
 
   /**
    * {mustSecObj && ctx.phase === 'acts' && 
@@ -1335,7 +1285,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
                 })}
                
-                
+               {G.tiles.map((element, index) => {
+
+                      return <TileContent2 key={index} element={element} index={index} />
+
+                })}
                 
 
               </PixiViewport> 

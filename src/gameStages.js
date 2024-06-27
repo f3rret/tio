@@ -14,6 +14,7 @@ export const secretObjectiveConfirm = ({G, playerID, events}, oid, y) => {
   if(objective.players && objective.players.length) return;
 
   if(y === 0){
+    if(!objective.players) objective.players = [];
     objective.players.push(playerID);
   }
 

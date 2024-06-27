@@ -324,6 +324,14 @@ li.list-group-item{
     bottom: 9rem;
     left: 5rem 
 }
+.combatPanel{
+    padding: 1rem;
+    background-color: rgba(33, 37, 41, 0.95)!important;
+    position: absolute!important;
+    bottom: 9rem;
+    left: 5rem;
+    color: antiquewhite!important;
+}
 
 
 @import "../../node_modules/bootstrap/scss/bootstrap";
