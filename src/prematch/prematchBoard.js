@@ -21,7 +21,7 @@ export const PrematchChat = ({sendChatMessage, chatMessages}) => {
         return [...chatMessages].slice(-20).reverse().map((m, i) => <p key={i} style={{margin: 0, color: trueColors[colors[m.sender]][0]}}><b>{'> '}</b>{m.payload}</p>)
     }, [chatMessages]);
 
-    return (<Card style={{border: 'solid 1px rgba(255,255,255,.25)', width: '100%', height: '10rem', fontFamily: 'arial, verdana'}}>
+    return (<Card style={{border: 'solid 1px rgba(255,255,255,.25)', width: '100%', height: '10rem', fontFamily: 'system-ui, arial, verdana'}}>
                 <CardBody style={{overflowY: 'auto'}}>
                     <div style={{fontSize: '.75rem'}}>{messages}</div>
                 </CardBody>

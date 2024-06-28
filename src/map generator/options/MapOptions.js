@@ -1485,9 +1485,11 @@ class MapOptions extends React.Component {
                     
                 </CardBody>
                 {this.props.playerID === '0' && <CardFooter style={{display: 'flex', justifyContent: 'right'}}>
-                    <button className='styledButton green' style={{minWidth: '8rem'}} 
-                        onClick={(e) => this.state.startInterval === null ? this.startClick(e) : ''}>{t('lobby.start_game')} 
-                        {' '}{this.state.startInterval !== null ? '(' + this.state.startCounter + ') ' : <b className='bi-caret-right-square-fill' />}</button>
+                    <button className='styledButton green' style={{minWidth: '8rem', display: 'flex', alignItems: 'center'}} 
+                        onClick={(e) => this.state.startInterval === null ? this.startClick(e) : ''}>
+                        <span style={{flexBasis: '70%'}}>{t('lobby.start_game')}</span> 
+                        <span style={{flexBasis: '30%'}}>{this.state.startInterval !== null ? '(' + this.state.startCounter + ') ' : <b className='bi-caret-right-square-fill' />}</span>
+                    </button>
                 </CardFooter>}
             </>
         );

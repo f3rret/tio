@@ -220,8 +220,7 @@ export const SpaceCannonAttack = () => {
     }, [playerID, ctx.activePlayers]);
 
     return (<>
-    <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
-        position: 'absolute', margin: '5rem', color: 'white'}}>
+    <Card className='borderedPanel combatPanel' style={{minWidth: '40%', maxWidth: '60%'}}>
         <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{t('board.space_cannon_attack')}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             {ctx.activePlayers[playerID] === 'spaceCannonAttack' && <>
@@ -240,12 +239,12 @@ export const SpaceCannonAttack = () => {
         </CardBody>
         <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
             {ctx.activePlayers[playerID] === 'spaceCannonAttack' && <>
-                <Button color='warning' disabled= {playerID === ctx.currentPlayer && !isLastOnStage} onClick={() => moves.nextStep()}>{t('board.next')}</Button>
+                <button className='styledButton yellow' disabled= {playerID === ctx.currentPlayer && !isLastOnStage} onClick={() => moves.nextStep()}>{t('board.next')}</button>
                 <span style={{fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>{hits + ' ' + t('board.hits') + ' '}</span>
             </>}
             {ctx.activePlayers[playerID] === 'spaceCannonAttack_step2' && <>
-                <Button color='warning' disabled= {(playerID === ctx.currentPlayer && !allHitsAssigned) || 
-                    (playerID !== ctx.currentPlayer && ctx.activePlayers[ctx.currentPlayer] !== undefined)}  onClick={()=>moves.nextStep(ahits)}>{t('board.next')}</Button>
+                <button className='styledButton yellow' disabled= {(playerID === ctx.currentPlayer && !allHitsAssigned) || 
+                    (playerID !== ctx.currentPlayer && ctx.activePlayers[ctx.currentPlayer] !== undefined)}  onClick={()=>moves.nextStep(ahits)}>{t('board.next')}</button>
                 <span style={{fontFamily: 'Handel Gothic', fontSize: 20, flex: 'auto', alignSelf: 'center'}}>
                     {playerID === ctx.currentPlayer ? assigned + ' / ' + hits + ' ' + t('board.hits_assigned') +  ' ' + (nonFighterHits ? ' (' + nonFighterHits + ' ' + t('board.non_fighters') + ')':''): hits + ' ' + t('board.hits') + ' '}
                 </span>
@@ -1170,8 +1169,7 @@ export const CombatRetreat = (args) => {
     }, [freePayload]);
 
     return (
-        <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '40%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
-            position: 'absolute', margin: '5rem', color: 'white'}}>
+        <Card className='borderedPanel combatPanel' style={{minWidth: '40%', maxWidth: '60%'}}>
             <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{t('board.Retreat')}</h3></CardTitle>
             <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
                 <div style={{display: 'flex', position: 'relative', flexDirection: 'row', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', border: 'solid 1px rgba(255,255,255,.15)'}}>
@@ -1233,9 +1231,9 @@ export const CombatRetreat = (args) => {
                 </div>
             </CardBody>
             <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-                <Button color='warning' onClick={() => moves.nextStep(selectedTile, escFleet, escGround)}>
+                <button className='styledButton yellow' onClick={() => moves.nextStep(selectedTile, escFleet, escGround)}>
                     {acceptableTile && Object.keys(escFleet).length > 0 ? 'Next':'Cancel'}
-                </Button>
+                </button>
             </CardFooter>
         </Card>);
 }
@@ -1890,8 +1888,7 @@ export const ChooseAndDestroy = () => {
     }, [G, playerID, destroyed, units]);
 
     return (
-        <Card style={{border: 'solid 1px rgba(119, 22, 31, 0.6)', minWidth: '50%', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(160, 160, 160, 0.85)', 
-            position: 'absolute', margin: '10rem', color: 'black'}}>
+        <Card className='borderedPanel combatPanel' style={{minWidth: '40%', maxWidth: '60%', backgroundColor: 'rgba(160, 160, 160, 0.85)', color: 'black'}}>
             <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{t('board.Choose') + ' ' + G.races[playerID].mustChooseAndDestroy.count + ' ' + t('board.ships_to_destroy')}</h3></CardTitle>
             <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
                 <div style={{display: 'flex', position: 'relative', flexDirection: 'row', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.75)', border: 'solid 1px rgba(255,255,0,.5)'}}>
@@ -1939,7 +1936,7 @@ export const ChooseAndDestroy = () => {
                 </div>
             </CardBody>
             <CardFooter style={{background: 'none', display: 'flex', flexDirection: 'row-reverse', borderTop: 'solid 1px rgba(119, 22, 31, 0.6)'}}>
-                <Button disabled={!canNext} color='warning' onClick={() => moves.chooseAndDestroy(destroyed)}>{t('board.done')}</Button>
+                <button disabled={!canNext} className='styledButton yellow' onClick={() => moves.chooseAndDestroy(destroyed)}>{t('board.done')}</button>
             </CardFooter>
         </Card>
 

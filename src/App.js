@@ -9,7 +9,7 @@ import './scss/custom.scss'
 export const App = Client({ 
     game: TIO,
     board: TIOBoard,
-    debug: true,
+    debug: false,
     //numPlayers: props.numPlayers,
     /*playerID: props.playerID,
     matchID: props.matchID,

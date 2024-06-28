@@ -279,7 +279,8 @@
             "move_path_distance": "Distance",
             "move_power_reserve": "Power reserve",
             "move_boost": "Boost",
-            "go": "Send"
+            "go": "Send",
+            "has_occupied_planet": "has occupied planet"
         },
         "cards": {
             "strategy": {

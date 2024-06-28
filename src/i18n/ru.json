@@ -278,7 +278,8 @@
             "move_path_distance": "Дистанция",
             "move_power_reserve": "Запас хода",
             "move_boost": "Ускорение",
-            "go": "Отправить"
+            "go": "Отправить",
+            "has_occupied_planet": "захватил планету"
         },
         "cards": {
             "strategy": {

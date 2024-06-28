@@ -183,7 +183,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         <button className={'styledButton ' + (leftPanel === 'trade' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('trade')}>{t("board.nav.trade")}</button>
       </ButtonGroup>
     
-      <div style={{marginTop: '2rem', marginRight: '3rem', display: 'flex'}}>
+      <div style={{marginTop: '2rem', marginRight: 0, display: 'flex'}}>
         <Nav className='comboPanel-left' style={{height: '5.5rem', marginTop: '-1rem', padding: '1.5rem 3rem 1rem 1rem'}}>
           <UncontrolledAccordion open='0' defaultOpen='0' id='turnLine' style={{width: '30rem', opacity: '.9', marginTop: '.5rem', background: 'transparent'}}>
             <AccordionItem style={{border: 'none', background: 'transparent'}}>
@@ -215,7 +215,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           </UncontrolledAccordion>
         </Nav>
 
-        <Nav className='comboPanel-right' style={{height: '3.5rem', zIndex: 1, padding: '.5rem 1.5em 0 .5rem', minWidth: '30rem', display: 'flex', justifyContent: 'flex-end'}}>
+        <Nav className='comboPanel-right' style={{height: '3.5rem', zIndex: 1, padding: '.5rem 2.5em 0 .5rem', minWidth: '30rem', display: 'flex', justifyContent: 'flex-end'}}>
           {false && <><NavItem style={{marginRight: '1rem'}}>
             <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
           </NavItem>
@@ -763,7 +763,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         {element.tdata.wormhole === 'gamma' && <Sprite x={-15} y={element.w/4 + 30} scale={.5} alpha={.9} image={'icons/gamma.png'}/>}
         {element.tdata.ionstorm && element.tdata.wormhole === 'alpha' && <Sprite x={-15} y={element.w/4 + 30} scale={1} alpha={.85} image={'icons/alpha.png'}/>}
         {element.tdata.ionstorm && element.tdata.wormhole === 'beta' && <Sprite x={-15} y={element.w/4 + 30} scale={1} alpha={.85} image={'icons/beta.png'}/>}
-        {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier_bg.png'}/>}
+        {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier.png'}/>}
         {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
             
             return <Sprite tint={getColorByRid(t)[0]} alpha={.9} key={i} x={element.w/2 + element.w/4 - i*15} y={element.w/4 - i*20} scale={.4} image={'icons/ct.png'}>
@@ -788,8 +788,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       <Text style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
                       x={65} y={5} text={p.units[u].length}/>
                       {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
-                      <Text text={'► ' + t('board.Production')} x={0} y={-10} interactive={true} pointerdown={()=>setProducing(p.name)} 
-                            style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}}/>}
+                      <Sprite image={'icons/producing.png'} cursor='pointer' scale={.2} x={45} y={-20} interactive={true} pointerdown={()=>setProducing(p.name)} 
+                            style={{}}/>}
                     </Container>
                   }
                 )}
@@ -875,7 +875,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           <Container x={30} y={element.w/2 + 60} alpha={.8} anchor={0.5} cursor='pointer' interactive={true} pointerdown={()=>moves.activateTile(index)} 
               mouseover={(e) => e.target.alpha = 1} mouseout={(e) => e.target.alpha = .8} >
             <Sprite x={20} y={-20} scale={.7} image={'label.png'} alpha={.95}/>
-            <Text x={80} y={17} text={t('board.activate_system')} style={{fontSize: 22, fontFamily:'Handel Gothic', fill: '#faebd7', dropShadow: true, dropShadowDistance: 1}}>
+            <Text x={100} y={17} text={t('board.activate_system')} style={{fontSize: 22, fontFamily:'system-ui', fill: '#faebd7', dropShadow: true, dropShadowDistance: 1}}>
             </Text>
           </Container>}
         
@@ -947,7 +947,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   useEffect(()=>{
     if(race.exploration && race.exploration.length && race.exploration.length > PREV_EXPLORATION.current.length){
       PREV_EXPLORATION.current = race.exploration;
-      sendChatMessage(t('board.got_new_exploration') + ': ' 
+      sendChatMessage(t('board.got_new_exploration') + ' ' 
       + t('cards.exploration.' + race.exploration[race.exploration.length-1].id + '.label').toUpperCase() + ' ('
       + t('cards.exploration.' + race.exploration[race.exploration.length-1].id + '.effect') + ')');
     }
@@ -981,7 +981,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           });
           if(newOne){
             setJustOccupied(newOne.name);
-            sendChatMessage('has occupied planet: ' + newOne.name);
+            sendChatMessage(t('board.has_occupied_planet') + ' ' + t('planets.' + newOne.name));
             if(newOne.exploration === 'Freelancers'){
               setProducing(newOne.name);
             }
@@ -990,7 +990,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
       PREV_PLANETS.current = PLANETS;
     }
-  }, [PLANETS, sendChatMessage]);
+  }, [PLANETS, sendChatMessage, t]);
 
   useEffect(() => { //switch TechAction
     if(!producing && justOccupied){
@@ -1410,7 +1410,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   </div>}
                   <div className='borderedPanel-vertical' style={{display: 'flex', height: 'max-content', backgroundColor: 'rgba(33, 37, 41, 0.95)',
                           width: '100%', flexDirection: 'column', justifyContent: 'flex-end', margin: '0 0 2rem 0', zIndex: 1}}>
-                    {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0}}>
+                    {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, minHeight: '13rem', marginBottom: 0}}>
 
                         {midPanelInfo === 'tokens' && <>
                           {<h6 style={{textAlign: 'right'}}>{race.tokens.new + tempCt.new || 0} {t('board.unused')}</h6>}
@@ -1517,7 +1517,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         <button size='sm' onClick={()=>setMidPanelInfo('reinforce')} className={ 'styledButton ' + (midPanelInfo === 'reinforce' ? 'white':'black')} style={{flexBasis: '33%'}}>{t('board.reinforce').toUpperCase()}</button>
                       </ButtonGroup>
                       </>}
-                    {race && subcardVisible === 'persons' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
+                    {race && subcardVisible === 'persons' && <><Card style={{...CARD_STYLE, minHeight: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
                         {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
                           <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
                           <CardText>{t('races.' + race.rid + '.agentAbility')}</CardText>
@@ -1539,7 +1539,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           <button onClick={()=>setAgentVisible('hero')} className={'styledButton ' + (agentVisible === 'hero' ? 'white':'black')} style={{flexBasis: '33%'}}>{t('board.hero').toUpperCase()}</button>
                       </ButtonGroup>
                     </>}
-                    {race && subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, height: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex'}}>
+                    {race && subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, minHeight: '15.5rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex'}}>
                         {race.abilities.map((a, i) => 
                           <CardText key={i} style={{fontSize: '90%'}}>
                             <b>{t('races.' + race.rid + '.' + a.id + '.label')}</b><br/>
