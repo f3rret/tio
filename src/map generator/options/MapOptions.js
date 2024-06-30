@@ -1356,7 +1356,6 @@ class MapOptions extends React.Component {
 
     startClick(e) {
         let int = setInterval(() => {
-            console.log('intervl');
             if(this.state.startCounter < 1){
                 clearInterval(this.state.startInterval);
                 this.generateBoard(e);

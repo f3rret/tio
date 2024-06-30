@@ -2,6 +2,7 @@
   "name": "tio",
   "version": "0.1.0",
   "private": true,
+  "ip": "twilight-imperium.online",
   "dependencies": {
     "@pixi/react": "^7.0.3",
     "@testing-library/jest-dom": "^5.16.5",
@@ -52,6 +53,10 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-transform-private-property-in-object": "^7.24.7"
+    "@babel/core": "7.22.5",
+    "@babel/eslint-parser": "7.22.5",
+    "@babel/plugin-proposal-private-property-in-object": "7.21.11",
+    "@babel/preset-env": "7.22.5"
   }
+
 }

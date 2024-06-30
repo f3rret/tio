@@ -5,6 +5,7 @@ import { TIO } from './Game';
 import { TIOBoard } from './Board';
 //import 'bootstrap/dist/css/bootstrap.min.css';
 import './scss/custom.scss'
+import settings from '../package.json'
 
 export const App = Client({ 
     game: TIO,
@@ -14,7 +15,7 @@ export const App = Client({
     /*playerID: props.playerID,
     matchID: props.matchID,
     credentials: props.credentials,*/
-    multiplayer: SocketIO({ server: 'localhost:8000' })
+    multiplayer: SocketIO({ server: settings.ip + ':8000' })
 });
 
 export const AppLocal = Client({ 

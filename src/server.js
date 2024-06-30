@@ -9,7 +9,7 @@ import { prematch } from './prematch/prematch';
 
 const server = Server({
   games: [TIO, prematch],
-  origins: ['*', Origins.LOCALHOST, Origins.LOCALHOST_IN_DEVELOPMENT]
+  origins: ['http://80.87.111.146', Origins.LOCALHOST, Origins.LOCALHOST_IN_DEVELOPMENT]
 });
 
 server.run({ port: 8000/*, lobbyConfig */});
