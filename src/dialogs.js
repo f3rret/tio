@@ -1946,7 +1946,7 @@ export const StrategyPick = ({actionCardStage}) => {
                         </div>
                         <button className='styledButton black' onMouseEnter={()=>setStrategyHover(key)} onClick={() => moves.pickStrategy(key)} 
                             style={{opacity: r ? '.5':'1', width: '12rem', height: '3.5rem', fontFamily: 'Handel Gothic', display: 'flex', alignItems: 'center'}}>
-                                <b style={{backgroundColor: getStratColor(key, .6), border: 'solid 1px', width: '1.5rem', height: '1.5rem', fontSize: '1.25rem'}}>{idx+1}</b>
+                                <b style={{backgroundColor: getStratColor(key, .6), border: 'solid 1px', width: '1.5rem', height: '1.5rem', fontSize: '1.25rem', lineHeight: '1.25rem'}}>{idx+1}</b>
                                 <span style={{flex: 'auto'}}>{' ' + t('cards.strategy.' + key + '.label')}</span>
                         </button>
                         </ListGroupItem>

@@ -43,7 +43,7 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
         {messages[0]}
         </div>}
 
-      <ButtonGroup className='comboPanel-left-vertical' style={{bottom: '-1.5rem', left: '1.5rem', padding: '.5rem'}}>
+      <ButtonGroup className='comboPanel-left-vertical' style={{bottom: '-1rem', left: '1.5rem', padding: '.5rem'}}>
         <button className={'styledButton ' + (chatVisible ? 'white': 'blue')} onClick={()=>{setChatVisible(!chatVisible)}} 
           style={{fontFamily: 'Handel Gothic', width: '8rem'}}>{t("board.nav.chat")}</button>
       </ButtonGroup>

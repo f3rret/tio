@@ -175,7 +175,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
 
   const MyNavbar = () =>
     <div style={{ position: 'fixed', height: 0, width: '100%', zIndex: '2', display: 'flex', justifyContent: 'space-between', padding: '0'}}>
-      <ButtonGroup className='borderedPanel' style={{height: '4.5rem', margin: '0 0 0 2rem', paddingTop:'2rem', fontFamily:'Handel Gothic'}}>
+      <ButtonGroup className='borderedPanel' style={{minHeight: '3rem', margin: '2.5rem 0 0 2.5rem', fontFamily:'Handel Gothic'}}>
         <button className={'styledButton ' + (leftPanel === 'objectives' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('objectives')}>{t("board.nav.objectives")}</button>
         <button className={'styledButton ' + (leftPanel === 'planets' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('planets')}>{t("board.nav.planets")}</button>
         <button className={'styledButton ' + (leftPanel === 'units' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('units')}>{t("board.nav.units")}</button>
@@ -184,7 +184,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       </ButtonGroup>
     
       <div style={{marginTop: '2rem', marginRight: 0, display: 'flex'}}>
-        <Nav className='comboPanel-left' style={{height: '5.5rem', marginTop: '-1rem', padding: '1.5rem 3rem 1rem 1rem'}}>
+        <Nav className='comboPanel-left' style={{height: '5.5rem', marginTop: '-1rem', padding: '1.5rem 3rem 1rem 2rem'}}>
           <UncontrolledAccordion open='0' defaultOpen='0' id='turnLine' style={{width: '30rem', opacity: '.9', marginTop: '.5rem', background: 'transparent'}}>
             <AccordionItem style={{border: 'none', background: 'transparent'}}>
               <AccordionHeader targetId='1' style={{border: 'none', background: 'transparent'}}>
@@ -215,7 +215,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
           </UncontrolledAccordion>
         </Nav>
 
-        <Nav className='comboPanel-right' style={{height: '3.5rem', zIndex: 1, padding: '.5rem 2.5em 0 .5rem', minWidth: '30rem', display: 'flex', justifyContent: 'flex-end'}}>
+        <Nav className='comboPanel-right' style={{height: '3.5rem', zIndex: 1, padding: '.5rem 2.75em 0 .5rem', minWidth: '30rem', display: 'flex', justifyContent: 'flex-end'}}>
           {false && <><NavItem style={{marginRight: '1rem'}}>
             <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
           </NavItem>
@@ -285,7 +285,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return <>
             <button id={'strategyCard_'+card.id} className={'styledButton ' + (card.exhausted ? 'white':'black')} disabled={card.exhausted} 
               style={{width: '12rem', height: '3.5rem', fontFamily: 'Handel Gothic', display: 'flex', alignItems: 'center'}} onClick={(e)=>{e.stopPropagation(); moves.useStrategy(idx)}}>
-              <b style={{backgroundColor: getStratColor(card.id, .6), border: 'solid 1px', width: '1.5rem', height: '1.5rem', fontSize: '1.25rem'}}>{card.init+1}</b>
+              <b style={{backgroundColor: getStratColor(card.id, .6), border: 'solid 1px', width: '1.5rem', height: '1.5rem', fontSize: '1.25rem', lineHeight: '1.25rem'}}>{card.init+1}</b>
               <span style={{flex: 'auto'}}>{' ' + t('cards.strategy.' + card.id + '.label')}</span>
             </button>
             <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='left' target={'#strategyCard_' + card.id}>
@@ -1388,22 +1388,22 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     </CardsPagerItem>)}
                   </CardsPager>}
                 </div>
-                <ButtonGroup className='comboPanel-left-vertical' style={{alignSelf: 'flex-end', fontFamily:'Handel Gothic', position: 'fixed', bottom: '1.5rem', padding: '.5rem', right: '35%'}}>
+                <ButtonGroup className='comboPanel-left-vertical' style={{alignSelf: 'flex-end', fontFamily:'Handel Gothic', position: 'fixed', bottom: '2rem', padding: '.5rem', right: '35%'}}>
                     <button className={'styledButton ' + (rightBottomVisible === 'promissory' ? 'white':'black')} onClick={()=>rightBottomSwitch('promissory')} 
-                      style={{width: '7rem'}}>{t("board.nav.promissory")}</button>
+                      style={{width: '7rem', padding: 0}}>{t("board.nav.promissory")}</button>
                     <button className={'styledButton ' + (rightBottomVisible === 'relics' ? 'white':'black')} onClick={()=>rightBottomSwitch('relics')} 
-                      style={{width: '7rem'}}>{t("board.nav.relics")}</button> 
+                      style={{width: '7rem', padding: 0}}>{t("board.nav.relics")}</button> 
                     <button className={'styledButton ' + (rightBottomVisible === 'agenda' ? 'white':'black')} onClick={()=>rightBottomSwitch('agenda')} 
-                      style={{width: '7rem'}}>{t("board.nav.agenda")}</button>
+                      style={{width: '7rem', padding: 0}}>{t("board.nav.agenda")}</button>
                     <button className={'styledButton ' + (rightBottomVisible === 'actions' ? 'white':'black')} onClick={()=>rightBottomSwitch('actions')} 
-                      style={{width: '7rem'}}>{t("board.nav.actions")}</button>
+                      style={{width: '7rem', padding: 0}}>{t("board.nav.actions")}</button>
                     <button className={'styledButton ' + (rightBottomVisible === 'context' ? 'white':'black')} onClick={()=>rightBottomSwitch('context')} 
-                      style={{width: '7rem'}}>{t("board.nav.context")}</button>
+                      style={{width: '7rem', padding: 0}}>{t("board.nav.context")}</button>
                 </ButtonGroup>
               </CardColumns>
 
               <CardColumns style={{paddingRight: '2rem', display: 'flex', height: 'max-content', 
-                          width: '100%', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+                          width: '100%', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end', position: 'relative' }}>
                   
                   {race && race.strategy.length > 0 && ctx.phase !== 'strat' && <div className='comboPanel-left-vertical' style={{display: 'flex', position: 'absolute', padding: '.5rem', top: '-5rem', right: '3rem'}}>
                     {race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
@@ -1413,7 +1413,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                     {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, minHeight: '13rem', marginBottom: 0}}>
 
                         {midPanelInfo === 'tokens' && <>
-                          {<h6 style={{textAlign: 'right'}}>{race.tokens.new + tempCt.new || 0} {t('board.unused')}</h6>}
+                          {<h6 style={{textAlign: 'right', marginRight: '1rem'}}>{race.tokens.new + tempCt.new || 0} {t('board.unused')}</h6>}
                           
                           <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
                             <ListGroupItem className={race.tokens.new ? 'hoverable':''} style={TOKENS_STYLE} >
@@ -1561,7 +1561,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{(race.commodity || 0) + '/' + race.commCap}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.commodity')}</b></Button>
                           <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.trade_goods')}</b></Button>
                         </div>
-                        <CardImg src={'race/'+race.rid+'.png'} style={{width: '205px', marginLeft: '4rem'}}/>
+                        <CardImg src={'race/'+race.rid+'.png'} style={{width: '14rem', height: 'auto', marginLeft: '4rem'}}/>
                         
                       </div>
                       

@@ -108,12 +108,12 @@ body{
     font-family: 'Handel Gothic';
 }
 .borderedPanel{
-    border-image: url('../../public/window-borders.png') 50 15 / 2rem / 2rem stretch !important;
+    border-image: url('../../public/window-borders.png') 50 15 / 2.1rem / 2rem stretch !important;
     background: 0% 0% / auto auto url('../../public/panel-bg.png');
 }
 
 .borderedPanel-vertical{
-    border-image: url('../../public/window-borders-vertical.png') 15 50 / 2rem / 2rem stretch !important;
+    border-image: url('../../public/window-borders-vertical.png') 15 50 / 2.1rem / 2rem stretch !important;
     background: 0% 0% / auto auto url('../../public/panel-bg.png');
 }
 
