@@ -61,7 +61,7 @@ const PixiViewportComponent = PixiComponent("Viewport", {
   },
   didMount() {
     
-    console.log("viewport mounted");
+    //console.log("viewport mounted");
   }
 });
 

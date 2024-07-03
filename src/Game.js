@@ -529,6 +529,7 @@ export const TIO = {
               var l = 0;
               if(['carrier', 'cruiser', 'destroyer', 'dreadnought', 'flagship', 'warsun'].indexOf(ukl) > -1){
                 if(!activeTile.tdata.fleet[ukl]) activeTile.tdata.fleet[ukl] = [];
+                if(activeTile.tdata.occupied == undefined) activeTile.tdata.occupied = playerID;
                 for(l=0; l<deploy[uk]; l++){
                   activeTile.tdata.fleet[ukl].push({});
                 }

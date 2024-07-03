@@ -943,6 +943,7 @@ export const ACTS_STAGES = {
                           var l = 0;
                           if(['carrier', 'cruiser', 'destroyer', 'dreadnought', 'flagship', 'warsun'].indexOf(ukl) > -1){
                             if(!tile.tdata.fleet[ukl]) tile.tdata.fleet[ukl] = [];
+                            if(tile.tdata.occupied === undefined) tile.tdata.occupied = playerID;
                             for(l=0; l<result.deploy[uk]; l++){
                               tile.tdata.fleet[ukl].push({});
                             }
