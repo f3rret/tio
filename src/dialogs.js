@@ -1333,8 +1333,8 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
                     <Col xs='1' onClick={(e)=>{if(specialty) specClick(e, p)}} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
                     <Col xs='1' style={{padding: 0}}>{trait}</Col>
                     {variant !== 'small' && <>
-                    <Col xs='1' onClick={(e)=>resClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
-                    <Col xs='1' onClick={(e)=>infClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain'}}><b>{p.influence}</b></Col>
+                    <Col xs='1' onClick={(e)=>resClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', display: 'flex', alignItems: 'center'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
+                    <Col xs='1' onClick={(e)=>infClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', display: 'flex', alignItems: 'center'}}><b>{p.influence}</b></Col>
                     
                     {(!psArch || p.exhausted) && <Col />}
                     {psArch && !p.exhausted && <Col style={{padding: 0, cursor: 'pointer', position: 'relative'}}>
