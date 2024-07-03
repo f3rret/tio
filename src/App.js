@@ -10,7 +10,7 @@ import settings from '../package.json'
 export const App = Client({ 
     game: TIO,
     board: TIOBoard,
-    debug: false,
+    debug: (!process.env.NODE_ENV || process.env.NODE_ENV === 'development'),
     //numPlayers: props.numPlayers,
     /*playerID: props.playerID,
     matchID: props.matchID,

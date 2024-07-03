@@ -739,7 +739,7 @@ export const TIO = {
               G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload = 
                 G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload.filter(p => p);
 
-              if(!to.occupied && to.trait){
+              if(to.occupied === undefined){
                 /*const explore = G.explorationDecks[to.trait].pop();
                 if(explore.id.indexOf('Relic Fragment') > -1){
                   G.races[playerID].fragments[to.trait[0]]++;
@@ -747,9 +747,9 @@ export const TIO = {
                 G.races[playerID].exploration.push(explore);*/
                 to.exhausted = true;
                 to.occupied = playerID;
-                explorePlanetByName(G, playerID, to.name);
+                if(to.trait){explorePlanetByName(G, playerID, to.name)}
               }
-              else if(to.occupied != playerID){
+              else if(to.occupied != playerID && G.races[to.occupied]){
                 checkSecretObjective(G, to.occupied, 'Become a Martyr');
                 to.occupied = playerID;
                 to.exhausted = true;
