@@ -1014,7 +1014,7 @@ export const TechnologyDialog = ({tooltipMode, onSelect, selected, races}) => {
     const [race, setRace] = useState(races && races.length ? races[0] : G.races[playerID]);
     const onSelectFn = onSelect ?  (t) => onSelect({...t, rid: race.rid}) : undefined;
 
-    return <Card className='subPanel' style={{padding: '2rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', position: 'relative', width: '70rem' }}>
+    return <Card className='subPanel' style={{padding: '3rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', position: 'relative', width: '70rem' }}>
     <CardTitle style={{}}>
         <ButtonGroup style={{}}>
             {(races || G.races).map((r, i) => <button onClick={()=>setRace(r)} className={'styledButton ' + (r.rid === race.rid ? 'white':'black')} 

@@ -226,7 +226,8 @@
         "sustain": false,
         "shot": 1,
         "description": true,
-        "effect": true
+        "effect": true,
+        "resurectAbove": 5
     },
     
     {

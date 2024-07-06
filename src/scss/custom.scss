@@ -332,7 +332,26 @@ li.list-group-item{
     left: 5rem;
     color: antiquewhite!important;
 }
-
+.chat-dice{
+    display: inline-block;
+    background-color: antiquewhite;
+    padding: 0 .5rem;
+    color: black;
+    border-radius: 5px;
+    font-family: 'system-ui';
+    font-weight: bold;
+    line-height: 1.5rem
+}
+.chat-dice-green{
+    display: inline-block;
+    background-color: green;
+    padding: 0 .5rem;
+    color: antiquewhite;
+    border-radius: 5px;
+    font-family: 'system-ui';
+    font-weight: bold;
+    line-height: 1.5rem
+}
 
 @import "../../node_modules/bootstrap/scss/bootstrap";
 

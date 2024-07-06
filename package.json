@@ -22,6 +22,7 @@
     "react-dom": "^18.2.0",
     "react-markdown": "^9.0.1",
     "react-scripts": "^5.0.1",
+    "react-string-replace": "^1.1.1",
     "reactstrap": "^9.1.8",
     "sass": "^1.61.0",
     "use-iterator": "^1.2.0",
@@ -58,5 +59,4 @@
     "@babel/plugin-proposal-private-property-in-object": "7.21.11",
     "@babel/preset-env": "7.22.5"
   }
-
 }

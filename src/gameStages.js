@@ -1805,7 +1805,7 @@ export const ACTS_STAGES = {
           draft[playerID][unit] = {dice};
         });
       },
-      nextStep: ({G, playerID, ctx, events}, hits, prevStages) => {
+      nextStep: ({G, playerID, ctx, events, random}, hits, prevStages) => {
         let fleet = {};
         const activeTile = G.tiles.find(t => t.active === true);
         const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
@@ -1846,6 +1846,8 @@ export const ACTS_STAGES = {
           }  
         });
 
+        const technologies = getUnitsTechnologies(['infantry'], G.races[playerID]);
+
         Object.keys(fleet).forEach(f => { //remove destroyed units
           fleet[f].forEach((car, i) => {
             if((car.hit === 1 && f !== 'mech') || car.hit > 1){
@@ -1853,6 +1855,10 @@ export const ACTS_STAGES = {
               delete fleet[f][i];
               if(f === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
                 G.races[playerID].tg += 1;
+              }
+              else if(f === 'infantry' && haveTechnology(G.races[playerID], 'INFANTRY2')){
+                const d = random.D10(1);
+                G.races[playerID].tempTechnoData.push({id: 'INFANTRY2', dice: d, success: d[0]>technologies['infantry'].resurectAbove});
               }
             }
           });

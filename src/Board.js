@@ -942,6 +942,36 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     
   }, [ctx.phase, leftPanel, mustAction, mustSecObj]);
 
+  const PREV_TECHNODATA = useRef([]);
+  useEffect(() => {
+
+    if(race.tempTechnoData && race.tempTechnoData.length && race.tempTechnoData.length > PREV_TECHNODATA.current.length){
+      const last = race.tempTechnoData.slice(PREV_TECHNODATA.current.length - race.tempTechnoData.length);
+      const summary = {INFANTRY2: []};
+      last.forEach(l => {
+        if(Object.keys(summary).includes(l.id)){
+          if(l.id === 'INFANTRY2'){
+            if(l.success){
+              summary[l.id].push('/dice-green ' + (l.dice === 10 ? 0:l.dice));
+            }
+            else{
+              summary[l.id].push('/dice ' + (l.dice === 10 ? 0:l.dice));
+            }
+          }
+        }
+      });
+      
+      Object.keys(summary).forEach(k => {
+        if(k === 'INFANTRY2' && summary['INFANTRY2'].length > 0){
+          sendChatMessage(t('cards.techno.INFANTRY2.label') + '   ' + summary['INFANTRY2'].join('  '));
+        }
+      });
+
+    }
+    PREV_TECHNODATA.current = race.tempTechnoData;
+  // eslint-disable-next-line
+  }, [race.tempTechnoData])
+
   const PREV_EXPLORATION = useRef([]);
 
   useEffect(()=>{
@@ -1036,6 +1066,8 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     let disabled = race.exhaustedCards.indexOf(args.techId) > -1;
     let technology = techData.find(t => t.id === args.techId);
     let icon = technology ? technology.type:'propulsion';
+    let addText = '';
+    let units = {};
 
     if(!disabled && args.techId === 'INTEGRATED_ECONOMY'){
       if(ctx.phase !== 'acts' || !justOccupied) disabled = true;
@@ -1090,14 +1122,36 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
     }
 
+    if(args.techId === 'INFANTRY2'){
+      const readyToRes = race.tempTechnoData.filter(i => i.id === 'INFANTRY2' && i.dice && i.dice.length && i.dice[0] > technology.resurectAbove);
+      if(Array.isArray(readyToRes)){
+        if(readyToRes.length){
+          units = {'infantry': readyToRes.length};
+        }
+        else{
+          disabled = true;
+        }
+        addText = ' (' + readyToRes.length + ')';
+      }
+      else{
+        disabled = true;
+      }
+      if(!disabled && ctx.phase !== 'acts') disabled = true;
+    }
+
+
     const onClick = ()=>{
       if(args.techId === 'BIO_STIMS'){
         exhaustTechCard(args.techId);
-        setRightBottomSubVisible(exhaustedCards.indexOf(args.techId) === -1 ? 'context':null);
+        setRightBottomSubVisible(exhaustedCards.indexOf(args.techId) === -1 ? true:false);
       }
       else if(args.techId === 'SCANLINK_DRONE_NETWORK'){
         exhaustTechCard(args.techId);
-        setRightBottomSubVisible(exhaustedCards.indexOf(args.techId) === -1 ? 'context2':null);
+        setRightBottomSubVisible(exhaustedCards.indexOf(args.techId) === -1 ? true:false);
+      }
+      else if(args.techId === 'INFANTRY2'){
+        exhaustTechCard(args.techId);
+        setRightBottomSubVisible(exhaustedCards.indexOf(args.techId) === -1 ? true:false);
       }
       else{
         exhaustTechCard(args.techId);
@@ -1108,10 +1162,10 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               <button style={{width: '100%', marginBottom: '1rem'}} disabled={disabled} 
                   className = {'styledButton ' + (exhaustedCards.indexOf(args.techId) > -1 ? 'white':'yellow')} onClick={onClick}>
                 <img alt='tech type' src={'icons/'+icon+'.png'} style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}}/>
-                {t('cards.techno.' + args.techId + '.label')}
+                {t('cards.techno.' + args.techId + '.label') + addText}
               </button>
 
-              {args.techId === 'SCANLINK_DRONE_NETWORK' && rightBottomSubVisible === 'context2' && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
+              {args.techId === 'SCANLINK_DRONE_NETWORK' && rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
                 <b>{t('board.explore_one')+ ':'}</b>
                 {activeTile.tdata.planets.map((p, i) => {
                   if(p.trait){
@@ -1126,7 +1180,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         </button>
               </ListGroup>}
 
-              {args.techId === 'BIO_STIMS' && rightBottomSubVisible === 'context' && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
+              {args.techId === 'BIO_STIMS' && rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
                       <b>{t('board.ready_one') + ':'}</b>
                       {PLANETS.map((p, i) => {
                         if(p.specialty && p.exhausted){
@@ -1134,7 +1188,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                             {t('planets.' + p.name)}
                           </button>
                         }
-                        return <div key={i}></div>
+                        else{
+                          return <div key={i}></div>
+                        }
                       })}
                       {race.exhaustedCards.map((c, i)=>{
                         return <button key={i} onClick={() => {moves.readyTechnology(c, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton blue'>
@@ -1145,6 +1201,25 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           {t('board.cancel')}
                         </button>
                     </ListGroup>}
+
+              {args.techId === 'INFANTRY2' && rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
+                <b>{t('board.choose_one') + ':'}</b>
+                {G.tiles.filter(t => t.tid === race.rid).map((tile, j) => {
+                  if(tile && tile.tdata && tile.tdata.planets){
+                    return tile.tdata.planets.map((p, i) =>
+                      <button key={j+i} onClick={() => {moves.fromReinforcement(p.name, units, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton yellow'>
+                        {t('planets.' + p.name)}
+                      </button>)
+                  }
+                  else{
+                    return <div key={j}></div>
+                  }
+                })}
+
+                <button onClick={() => {setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton black'>
+                    {t('board.cancel')}
+                  </button>
+              </ListGroup>}
                     
 
               {t('cards.techno.' + args.techId + '.description')}
@@ -1180,7 +1255,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             <CardColumns style={{margin: '4rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '42rem', zIndex: '1'}}>
               {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && !race.isSpectator && <>
                 {leftPanel === 'techno' && <TechnologyDialog />}
-                {leftPanel === 'objectives' && <Card id='objListMain' className='subPanel' style={{ padding: '3rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                {leftPanel === 'objectives' && <Card id='objListMain' className='subPanel' style={{ padding: '4rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                     <CardTitle><h6 style={{textAlign: 'right', margin: 0}}>{t('board.victory_points').toUpperCase() + ': ' + VP}</h6></CardTitle>
                     <ObjectivesList mustSecObj={mustSecObj} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective: mustSecObj ? dropSecretObjective: ()=>{}}/>
                   </Card>}
@@ -1198,7 +1273,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} rid={G.races[playerID].rid}/>
                 </Card>}
               </>}
-              {!race.isSpectator && leftPanel === 'trade' && <Card className='subPanel' style={{ padding: '2rem 2rem 2rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+              {!race.isSpectator && leftPanel === 'trade' && <Card className='subPanel' style={{ padding: '3rem 2rem 2rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                 <TradePanel onTrade={moves.trade}/>
               </Card>}
 
@@ -1312,6 +1387,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                       {haveTechnology(race, 'PREDICTIVE_INTELLIGENCE') && <TechAction techId='PREDICTIVE_INTELLIGENCE'/>}
                       {haveTechnology(race, 'TRANSIT_DIODES') && <TechAction techId='TRANSIT_DIODES'/>}
                       {haveTechnology(race, 'INTEGRATED_ECONOMY') && <TechAction techId='INTEGRATED_ECONOMY'/>}
+                      {haveTechnology(race, 'INFANTRY2') && <TechAction techId='INFANTRY2'/>}
                     </CardsPager>
                     
                   </>}
@@ -1410,7 +1486,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                   </div>}
                   <div className='borderedPanel-vertical' style={{display: 'flex', height: 'max-content', backgroundColor: 'rgba(33, 37, 41, 0.95)',
                           width: '100%', flexDirection: 'column', justifyContent: 'flex-end', margin: '0 0 2rem 0', zIndex: 1}}>
-                    {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, minHeight: '13rem', marginBottom: 0}}>
+                    {race && subcardVisible === 'stuff' && <><Card style={{...CARD_STYLE, minHeight: '14rem', marginBottom: 0}}>
 
                         {midPanelInfo === 'tokens' && <>
                           {<h6 style={{textAlign: 'right', marginRight: '1rem'}}>{race.tokens.new + tempCt.new || 0} {t('board.unused')}</h6>}
@@ -1517,7 +1593,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         <button size='sm' onClick={()=>setMidPanelInfo('reinforce')} className={ 'styledButton ' + (midPanelInfo === 'reinforce' ? 'white':'black')} style={{flexBasis: '33%'}}>{t('board.reinforce').toUpperCase()}</button>
                       </ButtonGroup>
                       </>}
-                    {race && subcardVisible === 'persons' && <><Card style={{...CARD_STYLE, minHeight: '13rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
+                    {race && subcardVisible === 'persons' && <><Card style={{...CARD_STYLE, minHeight: '14rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
                         {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
                           <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
                           <CardText>{t('races.' + race.rid + '.agentAbility')}</CardText>
@@ -1539,7 +1615,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           <button onClick={()=>setAgentVisible('hero')} className={'styledButton ' + (agentVisible === 'hero' ? 'white':'black')} style={{flexBasis: '33%'}}>{t('board.hero').toUpperCase()}</button>
                       </ButtonGroup>
                     </>}
-                    {race && subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, minHeight: '15.5rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex'}}>
+                    {race && subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, minHeight: '16.5rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex'}}>
                         {race.abilities.map((a, i) => 
                           <CardText key={i} style={{fontSize: '90%'}}>
                             <b>{t('races.' + race.rid + '.' + a.id + '.label')}</b><br/>

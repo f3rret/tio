@@ -280,7 +280,8 @@
             "move_power_reserve": "Power reserve",
             "move_boost": "Boost",
             "go": "Send",
-            "has_occupied_planet": "has occupied planet"
+            "has_occupied_planet": "has occupied planet",
+            "no_ability": "no ability"
         },
         "cards": {
             "strategy": {

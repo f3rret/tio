@@ -279,7 +279,8 @@
             "move_power_reserve": "Запас хода",
             "move_boost": "Ускорение",
             "go": "Отправить",
-            "has_occupied_planet": "захватил планету"
+            "has_occupied_planet": "захватил планету",
+            "no_ability": "нет способности"
         },
         "cards": {
             "strategy": {

@@ -551,12 +551,12 @@ const CombatantForces = (args) => {
             <CardImg src={'race/' + race.rid + '.png'} style={{height: '10rem', width: 'auto', marginTop: '-1.5rem', marginLeft: '-1.5rem'}}/>
             {race.retreat && <CardText style={{position: 'absolute', left: '0.25rem', top: '3rem', background: race.retreat === 'cancel' ? 'gray':'darkslateblue', padding: '.5rem', fontFamily: 'Handel Gothic'}}>{t('board.retreat').toUpperCase()}</CardText>}
             <Container>
-                <Row className='row-cols-auto'>
+                <Row className='row-cols-auto' style={{alignItems: 'flex-start'}}>
                     {Object.keys(units).map((u, i) => {
                         const ucount = (Array.isArray(units[u]) ? units[u].length : units[u]);
                         if(!ucount) return null;
 
-                        let style = {marginLeft: '1rem', padding: 0, fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'};
+                        let style = {marginLeft: '1rem', minHeight: '7rem', padding: 0, fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'};
                         const deflt = {value: technologies[u].combat, count: technologies[u].shot || 1};
                         let ability = isInvasion ? (u === 'pds' ? technologies[u]['spaceCannon']: deflt):
                                         ['infantry', 'mech'].indexOf(u) === -1 ? 
@@ -612,8 +612,8 @@ const CombatantForces = (args) => {
                         return <Col className='col-md-auto' key={i} style={style}>
                             <span className={className} style={{position: 'relative'}}>
                                 {injury > 0 && <span className='hit_assigned1' style={{position: 'absolute', bottom: 0, color: 'red', width: '1.75rem', textAlign: 'right'}}>{injury}</span>}
-                                <CardImg style={{width: '5rem'}} src={'units/' + u.toUpperCase() + '.png'} />
-                                {ucount > 1 && <span style={{fontSize: 30, position: 'absolute', right: 0, bottom: 0, textShadow: '-2px 2px 3px black'}}>{ucount}</span>}
+                                <CardImg style={{width: '5rem', marginTop: '1rem'}} src={'units/' + u.toUpperCase() + '.png'} />
+                                {ucount > 1 && <span style={{fontSize: 30, position: 'absolute', right: 0, top: 0, textShadow: '-2px 2px 3px black'}}>{ucount}</span>}
                             </span>
                             <span style={{fontSize: 16, marginLeft: '1rem', minWidth: '7rem'}}>
                                 {ability && <>
@@ -624,6 +624,7 @@ const CombatantForces = (args) => {
                                     </p>
                                     <p style={{margin: 0}}>{t('board.shot') + ': ' + ability.count}</p>
                                 </>}
+                                {!ability && <div style={{fontSize: '70%', width: '5rem'}}>{t('board.no_ability')}</div>}
                                 
                                 {!G.dice[owner][u] && ability && String(playerID) === String(owner) &&
                                         <UncontrolledDropdown group> 

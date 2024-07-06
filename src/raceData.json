@@ -87,7 +87,8 @@
                 "combat": 6,
                 "sustain": false,
                 "shot": 1,
-                "effect": true
+                "effect": true,
+                "resurectAbove": 4
             }
         ],
         "promissory": ["MILITARY_SUPPORT"]

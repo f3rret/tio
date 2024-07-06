@@ -175,7 +175,7 @@ export const TIO = {
           });
         },
         endIf: ({ G, ctx }) => {
-          const cardsCount = ctx.numPlayers > 4 ? 1 : 2; // more than 4!
+          const cardsCount = ctx.numPlayers > 4 || (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') ? 1 : 2; // more than 4!
           return ctx.playOrder.every( r => G.races[r].strategy.length === cardsCount );
         }
       },
@@ -444,6 +444,10 @@ export const TIO = {
 
             if(exhaustedCards && exhaustedCards.indexOf('SELF_ASSEMBLY_ROUTINES')>-1){
               G.races[playerID].exhaustedCards.push('SELF_ASSEMBLY_ROUTINES');
+            }
+            if(exhaustedCards && exhaustedCards.indexOf('INFANTRY2')>-1){
+              G.races[playerID].exhaustedCards.push('INFANTRY2');
+              G.races[playerID].tempTechnoData = G.races[playerID].tempTechnoData.filter(td => td.id !== 'INFANTRY2');
             }
           },
           readyTechnology: ({G, playerID}, techId, exhaustedCards) => {

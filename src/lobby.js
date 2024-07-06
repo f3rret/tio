@@ -290,13 +290,13 @@ export const Lobby = (args)=> {
 
     const reconnect = useCallback(() => {
         setPlayerCreds(cookie.playerCreds);
-        setPlayerID('' + cookie.playerID);
+        setPlayerID(String(cookie.playerID));
         setPlayerName(cookie.playerName);
 
         if(prematchInfo.gameName === 'TIO'){
             setMatchID(prematchInfo.matchID);
 
-            args.setPlayerID(cookie.playerID);
+            args.setPlayerID(String(cookie.playerID));
             args.setMatchID(prematchInfo.matchID);
             args.setPlayerCreds(cookie.playerCreds);
         }

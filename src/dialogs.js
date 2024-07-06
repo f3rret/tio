@@ -124,13 +124,13 @@ export const AgendaDialog = ({ onConfirm, mini }) => {
         G.passedPlayers.lastIndexOf(playerID) > G.passedPlayers.indexOf(playerID), [G.passedPlayers, playerID]
     );
 
-    const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
+    //const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
     const a = useMemo(() => G['vote' + agendaNumber], [agendaNumber, G]);
 /*
 G.races[playerID].actions.length === agendaNumber &&
 {afterVoteActions && <p><i>{'You can now select one of your action card to use it after this round: '}<b>{afterVoteActions.join(', ')}</b></i></p>}
 */
-    return <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: mini ? '25%':'50%', position: 'absolute', margin: mini ? '5rem 0 0 50%':'10rem'}}>
+    return <Card className='borderedPanel bigDialog' style={{width: mini ? '25%':'50%'}}>
         <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>{t('board.agenda_vote')}</h3></CardTitle>
         <CardBody style={{display: 'flex'}}>
             <div style={{width: mini ? '100%':'50%', border: 'solid 1px', color: 'black', position: 'relative', padding: '1rem', marginBottom: '1rem', borderRadius: '5px'}}>
@@ -159,7 +159,7 @@ G.races[playerID].actions.length === agendaNumber &&
                             {a.elect === 'NonHome nonMecatol system' && G.tiles.map((t) => t.tid > 0 && t.tdata.type !== 'green' && t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
                         </Input>
                     </>}
-                    <p><Button color='success' disabled={!myTurn} onClick={confirmClick}>{t('board.confirm') + ' ' + votes + ' ' + t('board.votes')}</Button></p>
+                    <p><button className='styledButton green' disabled={!myTurn} onClick={confirmClick}>{t('board.confirm') + ' ' + votes + ' ' + t('board.votes')}</button></p>
                 </>}
             
                 <div style={{display: 'flex', flexDirection: 'column', marginTop: '2rem'}}>
@@ -189,7 +189,7 @@ G.races[playerID].actions.length === agendaNumber &&
                 
                 {!mini && G.races[playerID].actions.length < agendaNumber && <>
                     <br/><p><i>{t('board.use_card_or_pass')}</i></p>
-                    <Button disabled={!myTurn} color='dark' onClick={()=>moves.pass()}>{t('board.nav.pass')}</Button>
+                    <button disabled={!myTurn} className='styledButton black' onClick={()=>moves.pass()}>{t('board.nav.pass')}</button>
                 </>}
 
                 {a && a.decision && <h6 style={{color: 'white', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.5)'}}>
@@ -198,7 +198,7 @@ G.races[playerID].actions.length === agendaNumber &&
                 {afterVoteStage && <>
                     {afterVoteActions && <>
                         <br/><p><i>{t('board.use_card_or_pass')}</i></p>
-                        <Button color='dark' onClick={()=>moves.pass()}>{t('board.nav.pass')}</Button>
+                        <button className='styledButton black' onClick={()=>moves.pass()}>{t('board.nav.pass')}</button>
                     </>}
                     {!afterVoteActions && <>
                         <b>{t('board.awaiting_other_players')}...</b>
@@ -206,9 +206,9 @@ G.races[playerID].actions.length === agendaNumber &&
                 </>}
 
                 {!afterVoteStage && !actionCardStage && G.vote2 && !G.vote2.decision && agendaNumber < 2 && 
-                    <Button color='success' onClick={()=>setAgendaNumber(agendaNumber + 1)} style={{marginTop: '2rem'}}>{t('board.next')}</Button>}
+                    <button className='styledButton green' onClick={()=>setAgendaNumber(agendaNumber + 1)} style={{marginTop: '2rem'}}>{t('board.next')}</button>}
                 {myTurn && !afterVoteStage && !actionCardStage && G.vote2 && G.vote2.decision && agendaNumber === 2 && !iAmFinished &&
-                    <Button color='success' onClick={()=>moves.endVote()} style={{marginTop: '2rem'}}>{t('board.end')}</Button>}
+                    <button className='styledButton black' onClick={()=>moves.endVote()} style={{marginTop: '2rem'}}>{t('board.end')}</button>}
             </div>
             {!mini && <div style={{width: '50%', overflowY: 'auto', maxHeight: '30rem', marginLeft: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                 <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>

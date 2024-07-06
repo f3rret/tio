@@ -24,7 +24,7 @@ export const getInitRaces = (hexGrid, numPlayers, simpleColors) => {
   races = races.map( (r, idx) => {
     const rd = JSON.parse(JSON.stringify(raceData[r.rid]));
     return {rid: r.rid, ...rd, pid: idx, color: colors[idx], destroyedUnits: [], commodity: 0, strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
-    exploration:[], vp: 0, tg: 0, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []}
+    exploration:[], vp: 0, tg: 0, tokens: { t: 3, f: 3, s: 2, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: [], tempTechnoData: []}
   });
 
   races.forEach( (r, idx) => {
@@ -1127,7 +1127,7 @@ export const loadUnitsBackToSpace = (G, playerID, planet) => {
               }
             }
 
-            car.payload = car.payload.filter( p => p.id);
+            car.payload = car.payload.filter( p => p && p.id);
         }
         
       });
