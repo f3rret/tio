@@ -150,7 +150,7 @@ export const TIO = {
           if(!G.secretObjDeck.length){
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
             G.races.forEach(r => {
-              r.secretObjectives.push(...G.secretObjDeck.slice(-1)); //2!
+              r.secretObjectives.push(...G.secretObjDeck.splice(-1)); //2!
               //r.mustDropSecObj = true;
 
               //r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Drive the Debate'), players: []});

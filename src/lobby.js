@@ -402,6 +402,13 @@ export const Lobby = (args)=> {
         // eslint-disable-next-line
     }, []);
 
+    useEffect(() => {
+        let overlay = document.getElementById('tempOverlay');
+        if(overlay){
+          overlay.remove();
+        }
+    }, [])
+
     const { imagesPreloaded, lastLoaded, loadingError } = useImagePreloader(imgSrc.lobbyImages)
 
     if (!imagesPreloaded) {
