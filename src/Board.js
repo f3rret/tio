@@ -19,6 +19,9 @@ import { produce } from 'immer';
 import techData from './techData.json';
 import tileData from './tileData.json';
 import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep, SectorUnderAttack, PlanetUnderAttack } from './animated';
+import useImagePreloader, {getTilesAndRacesImgs} from './imgUtils.js';
+import imgSrc from './imgsrc.json';
+import { Blocks } from 'react-loader-spinner';
 
 
 export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages }) {
@@ -1226,28 +1229,32 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             </CardsPagerItem>
   }
 
+  useEffect(() => {
+    let overlay = document.getElementById('tempOverlay');
+    if(overlay){
+      overlay.remove();
+    }
+  }, [])
 
-  /**
-   * {mustSecObj && ctx.phase === 'acts' && 
-      <Card style={{...CARD_STYLE, backgroundColor: 'rgba(255, 255, 255, .75)', width: '30%', position: 'absolute', margin: '20rem 30rem', zIndex: 1}}>
-        <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>You must drop secret objective</h3></CardTitle>
-        <CardBody style={{display: 'flex', color: 'black'}}>
-          Game starts with 1 secret objective. You can't have more than 3 secret objectives.
-        </CardBody>
-      </Card>}
-   */
+  const { imagesPreloaded, lastLoaded, loadingError } = useImagePreloader([...imgSrc.boardImages, ...getTilesAndRacesImgs(G.tiles)])
 
-// <Graphics draw={draw}/>
-//{G.tiles.map((element, index) =>  )}
-  /**
-   * <Container key={index}>
-                              {selectedTile === index && <Sprite cacheAsBitmap={true} 
-                                          image={'/selected.png'} anchor={0} scale={.65} alpha={.5}
-                                          x={firstCorner.x + stagew/2 - element.w/2 - element.w/4 - 10} y={firstCorner.y + stageh/2 - 50}>
-                                          </Sprite>}
-                              <TileContent key={index} element={element} index={index} />
-                            </Container>
-   */
+  if (!imagesPreloaded) {
+    return <div style={{width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, backgroundColor: 'black', zIndex: 101, display: 'flex', justifyContent: 'center', alignItems: 'center', flexFlow: 'column'}}>
+              
+              <Blocks
+                  height="80"
+                  width="80"
+                  color="#4fa94d"
+                  ariaLabel="blocks-loading"
+                  wrapperStyle={{}}
+                  wrapperClass="blocks-wrapper"
+                  visible={true}
+                  />
+              {!loadingError && <span style={{fontFamily: 'system-ui', color: 'antiquewhite'}}>{lastLoaded}</span>}
+              {loadingError && <span style={{fontFamily: 'system-ui', color: 'red'}}>{'ошибка загрузки ' + loadingError}</span>}
+          </div>
+  }
+  
   return (
           <StateContext.Provider value={{G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>
             <Overlay/>      

@@ -34,6 +34,7 @@ const LangWrapper = () => {
 
   return (
     <LocalizationContext.Provider value={localizationContext}>
+      {ready && <div id='tempOverlay' style={{width: '100%', height: '100%', backgroundColor: 'black', position: 'absolute', top: 0, left: 0, zIndex: 101}}></div>}
       {ready && <App playerID={playerID} matchID={matchID} credentials={playerCreds}/>}
       {!ready && <Lobby setPlayerID={(p) => setPlayerID(p)} setMatchID={(p) => setMatchID(p)} setPlayerCreds={(p) => setPlayerCreds(p)}/>}
     </LocalizationContext.Provider>

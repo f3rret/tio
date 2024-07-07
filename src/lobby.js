@@ -12,12 +12,16 @@ import settings from '../package.json'
 import { PrematchApp } from './prematch/prematchApp';
 import { LocalizationContext, shuffle } from './utils';
 import { colors, trueColors } from './colors';
+import useImagePreloader from './imgUtils.js';
+import imgSrc from './imgsrc.json';
+import { Blocks } from 'react-loader-spinner';
 
 import './scss/custom.scss';
 
 let interval = null;
 
 export const Lobby = (args)=> {
+
 
     const { t, locale, setLocale } = useContext(LocalizationContext);
     const playerNames = useMemo(() => ['Alice', 'Bob', 'Cecil', 'David', 'Eva', 'Frank', 'Gregory', 'Heilen'], []);
@@ -34,6 +38,7 @@ export const Lobby = (args)=> {
     const [playerID, setPlayerID] = useState(null);
     const [playerName, setPlayerName] = useState(null);
     const [matchID, setMatchID] = useState(null);
+    const [autoJoinPrematch, setAutoJoinPrematch] = useState(false);
     const [cookie, setCookie] = useCookies(['matchID', 'playerID', 'playerCreds']);
     //const [playerName, setPlayerName] = useState(playerNames[0]);
     
@@ -190,6 +195,7 @@ export const Lobby = (args)=> {
         lobbyClient.createMatch('prematch', prematchInfo)
         .then(data => {
             if(data.matchID) {
+                setAutoJoinPrematch(true);
                 setPrematchID(data.matchID);
                 joinPrematch(data.matchID);
                 refreshMatchList();
@@ -396,6 +402,24 @@ export const Lobby = (args)=> {
         // eslint-disable-next-line
     }, []);
 
+    const { imagesPreloaded, lastLoaded, loadingError } = useImagePreloader(imgSrc.lobbyImages)
+
+    if (!imagesPreloaded) {
+      return <div style={{width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, backgroundColor: 'black', zIndex: 101, display: 'flex', justifyContent: 'center', alignItems: 'center', flexFlow: 'column'}}>
+                
+                <Blocks
+                    height="80"
+                    width="80"
+                    color="#4fa94d"
+                    ariaLabel="blocks-loading"
+                    wrapperStyle={{}}
+                    wrapperClass="blocks-wrapper"
+                    visible={true}
+                    />
+                {!loadingError && <span style={{fontFamily: 'system-ui', color: 'antiquewhite'}}>{lastLoaded}</span>}
+                {loadingError && <span style={{fontFamily: 'system-ui', color: 'red'}}>{'ошибка загрузки ' + loadingError}</span>}
+            </div>
+    }
 
     return <>
             {(!playerID || !matchID || !playerCreds) && <>
@@ -503,7 +527,7 @@ export const Lobby = (args)=> {
                         {!playerCreds && !prematchInfo.players && <button className='styledButton yellow' onClick={createPrematch}>{t('lobby.create_game')} <b className='bi-caret-right-square-fill' ></b></button>}
                         {!playerCreds && !playerID && prematchInfo && prematchInfo.players && cookie.matchID === prematchID &&
                             <button className='styledButton yellow' onClick={()=>reconnect()}>{t('lobby.reconnect')} <b className='bi-caret-right-square-fill' ></b></button>}
-                        {!playerCreds && !playerID && prematchInfo && prematchInfo.players &&
+                        {!playerCreds && !playerID && prematchInfo && prematchInfo.players && !autoJoinPrematch &&
                              <button className='styledButton yellow' disabled={prematchInfo.gameName !== 'prematch' || !prematchInfo.players.find(p => !p || !p.name)} onClick={()=>joinPrematch()}>{t('lobby.join_game')} <b className='bi-caret-right-square-fill' ></b></button>}
                         {playerCreds && <button className='styledButton yellow' style={{minWidth: '7rem'}} onClick={leavePrematch}><b className='bi-caret-left-square-fill' ></b> {t('lobby.leave')}</button>}
                        
