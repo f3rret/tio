@@ -11,6 +11,7 @@
             "random_map": "random map",
             "map_type_random": "random",
             "players": "Players",
+            "vp": "Victory points",
             "create_game": "Create game",
             "leave": "Leave",
             "start_game": "Start",
@@ -281,7 +282,10 @@
             "move_boost": "Boost",
             "go": "Send",
             "has_occupied_planet": "has occupied planet",
-            "no_ability": "no ability"
+            "no_ability": "no ability",
+            "game_is_over": "Game over",
+            "winner": "Winner",
+            "return_to_lobby": "Lobby"
         },
         "cards": {
             "strategy": {

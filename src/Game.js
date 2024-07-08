@@ -38,7 +38,8 @@ export const TIO = {
         TURN_ORDER: races.map((r,i)=>i),
         races,
         dice: (new Array(ctx.numPlayers)).map(a => { return {}}),
-        HexGrid: JSON.stringify(HexGrid)
+        HexGrid: JSON.stringify(HexGrid),
+        vp: setupData.vp || 10
       }
     },
 
@@ -1271,16 +1272,23 @@ export const TIO = {
     },
     
     endIf: ({ G, ctx }) => {
-        if (IsVictory(G, ctx)) {
-          return { winner: ctx.currentPlayer };
-        }
+      let result = 0;
+      let race = G.races[ctx.currentPlayer];
+
+      if(race){
+        race.secretObjectives.concat(G.pubObjectives).forEach(o => {
+          if(o && o.players && o.players.length > 0){
+            if(o.players.indexOf(ctx.currentPlayer) > -1) result += (o.vp ? o.vp : 1);
+          }
+        });
+  
+        result += race.vp;
+      }
+  
+      if(result >= G.vp) {
+        return { winner: ctx.currentPlayer };
+      }
         
     },
 };
 
-//const WIN_POINTS = 10;
-const IsVictory = (G, ctx) => {
-    
-  return false;//G.pubObjectives.filter( ag => ag.players.indexOf(ctx.currentPlayer) > -1 ) >= WIN_POINTS;
-
-}

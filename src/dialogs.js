@@ -2,10 +2,13 @@
 import { Card, CardImg,  CardTitle, CardSubtitle, CardBody, CardText, CardFooter, Button, ButtonGroup, Row, Col, UncontrolledCollapse, UncontrolledTooltip,
     Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Input, Label, Badge } from 'reactstrap';
 import { useState, useMemo, useCallback, useEffect, useRef, useContext } from 'react';
+import { useCookies } from 'react-cookie';
 import { produce } from 'immer';
 import cardData from './cardData.json';
 import techData from './techData.json';
 import { checkObjective, StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT } from './utils';
+//import { LobbyClient } from 'boardgame.io/client';
+import settings from '../package.json';
 
 export function PaymentDialog(args) {
     
@@ -848,7 +851,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, 
                             </div>
                         </div>}
                         {sid === 'IMPERIAL' && <div style={{display: 'flex', borderRadius: '5px', width: '35rem', margin: '1rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                            <ObjectivesList G={G} playerID={playerID} onSelect={selectObjective} selected={selectedRace} maxHeight='20rem'/>
+                            <ObjectivesList playerID={playerID} onSelect={selectObjective} selected={selectedRace} maxHeight='20rem'/>
                         </div>}
                     </div>}
                     {step === 2 && lastStep > 1 && <div style={{width: '100%', display: 'flex', flexFlow: 'column'}}>
@@ -1108,8 +1111,8 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect, rid}) => {
 
 }
 
-export const ObjectivesList = ({onSelect, selected, mustSecObj, maxHeight}) => {
-    const { G, playerID } = useContext(StateContext);
+export const ObjectivesList = ({playerID, onSelect, selected, mustSecObj, maxHeight}) => {
+    const { G } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
     /*const mustSecObj = useMemo(() => {
         if(G.races[playerID] && G.races[playerID].secretObjectives) return G.races[playerID].mustDropSecObj || G.races[playerID].secretObjectives.length > 3
@@ -1912,7 +1915,7 @@ export const Overlay = () => {
     const [ mem, setMem ] = useState(null);
 
     return <div id='overlay'  onClick={() => setMem(ctx.phase)} className={ctx.phase === mem ? 'none':'block'} >
-        <div id='overlay-text'>{t('board.phase_begin_' + ctx.phase)}</div>
+        {ctx.phase && <div id='overlay-text'>{t('board.phase_begin_' + ctx.phase)}</div>}
     </div>
 
 }
@@ -1966,3 +1969,62 @@ export const StrategyPick = ({actionCardStage}) => {
             </Card>
 
 }
+
+export const Gameover = (args) => {
+
+    const { t } = useContext(LocalizationContext);
+    const { ctx, G } = useContext(StateContext);
+    const { winner } = ctx.gameover;
+    //const lobbyClient = useMemo(() => new LobbyClient({ server: 'http://' + settings.ip + ':8000' }), []);
+    // eslint-disable-next-line
+    const [cookie, setCookie, removeCookie] = useCookies(['matchID', 'playerID', 'playerCreds']);
+    const leaveMatch = () => {
+        /*lobbyClient.leaveMatch('TIO', matchID, {
+            playerID, 
+            credentials
+        })
+        .then(() => {*/
+            removeCookie('matchID', {path: '/', domain: settings.ip});
+            removeCookie('playerID', {path: '/', domain: settings.ip});
+            removeCookie('playerCreds', {path: '/', domain: settings.ip});
+            window.location.reload();
+        /*})
+        .catch(console.err)*/
+    };
+
+    const winnerRace = useMemo(() => G.races[winner], [G.races, winner])
+
+    const VP = useMemo(() => {
+        let result = 0;
+    
+        if(winnerRace){
+            winnerRace.secretObjectives.concat(G.pubObjectives).forEach(o => {
+            if(o && o.players && o.players.length > 0){
+              if(o.players.indexOf(winner) > -1) result += (o.vp ? o.vp : 1);
+            }
+          });
+    
+          result += winnerRace.vp;
+        }
+    
+        return result;
+      }, [winner, winnerRace, G.pubObjectives]);
+
+    return  <Modal className='borderedPanel' style={{margin: '10rem auto', width: 'fit-content', maxWidth: 'unset', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} isOpen={args.isOpen}>
+                <ModalHeader style={{justifyContent: 'center'}}><span style={{fontSize: '150%'}}>{t('board.game_is_over')}</span></ModalHeader>
+                <ModalBody style={{display: 'flex', padding: '2rem'}}>
+                        <div>
+                            <h4 style={{marginBottom: '2rem'}}>{t('board.winner') + ': '}</h4>
+                            <CardImg src={'race/'+ winnerRace.rid +'.png'} style={{width: '205px'}}/>
+                            <h6 style={{marginTop: '1rem'}}>{t('board.victory_points') + ': ' + VP}</h6>
+                        </div>
+                        <div style={{ marginLeft: '3rem', padding: '1rem'}}>
+                            <ObjectivesList playerID={winner} onSelect={() => {}}/>
+                        </div>
+                </ModalBody>
+                <ModalFooter style={{padding: '1rem', display: 'flex', justifyContent: 'right'}}>
+                    <button className='styledButton yellow' style={{fontFamily: 'Handel Gothic'}} onClick={leaveMatch}>{t('board.return_to_lobby')}</button>
+                </ModalFooter>
+            </Modal>
+  
+  }

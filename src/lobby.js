@@ -130,7 +130,8 @@ export const Lobby = (args)=> {
                 matchName: t('lobby.new_game'),
                 edition: 'PoK',
                 map: 'random',
-                colors
+                colors,
+                vp: 10
             },
             gameName: 'prematch'
         });
@@ -300,6 +301,7 @@ export const Lobby = (args)=> {
         setPlayerName(cookie.playerName);
 
         if(prematchInfo.gameName === 'TIO'){
+            clearInterval(interval);
             setMatchID(prematchInfo.matchID);
 
             args.setPlayerID(String(cookie.playerID));
@@ -452,7 +454,7 @@ export const Lobby = (args)=> {
                                 <Col xs='4' style={{paddingRight: 0}}>{g.createdAt && (new Date(g.createdAt)).toLocaleString()}</Col>
                                 <Col xs='3'>{g.setupData && g.setupData.matchName}</Col>
                                 <Col xs='1'>{g.setupData && t('lobby.edition_' + g.setupData.edition)}</Col>
-                                <Col xs='2'>{g.setupData && t('lobby.map_type_' + g.setupData.map)}</Col>
+                                <Col xs='2'>{g.setupData && t('lobby.map_type_' + g.setupData.map) + ' (' + g.setupData.vp + ')'}</Col>
                                 <Col xs='2'>{g.players && g.players.filter(p => p.name).length + ' / ' + g.players.length}</Col>
                             </Row>
                             )}
@@ -470,7 +472,7 @@ export const Lobby = (args)=> {
                             <h3 className="text-center">{prematchInfo.setupData.matchName}</h3>
                             {prematchInfo.players && <CardText>
                                 {t('lobby.edition_' + prematchInfo.setupData.edition) + ' / ' + t('lobby.map_type_' + prematchInfo.setupData.map)
-                                        + ' / ' + prematchInfo.players.length}</CardText>}
+                                + ' / ' + prematchInfo.setupData.vp + ' / ' + prematchInfo.players.length}</CardText>}
                         </div>}
                     </CardTitle>
                     {!playerCreds && !prematchInfo.players && <CardBody>
@@ -502,6 +504,15 @@ export const Lobby = (args)=> {
                             </FormGroup>
                             <FormGroup check style={{marginLeft: '1rem'}}>
                                 <Input type='radio' onClick={() => setPrematchInfo({...prematchInfo, numPlayers: 8})} name='numPlayers' id='numPlayers8' /><Label for='numPlayers8' check>8</Label>
+                            </FormGroup>
+                        </div>
+                        <div style={{display: 'flex', marginTop: '2rem'}}>
+                            {t('lobby.vp')}:
+                            <FormGroup check style={{marginLeft: '1rem'}}>
+                                <Input type='radio' onClick={() => setPrematchInfo({...prematchInfo, vp: 10})} name='numPlayers' id='vp10' defaultChecked/><Label for='vp10' check>10</Label>
+                            </FormGroup>
+                            <FormGroup check style={{marginLeft: '1rem'}}>
+                                <Input type='radio' onClick={() => setPrematchInfo({...prematchInfo, vp: 14})} name='numPlayers' id='vp14'/><Label for='vp14' check>14</Label>
                             </FormGroup>
                         </div>
                     </CardBody>}

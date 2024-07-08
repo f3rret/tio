@@ -11,6 +11,7 @@
             "random_map": "случайная карта",
             "map_type_random": "случайная",
             "players": "Игроки",
+            "vp": "Победных очков",
             "create_game": "Далее",
             "leave": "Покинуть",
             "start_game": "Старт",
@@ -280,7 +281,10 @@
             "move_boost": "Ускорение",
             "go": "Отправить",
             "has_occupied_planet": "захватил планету",
-            "no_ability": "нет способности"
+            "no_ability": "нет способности",
+            "game_is_over": "Игра окончена",
+            "winner": "Победитель",
+            "return_to_lobby": "Лобби"
         },
         "cards": {
             "strategy": {

@@ -14,7 +14,8 @@ export const prematch = {
         return {
             matchName: setupData.matchName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, ''),
             edition: setupData.edition,
-            map: setupData.map
+            map: setupData.map,
+            vp: setupData.vp
         }
     }
 }
