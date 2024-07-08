@@ -509,10 +509,10 @@ export const Lobby = (args)=> {
                         <div style={{display: 'flex', marginTop: '2rem'}}>
                             {t('lobby.vp')}:
                             <FormGroup check style={{marginLeft: '1rem'}}>
-                                <Input type='radio' onClick={() => setPrematchInfo({...prematchInfo, vp: 10})} name='numPlayers' id='vp10' defaultChecked/><Label for='vp10' check>10</Label>
+                                <Input type='radio' onClick={() => changeOption('vp', {value:10})} name='vp' id='vp10' defaultChecked/><Label for='vp10' check>10</Label>
                             </FormGroup>
                             <FormGroup check style={{marginLeft: '1rem'}}>
-                                <Input type='radio' onClick={() => setPrematchInfo({...prematchInfo, vp: 14})} name='numPlayers' id='vp14'/><Label for='vp14' check>14</Label>
+                                <Input type='radio' onClick={() => changeOption('vp', {value:14})} name='vp' id='vp14'/><Label for='vp14' check>14</Label>
                             </FormGroup>
                         </div>
                     </CardBody>}
