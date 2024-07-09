@@ -35,7 +35,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -52,7 +52,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -69,7 +69,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -86,7 +86,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -103,7 +103,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -120,7 +120,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -137,7 +137,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -154,7 +154,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -171,7 +171,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -181,7 +181,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [200, 230],
                     "hitRadius": [70]
                 }
             ]
@@ -198,7 +198,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -208,7 +208,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -225,7 +225,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -235,7 +235,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -252,7 +252,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -262,7 +262,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -279,7 +279,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -289,7 +289,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -306,7 +306,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -316,7 +316,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -333,7 +333,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -343,7 +343,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 240],
                     "hitRadius": [70]
                 }
             ]
@@ -360,7 +360,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [95,85],
+                    "hitCenter": [95, 55],
                     "hitRadius": [70]
                 },
                 {
@@ -370,7 +370,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [230,140],
+                    "hitCenter": [230, 160],
                     "hitRadius": [70]
                 },
                 {
@@ -380,7 +380,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,230],
+                    "hitCenter": [240, 230],
                     "hitRadius": [70]
                 }
             ]
@@ -403,7 +403,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [120]
                 }
             ]
@@ -419,7 +419,7 @@
                     "trait": "industrial",
                     "specialty": "cybernetic",
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [70]
                 }
             ]
@@ -435,7 +435,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [70]
                 }
             ]
@@ -451,7 +451,7 @@
                     "trait": "industrial",
                     "specialty": "propulsion",
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [70]
                 }
             ]
@@ -467,7 +467,7 @@
                     "trait": "industrial",
                     "specialty": "biotic",
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [70]
                 }
             ]
@@ -483,7 +483,7 @@
                     "trait": "industrial",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [70]
                 }
             ]
@@ -499,7 +499,7 @@
                     "trait": "hazardous",
                     "specialty": "warfare",
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [70]
                 }
             ]
@@ -515,7 +515,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 }
             ]
@@ -531,7 +531,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 }
             ]
@@ -557,7 +557,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -583,7 +583,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240, 210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -609,7 +609,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -625,7 +625,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -635,7 +635,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -651,7 +651,7 @@
                     "trait": "industrial",
                     "specialty": "cybernetic",
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -661,7 +661,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -677,7 +677,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -687,7 +687,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -703,7 +703,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -713,7 +713,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -729,7 +729,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -739,7 +739,7 @@
                     "trait": "industrial",
                     "specialty": "propulsion",
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -755,7 +755,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -765,7 +765,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -781,7 +781,7 @@
                     "trait": "industrial",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -791,7 +791,7 @@
                     "trait": "industrial",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -807,7 +807,7 @@
                     "trait": "industrial",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -817,7 +817,7 @@
                     "trait": "hazardous",
                     "specialty": "warfare",
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -833,7 +833,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -843,7 +843,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -942,7 +942,7 @@
                     "influence": 2,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -959,7 +959,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -976,7 +976,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -993,7 +993,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -1010,7 +1010,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [100]
                 }
             ]
@@ -1027,7 +1027,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,135],
+                    "hitCenter": [180, 135],
                     "hitRadius": [70]
                 }
             ]
@@ -1044,7 +1044,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -1054,7 +1054,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [200, 230],
                     "hitRadius": [70]
                 }
             ]
@@ -1071,7 +1071,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [85,145],
+                    "hitCenter": [85, 145],
                     "hitRadius": [70]
                 },
                 {
@@ -1081,7 +1081,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [230,235],
+                    "hitCenter": [230, 235],
                     "hitRadius": [70]
                 },
                 {
@@ -1091,7 +1091,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [220,90],
+                    "hitCenter": [220, 90],
                     "hitRadius": [70]
                 }
             ]
@@ -1107,7 +1107,7 @@
                     "trait": "hazardous",
                     "specialty": "propulsion",
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [70]
                 }
             ]
@@ -1123,7 +1123,7 @@
                     "trait": "industrial",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [70]
                 }
             ]
@@ -1139,7 +1139,7 @@
                     "trait": "industrial",
                     "specialty": "warfare",
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [70]
                 }
             ]
@@ -1155,7 +1155,7 @@
                     "trait": "cultural",
                     "specialty": "cybernetic",
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [70]
                 }
             ]
@@ -1171,7 +1171,7 @@
                     "trait": "cultural",
                     "specialty": "biotic",
                     "legendary": false,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [70]
                 }
             ]
@@ -1187,7 +1187,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [145,95],
+                    "hitCenter": [145, 95],
                     "hitRadius": [70]
                 }
             ]
@@ -1203,7 +1203,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": true,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [110]
                 }
             ]
@@ -1219,7 +1219,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": true,
-                    "hitCenter": [180,150],
+                    "hitCenter": [180, 150],
                     "hitRadius": [110]
                 }
             ]
@@ -1236,7 +1236,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [150,140],
+                    "hitCenter": [150, 140],
                     "hitRadius": [70]
                 }
             ]
@@ -1253,7 +1253,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [155,140],
+                    "hitCenter": [155, 140],
                     "hitRadius": [60]
                 }
             ]
@@ -1269,7 +1269,7 @@
                     "trait": "industrial",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -1279,7 +1279,7 @@
                     "trait": "industrial",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -1295,7 +1295,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -1305,7 +1305,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -1321,7 +1321,7 @@
                     "trait": "industrial",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -1331,7 +1331,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -1347,7 +1347,7 @@
                     "trait": "industrial",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -1357,7 +1357,7 @@
                     "trait": "industrial",
                     "specialty": "warfare",
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -1373,7 +1373,7 @@
                     "trait": "cultural",
                     "specialty": "cybernetic",
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -1383,7 +1383,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -1399,7 +1399,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [140,90],
+                    "hitCenter": [140, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -1409,7 +1409,7 @@
                     "trait": "cultural",
                     "specialty": "propulsion",
                     "legendary": false,
-                    "hitCenter": [240,210],
+                    "hitCenter": [210, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -1425,7 +1425,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [90,150],
+                    "hitCenter": [90, 150],
                     "hitRadius": [70]
                 },
                 {
@@ -1435,7 +1435,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [230,150],
+                    "hitCenter": [230, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -1445,7 +1445,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [230,250],
+                    "hitCenter": [230, 240],
                     "hitRadius": [70]
                 }
             ]
@@ -1461,7 +1461,7 @@
                     "trait": "hazardous",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [230,245],
+                    "hitCenter": [230, 245],
                     "hitRadius": [70]
                 },
                 {
@@ -1471,7 +1471,7 @@
                     "trait": "industrial",
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [225,100],
+                    "hitCenter": [225, 90],
                     "hitRadius": [70]
                 },
                 {
@@ -1481,7 +1481,7 @@
                     "trait": "industrial",
                     "specialty": "biotic",
                     "legendary": false,
-                    "hitCenter": [95,140],
+                    "hitCenter": [85, 140],
                     "hitRadius": [70]
                 }
             ]
@@ -1532,7 +1532,7 @@
                     "trait": "cultural",
                     "specialty": null,
                     "legendary": true,
-                    "hitCenter": [210,140],
+                    "hitCenter": [210, 140],
                     "hitRadius": [60]
                 }
             ]

@@ -18,7 +18,7 @@ import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bomb
 import { produce } from 'immer';
 import techData from './techData.json';
 import tileData from './tileData.json';
-import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep, SectorUnderAttack, PlanetUnderAttack } from './animated';
+import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep, SectorUnderAttack, PlanetUnderAttack, SelectedPlanet } from './animated';
 import useImagePreloader, {getTilesAndRacesImgs} from './imgUtils.js';
 import imgSrc from './imgsrc.json';
 import { Blocks } from 'react-loader-spinner';
@@ -776,7 +776,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         
         
         {element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map((p,i) => { 
-          return p.hitCenter && <Sprite image={'icons/empty.png'} scale={1} key={i} width={p.hitRadius * 2} height={p.hitRadius * 2} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}
+          return p.hitCenter && <Container x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}>
+            {selectedTile === index && selectedPlanet === i && <SelectedPlanet radius={p.hitRadius}/>}
+            <Sprite image={'icons/empty.png'} scale={1} key={i} width={p.hitRadius * 2} height={p.hitRadius * 2} 
             interactive={true} pointerdown={ (e)=>tileClick(e, index, i) }>
               
               <Container sortableChildren={true} x={0} y={50}>
@@ -837,6 +839,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 </Container>}
   
             </Sprite>
+            </Container>
           }
         )}
         
@@ -1299,7 +1302,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               {race.secretObjectiveConfirm && (ctx.phase !== 'agenda' || isMyTurn) && <ChoiceDialog args={race.secretObjectiveConfirm} onSelect={(i)=>moves.secretObjectiveConfirm(race.secretObjectiveConfirm.oid, i)}/>}
               
               {strategyStage && <StrategyDialog R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
-                    onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}/>}
+                    onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}  selectedPlanet={selectedPlanet}/>}
               {actionCardStage && <ActionCardDialog selectedTile={selectedTile} selectedPlanet={selectedPlanet} selectedUnit={advUnitView}/> }
               
               {!race.secretObjectiveConfirm && <>

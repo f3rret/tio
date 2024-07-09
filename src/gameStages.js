@@ -1012,7 +1012,9 @@ export const ACTS_STAGES = {
         }
         
         if(String(ctx.currentPlayer) !== String(playerID)){
-          G.races[playerID].tokens.s--;
+          if(G.strategy !== 'LEADERSHIP'){
+            G.races[playerID].tokens.s--;
+          }
         }
         
         if(Object.keys(ctx.activePlayers).length === 1){

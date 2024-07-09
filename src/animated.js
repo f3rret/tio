@@ -16,6 +16,22 @@ export const SelectedHex = ({x, y}) => {
 
 };
 
+export const SelectedPlanet = ({radius}) => {
+
+    const [sc, setSc] = useState(0);
+    const [sign, setSign] = useState(1);
+
+    useTick(delta => setSc(r => {
+        if(sc <= -0.5) setSign(1);
+        else if(sc >= 0.5) setSign(-1);
+
+        return r + (0.01 * delta * sign);
+    }));
+
+    return <Sprite zIndex={4} image={'selected_planet.png'} anchor={.5} x={radius} y={radius} width={radius*3 + sc*10} height={radius*3 + sc*10} alpha={.5}/>
+
+};
+
 export const ActiveHex = ({x, y}) => {
 
     //const [rot, setRot] = useState(0);

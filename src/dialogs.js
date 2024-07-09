@@ -221,7 +221,7 @@ G.races[playerID].actions.length === agendaNumber &&
 
 }
 
-export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, onComplete, onDecline }) => {
+export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlanet, onComplete, onDecline }) => {
 
     const {G, ctx, playerID, exhaustedCards, PLANETS, UNITS} = useContext(StateContext);
     const {t} = useContext(LocalizationContext);
