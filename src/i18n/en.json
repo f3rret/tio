@@ -285,7 +285,8 @@
             "no_ability": "no ability",
             "game_is_over": "Game over",
             "winner": "Winner",
-            "return_to_lobby": "Lobby"
+            "return_to_lobby": "Lobby",
+            "select_planet_you_own": "Select planet you own"
         },
         "cards": {
             "strategy": {

@@ -284,7 +284,8 @@
             "no_ability": "нет способности",
             "game_is_over": "Игра окончена",
             "winner": "Победитель",
-            "return_to_lobby": "Лобби"
+            "return_to_lobby": "Лобби",
+            "select_planet_you_own": "Укажите планету под вашим контролем"
         },
         "cards": {
             "strategy": {

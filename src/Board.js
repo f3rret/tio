@@ -81,9 +81,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     const arr = [];
     G.tiles.forEach( t => {
       if(t.tdata.planets && t.tdata.planets.length){
-        t.tdata.planets.forEach(p => {
+        t.tdata.planets.forEach((p, pidx) => {
           if(p.occupied == playerID){
-            arr.push({...p, tid: t.tid});
+            arr.push({...p, tid: t.tid, pidx});
           }
         })
       }
@@ -363,7 +363,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       setGroundUnitSelected({});
     }
     setSelectedTile(index);
-    setSelectedPlanet(planetIndex);
+    setSelectedPlanet(planetIndex === undefined ? -1:planetIndex);
   }
 
 
@@ -776,9 +776,9 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
         
         
         {element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map((p,i) => { 
-          return p.hitCenter && <Container x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}>
+          return p.hitCenter && <Container key={i} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}>
             {selectedTile === index && selectedPlanet === i && <SelectedPlanet radius={p.hitRadius}/>}
-            <Sprite image={'icons/empty.png'} scale={1} key={i} width={p.hitRadius * 2} height={p.hitRadius * 2} 
+            <Sprite image={'icons/empty.png'} scale={1} width={p.hitRadius * 2} height={p.hitRadius * 2} 
             interactive={true} pointerdown={ (e)=>tileClick(e, index, i) }>
               
               <Container sortableChildren={true} x={0} y={50}>

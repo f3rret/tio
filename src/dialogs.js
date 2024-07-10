@@ -6,7 +6,7 @@ import { useCookies } from 'react-cookie';
 import { produce } from 'immer';
 import cardData from './cardData.json';
 import techData from './techData.json';
-import { checkObjective, StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT } from './utils';
+import { checkObjective, StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT, getPlanetByName } from './utils';
 //import { LobbyClient } from 'boardgame.io/client';
 import settings from '../package.json';
 
@@ -424,7 +424,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
             }
         }
         else if(sid === 'CONSTRUCTION'){
-            if(step === 1){
+            /*if(step === 1){
                 setEx(produce(ex, draft => {
                     if(draft[pname]){
                         delete draft[pname];
@@ -445,7 +445,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
                         draft[pname] = 'pds';
                     }
                 }));
-            }
+            }*/
         }
         if(sid === 'WARFARE'){
             if(step === 1){
@@ -539,10 +539,34 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
             if(step === 1 && isMine){
                 const keys = Object.keys(ex);
                 stopThere = ! (keys.length > 0 && (ex[keys[0]] === 'pds' || ex[keys[0]] === 'spacedock'))
+                if(!stopThere){
+                    const planet = getPlanetByName(G.tiles, keys[0]);
+                    
+                    if(planet){
+                        if(String(planet.occupied) !== String(playerID)){
+                            stopThere = true;
+                        }
+                        else if(ex[keys[0]] === 'spacedock'){
+                            if(planet.units && planet.units['spacedock'] && planet.units['spacedock'].length){
+                                stopThere = true;
+                            }
+                        }
+                    }
+                    else{
+                        stopThere = true;
+                    }
+                }
             }
             else if(step === 2){
                 const keys = Object.keys(ex2);
                 stopThere = ! (keys.length > 0 && (ex2[keys[0]] === 'pds'))
+
+                if(!stopThere){
+                    const planet = getPlanetByName(G.tiles, keys[0]);
+                    if(!planet){
+                        stopThere = true;
+                    }
+                }
             }
         }
         else if(sid === 'WARFARE'){
@@ -745,6 +769,26 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
     // eslint-disable-next-line
     }, [step]);
 
+    useEffect(() => {
+        if(sid === 'CONSTRUCTION' && selectedTile > -1){
+            const tile = G.tiles[selectedTile];
+            if(tile && tile.tdata){
+                const planet = tile.tdata.planets[selectedPlanet];
+
+                if(planet && planet.name){
+                    if(step === 1){
+                        setEx({[planet.name]: 'pds'});
+                        setEx2({[planet.name]: 'pds'});
+                    }
+                    else if(step === 2){
+                        setEx2({[planet.name]: 'pds'});
+                    }
+                }
+            }
+        }
+
+    }, [selectedPlanet, selectedTile, sid, step, G.tiles])
+
     return (
         <Card className='borderedPanel bigDialog' style={{maxWidth: '60%'}}>
               <CardTitle style={{borderBottom: '1px solid ' + getStratColor(sid, '.6'), color: 'black'}}><h3>{t('cards.strategy.' + sid + '.label')}</h3></CardTitle>
@@ -788,22 +832,21 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
                             <RaceList races={G.races} onClick={raceRowClick} selected={selectedRace} speaker={G.speaker}/>
                         </div>}
                         {sid === 'CONSTRUCTION' && <div style={{display: 'flex', flexDirection: 'row', marginTop: '2rem'}}>
-                            {selectedTile === -1 && <h5 style={{margin: '2rem'}}>{t('board.select_system')}</h5>}
-                            {selectedTile > -1 && <><div style={{width: '60%', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                                {selectedTile > -1 && <CardImg style={{width: '75%'}} src={'tiles/ST_'+G.tiles[selectedTile].tid+'.png'} />}
-                            </div>
-                            <div style={{width: '40%'}}>
-                                {selectedTile > -1 && <div style={{ overflowY: 'auto', height: '50%', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                                    <PlanetsRows PLANETS={PLANETS.filter(p => p.tid === G.tiles[selectedTile].tid)} onClick={planetRowClick} exhausted={ex} variant='small'/>
+                            {(selectedTile === -1 || selectedPlanet === -1) && <h5 style={{margin: '2rem'}}>{t('board.click_planet')}</h5>}
+
+                            {selectedTile > -1 && selectedPlanet > -1 && <div style={{display: 'flex', flexFlow: 'column', width: '100%'}}>
+                                <div style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', height: '3.25rem', padding: '0 1rem'}}>
+                                    <PlanetsRows PLANETS={PLANETS.filter(p => p.tid === G.tiles[selectedTile].tid && p.pidx === selectedPlanet)} onClick={()=>{}} exhausted={ex} emptyListMsg={t('board.select_planet_you_own')}/>
+                                </div>
+                            
+                                {Object.keys(ex).length > 0 && <div style={{padding: '2rem 0', display: 'flex', justifyContent: 'center'}}>
+                                    
+                                    <button className={'styledButton ' + (ex[Object.keys(ex)[0]] === 'pds' ? 'green':'black')} onClick={()=>setEx(produce(ex, draft => {draft[Object.keys(ex)[0]] = 'pds'}))} style={{}}>{t('cards.techno.PDS.label')}</button>
+
+                                    <button className={'styledButton ' + (ex[Object.keys(ex)[0]] === 'spacedock' ? 'green':'black')} onClick={()=>setEx(produce(ex, draft => {draft[Object.keys(ex)[0]] = 'spacedock'}))} style={{}}>{t('cards.techno.SPACEDOCK.label')}</button>
+
                                 </div>}
-                                {Object.keys(ex).length > 0 && <div style={{padding: '1rem 0 0 0', height: '50%', display: 'flex', justifyContent: 'space-between'}}>
-                                    <Button onClick={()=>setEx(produce(ex, draft => {draft[Object.keys(ex)[0]] = 'pds'}))} color={ex[Object.keys(ex)[0]] === 'pds' ? 'dark':'' } 
-                                        style={{padding: 0, width: '49%', border: 'none', borderRadius: '5px'}}><img alt='pds' style={{width: '100%'}} src='units/PDS.png'/></Button>
-                                    <Button onClick={()=>setEx(produce(ex, draft => {draft[Object.keys(ex)[0]] = 'spacedock'}))} color={ex[Object.keys(ex)[0]] === 'spacedock' ? 'dark':'' } 
-                                        style={{padding: 0, width: '49%', border: 'none', borderRadius: '5px'}}><img alt='spacedock' style={{width: '100%'}} src='units/SPACEDOCK.png'/></Button>
-                                </div>}
-                            </div>
-                            </>}
+                            </div>}
                         </div>}
                         {sid === 'TRADE' && <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column', padding: '2rem'}}>
                             <h5 style={{margin: '1rem'}}>{t('board.you_gain') + ': '}</h5>
@@ -869,19 +912,17 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
                             )}
                         </div>}
                         {sid === 'CONSTRUCTION' && <div style={{display: 'flex', flexDirection: 'row', marginTop: '2rem'}}>
-                            {selectedTile === -1 && <h5 style={{margin: '2rem'}}>{t('board.select_system')}</h5>}
-                            {selectedTile > -1 && <><div style={{width: '60%', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                                {selectedTile > -1 && <CardImg style={{width: '75%'}} src={'tiles/ST_'+G.tiles[selectedTile].tid+'.png'} />}
-                            </div>
-                            <div style={{width: '40%'}}>
-                                {selectedTile > -1 && <div style={{ overflowY: 'auto', height: '50%', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                                    <PlanetsRows PLANETS={PLANETS.filter(p => p.tid === G.tiles[selectedTile].tid)} onClick={planetRowClick} exhausted={ex2} variant='small'/>
-                                </div>}
-                                <div style={{padding: '1rem 0 0 0', height: '50%', display: 'flex', justifyContent: 'space-between'}}>
-                                    <Button color='dark'style={{padding: 0, width: '49%', border: 'none', borderRadius: '5px'}}><img alt='pds' style={{width: '100%'}} src='units/PDS.png'/></Button>
+                            {(selectedTile === -1 || selectedPlanet === -1) && <h5 style={{margin: '2rem'}}>{t('board.click_planet')}</h5>}
+
+                            {selectedTile > -1 && selectedPlanet > -1 && <div style={{display: 'flex', flexFlow: 'column', width: '100%'}}>
+                                <div style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', height: '3.25rem', padding: '0 1rem'}}>
+                                    <PlanetsRows PLANETS={PLANETS.filter(p => p.tid === G.tiles[selectedTile].tid && p.pidx === selectedPlanet)} onClick={()=>{}} exhausted={ex2} emptyListMsg={t('board.select_planet_you_own')}/>
                                 </div>
-                            </div>
-                            </>}
+
+                                {Object.keys(ex).length > 0 && <div style={{padding: '2rem 0', display: 'flex', justifyContent: 'center'}}>
+                                    <button className={'styledButton green'} style={{}}>{t('cards.techno.PDS.label')}</button>
+                                </div>}
+                            </div>}
                         </div>}
                         {sid === 'TRADE' && <div style={{margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                             <RaceList races={G.races.filter(r => r.rid !== G.races[playerID].rid)} onClick={raceMultiRowClick} selected={selectedRace}/>
@@ -1296,7 +1337,7 @@ const PaymentCard = (args) => {
     </>
 }
 
-export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, infClick, specClick}) => {
+export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, infClick, specClick, emptyListMsg}) => {
 
     if(!onClick) onClick = ()=>{};
     if(!resClick) resClick = ()=>{};
@@ -1310,47 +1351,47 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
 
     if(PLANETS && PLANETS.length){
         return PLANETS.map((p,i) => {
-        let trait;
-        if(p.trait) trait = <img alt='trait' style={{width: '1.5rem'}} src={'icons/' + p.trait + '.png'}/>;
-        let specialty;
-        if(p.specialty) specialty = <img alt='specialty' style={{width: '1.5rem'}} src={'icons/' + p.specialty + '.png'}/>;
+            let trait;
+            if(p.trait) trait = <img alt='trait' style={{width: '1.5rem'}} src={'icons/' + p.trait + '.png'}/>;
+            let specialty;
+            if(p.specialty) specialty = <img alt='specialty' style={{width: '1.5rem'}} src={'icons/' + p.specialty + '.png'}/>;
 
-        let opac = '1';
-        if(exhausted[p.name] === 'pds' || exhausted[p.name] === 'spacedock'){
-            opac = p.exhausted ? '.25':'1';
-        }
-        else{
-            opac = p.exhausted || exhausted[p.name] ? (exhausted[p.name] === 'ready'  ? '1': '.25'):'1';
-        }
-        
-        return (<Row className='hoverable' onClick={()=>onClick(p.name)} key={i} 
-                        style={{cursor: 'default', paddingRight: '1rem', fontSize: '1.25rem', marginTop: '.25rem', lineHeight: '2.2rem', height: '2.75rem', background: exhausted[p.name] ? 'green':'',
-                        opacity: opac, color: 'white'}}>
-                    <Col xs='7'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/legendary_complete.png'}/>:'' } 
-                                {p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1 ? 
-                                    <img alt='dmz' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/dmz.png'}/>:'' } 
-                                {t('planets.' + p.name)}
-                                {p.attach && p.attach.length && <><Badge style={{margin: '0 .2rem', padding: '.3rem .5rem'}} color='success' pill id={p.name.replaceAll(' ', '_') + '_attach_badge'}>+</Badge>
-                                <UncontrolledTooltip target={'#' + p.name.replaceAll(' ', '_') + '_attach_badge'}>{p.attach.join(',')}</UncontrolledTooltip></>}
-                    </Col>
-                    <Col xs='1' onClick={(e)=>{if(specialty) specClick(e, p)}} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
-                    <Col xs='1' style={{padding: 0}}>{trait}</Col>
-                    {variant !== 'small' && <>
-                    <Col xs='1' onClick={(e)=>resClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', display: 'flex', alignItems: 'center'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
-                    <Col xs='1' onClick={(e)=>infClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', display: 'flex', alignItems: 'center'}}><b>{p.influence}</b></Col>
-                    
-                    {(!psArch || p.exhausted) && <Col />}
-                    {psArch && !p.exhausted && <Col style={{padding: 0, cursor: 'pointer', position: 'relative'}}>
-                        <button className='styledButton green' style={{width: '3rem', padding: 0, position: 'absolute', left: '.5rem', boxShadow: '-2px 0px 10px gold'}} onClick={(e)=>{e.stopPropagation(); moves.exhaustForTg(p.name)}}>
-                            <img style={{width: '1.5rem'}} src='icons/trade_good_1.png' alt='tg'/> 
-                        </button>
-                    </Col>}
-                    </>}
-                </Row>)
+            let opac = '1';
+            if(exhausted[p.name] === 'pds' || exhausted[p.name] === 'spacedock'){
+                opac = p.exhausted ? '.25':'1';
+            }
+            else{
+                opac = p.exhausted || exhausted[p.name] ? (exhausted[p.name] === 'ready'  ? '1': '.25'):'1';
+            }
+            
+            return (<Row className='hoverable' onClick={()=>onClick(p.name)} key={i} 
+                            style={{cursor: 'default', paddingRight: '1rem', fontSize: '1.25rem', marginTop: '.25rem', lineHeight: '2.2rem', height: '2.75rem', background: exhausted[p.name] ? 'green':'',
+                            opacity: opac, color: 'white'}}>
+                        <Col xs='7'>{p.legendary ? <img alt='legendary' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/legendary_complete.png'}/>:'' } 
+                                    {p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1 ? 
+                                        <img alt='dmz' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/dmz.png'}/>:'' } 
+                                    {t('planets.' + p.name)}
+                                    {p.attach && p.attach.length && <><Badge style={{margin: '0 .2rem', padding: '.3rem .5rem'}} color='success' pill id={p.name.replaceAll(' ', '_') + '_attach_badge'}>+</Badge>
+                                    <UncontrolledTooltip target={'#' + p.name.replaceAll(' ', '_') + '_attach_badge'}>{p.attach.join(',')}</UncontrolledTooltip></>}
+                        </Col>
+                        <Col xs='1' onClick={(e)=>{if(specialty) specClick(e, p)}} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
+                        <Col xs='1' style={{padding: 0}}>{trait}</Col>
+                        {variant !== 'small' && <>
+                        <Col xs='1' onClick={(e)=>resClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', display: 'flex', alignItems: 'center'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
+                        <Col xs='1' onClick={(e)=>infClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', display: 'flex', alignItems: 'center'}}><b>{p.influence}</b></Col>
+                        
+                        {(!psArch || p.exhausted) && <Col />}
+                        {psArch && !p.exhausted && <Col style={{padding: 0, cursor: 'pointer', position: 'relative'}}>
+                            <button className='styledButton green' style={{width: '3rem', padding: 0, position: 'absolute', left: '.5rem', boxShadow: '-2px 0px 10px gold'}} onClick={(e)=>{e.stopPropagation(); moves.exhaustForTg(p.name)}}>
+                                <img style={{width: '1.5rem'}} src='icons/trade_good_1.png' alt='tg'/> 
+                            </button>
+                        </Col>}
+                        </>}
+                    </Row>)
         })
     }
     else {
-        return <></>;
+        return <div style={{color: 'white', marginTop: '1rem'}}>{emptyListMsg}</div>;
     }
   }
 

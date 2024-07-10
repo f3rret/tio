@@ -32,8 +32,7 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
       </ButtonGroup>
  */
     return <>
-      {!chatVisible && messages && messages.length > 0 && <div onClick={()=>{setChatVisible(!chatVisible)}} style={{fontFamily: 'system-ui, arial', marginLeft: '1rem', width: '40rem', height: '3.5rem', 
-          overflow: 'hidden', padding: '.25rem 0 .25rem 1rem', position: 'fixed', bottom: '5rem', left: '3rem', }}>
+      {!chatVisible && messages && messages.length > 0 && <div onClick={()=>{setChatVisible(!chatVisible)}} style={{fontFamily: 'system-ui, arial', marginLeft: '1rem', width: '40rem', height: '3.25rem', lineHeight: '1.25rem', overflow: 'hidden', padding: '.25rem 0 .25rem 1rem', position: 'fixed', bottom: '5rem', left: '3rem' }}>
         {messages[0]}
       </div>}
       <div style={{position: 'fixed', bottom: '3rem', left: '3rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', zIndex: 1}}>
