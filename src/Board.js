@@ -942,11 +942,11 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   },[stratUnfold, rightBottomVisible]);*/
 
   useEffect(()=>{
-    if(mustSecObj || (ctx.phase === 'stats' && leftPanel !== 'objectives' && !mustAction)){
+    if(mustSecObj /*|| (ctx.phase === 'stats' && leftPanel !== 'objectives' && !mustAction)*/){
       setLeftPanel('objectives');
     }
     
-  }, [ctx.phase, leftPanel, mustAction, mustSecObj]);
+  }, [/*ctx.phase, leftPanel, mustAction, */mustSecObj]);
 
   const PREV_TECHNODATA = useRef([]);
   useEffect(() => {
@@ -1233,6 +1233,16 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }
 
   useEffect(() => {
+    console.log(ctx.phase);
+    if(ctx.phase === 'stats'){
+      setLeftPanel('objectives');
+    }
+    else if(ctx.phase === 'strat' || ctx.phase === 'agenda'){
+      setLeftPanel('');
+    }
+  }, [ctx.phase])
+
+  useEffect(() => {
     let overlay = document.getElementById('tempOverlay');
     if(overlay){
       overlay.remove();
@@ -1257,12 +1267,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               {loadingError && <span style={{fontFamily: 'system-ui', color: 'red'}}>{'ошибка загрузки ' + loadingError}</span>}
           </div>
   }
-  
+  //ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && 
   return (<StateContext.Provider value={{G, ctx, playerID, /*matchID, credentials,*/ moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>
               <Overlay/>      
               <MyNavbar />
               <CardColumns style={{margin: '4rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '42rem', zIndex: '1'}}>
-                {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && !race.isSpectator && <>
+                {!race.isSpectator && <>
                   {leftPanel === 'techno' && <TechnologyDialog />}
                   {leftPanel === 'objectives' && <Card id='objListMain' className='subPanel' style={{ padding: '4rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                       <CardTitle><h6 style={{textAlign: 'right', margin: 0}}>{t('board.victory_points').toUpperCase() + ': ' + VP + '/' + G.vp}</h6></CardTitle>

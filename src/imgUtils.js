@@ -34,7 +34,7 @@ export default function useImagePreloader(imageList) {
       for (const i of imageList) {
         imagesPromiseList.push(preloadImage(i, (p)=>setLastLoaded(p)))
       }
-  
+      
       try{
         await Promise.all(imagesPromiseList)
       }
