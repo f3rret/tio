@@ -87,6 +87,36 @@ body{
     padding: 0 2rem 6rem 2rem;
     font-family: 'Handel Gothic'
 }
+#bottomPanel{
+    width: 100%;
+    padding: 3rem 3rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    position: absolute;
+    bottom: 2.5rem
+}
+#bottomPanel button{
+    margin: 0;
+    color: burlywood;
+    text-decoration: none;
+    background: none;
+    border: none;
+}
+#about{
+    width: 100%;
+    background-color: rgba(0,0,0,0.95);
+    color: antiquewhite;
+    font-family: system-ui;
+}
+#about.active{
+    height: 100vh;
+    transition: height .25s ease-in;
+}
+#about.inactive{
+    height: 0vh;
+    transition: height .25s ease-in;
+}
 h3, h4, h5, h6 {
     font-family: 'Handel Gothic', arial, sans-serif;
 }

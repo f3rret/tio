@@ -61,8 +61,12 @@
             "system_weighting_help": "Pick Style is used to determine how tiles are weighted for when they are placed on the board. A higher weighted tile means that the hex is more important, and so (depending on the placement style) it is put closer to home worlds to facilitate available assets.\n***\n**Balanced:** A custom weight which favors resources and planet count more than anomalies. This more accurately factors in tech specialties and influence as trade-offs to the 'Resource' pick.\n***\n**Resource:** Tiles are ordered primarily by their resource values. Higher resource planets are more coveted, and so are more important.\n***\n**Influence:** Similar to 'Resource', tiles are ordered primarily by their influence values.\n***\n**Random:** Tiles are completely randomly ordered. Expect chaotic and unbalanced maps.",
             "ensure_anomalies_help": "Ensures that races get their beneficial anomalies\n***\nThis option makes it so that Muaat will always receive a supernova, Saar will always receive an asteroid field, Empyrean will always receive a nebulae and Vuil'Raith will always receive a gravity rift.",
             "randomize_priorities_help": "Randomizes the priority picks for each picking round.\n***\nNormally when placing tiles, this tool attempts to place the tiles so player 1 does not always get the best tiles. To do this, it follows the game setup rules and (in a 6 player game) player 1 gets to place tile 1 and 12, while player 6 gets to place tile 6 and 7.\n***\nTurning this on stops this from happening, and instead completely randomizes the placement order.",
-            "reverse_placement_help": "Reverses which tiles are placed first in placement order.\n***\nTiles are normally placed in priority (see randomize priority help). This reverses the order, so that the last picks are first, which generally has the effect of pushing the more valuable tiles towards the center of the galaxy."
-
+            "reverse_placement_help": "Reverses which tiles are placed first in placement order.\n***\nTiles are normally placed in priority (see randomize priority help). This reverses the order, so that the last picks are first, which generally has the effect of pushing the more valuable tiles towards the center of the galaxy.",
+            "team": "Team",
+            "about": "Mission",
+            "mission": "This project is an open public creation of fans of the strategic board game \"Twilight Imperium\" produced by Fantasy Flight Games. The project does not pursue commercial goals and is not a competitor to the original game. On the contrary, we fully advocate purchasing the original desktop version and joining the ranks of its fans.",
+            "mission_github": "The project source code is available in repository of",
+            "mission_vk": "The developer forum is available on the social network"
         },
         "board": {
             "nav": {

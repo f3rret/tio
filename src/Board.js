@@ -1233,7 +1233,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   }
 
   useEffect(() => {
-    console.log(ctx.phase);
     if(ctx.phase === 'stats'){
       setLeftPanel('objectives');
     }

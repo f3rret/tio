@@ -38,6 +38,7 @@ export const Lobby = (args)=> {
     const [playerID, setPlayerID] = useState(null);
     const [playerName, setPlayerName] = useState(null);
     const [matchID, setMatchID] = useState(null);
+    const [aboutVisible, setAboutVisible] = useState(false);
     const [autoJoinPrematch, setAutoJoinPrematch] = useState(false);
     const [cookie, setCookie] = useCookies(['matchID', 'playerID', 'playerCreds']);
     //const [playerName, setPlayerName] = useState(playerNames[0]);
@@ -558,7 +559,29 @@ export const Lobby = (args)=> {
                     {playerID && playerID !== '0' && prematchInfo.players[0] && prematchInfo.players[0].data && 
                         <MapOptionsRO {...prematchInfo.players[0].data.mapOptions}/>}
                 </Card>}
-            </div>
+                </div>
+                <div id='bottomPanel'>
+                    <button onClick={() => setAboutVisible(true)}>{t('lobby.about')}</button>
+                    <div id='about' className={aboutVisible ? 'active':'inactive'} onClick={() => setAboutVisible(false)}>
+                        <div style={{display: 'flex', padding: '8rem'}}>
+                            <div style={{flexBasis: '33%'}}>
+                                <h3 style={{margin: '3rem 0'}}>{t('lobby.team')}</h3>
+
+                                <h6>this is Изотов</h6>
+                                <h6>Aleksey Lola</h6>
+                                <h6>Владислав Б</h6>
+                                <h6>Дмитрий Харитонов</h6>
+                                <h6>shadow azray</h6>
+                            </div>
+                            <div style={{flexBasis: '67%'}}>
+                                <h3 style={{margin: '3rem 0'}}>{t('lobby.about')}</h3>
+                                <p>{t('lobby.mission')}</p>
+                                <p>{t('lobby.mission_github') + ' '}<a onClick={(e)=>e.stopPropagation()} href='https://github.com/f3rret/tio'>GitHub</a></p>
+                                <p>{t('lobby.mission_vk') + ' '}<a onClick={(e)=>e.stopPropagation()} href='https://vk.com/twionline'>Вконтакте</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </>}
         </>;
 }
