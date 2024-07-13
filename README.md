@@ -2,7 +2,7 @@
 
 ### `npm run serve`
 
-Server on port 8000 and 8080
+Server on port 8000
 
 ### `npm start`
 

@@ -675,6 +675,12 @@ export const haveTechnology = (race, techId) => {
 
 }
 
+export const haveAbility = (race, abilId) => {
+
+  return race.abilities.find(a => a.id === abilId);
+
+}
+
 export const enemyHaveTechnology = (races, players, myId, techId) => {
 
   const enemyId = Object.keys(players).find(k => String(k) !== String(myId));

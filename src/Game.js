@@ -952,7 +952,31 @@ export const TIO = {
               }
             }
           },
-          dropActionCard: dropACard
+          dropActionCard: dropACard,
+          useRacialAbility: ({G, playerID}, args) => {
+            const race = G.races[playerID];
+            race.actions.push(args.abilId);
+
+            if(args.abilId === 'ORBITAL_DROP'){
+              const {selectedTile, selectedPlanet} = args;
+              if(selectedTile > -1 && selectedPlanet > -1){
+                const tile = G.tiles[selectedTile];
+        
+                if(tile && tile.tdata && tile.tdata.planets){
+                  const planet = tile.tdata.planets[selectedPlanet];
+        
+                  if(planet && String(planet.occupied) === String(playerID)){
+                    race.tokens.s--;
+                    if(!planet.units) planet.units={};
+                    if(!planet.units.infantry) planet.units.infantry = [];
+                    planet.units.infantry.push({}, {});
+                  }
+                }
+              }
+            }
+
+
+          }
         },
         onEnd: ({ G }) => {
           G.tiles.forEach( t => t.tdata.tokens = []);
@@ -1011,7 +1035,9 @@ export const TIO = {
           G.races.forEach( r => { 
             if(r.exhaustedCards.indexOf('Political Stability') === -1) r.strategy = []; 
             r.initiative = undefined;
-            r.tokens.new += haveTechnology(r, 'HYPER_METABOLISM') ? 3:2; 
+            let c = haveTechnology(r, 'HYPER_METABOLISM') ? 3:2;
+            if(r.rid === 1) c++;
+            r.tokens.new += c;
           });
 
           G.passedPlayers = [];

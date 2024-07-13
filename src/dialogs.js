@@ -1374,14 +1374,14 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
                                     {p.attach && p.attach.length && <><Badge style={{margin: '0 .2rem', padding: '.3rem .5rem'}} color='success' pill id={p.name.replaceAll(' ', '_') + '_attach_badge'}>+</Badge>
                                     <UncontrolledTooltip target={'#' + p.name.replaceAll(' ', '_') + '_attach_badge'}>{p.attach.join(',')}</UncontrolledTooltip></>}
                         </Col>
-                        <Col xs='1' onClick={(e)=>{if(specialty) specClick(e, p)}} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
+                        <Col xs='1' onClick={(e)=>{if(specialty){specClick(e, p)}}} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
                         <Col xs='1' style={{padding: 0}}>{trait}</Col>
                         {variant !== 'small' && <>
                         <Col xs='1' onClick={(e)=>resClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/resources_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', display: 'flex', alignItems: 'center'}}><b style={{paddingLeft: '0.1rem'}}>{p.resources}</b></Col>
                         <Col xs='1' onClick={(e)=>infClick(e, p)} style={{cursor: 'pointer', background: 'url(icons/influence_bg.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', display: 'flex', alignItems: 'center'}}><b>{p.influence}</b></Col>
                         
                         {(!psArch || p.exhausted) && <Col />}
-                        {psArch && !p.exhausted && <Col style={{padding: 0, cursor: 'pointer', position: 'relative'}}>
+                        {psArch && !p.exhausted && specialty && <Col style={{padding: 0, cursor: 'pointer', position: 'relative'}}>
                             <button className='styledButton green' style={{width: '3rem', padding: 0, position: 'absolute', left: '.5rem', boxShadow: '-2px 0px 10px gold'}} onClick={(e)=>{e.stopPropagation(); moves.exhaustForTg(p.name)}}>
                                 <img style={{width: '1.5rem'}} src='icons/trade_good_1.png' alt='tg'/> 
                             </button>
@@ -1420,8 +1420,8 @@ export const GetTechType = (typ, race, tooltipMode, onSelect, selected) => {
       <ListGroup>
         {techs.map((t, i) => {
             let color = 'dark';
-            if(race.knownTechs.indexOf(t.id) > -1) color = 'success';
             if(selected.indexOf(t.id) > -1) color = 'warning';
+            if(race.knownTechs.indexOf(t.id) > -1) color = 'success';
             
             return <ListGroupItem onClick={()=>ItemOnClick(t)} key={i} style={{opacity: race.exhaustedCards.indexOf(t.id)>-1 ? .35:1, background: 'none', padding: '.25rem', color: 'white', border: 'none', borderBottom: 'solid 1px rgba(255,255,255,.15)'}} >
                 <Button size='sm' color={color} id={t.id} style={{width: '100%', fontSize: '.7rem', textAlign: 'left'}}>
@@ -1981,18 +1981,18 @@ export const StrategyPick = ({actionCardStage}) => {
                         if(sum < 7) r = true;
                         }
 
-                        return <ListGroupItem id={'strategyPick_'+key} key={idx} style={{background: 'none', display:'flex', justifyContent: 'flex-end', border: 'none', padding: '.25rem'}}>
-                                <div style={{width: 'auto'}}>
-                                    {r && r!== true && <div style={{position: 'absolute', left: '0', width: '100%', display: 'flex', alignItems: 'flex-end'}}>
-                                            <img alt='race icon' src={'race/icons/'+r.rid+'.png'} style={{width: '3rem', maxHeight: '3rem'}}/>
-                                            <h5 style={{marginLeft: '1rem', color: 'black'}}>{t('races.' + r.rid + '.name')}</h5>
-                                        </div>}
-                                </div>
-                                <button className='styledButton black' onClick={() => moves.pickStrategy(key)} 
+                        return <ListGroupItem key={idx} style={{background: 'none', display:'flex', justifyContent: 'flex-start', border: 'none', padding: '.25rem'}}>
+                                <button id={'strategyPick_'+key} className='styledButton black' onClick={() => moves.pickStrategy(key)} 
                                     style={{opacity: r ? '.5':'1', width: '12rem', height: '3.5rem', fontFamily: 'Handel Gothic', display: 'flex', alignItems: 'center'}}>
                                         <b style={{backgroundColor: getStratColor(key, .6), border: 'solid 1px', width: '1.5rem', height: '1.5rem', fontSize: '1.25rem', lineHeight: '1.25rem'}}>{idx+1}</b>
                                         <span style={{flex: 'auto'}}>{' ' + t('cards.strategy.' + key + '.label')}</span>
                                 </button>
+                                <div style={{flexGrow: 1, position: 'relative', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end'}}>
+                                    {r && r!== true && <>
+                                        <h5 style={{marginRight: '1rem', color: 'black'}}>{t('races.' + r.rid + '.name')}</h5>
+                                        <img alt='race icon' src={'race/icons/'+r.rid+'.png'} style={{width: '3rem', maxHeight: '3rem'}}/>
+                                    </>}
+                                </div>
                                 <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='right' target={'#strategyPick_' + key}>
                                     <CardText>{t("cards.strategy." + key + ".hit")}</CardText>
                                     <h6 style={{marginTop: '.5rem'}}>{t('board.primary')}:</h6>

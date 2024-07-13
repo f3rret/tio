@@ -1,4 +1,4 @@
-import { Card, CardImg,  CardTitle, CardBody, CardFooter, ButtonGroup, Button, Row, Col, Input, Modal, ModalFooter, ModalBody, Label } from 'reactstrap';
+import { Card, CardImg,  CardTitle, CardBody, CardFooter, ButtonGroup, Button, Row, Col, Input, Label } from 'reactstrap';
 import { useState, useMemo, useContext, useCallback, useEffect, useRef } from 'react';
 import { produce } from 'immer';
 //import techData from './techData.json';
@@ -7,7 +7,7 @@ import { neighbors } from './Grid.js'
 import { UnmeetReqs, PlanetsRows, GetTechType } from './dialogs.js';
 
 export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) => {
-    const {G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, PLANETS, UNITS} = useContext(StateContext);
+    const {G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, PLANETS, UNITS, selectedTech} = useContext(StateContext);
     const {t} = useContext(LocalizationContext);
     const [selection, setSelection] = useState();
     const [selection2, setSelection2] = useState();
@@ -52,9 +52,9 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                     });
                 }
                 else{
-                    adjSpec = Object.keys(exhausted);
+                    adjSpec = Object.keys(exhausted2);
                 }
-                
+
                 const ex2 = {};
                 ex2[selection.id] = selection; //ex2[selection] = technology;
                 const reqs = UnmeetReqs({separate: true, PLANETS, ex2, adjSpec, G, playerID: cardOwner});
@@ -63,7 +63,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
             }
 
         }
-    }, [G, card, cardOwner, PLANETS, selection, exhausted]);
+    }, [G, card, cardOwner, PLANETS, selection, exhausted2]);
 
     const myTarget = useMemo(() => {
         
@@ -483,21 +483,29 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
         }
     }, [card, exhaustTechCard, moves]);
 
+    useEffect(() => {
+        if(isMine && !card.target && ['Focused Research', 'Enigmatic Device', 'Plagiarize', 'Technology Rider'].includes(card.id)){
+            if(selectedTech && selectedTech.techno){
+                setSelection(selectedTech.techno)
+            }
+        }
+    }, [isMine, card, selectedTech])
+
     const haveSabotageCard = useMemo(() => G.races[playerID].actionCards && G.races[playerID].actionCards.find(c => c.id === 'Sabotage'), [G.races, playerID]);
     const isSabotaged = useMemo(() => {
         return card.reaction && Object.keys(card.reaction).find(pid => card.reaction[pid] === 'sabotage') !== undefined;
     }, [card]);
 
-    let style = {border: 'solid 1px rgba(74, 111, 144, 0.42)', maxWidth: '60%', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute', margin: '5rem'};
+    let style = {backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute'};
     if(card.when === 'COMBAT'){
         style = {...style, right: '25%', bottom: '5%'}
     }
 
-    return <Card style={style}>
+    return <Card style={style} className='borderedPanel bigDialog'>
                 <CardTitle style={{borderBottom: '1px solid coral', color: 'black'}}><h3>{t('board.action_card')}</h3></CardTitle>
-                <CardBody style={{display: 'flex', color: 'black', width: 'min-content'}}>
+                <CardBody style={{display: 'flex', color: 'black'}}>
                     {card.when !== 'COMBAT' && <div>
-                        <CardImg src={'race/'+ G.races[cardOwner].rid +'.png'} style={{width: '205px'}}/>
+                        <CardImg src={'race/'+ G.races[cardOwner].rid +'.png'} style={{width: '12rem'}}/>
                     </div>}
                     <div style={{display: 'flex', flexDirection: 'column', padding: '0 1rem 1rem 1rem', minWidth: '30rem'}}>
                         <h6 style={{margin: '0 0 1rem 1rem'}}>{card.when !== 'COMBAT' && t('board.when_' + card.when) + ':'}
@@ -515,22 +523,22 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown', 
                             'Unstable Planet', 'Uprising', 'Experimental Battlestation'].indexOf(card.id) > -1 && <PlanetInfo tidx={selectedTile} pidx={selectedPlanet}/>}
                             {['Ghost Ship', 'Tactical Bombardment', 'Unexpected Action', 'War Effort', 'In The Silence Of Space'].indexOf(card.id) > -1 && <TileInfo tidx={selectedTile}/>}
-                            {card.id === 'Focused Research' && <TechnologySelect  races={[G.races[playerID]]}  onSelect={setSelection} requirements={requirements} 
+                            {card.id === 'Focused Research' && <TechnologySelect  races={[G.races[playerID]]}  requirements={requirements} 
                                 exhausted={exhausted} setExhausted={setExhausted}/>}
                             {['Impersonation', 'Mining Initiative'].indexOf(card.id) > -1 && <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                                <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} /></div>}
+                                <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} specClick={(e,p) => planetsRowsClick2(p.name)} /></div>}
                             {['Insubordination', 'Spy', 'Forward Supply Base'].indexOf(card.id) > -1 && <PlayerSelect selected={selection} onSelect={setSelection}/>}
                             {['Lucky Shot'].indexOf(card.id) > -1 && <UnitInfo selectedUnit={selectedUnit} />}
                             {card.id === 'Enigmatic Device' && <>
-                                <TechnologySelect onSelect={setSelection} races={[G.races[playerID]]}/>
+                                <TechnologySelect races={[G.races[playerID]]} requirements={requirements}/>
                                 <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                                    <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} />
+                                    <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} specClick={(e,p) => planetsRowsClick2(p.name)}/>
                                 </div>
                                 </>}
                             {card.id === 'Plagiarize' && <>
-                                <TechnologySelect onSelect={setSelection} races={myNeighbors.map(n => G.races[n])}/>
+                                <TechnologySelect races={myNeighbors.map(n => G.races[n])}/>
                                 {myNeighbors.length > 0 && <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                                    <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} />
+                                    <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} specClick={(e,p) => planetsRowsClick2(p.name)}/>
                                 </div>}
                                 </>}
                             {card.id === 'Repeal Law' && <LawSelect onSelect={(law)=>setSelection(law)}/>}
@@ -559,7 +567,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             </>}
                             {card.id === 'Technology Rider' && <>
                                 <Predict onSelect={setSelection2}/>
-                                <TechnologySelect onSelect={setSelection} races={[G.races[playerID]]} requirements={requirements} exhausted={exhausted} setExhausted={setExhausted}/>
+                                <TechnologySelect races={[G.races[playerID]]} requirements={requirements} exhausted={exhausted} setExhausted={setExhausted}/>
                             </>}
                             {['Imperial Rider', 'Leadership Rider', 'Politics Rider', 'Sanction', 'Trade Rider'].indexOf(card.id) > -1 && <Predict onSelect={setSelection}/>}
                         </div>}
@@ -575,7 +583,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             {['Cripple Defenses', 'Frontline Deployment', 'Plague', 'Reactor Meltdown', 'Unstable Planet', 'Uprising', 
                             'Experimental Battlestation'].indexOf(card.id) > -1 && <PlanetInfo tidx={card.target.tidx} pidx={card.target.pidx}/>}
                             {['Ghost Ship', 'Tactical Bombardment', 'Unexpected Action', 'War Effort', 'In The Silence Of Space', 'Skilled Retreat'].indexOf(card.id) > -1 && <TileInfo tidx={card.target.tidx}/>}
-                            {['Focused Research', 'Plagiarize', 'Enigmatic Device'].indexOf(card.id) > -1 && <div style={{padding: '1rem'}}><OneTechLine technology={card.target.tech}/></div>}
+                            {['Focused Research', 'Plagiarize', 'Enigmatic Device'].indexOf(card.id) > -1 && <div style={{padding: '1rem'}}><OneTechLine technology={card.target.tech} rid={G.races[ctx.currentPlayer].rid}/></div>}
                             {['Impersonation', 'Mining Initiative'].indexOf(card.id) > -1 && <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                                 <PlanetsRows PLANETS={card.target.exhausted} /></div>}
                             {['Insubordination', 'Spy', 'Forward Supply Base'].indexOf(card.id) > -1 && <OneLinePlayerInfo race={G.races[card.target.playerID]}/>}
@@ -641,11 +649,11 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                 </CardBody>
                 <CardFooter style={{background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid coral'}}>
                     {isMine && <>
-                        <Button color='danger' disabled={isSabotaged} onClick={card.when === 'COMBAT' ? ()=>moves.actionCardCancel() : ()=>moves.cancel()}>{t('board.cancel')}</Button>
-                        {!card.target && <Button color='success' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardNext(myTarget) : ()=>moves.next(myTarget)} disabled={!myTarget}>{t('board.next')}</Button>}
+                        <button className='styledButton red' disabled={isSabotaged} onClick={card.when === 'COMBAT' ? ()=>moves.actionCardCancel() : ()=>moves.cancel()}>{t('board.cancel')}</button>
+                        {!card.target && <button className='styledButton green' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardNext(myTarget) : ()=>moves.next(myTarget)} disabled={!myTarget}>{t('board.next')}</button>}
                     </>}
                     {!isMine && !card.reaction[playerID] && <>
-                        <Button style={{alignSelf: 'flex-start'}} disabled={!haveSabotageCard} color='danger' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardSabotage() : ()=>moves.sabotage()}>{t('board.sabotage')}</Button>
+                        <button className='styledButton red' style={{alignSelf: 'flex-start'}} disabled={!haveSabotageCard} onClick={card.when === 'COMBAT' ? ()=>moves.actionCardSabotage() : ()=>moves.sabotage()}>{t('board.sabotage')}</button>
                     </>}
                     {((isMine && card.target) || !isMine) && <div>
                         {Object.keys(card.reaction).map((pid, i) => {
@@ -655,10 +663,10 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                         {isMine && Object.keys(card.reaction).length === 0 && <p style={{color: 'black'}}><b>{t('board.awaiting_other_players')}...</b></p>}
                     </div>}
                     {!isMine && !card.reaction[playerID] && <>
-                        <Button style={{alignSelf: 'flex-start'}} color='dark' onClick={card.when === 'COMBAT' ? ()=>moves.actionCardPass() : ()=>moves.pass()}>{t('board.nav.pass')}</Button>
+                        <button className='styledButton black' style={{alignSelf: 'flex-start'}} onClick={card.when === 'COMBAT' ? ()=>moves.actionCardPass() : ()=>moves.pass()}>{t('board.nav.pass')}</button>
                     </>}
                     {isMine && card.target && Object.keys(card.reaction).length === (Object.keys(ctx.activePlayers).length - 1) && 
-                        <Button style={{alignSelf: 'flex-start'}} color='success' onClick={doneClick}>{t('board.done')}</Button>
+                        <button className='styledButton green' style={{alignSelf: 'flex-start'}} onClick={doneClick}>{t('board.done')}</button>
                     }
                 </CardFooter>
             </Card>
@@ -947,11 +955,13 @@ const PayTg = ({onChange}) => {
     </div>;
 }
 
-const OneTechLine = ({technology}) => {
+const OneTechLine = ({technology, rid}) => {
+
+    const { t } = useContext(LocalizationContext);
+
     return <b style={{textAlign: 'left', color: 'black', position: 'relative', paddingLeft: '2rem'}}>
                 <img alt='type' style={{width: '1rem', left: '.5rem', position: 'absolute', top: '.15rem'}} src={'icons/'+ technology.type +'.png'}/>
-                {technology.id.replaceAll('_', ' ').replaceAll('2', ' II')}
-                {technology.racial && ' (racial)'}
+                {technology.racial ? t('races.' + rid + '.' + technology.id + '.label'):t('cards.techno.' + technology.id + '.label')}
             </b>
 }
 
@@ -962,37 +972,33 @@ const OneLinePlayerInfo = ({race}) => {
     </b>
 }
 
-const TechnologySelect = ({onSelect, requirements, exhausted, setExhausted, races}) => {
+const TechnologySelect = ({requirements, races}) => {
     
-    const {G, playerID, PLANETS} = useContext(StateContext);
+    const {G, ctx, selectedTech} = useContext(StateContext);
     const {t} = useContext(LocalizationContext);
-    const splanets = PLANETS.filter(p => !p.exhausted && p.specialty);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [selectedTech, setSelectedTech] = useState([]);
+    const haveReq = useMemo(() => (requirements && (requirements.upgrades.length > 0 || requirements.other.length > 0)), [requirements])
+    //const splanets = PLANETS.filter(p => !p.exhausted && p.specialty);
+    //const [dialogOpen, setDialogOpen] = useState(false);
+    //const [selectedTech, setSelectedTech] = useState([]);
 
     if(races && races.length === 0){
         return <div style={{padding: '1rem'}}>You haven't any neighbors.</div>
     }
-
-    return  <div style={{padding: '1rem'}}>
-                <Button size='sm' color='success' onClick={()=>setDialogOpen(!dialogOpen)}>{t('board.choose_technology')}</Button>
-                {dialogOpen && 
-                    <Modal style={{maxWidth: '72rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} isOpen={dialogOpen} toggle={()=>setDialogOpen(!dialogOpen)}>
-                        <ModalBody style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '1rem'}}>
+/**
+ * {dialogOpen && 
+                    <Modal className='borderedPanel' style={{maxWidth: '72rem'}} isOpen={dialogOpen} toggle={()=>setDialogOpen(!dialogOpen)}>
+                        <ModalBody style={{padding: '1rem'}}>
                             <TechnologyDialog races={races} tooltipMode={true} selected={selectedTech.map(s=>s.id)} onSelect={(tech)=>{setSelectedTech([tech]); onSelect(tech)}}/>
                         </ModalBody>
-                        <ModalFooter style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', padding: '0 1rem 1rem 1rem', borderTop: 'none'}}>
-                            <Button color='success' onClick={()=>setDialogOpen(!dialogOpen)}>
+                        <ModalFooter style={{padding: '0 1rem 1rem 1rem', borderTop: 'none'}}>
+                            <button className='styledButton green' onClick={()=>setDialogOpen(!dialogOpen)}>
                             {t('board.confirm')}
-                            </Button>
+                            </button>
                         </ModalFooter>
                     </Modal>}
-                {selectedTech.length > 0 && <OneTechLine technology={selectedTech[0]}/>}
-                {(requirements && (requirements.upgrades.length > 0 || requirements.other.length > 0)) && <div style={{padding: '1rem 1rem 0 1rem'}}>
-                    <b>{'Technology have unmeet requirements:  '}</b>
-                    {[...requirements.upgrades, ...requirements.other].map((r,i)=><img alt={r} key={i} src={'icons/'+ r +'.png'} style={{width: '1rem'}}/>)}
-                </div>}
-                {!haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY') && splanets.length > 0 && 
+                    <button className='styledButton yellow' onClick={()=>setDialogOpen(!dialogOpen)}>{t('board.choose_technology')}</button>
+                    
+                    {!haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY') && splanets.length > 0 && 
                     <div style={{overflowY: 'auto', maxHeight: '10rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', marginTop: '1rem'}}>
                     <PlanetsRows PLANETS={splanets} exhausted={exhausted} onClick={(pname)=>setExhausted(
                         produce(exhausted, draft => {
@@ -1003,7 +1009,19 @@ const TechnologySelect = ({onSelect, requirements, exhausted, setExhausted, race
                                 draft[pname] = true;
                             }
                         }))}/>
+                        
                 </div>}
+ */
+
+    return  <div style={{padding: '1rem'}}>
+                
+                {!(selectedTech && selectedTech.techno) && t('board.choose_technology')}
+                {selectedTech && selectedTech.techno && <OneTechLine technology={selectedTech.techno} rid={G.races[ctx.currentPlayer].rid}/>}
+                {haveReq && <div style={{padding: '1rem 1rem 0 1rem'}}>
+                    <b>{t('board.have_unmeet_requirements') + ': '}</b>
+                    {[...requirements.upgrades, ...requirements.other].map((r,i)=><img alt={r} key={i} src={'icons/'+ r +'.png'} style={{width: '1rem'}}/>)}
+                </div>}
+                {!haveReq && <div style={{padding: '1rem 1rem 0 1rem'}}></div>}
             </div>
 }
 
@@ -1012,9 +1030,9 @@ export const TechnologyDialog = ({tooltipMode, onSelect, selected, races}) => {
     const { G, playerID } = useContext(StateContext);
     //const CARD_STYLE = {background: 'none', border: 'solid 1px rgba(74, 111, 144, 0.42)', padding: '1rem', marginBottom: '1rem'}
     const [race, setRace] = useState(races && races.length ? races[0] : G.races[playerID]);
-    const onSelectFn = onSelect ?  (t) => onSelect({...t, rid: race.rid}) : undefined;
+    const onSelectFn = onSelect ?  (t) => onSelect({techno: t, rid: race.rid}) : undefined;
 
-    return <Card className='subPanel' style={{padding: '3rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', position: 'relative', width: '70rem' }}>
+    return <Card className= {tooltipMode ?'':'subPanel'} style={{padding: '3rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', position: 'relative', width: '70rem' }}>
     <CardTitle style={{}}>
         <ButtonGroup style={{}}>
             {(races || G.races).map((r, i) => <button onClick={()=>setRace(r)} className={'styledButton ' + (r.rid === race.rid ? 'white':'black')} 

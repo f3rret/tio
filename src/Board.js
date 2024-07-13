@@ -1,17 +1,14 @@
 /* eslint eqeqeq: 0 */
 import { useApp, Stage, Text, Container, Sprite } from '@pixi/react';
-import { useMemo, useCallback, useState, useEffect, useRef, useContext } from 'react';
+import { memo, useMemo, useCallback, useState, useEffect, useRef, useContext } from 'react';
 import { /*Navbar,*/ Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip,/*UncontrolledAccordion, 
   AccordionItem, AccordionBody, AccordionHeader,*/ CardBody, Tooltip, ListGroup, ListGroupItem, Container as Cont, Row, Col, CardColumns,
-  UncontrolledAccordion,
-  AccordionItem,
-  AccordionHeader,
-  AccordionBody} from 'reactstrap';
+  UncontrolledAccordion, AccordionItem, AccordionHeader, AccordionBody} from 'reactstrap';
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList, /*getTechType,*/ 
 ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover} from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
 import { PixiViewport } from './viewport';
-import { checkObjective, StateContext, haveTechnology, UNITS_LIMIT, wormholesAreAdjacent, LocalizationContext} from './utils';
+import { checkObjective, StateContext, haveTechnology, haveAbility, UNITS_LIMIT, wormholesAreAdjacent, LocalizationContext} from './utils';
 import { lineTo, pathFromCoordinates } from './Grid';
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion, ChooseAndDestroy } from './combat';
@@ -24,7 +21,7 @@ import imgSrc from './imgsrc.json';
 import { Blocks } from 'react-loader-spinner';
 
 
-export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessage, chatMessages, matchID, credentials }) {
+export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages }) {
 
   const stagew = window.innerWidth;
   const stageh = window.innerHeight;
@@ -42,24 +39,19 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [exhaustedCards, setExhaustedCards] = useState([]);
   const [producing, setProducing] = useState(null);
   const [leftPanel, setLeftPanel] = useState(null);
-  /*const [objVisible, setObjVisible] = useState(false);
-  const [techVisible, setTechVisible] = useState(false);
-  const [tradeVisible, setTradeVisible] = useState(false)
-  const [planetsVisible, setPlanetsVisible] = useState(false);*/
   const [advUnitView, setAdvUnitView] = useState(undefined);
   const [groundUnitSelected, setGroundUnitSelected] = useState({});
   const [payloadCursor, setPayloadCursor] = useState({i:0, j:0});
   const [tilesPng, setTilesPng] = useState(true);
   const [tilesTxt, setTilesTxt] = useState(false);
-  //const [unitsVisible, setUnitsVisible] = useState(false);
   const [agentVisible, setAgentVisible] = useState('agent');
   const [subcardVisible, setSubcardVisible] = useState('stuff');
   
-  //const [stratUnfold, setStratUnfold] = useState(0);
   const [rightBottomVisible, setRightBottomVisible] = useState(null);
   const [rightBottomSubVisible, setRightBottomSubVisible] = useState(null);
   const [selectedTile, setSelectedTile] = useState(-1);
   const [selectedPlanet, setSelectedPlanet] = useState(-1);
+  const [selectedTech, setSelectedTech] = useState({});
   const [midPanelInfo, setMidPanelInfo] = useState('tokens');
   const [purgingFragments, setPurgingFragments] = useState({c: 0, h: 0, i: 0, u: 0});
   const [moveSteps, setMoveSteps] = useState([]);
@@ -68,7 +60,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   const [tempCt, setTempCt] = useState({t: 0, s: 0, f: 0, new: 0});
   const [justOccupied, setJustOccupied] = useState(null);
   const { t } = useContext(LocalizationContext);
-
+  
   const [payObj, setPayObj] = useState(null);
   const togglePaymentDialog = (payment) => {
     if(payment && Object.keys(payment).length > 0){
@@ -332,6 +324,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     return ctx.activePlayers && ctx.activePlayers[playerID] && ctx.activePlayers[playerID].startsWith('invasion');
   }, [ctx.activePlayers, playerID]);
 
+  const agentAbilityIsActive = useMemo(() => {
+    if(race.rid === 1){
+
+    }
+    return false;
+  }, [race.rid])
+
   const IncrToken = ({tag}) => {
     let clickFn = ()=>{if(race.tokens.new){ moves.adjustToken(tag) }};
     if(exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1){
@@ -357,14 +356,14 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       <h5 style={{margin: '.25rem .5rem'}}>-</h5></button>);
   }
 
-  const tileClick = (e, index, planetIndex) => {
+  const tileClick = useCallback((e, index, planetIndex) => {
     e.preventDefault(); 
     if(groundUnitSelected && groundUnitSelected.unit){
       setGroundUnitSelected({});
     }
     setSelectedTile(index);
     setSelectedPlanet(planetIndex === undefined ? -1:planetIndex);
-  }
+  }, [groundUnitSelected]);
 
 
   const advUnitViewTechnology = useMemo(() => {
@@ -453,37 +452,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
   },[G.tiles, advUnitView, advUnitViewTechnology, moves, payloadCursor, groundUnitSelected, movePayloadCursor, playerID, exhaustedCards, race])
 
   const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
-
-  /*const draw = useCallback((g) => {
-    g.clear();
-
-    G.tiles.forEach((element, index) => {
-      if(element.active === true){
-        //g.beginFill('yellow', .15);
-        g.lineStyle(3,  'yellow');
-      }
-      else if(index === selectedTile){
-        //g.beginFill('lightblue', .25);
-        g.lineStyle(3,  'lightblue');
-      }
-
-      else{
-        //g.lineStyle(3,  0x999999);
-        g.lineStyle(0,  'black');
-      }
-
-      if(element.active === true || index === selectedTile){
-        const [firstCorner, ...otherCorners] = element.corners
-        g.moveTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2)
-        otherCorners.forEach(({ x, y }) => g.lineTo(x + stagew/2, y + stageh/2))
-        g.lineTo(firstCorner.x + stagew/2, firstCorner.y + stageh/2);
-
-        g.endFill();
-      }
-
-    });
-  }, [G.tiles, stageh, stagew, selectedTile]);*/
-
 
   const getMovePath = useMemo(() => {
 
@@ -898,6 +866,55 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     </Container>
   }
 
+  const TilesMap1 = memo(function TilesMap1({tiles}){
+
+    return tiles.map((element, index) => {
+        const [firstCorner] = element.corners;
+        const fill = element.tdata.type !== 'hyperlane' ? element.tdata.type: 'gray';
+        
+        return <Container key={index}>
+                
+                {tilesPng && <Sprite cacheAsBitmap={true} interactive={true} pointerdown={ (e)=>tileClick(e, index) } 
+                            image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }}
+                            x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5} alpha={.9}>
+                            </Sprite>}
+                {tilesTxt && <>
+                  <Text style={{fontSize: 20, fill:'white'}} text={'(' + element.q + ',' + element.r + ')'} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
+                  <Text style={{fontSize: 25, fill: fill}} text={ element.tid } x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2}/>
+                    { element.tdata.occupied!==undefined && <Text style={{fontSize: 22, fill: 'green'}} 
+                    text={element.tdata.occupied + ':' + (element.tdata.fleet ? getUnitsString(element.tdata.fleet) : '-')} 
+                    x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2 + element.w/1.5} /> }
+                    { element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map( (p, i) => 
+                      <Text key={i} 
+                        text={ (p.specialty ? '[' + p.specialty[0] + '] ':'') + p.name + (p.trait ? ' [' + p.trait[0] + '] ':'') + ' ' + p.resources + '/' + p.influence + 
+                        (p.occupied !== undefined ? ' [' + p.occupied + ':' + (p.units ? getUnitsString(p.units) : '-') + ']':'') } 
+                        style={{ fontSize: 20, fill: 'white' }} 
+                        x={firstCorner.x + stagew/2 - element.w/1.5} y={firstCorner.y + stageh/2 + element.w/6 + element.w/8 * (i+1)} />
+                      )}
+                </>}
+                
+              </Container>
+      })
+  });
+
+  const TilesMap2 = memo(function TilesMap2({tiles}){ 
+      return tiles.map((element, index) => {
+        const [firstCorner] = element.corners;
+        
+        return <Container key={index}>
+                {selectedTile === index && element.active !== true && <SelectedHex x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2 + element.w/2 - 20}/>}
+                {element.active === true && <ActiveHex x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2 + element.w/2 - 20}/>}
+                <TileContent key={index} element={element} index={index} />
+              </Container>
+      })
+  });
+
+  const TilesMap3 = memo(function TilesMap3({tiles}){ 
+    return tiles.map((element, index) => {
+      return <TileContent2 key={index} element={element} index={index} />
+    })
+  });
+
   const advUnitSwitch = useMemo(()=> {
     if(advUnitView){
       return advUnitView.tile;
@@ -909,163 +926,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       return activeTile.tid;
     }
   }, [activeTile]);
-
-  useEffect(() => {
-    if(groundUnitSelected.unit !== undefined){
-      const t = G.tiles[groundUnitSelected.tile];
-      if(t && t.tdata){
-        const p = t.tdata.planets[groundUnitSelected.planet];
-        if(!p || !p.units || !p.units[groundUnitSelected.unit]){
-          setGroundUnitSelected({});
-        }
-      }
-    }
-  }, [groundUnitSelected, G.tiles, race.reinforcement]);
-
-  useEffect(()=>{
-    //if(!activeTile || !advUnitView || !advUnitView.tile){
-      setMoveSteps([]);
-    //}
-  }, [advUnitSwitch, activeTileSwitch]);
-
-  useEffect(()=>{
-    if(race.exhaustedCards.length){
-      setExhaustedCards([]);
-    }
-    flushTempCt();
-  },[race.exhaustedCards, flushTempCt]);
-
-  /*useEffect(()=> {
-    if(stratUnfold > 0 && rightBottomVisible){
-      setRightBottomVisible(null)
-    }
-  },[stratUnfold, rightBottomVisible]);*/
-
-  useEffect(()=>{
-    if(mustSecObj /*|| (ctx.phase === 'stats' && leftPanel !== 'objectives' && !mustAction)*/){
-      setLeftPanel('objectives');
-    }
-    
-  }, [/*ctx.phase, leftPanel, mustAction, */mustSecObj]);
-
-  const PREV_TECHNODATA = useRef([]);
-  useEffect(() => {
-
-    if(race.tempTechnoData && race.tempTechnoData.length && race.tempTechnoData.length > PREV_TECHNODATA.current.length){
-      const last = race.tempTechnoData.slice(PREV_TECHNODATA.current.length - race.tempTechnoData.length);
-      const summary = {INFANTRY2: []};
-      last.forEach(l => {
-        if(Object.keys(summary).includes(l.id)){
-          if(l.id === 'INFANTRY2'){
-            if(l.success){
-              summary[l.id].push('/dice-green ' + (l.dice === 10 ? 0:l.dice));
-            }
-            else{
-              summary[l.id].push('/dice ' + (l.dice === 10 ? 0:l.dice));
-            }
-          }
-        }
-      });
-      
-      Object.keys(summary).forEach(k => {
-        if(k === 'INFANTRY2' && summary['INFANTRY2'].length > 0){
-          sendChatMessage(t('cards.techno.INFANTRY2.label') + '   ' + summary['INFANTRY2'].join('  '));
-        }
-      });
-
-    }
-    PREV_TECHNODATA.current = race.tempTechnoData;
-  // eslint-disable-next-line
-  }, [race.tempTechnoData])
-
-  const PREV_EXPLORATION = useRef([]);
-
-  useEffect(()=>{
-    if(race.exploration && race.exploration.length && race.exploration.length > PREV_EXPLORATION.current.length){
-      PREV_EXPLORATION.current = race.exploration;
-      sendChatMessage(t('board.got_new_exploration') + ' ' 
-      + t('cards.exploration.' + race.exploration[race.exploration.length-1].id + '.label').toUpperCase() + ' ('
-      + t('cards.exploration.' + race.exploration[race.exploration.length-1].id + '.effect') + ')');
-    }
-    // eslint-disable-next-line
-  }, [race.exploration]);
-
-  const PREV_RELICS = useRef([]);
-
-  useEffect(()=>{
-    if(race.relics && race.relics.length && race.relics.length > PREV_RELICS.current.length){
-      PREV_RELICS.current = race.relics;
-      sendChatMessage(t('board.got_new_relic') + ': ' 
-      + t('cards.relics.' + race.relics[race.relics.length-1].id + '.label').toUpperCase() + ' ('
-      + t('cards.relics.' + race.relics[race.relics.length-1].id + '.effect'));
-    }
-    // eslint-disable-next-line
-  }, [race.relics]);
-  
-  const PREV_PLANETS = useRef([]);
-
-  useEffect(()=>{  //occupied new planet
-    if(PLANETS && PLANETS.length){
-      if(!PREV_PLANETS.current || !PREV_PLANETS.current.length){
-        //PREV_PLANETS.current = PLANETS;
-      }
-      else{
-        if(PLANETS.length - PREV_PLANETS.current.length === 1){
-          const newOne = PLANETS.find(p => {
-            const oldOne = PREV_PLANETS.current.find(pp => pp.name === p.name);
-            return !oldOne;
-          });
-          if(newOne){
-            setJustOccupied(newOne.name);
-            sendChatMessage(t('board.has_occupied_planet') + ' ' + t('planets.' + newOne.name));
-            if(newOne.exploration === 'Freelancers'){
-              setProducing(newOne.name);
-            }
-          }
-        }
-      }
-      PREV_PLANETS.current = PLANETS;
-    }
-  }, [PLANETS, sendChatMessage, t]);
-
-  useEffect(() => { //switch TechAction
-    if(!producing && justOccupied){
-      if(exhaustedCards.indexOf('INTEGRATED_ECONOMY') > -1){
-        exhaustTechCard('INTEGRATED_ECONOMY');
-      }
-    }
-  }, [producing, exhaustTechCard, exhaustedCards, justOccupied])
-  
-  useEffect(() => {
-    if(ctx.activePlayers && Object.keys(ctx.activePlayers).filter(ap => !ap.endsWith('ctionCard')).length){
-      if(!prevStages.current){
-        prevStages.current = {...ctx.activePlayers};
-        Object.keys(prevStages.current).forEach(k => {
-          if(!k.endsWith('ctionCard')){
-            prevStages.current[k] = [prevStages.current[k]];
-          }
-          else{
-            prevStages.current[k] = undefined;
-          }
-        });
-      }
-      else{
-        Object.keys(ctx.activePlayers).filter(ap => !ap.endsWith('ctionCard')).forEach(ap => {
-          if(!prevStages.current[ap] || !prevStages.current[ap].length){
-            prevStages.current[ap]=[ctx.activePlayers[ap]];
-          }
-          else if(prevStages.current[ap][prevStages.current[ap].length-1] !== ctx.activePlayers[ap]){
-            prevStages.current[ap].push(ctx.activePlayers[ap]);
-          }
-        });
-      }
-    }
-
-    else{
-      prevStages.current = null;
-    }
-
-  }, [ctx.activePlayers, prevStages]);
 
   const TechAction = (args) => { 
 
@@ -1128,7 +988,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
     }
 
-    if(args.techId === 'INFANTRY2'){
+    if(!disabled && args.techId === 'INFANTRY2'){
       const readyToRes = race.tempTechnoData.filter(i => i.id === 'INFANTRY2' && i.dice && i.dice.length && i.dice[0] > technology.resurectAbove);
       if(Array.isArray(readyToRes)){
         if(readyToRes.length){
@@ -1144,7 +1004,6 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
       }
       if(!disabled && ctx.phase !== 'acts') disabled = true;
     }
-
 
     const onClick = ()=>{
       if(args.techId === 'BIO_STIMS'){
@@ -1232,6 +1091,201 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
             </CardsPagerItem>
   }
 
+  const AbilAction = ({abilId}) => { 
+    let disabled = race.actions.length >= maxActs;
+    //let ability = race.abilities.find(a => a.id === abilId);
+
+  
+    if(!disabled && abilId === 'ORBITAL_DROP'){
+      disabled = true;
+
+      if(selectedTile > -1 && selectedPlanet > -1){
+        const tile = G.tiles[selectedTile];
+
+        if(tile && tile.tdata && tile.tdata.planets){
+          const planet = tile.tdata.planets[selectedPlanet];
+
+          if(planet && String(planet.occupied) === String(playerID)){
+            disabled = false;
+          }
+        }
+      }
+    }
+
+
+    const onClick = ()=>{
+      moves.useRacialAbility({abilId, selectedTile, selectedPlanet})
+    }
+
+    return  <CardsPagerItem tag='context'>
+              <button style={{width: '100%', marginBottom: '1rem'}} disabled={disabled} className = {'styledButton yellow'} onClick={onClick}>
+                {t('races.' + race.rid + '.' + abilId + '.label')}
+              </button>
+
+              {t('races.' + race.rid + '.' + abilId + '.effect')}
+            </CardsPagerItem>
+  }
+
+  const stateContext = useMemo(() => ({G, ctx, playerID, /*matchID, credentials,*/ moves, selectedTech, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}), [G, ctx, playerID, moves, selectedTech, exhaustedCards, exhaustTechCard, prevStages, PLANETS, UNITS]);
+
+  useEffect(() => {
+    let overlay = document.getElementById('tempOverlay');
+    if(overlay){
+      overlay.remove();
+    }
+  }, [])
+  
+  useEffect(() => {
+    if(groundUnitSelected.unit !== undefined){
+      const t = G.tiles[groundUnitSelected.tile];
+      if(t && t.tdata){
+        const p = t.tdata.planets[groundUnitSelected.planet];
+        if(!p || !p.units || !p.units[groundUnitSelected.unit]){
+          setGroundUnitSelected({});
+        }
+      }
+    }
+  }, [groundUnitSelected, G.tiles, race.reinforcement]);
+
+  useEffect(()=>{
+    //if(!activeTile || !advUnitView || !advUnitView.tile){
+      setMoveSteps([]);
+    //}
+  }, [advUnitSwitch, activeTileSwitch]);
+
+  useEffect(()=>{
+    if(race.exhaustedCards.length){
+      setExhaustedCards([]);
+    }
+    flushTempCt();
+  },[race.exhaustedCards, flushTempCt]);
+
+  useEffect(()=>{
+    if(mustSecObj){
+      setLeftPanel('objectives');
+    }
+    
+  }, [mustSecObj]);
+
+  const PREV_TECHNODATA = useRef([]); //todo: replace with bgio-effects
+  useEffect(() => {
+
+    if(race.tempTechnoData && race.tempTechnoData.length && race.tempTechnoData.length > PREV_TECHNODATA.current.length){
+      const last = race.tempTechnoData.slice(PREV_TECHNODATA.current.length - race.tempTechnoData.length);
+      const summary = {INFANTRY2: []};
+      last.forEach(l => {
+        if(Object.keys(summary).includes(l.id)){
+          if(l.id === 'INFANTRY2'){
+            if(l.success){
+              summary[l.id].push('/dice-green ' + (l.dice === 10 ? 0:l.dice));
+            }
+            else{
+              summary[l.id].push('/dice ' + (l.dice === 10 ? 0:l.dice));
+            }
+          }
+        }
+      });
+      
+      Object.keys(summary).forEach(k => {
+        if(k === 'INFANTRY2' && summary['INFANTRY2'].length > 0){
+          sendChatMessage(t('cards.techno.INFANTRY2.label') + '   ' + summary['INFANTRY2'].join('  '));
+        }
+      });
+
+    }
+    PREV_TECHNODATA.current = race.tempTechnoData;
+  // eslint-disable-next-line
+  }, [race.tempTechnoData])
+
+  const PREV_EXPLORATION = useRef([]);//todo: replace with bgio-effects
+
+  useEffect(()=>{
+    if(race.exploration && race.exploration.length && race.exploration.length > PREV_EXPLORATION.current.length){
+      PREV_EXPLORATION.current = race.exploration;
+      sendChatMessage(t('board.got_new_exploration') + ' ' 
+      + t('cards.exploration.' + race.exploration[race.exploration.length-1].id + '.label').toUpperCase() + ' ('
+      + t('cards.exploration.' + race.exploration[race.exploration.length-1].id + '.effect') + ')');
+    }
+    // eslint-disable-next-line
+  }, [race.exploration]);
+
+  const PREV_RELICS = useRef([]);//todo: replace with bgio-effects
+
+  useEffect(()=>{
+    if(race.relics && race.relics.length && race.relics.length > PREV_RELICS.current.length){
+      PREV_RELICS.current = race.relics;
+      sendChatMessage(t('board.got_new_relic') + ': ' 
+      + t('cards.relics.' + race.relics[race.relics.length-1].id + '.label').toUpperCase() + ' ('
+      + t('cards.relics.' + race.relics[race.relics.length-1].id + '.effect'));
+    }
+    // eslint-disable-next-line
+  }, [race.relics]);
+  
+  const PREV_PLANETS = useRef([]);//todo: replace with bgio-effects
+
+  useEffect(()=>{  //occupied new planet
+    if(PLANETS && PLANETS.length){
+      if(!PREV_PLANETS.current || !PREV_PLANETS.current.length){
+        //PREV_PLANETS.current = PLANETS;
+      }
+      else{
+        if(PLANETS.length - PREV_PLANETS.current.length === 1){
+          const newOne = PLANETS.find(p => {
+            const oldOne = PREV_PLANETS.current.find(pp => pp.name === p.name);
+            return !oldOne;
+          });
+          if(newOne){
+            setJustOccupied(newOne.name);
+            sendChatMessage(t('board.has_occupied_planet') + ' ' + t('planets.' + newOne.name));
+            if(newOne.exploration === 'Freelancers'){
+              setProducing(newOne.name);
+            }
+          }
+        }
+      }
+      PREV_PLANETS.current = PLANETS;
+    }
+  }, [PLANETS, sendChatMessage, t]);
+
+  useEffect(() => { //switch TechAction
+    if(!producing && justOccupied){
+      if(exhaustedCards.indexOf('INTEGRATED_ECONOMY') > -1){
+        exhaustTechCard('INTEGRATED_ECONOMY');
+      }
+    }
+  }, [producing, exhaustTechCard, exhaustedCards, justOccupied])
+  
+  useEffect(() => {
+    if(ctx.activePlayers && Object.keys(ctx.activePlayers).filter(ap => !ap.endsWith('ctionCard')).length){
+      if(!prevStages.current){
+        prevStages.current = {...ctx.activePlayers};
+        Object.keys(prevStages.current).forEach(k => {
+          if(!k.endsWith('ctionCard')){
+            prevStages.current[k] = [prevStages.current[k]];
+          }
+          else{
+            prevStages.current[k] = undefined;
+          }
+        });
+      }
+      else{
+        Object.keys(ctx.activePlayers).filter(ap => !ap.endsWith('ctionCard')).forEach(ap => {
+          if(!prevStages.current[ap] || !prevStages.current[ap].length){
+            prevStages.current[ap]=[ctx.activePlayers[ap]];
+          }
+          else if(prevStages.current[ap][prevStages.current[ap].length-1] !== ctx.activePlayers[ap]){
+            prevStages.current[ap].push(ctx.activePlayers[ap]);
+          }
+        });
+      }
+    }
+
+    else{
+      prevStages.current = null;
+    }
+
+  }, [ctx.activePlayers, prevStages]);
+
   useEffect(() => {
     if(ctx.phase === 'stats'){
       setLeftPanel('objectives');
@@ -1241,12 +1295,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
     }
   }, [ctx.phase])
 
-  useEffect(() => {
-    let overlay = document.getElementById('tempOverlay');
-    if(overlay){
-      overlay.remove();
-    }
-  }, [])
+
 
   const { imagesPreloaded, lastLoaded, loadingError } = useImagePreloader([...imgSrc.boardImages, ...getTilesAndRacesImgs(G.tiles)])
 
@@ -1266,13 +1315,13 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
               {loadingError && <span style={{fontFamily: 'system-ui', color: 'red'}}>{'ошибка загрузки ' + loadingError}</span>}
           </div>
   }
-  //ctx.phase !== 'strat' && ctx.phase !== 'agenda' && !strategyStage && 
-  return (<StateContext.Provider value={{G, ctx, playerID, /*matchID, credentials,*/ moves, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}}>
+
+  return (<StateContext.Provider value={stateContext}>
               <Overlay/>      
               <MyNavbar />
               <CardColumns style={{margin: '4rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '42rem', zIndex: '1'}}>
                 {!race.isSpectator && <>
-                  {leftPanel === 'techno' && <TechnologyDialog />}
+                  {leftPanel === 'techno' && <TechnologyDialog selected={selectedTech && selectedTech.techno ? [selectedTech.techno.id]:[]} onSelect={({techno, rid}) => setSelectedTech({techno, rid})}/>}
                   {leftPanel === 'objectives' && <Card id='objListMain' className='subPanel' style={{ padding: '4rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                       <CardTitle><h6 style={{textAlign: 'right', margin: 0}}>{t('board.victory_points').toUpperCase() + ': ' + VP + '/' + G.vp}</h6></CardTitle>
                       <ObjectivesList playerID={playerID} mustSecObj={mustSecObj} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective: mustSecObj ? dropSecretObjective: ()=>{}}/>
@@ -1332,59 +1381,12 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                 </CardBody>
               </Card>}
 
-              
-
               <Stage width={stagew} height={stageh} options={{antialias: true, backgroundAlpha: 0, resizeTo: window, autoDensity: true }}>
                 <TickerSettings fps={30}/>
                 <PixiViewport home={G.tiles.find(t => t.tid === G.races[playerID].rid)}>
-                  
-                  {G.tiles.map((element, index) => {
-                        const [firstCorner] = element.corners;
-                        const fill = element.tdata.type !== 'hyperlane' ? element.tdata.type: 'gray';
-                        
-                        return <Container key={index}>
-                                
-                                {tilesPng && <Sprite cacheAsBitmap={true} interactive={true} pointerdown={ (e)=>tileClick(e, index) } 
-                                            image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }}
-                                            x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5} alpha={.9}>
-                                            </Sprite>}
-                                {tilesTxt && <>
-                                  <Text style={{fontSize: 20, fill:'white'}} text={'(' + element.q + ',' + element.r + ')'} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
-                                  <Text style={{fontSize: 25, fill: fill}} text={ element.tid } x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2}/>
-                                    { element.tdata.occupied!==undefined && <Text style={{fontSize: 22, fill: 'green'}} 
-                                    text={element.tdata.occupied + ':' + (element.tdata.fleet ? getUnitsString(element.tdata.fleet) : '-')} 
-                                    x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2 + element.w/1.5} /> }
-                                    { element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map( (p, i) => 
-                                      <Text key={i} 
-                                        text={ (p.specialty ? '[' + p.specialty[0] + '] ':'') + p.name + (p.trait ? ' [' + p.trait[0] + '] ':'') + ' ' + p.resources + '/' + p.influence + 
-                                        (p.occupied !== undefined ? ' [' + p.occupied + ':' + (p.units ? getUnitsString(p.units) : '-') + ']':'') } 
-                                        style={{ fontSize: 20, fill: 'white' }} 
-                                        x={firstCorner.x + stagew/2 - element.w/1.5} y={firstCorner.y + stageh/2 + element.w/6 + element.w/8 * (i+1)} />
-                                      )}
-                                </>}
-                                
-                              </Container>
-
-                      })}
-
-                  {G.tiles.map((element, index) => {
-                        const [firstCorner] = element.corners;
-                        
-                        return <Container key={index}>
-                                {selectedTile === index && element.active !== true && <SelectedHex x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2 + element.w/2 - 20}/>}
-                                {element.active === true && <ActiveHex x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2 + element.w/2 - 20}/>}
-                                <TileContent key={index} element={element} index={index} />
-                              </Container>
-
-                  })}
-                
-                {G.tiles.map((element, index) => {
-
-                        return <TileContent2 key={index} element={element} index={index} />
-
-                  })}
-                  
-
+                  <TilesMap1 tiles={G.tiles}/>
+                  <TilesMap2 tiles={G.tiles}/>
+                  <TilesMap3 tiles={G.tiles}/>
                 </PixiViewport> 
               </Stage>
               
@@ -1406,6 +1408,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                         {haveTechnology(race, 'TRANSIT_DIODES') && <TechAction techId='TRANSIT_DIODES'/>}
                         {haveTechnology(race, 'INTEGRATED_ECONOMY') && <TechAction techId='INTEGRATED_ECONOMY'/>}
                         {haveTechnology(race, 'INFANTRY2') && <TechAction techId='INFANTRY2'/>}
+                        {haveAbility(race, 'ORBITAL_DROP') && <AbilAction abilId='ORBITAL_DROP'/>}
                       </CardsPager>
                       
                     </>}
@@ -1615,6 +1618,7 @@ export function TIOBoard({ ctx, G, moves, events, undo, playerID, sendChatMessag
                           {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
                             <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
                             <CardText>{t('races.' + race.rid + '.agentAbility')}</CardText>
+                            <button className='styledButton black' disabled={!agentAbilityIsActive}>{t('board.activate')}</button>
                           </Card>}
                           {agentVisible === 'commander' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
                             <CardImg src={'race/commander/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
