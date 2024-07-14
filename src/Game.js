@@ -6,7 +6,7 @@ import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm } from './gameSt
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
- getInitRaces, getInitTiles } from './utils';
+ getInitRaces, getInitTiles, checkCommanderUnlock } from './utils';
  
 export const TIO = {
     name: 'TIO',
@@ -752,11 +752,13 @@ export const TIO = {
                 G.races[playerID].exploration.push(explore);*/
                 to.exhausted = true;
                 to.occupied = playerID;
+                checkCommanderUnlock(G, playerID);
                 if(to.trait){explorePlanetByName(G, playerID, to.name)}
               }
               else if(to.occupied != playerID && G.races[to.occupied]){
                 checkSecretObjective(G, to.occupied, 'Become a Martyr');
                 to.occupied = playerID;
+                checkCommanderUnlock(G, playerID);
                 to.exhausted = true;
               }
             }
@@ -976,6 +978,23 @@ export const TIO = {
             }
 
 
+          },
+          useHeroAbility: ({G, playerID}) => {
+            const race = G.races[playerID];
+            if(race && race.heroIsUnlocked && !race.heroIsExhausted){
+              if(race.rid === 1){
+                G.tiles.forEach(t => {
+                  if(t && t.tdata && t.tdata.tokens){
+                    const idx = t.tdata.tokens.indexOf(race.rid);
+                    if(idx > -1){
+                      t.tdata.tokens.splice(idx, 1);
+                    }
+                  }
+                })
+              }
+
+              race.heroIsExhausted = true;
+            }
           }
         },
         onEnd: ({ G }) => {

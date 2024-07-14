@@ -119,10 +119,10 @@ export const MoveStep = ({pointerdown, x, y, text, tint}) => {
         return r + (0.01 * delta * sign);
     }));
 
-    return <Sprite interactive={true} cursor='pointer' alpha={.9} mouseover={(e) => e.target.alpha = 1} mouseout={(e) => e.target.alpha = .9}
-                pointerdown={pointerdown} scale={.7 + sc/10} y={y} x={x} image={'move_step.png'}>
-                <Text tint={tint} text={text} x={text && text.length > 1 ? 30:50} y={25} style={{fontSize: 50, fontFamily:'system-ui', fill: '#faebd7'}}/>
-            </Sprite>
+    return <Container interactive={true} cursor='pointer' pointerdown={pointerdown} y={y} x={x} scale={.5 + sc/20} anchor={.5}>
+            <Sprite tint={tint} image={'icons/unit_pl_bg.png'} alpha={.9}/>
+            <Text tint={tint} text={text} x={70} y={50} style={{fontSize: 70, fontFamily:'Handel Gothic', fill: '#faebd7'}}/>
+            </Container>
 
 }
 

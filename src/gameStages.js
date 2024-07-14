@@ -2,7 +2,7 @@ import { produce } from 'immer';
 import { INVALID_MOVE } from 'boardgame.io/core';
 import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveTechnology, getPlanetByName, 
   completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits, 
-  spliceCombatAC, checkIonStorm, checkSecretObjective } from './utils';
+  spliceCombatAC, checkIonStorm, checkSecretObjective, checkCommanderUnlock, useCommanderAbility } from './utils';
 
   
 export const secretObjectiveConfirm = ({G, playerID, events}, oid, y) => {
@@ -1737,11 +1737,14 @@ export const ACTS_STAGES = {
       actionCardDone: ACTION_CARD_STAGE.moves.done,
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
 
-      rollDice: ({G, playerID, random}, unit, count) => {
+      rollDice: ({G, playerID, random}, unit, count, withTech) => {
         const dice = random.D10(count || 1);
         G.dice = produce(G.dice, draft => {
           draft[playerID][unit] = {dice};
         });
+        if(withTech.indexOf('AGENT')>-1){
+          G.races[playerID].exhaustedCards.push('AGENT');
+        }
       },
       rerollDice: ({G, playerID, random}, unit, didx) => {
         const dice = random.D10(1);
@@ -1789,6 +1792,9 @@ export const ACTS_STAGES = {
           }
         }
        
+      },
+      useCommander: ({G, playerID}) => {
+        useCommanderAbility(G, playerID)
       }
     }
   },
@@ -1964,6 +1970,7 @@ export const ACTS_STAGES = {
               }
 
               activePlanet.occupied = playerID;
+              checkCommanderUnlock(G, playerID);
 
               if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
                 if(!activePlanet.units['infantry']) activePlanet.units['infantry']=[];

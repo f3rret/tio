@@ -633,6 +633,48 @@ export const checkSecretObjective = (G, playerID, oid, param) => {
   return false;
 }
 
+export const checkCommanderUnlock = (G, playerID) => {
+
+  const race = G.races[playerID];
+  if(race.commanderIsUnlocked) return;
+
+  if(race){
+    if(race.rid === 1){
+      const planets = getPlayerPlanets(G.tiles, playerID);
+      let res = 0;
+      planets.forEach(p => {
+        if(p && p.resources) {res += p.resources}
+      });
+      if(res >= 12){
+        race.commanderIsUnlocked = true;
+      }
+    }
+  }
+
+}
+
+export const useCommanderAbility = (G, playerID) => {
+
+  const race = G.races[playerID];
+  if(race && race.exhaustedCards.indexOf('COMMANDER') === -1){
+    if(race.rid === 1){
+      const planets = getPlayerPlanets(G.tiles, playerID);
+
+      if(planets && planets.length){
+        const planet = planets.find(p => p.invasion)
+        if(planet && String(planet.occupied) === String(playerID)){
+          if(!planet.units) planet.units={};
+          if(!planet.units.infantry) planet.units.infantry=[];
+          planet.units.infantry.push({});
+        }
+      }
+    }
+
+    race.exhaustedCards.push('COMMANDER');
+  }
+
+}
+
 export const getPlanetByName = (tiles, pname) => {
   let planet;
 
@@ -1037,10 +1079,12 @@ export const completeObjective = ({G, playerID, oid, payment}) => {
       }           
 
       objective.players.push(playerID);
+      checkHeroUnlock(G, playerID);
     }
     else if(objective.type === 'HAVE'){
       if(checkObjective(G, playerID, oid) === true){
         objective.players.push(playerID);
+        checkHeroUnlock(G, playerID);
       }
     }
     else{
@@ -1049,6 +1093,25 @@ export const completeObjective = ({G, playerID, oid, payment}) => {
     
   }
 
+}
+
+export const checkHeroUnlock = (G, playerID) => {
+  let result = 0;
+  let race = G.races[playerID];
+
+  if(race.heroIsUnlocked) return;
+
+  if(race){
+    race.secretObjectives.concat(G.pubObjectives).forEach(o => {
+      if(o && o.players && o.players.length > 0){
+        if(o.players.indexOf(playerID) > -1) result += (o.vp ? o.vp : 1);
+      }
+    });
+  }
+
+  if(result >= 3){
+    race.heroIsUnlocked = true;
+  }
 }
 
 export const loadUnitsOnRetreat = (G, playerID) => {

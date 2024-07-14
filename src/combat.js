@@ -504,6 +504,7 @@ const CombatantForces = (args) => {
 
     const fireClick = useCallback((u, withTech) => {
         const count = Array.isArray(units[u]) ? units[u].length : units[u];
+        let adv_shots = 0;
         const wt = [withTech];
 
         let shots = (combatAbility && technologies[u][combatAbility] ? technologies[u][combatAbility].count : 
@@ -513,7 +514,8 @@ const CombatantForces = (args) => {
             wt.push('Experimental Battlestation');
         }
         if(withTech === 'PLASMA_SCORING') shots++;
-        moves.rollDice(u, count*shots, wt);
+        if(withTech === 'AGENT') adv_shots = 1;
+        moves.rollDice(u, count*shots + adv_shots, wt);
         if(withTech === 'PLASMA_SCORING') setPlasmaScoringUsed(true);        
     }, [moves, technologies, units, combatAbility]);
 
@@ -534,6 +536,10 @@ const CombatantForces = (args) => {
     const dropdown_gls = useMemo(() =>{
         return (combatAbility === 'spaceCannon') && (haveTechnology(race, 'GRAVITON_LASER_SYSTEM') && race.exhaustedCards.indexOf('GRAVITON_LASER_SYSTEM') === -1)
     }, [race, combatAbility]);
+
+    const dropdown_agent = useMemo(() => {
+        return !combatAbility && isInvasion && race.rid === 1 && race.exhaustedCards.indexOf('AGENT') === -1
+    }, [race, combatAbility, isInvasion])
 
     const mayReroll = useCallback((owner, unit, didx) => {
         if(String(playerID) === String(owner)){
@@ -629,13 +635,16 @@ const CombatantForces = (args) => {
                                 {!G.dice[owner][u] && ability && String(playerID) === String(owner) &&
                                         <UncontrolledDropdown group> 
                                             <Button size='sm' onClick={()=>fireClick(u)} color='danger' style={{width: '5rem'}}>{t('board.fire')}</Button>
-                                            {(dropdown_ps || dropdown_gls) && <><DropdownToggle caret color='danger' style={{padding: '0.25rem 0.5rem 0 0.25rem'}}/>
+                                            {(dropdown_ps || dropdown_gls || dropdown_agent) && <><DropdownToggle caret color='danger' style={{padding: '0.25rem 0.5rem 0 0.25rem'}}/>
                                             <DropdownMenu dark>
                                                 {dropdown_ps && <DropdownItem onClick={()=>fireClick(u, 'PLASMA_SCORING')}>
                                                     <img alt='warfare' src='icons/warfare.png' style={{width: '1rem', marginRight: '.5rem'}}/>{t('cards.techno.PLASMA_SCORING.label')}
                                                 </DropdownItem>}
                                                 {dropdown_gls && <DropdownItem onClick={()=>fireClick(u, 'GRAVITON_LASER_SYSTEM')}>
                                                     <img alt='warfare' src='icons/cybernetic.png' style={{width: '1rem', marginRight: '.5rem'}}/>{t('cards.techno.GRAVITON_LASER_SYSTEM.label')}
+                                                </DropdownItem>}
+                                                {dropdown_agent && <DropdownItem onClick={()=>fireClick(u, 'AGENT')}>
+                                                    {t('board.agent')}
                                                 </DropdownItem>}
                                             </DropdownMenu></>}
                                         </UncontrolledDropdown>}
@@ -657,6 +666,14 @@ const CombatantForces = (args) => {
                             </span>
                         </Col>
                     })}
+                    {race.rid === 1 && race.commanderIsUnlocked && race.exhaustedCards.indexOf('COMMANDER') === -1 && G.races[ctx.currentPlayer].rid !== 1 && isInvasion &&prevStages && prevStages[race.pid] && prevStages[race.pid].indexOf('invasion') === prevStages[race.pid].length - 1 && 
+                    <Col className='col-md-auto' style={{marginLeft: '1rem', minHeight: '7rem', padding: '.5rem', background: 'rgba(255,255,255,.15)', fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'}}>
+                        <span style={{position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+                            <CardImg style={{width: '3rem', marginLeft: '2rem'}} src={'units/INFANTRY.png'} />
+                            <span style={{fontSize: 30, position: 'absolute', left: 0, top: '.5rem'}}>+1</span>
+                            <Button size='sm' disabled={String(playerID)!==String(owner)} color='success' onClick={()=>moves.useCommander()}>{t('board.commander')}</Button>
+                        </span>
+                    </Col>}
                 </Row>
             </Container>
         </div>

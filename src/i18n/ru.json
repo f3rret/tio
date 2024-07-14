@@ -199,6 +199,7 @@
             "remove_selected_from_board": "убрать с доски",
             "purge": "изгнать",
             "ready": "готов",
+            "not_ready": "не готов",
             "unlock": "разблокировка",
             "complete_3_objectives": "выполните 3 цели",
             "action": "действие",
@@ -290,7 +291,10 @@
             "game_is_over": "Игра окончена",
             "winner": "Победитель",
             "return_to_lobby": "Лобби",
-            "select_planet_you_own": "Укажите планету под вашим контролем"
+            "select_planet_you_own": "Укажите планету под вашим контролем",
+            "commander_is_unlocked": "Командир разблокирован",
+            "hero_is_unlocked": "Герой разблокирован",
+            "hero_is_exhausted": "Способность героя разыграна"
         },
         "cards": {
             "strategy": {
