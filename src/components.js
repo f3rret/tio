@@ -1,6 +1,6 @@
 import { useContext, useMemo, useState, useCallback } from 'react'
 import { LocalizationContext, StateContext, UNITS_LIMIT } from './utils';
-import { Badge, Card, CardText, CardImg, ButtonGroup, ListGroup, ListGroupItem } from 'reactstrap';
+import { Badge, Card, CardText, CardImg, ButtonGroup, ListGroup, ListGroupItem, UncontrolledAccordion, AccordionItem, AccordionHeader, AccordionBody, Nav, NavItem, Row, Col } from 'reactstrap';
 import { produce } from 'immer';
 
 export const CARD_STYLE = { background: 'none', border: 'solid 1px rgba(255, 255, 255, 0.2)', padding: '1rem', marginBottom: '1rem' }
@@ -226,4 +226,93 @@ export const Stuff = ({exhaustedCards, tempCt, setTempCt, R_UNITS, groundUnitSel
             <button size='sm' onClick={()=>setMidPanelInfo('reinforce')} className={ 'styledButton ' + (midPanelInfo === 'reinforce' ? 'white':'black')} style={{flexBasis: '33%'}}>{t('board.reinforce').toUpperCase()}</button>
         </ButtonGroup>
     </>
+}
+
+export const MyNavbar = ({leftPanel, setLeftPanel, undo, activeTile, isMyTurn}) => {
+    const { G, ctx, moves } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
+    const leftPanelClick = useCallback((label) => {
+        if(leftPanel === label){
+          setLeftPanel(null);
+        }
+        else{
+          if(label !== 'trade' || (G.races.length > 1)){
+            setLeftPanel(label);
+          }
+        }
+      //eslint-disable-next-line
+      }, [leftPanel]);
+
+    return <div style={{ position: 'fixed', height: 0, width: '100%', zIndex: '2', display: 'flex', justifyContent: 'space-between', padding: '0'}}>
+      <ButtonGroup className='borderedPanel' style={{minHeight: '3rem', margin: '2.5rem 0 0 2.5rem', fontFamily:'Handel Gothic'}}>
+        <button className={'styledButton ' + (leftPanel === 'objectives' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('objectives')}>{t("board.nav.objectives")}</button>
+        <button className={'styledButton ' + (leftPanel === 'planets' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('planets')}>{t("board.nav.planets")}</button>
+        <button className={'styledButton ' + (leftPanel === 'units' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('units')}>{t("board.nav.units")}</button>
+        <button className={'styledButton ' + (leftPanel === 'techno' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('techno')}>{t("board.nav.technologies")}</button>
+        <button className={'styledButton ' + (leftPanel === 'trade' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('trade')}>{t("board.nav.trade")}</button>
+      </ButtonGroup>
+
+      <div style={{marginTop: '2rem', marginRight: 0, display: 'flex'}}>
+        <Nav className='comboPanel-left' style={{height: '5.5rem', marginTop: '-1rem', padding: '1.5rem 3rem 1rem 2rem'}}>
+          <UncontrolledAccordion open='0' defaultOpen='0' id='turnLine' style={{width: '30rem', opacity: '.9', marginTop: '.5rem', background: 'transparent'}}>
+            <AccordionItem style={{border: 'none', background: 'transparent'}}>
+              <AccordionHeader targetId='1' style={{border: 'none', background: 'transparent'}}>
+                <span style={{display: 'flex', width: '100%', background: 'transparent'}}>
+                  <CardImg style={{width: '2rem', maxHeight: '2rem', marginRight: '1rem'}} src={'race/icons/'+G.races[ctx.currentPlayer].rid+'.png'} />
+                  <h5 style={{margin: 0, alignSelf: 'center', flex: 'auto'}}>{t('races.' + G.races[ctx.currentPlayer].rid + '.name')}
+                  {G.speaker === G.races[ctx.currentPlayer].rid ? ' (' + t('board.speaker') + ')': ''}
+                  </h5>
+                </span>
+              </AccordionHeader>
+              <AccordionBody style={{padding: '1rem', overflow: 'hidden', background: '0% 0% / 100% auto url(/bg1.png)', backgroundColor: 'rgba(33, 37, 41, 1)', marginTop: '1rem', marginRight: '-1rem', border: 'solid 5px #424242'}} accordionId='1'>
+                {[...ctx.playOrder.slice(ctx.playOrderPos+1), ...ctx.playOrder.slice(0, ctx.playOrderPos)].map((pid, idx) => 
+                  <Row key={idx} style={{background: 'transparent'}}>
+                    <Col xs='1' style={{}}>
+                      <CardImg style={{width: '2rem', maxHeight: '2rem', margin: '.5rem'}} src={'race/icons/'+G.races[pid].rid+'.png'} />
+                    </Col>
+                    <Col xs='8' style={{padding: '1rem 1rem 0 2rem', fontFamily: 'Handel Gothic', textDecoration: G.passedPlayers.includes(''+pid) ? 'line-through':''}}>
+                      {t('races.' + G.races[pid].rid + '.name')} {G.speaker === G.races[pid].rid ? ' (' + t('board.speaker') + ')': ''}</Col>
+                    <Col xs='3' style={{padding: '.5rem 0'}}>
+                      {G.races[pid].strategy.map((s, i) => 
+                        <p key={i} style={{fontSize: '75%', margin: 0, textDecoration: s.exhausted ? 'line-through':''}}>
+                          {t('cards.strategy.' + s.id + '.label') + ' [' + (s.init+1) + ']'}</p>)}
+                    </Col>
+                  </Row>
+                )}
+              </AccordionBody>
+            </AccordionItem>
+          </UncontrolledAccordion>
+        </Nav>
+
+        <Nav className='comboPanel-right' style={{height: '3.5rem', zIndex: 1, padding: '.5rem 2.75em 0 .5rem', minWidth: '30rem', display: 'flex', justifyContent: 'flex-end'}}>
+          <NavItem style={{}}>
+            {ctx.phase === 'acts' && <>
+              <button className='styledButton black' style={{}} disabled={ctx.numMoves === 0 || !isMyTurn} onClick={() => undo()}><h5 style={{margin: '.5rem'}}>{t("board.nav.undo")}</h5></button>
+              {!G.spaceCannons && <>
+                {!(activeTile && activeTile.tdata.attacker) && <button className='styledButton yellow' style={{}} disabled={!isMyTurn} onClick={()=>moves.endTurn()}><h5 style={{margin: '.5rem'}}>{t("board.nav.end_turn")}</h5></button>}
+                {activeTile && activeTile.tdata.attacker && <button className='styledButton yellow' style={{}} disabled={!isMyTurn} onClick={()=>moves.antiFighterBarrage()}><h5 style={{margin: '.5rem'}}>{t("board.nav.space_combat")}</h5></button>}
+                </>
+              }
+              {isMyTurn && G.spaceCannons && <button className='styledButton yellow' style={{}} onClick={()=>moves.spaceCannonAttack()}><h5 style={{margin: '.5rem'}}>{t("board.nav.space_cannon")}</h5></button>}
+            </>}
+            {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && <button className='styledButton red' style={{}} disabled={!isMyTurn} onClick={()=>moves.pass()}><h5 style={{margin: '.5rem'}}>{t("board.nav.pass")}</h5></button>}
+          </NavItem>
+        </Nav>
+      </div>
+    </div>;
+}
+
+
+export const GlobalPayment = ({globalPayment, GP}) => {
+
+    const colStyle = useMemo(() => ({width: '4rem', height: '4rem', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', display: 'flex', alignItems: 'center', justifyContent: 'center'}), []);
+
+    return <div style={{fontSize: '2rem', marginRight: '1rem'}}>
+        {globalPayment && <Row>
+            {GP.resources > 0 && <Col xs='1' style={{background: 'url(icons/resources_bg.png)', ...colStyle}}><b style={{paddingLeft: '0.1rem'}}>{GP.resources}</b></Col>}
+            {GP.influence > 0 && <Col xs='1' style={{background: 'url(icons/influence_bg.png)', ...colStyle}}><b style={{paddingLeft: '0.1rem'}}>{GP.influence}</b></Col>}
+            {globalPayment.tg > 0 && <Col xs='1' style={{background: 'url(icons/trade_good_1.png)', ...colStyle}}><b style={{paddingLeft: '0.1rem'}}>{globalPayment.tg}</b></Col>}
+        </Row>}
+    </div>
+
 }

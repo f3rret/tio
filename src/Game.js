@@ -6,7 +6,7 @@ import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm } from './gameSt
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
- getInitRaces, getInitTiles, checkCommanderUnlock } from './utils';
+ getInitRaces, getInitTiles, checkCommanderUnlock, doFlagshipAbility } from './utils';
  
 export const TIO = {
     name: 'TIO',
@@ -969,6 +969,8 @@ export const TIO = {
         
                   if(planet && String(planet.occupied) === String(playerID)){
                     race.tokens.s--;
+                    race.lastUsedPlanet = planet.name;
+
                     if(!planet.units) planet.units={};
                     if(!planet.units.infantry) planet.units.infantry = [];
                     planet.units.infantry.push({}, {});
@@ -976,8 +978,30 @@ export const TIO = {
                 }
               }
             }
+          },
+          deployMech: ({G, playerID}, args) => {
+            const race = G.races[playerID];
 
-
+            if(race && race.rid === 1){
+              const planet = getPlanetByName(G.tiles, args.planet);
+              
+              if(planet){
+                let pay = 3;
+                if(args.payment && args.payment.resources && args.payment.resources.length){
+                  args.payment.resources.forEach(pname => {
+                    const ex = getPlanetByName(G.tiles, pname);
+                    if(ex){
+                      if(ex.resources) pay -= ex.resources;
+                      ex.exhausted = true 
+                    }
+                  })
+                }
+                if(pay > 0) race.tg -= pay;
+                if(!planet.units) planet.units={};
+                if(!planet.units.mech) planet.units.mech = [];
+                planet.units.mech.push({});
+              }
+            }
           },
           useHeroAbility: ({G, playerID}) => {
             const race = G.races[playerID];
@@ -1065,6 +1089,7 @@ export const TIO = {
           order = [...order.slice(spkIdx), ...order.slice(0, spkIdx)];
           G.TURN_ORDER = [...order.slice(1), order[0]]; //speaker at the end*/
           G.TURN_ORDER = order;
+          doFlagshipAbility({G, rid: 1});
         },
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       },

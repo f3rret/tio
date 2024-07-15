@@ -1343,7 +1343,14 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
     if(!resClick) resClick = ()=>{};
     if(!infClick) infClick = ()=>{};
     if(!specClick) specClick = ()=>{};
-    if(!exhausted) exhausted = {};
+    if(!exhausted){
+        exhausted = {};
+    }
+    else if(Array.isArray(exhausted)){
+        let tmp = {};
+        exhausted.forEach(e => tmp[e]=true);
+        exhausted = tmp;
+    }
 
     const { t } = useContext(LocalizationContext);
     const { G, playerID, moves } = useContext(StateContext);

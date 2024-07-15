@@ -1582,3 +1582,48 @@ export const shuffle = (array) => {
   return array;
 }
 
+export const doFlagshipAbility = ({G, rid}) => {
+
+  try{
+    const playerID = G.races.findIndex(r => r && r.rid === rid);
+
+    if(playerID > -1){
+
+      if(rid === 1){
+          G.tiles.some(tile => {
+            if(tile && tile.tdata && String(tile.tdata.occupied) === String(playerID)){
+              const fleet = tile.tdata.fleet;
+              
+              if(fleet && fleet.flagship && fleet.flagship.length){
+                const technologies = getUnitsTechnologies(['flagship', 'carrier', 'dreadnought', 'warsun'], G.races[playerID]);
+                
+                Object.keys(fleet).some(k => {
+                  if(technologies[k] && fleet[k] && fleet[k].length){
+                    return fleet[k].some(ship => {
+                      if(!ship.payload){
+                        ship.payload = [];
+                      }
+                        
+                      if(ship.payload.length < technologies[k].capacity){
+                        ship.payload.push({id: 'infantry'});
+                        return true;
+                      }
+                      return false;
+                    });
+                  }
+                  return false;
+                })
+                return true;
+              }
+            }
+            return false;
+          });
+      }
+
+    }
+  }
+  catch(e){
+    console.log(e);
+  }
+
+}

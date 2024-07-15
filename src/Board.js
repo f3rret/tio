@@ -1,13 +1,13 @@
 /* eslint eqeqeq: 0 */
 import { useApp, Stage, Text, Container, Sprite } from '@pixi/react';
 import { memo, useMemo, useCallback, useState, useEffect, useRef, useContext } from 'react';
-import { Nav, NavItem, Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, CardBody, Tooltip, ListGroup, Container as Cont, Row, Col, CardColumns,
-  UncontrolledAccordion, AccordionItem, AccordionHeader, AccordionBody } from 'reactstrap';
+import { Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, CardBody, Tooltip, ListGroup, Container as Cont, CardColumns,
+   } from 'reactstrap';
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList,
-ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover } from './dialogs';
+ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover} from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
 import { PixiViewport } from './viewport';
-import { checkObjective, StateContext, haveTechnology, haveAbility, wormholesAreAdjacent, LocalizationContext } from './utils';
+import { checkObjective, StateContext, haveTechnology, haveAbility, wormholesAreAdjacent, LocalizationContext, UNITS_LIMIT } from './utils';
 import { lineTo, pathFromCoordinates } from './Grid';
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion, ChooseAndDestroy } from './combat';
@@ -18,7 +18,7 @@ import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep,
 import useImagePreloader, {getTilesAndRacesImgs} from './imgUtils.js';
 import imgSrc from './imgsrc.json';
 import { Blocks } from 'react-loader-spinner';
-import { Persons, Stuff, CARD_STYLE, TOKENS_STYLE } from './components';
+import { Persons, Stuff, CARD_STYLE, TOKENS_STYLE, MyNavbar, GlobalPayment } from './components';
 
 
 export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages }) {
@@ -40,9 +40,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   const [advUnitView, setAdvUnitView] = useState(undefined);
   const [groundUnitSelected, setGroundUnitSelected] = useState({});
   const [payloadCursor, setPayloadCursor] = useState({i:0, j:0});
-  const [tilesPng, setTilesPng] = useState(true);
-  const [tilesTxt, setTilesTxt] = useState(false);
   const [subcardVisible, setSubcardVisible] = useState('stuff');
+  const [globalPayment, setGlobalPayment] = useState({ influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0} });
   
   const [rightBottomVisible, setRightBottomVisible] = useState(null);
   const [rightBottomSubVisible, setRightBottomSubVisible] = useState(null);
@@ -151,83 +150,65 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     return result;
   }, [race, G.pubObjectives, playerID]);
 
-  const leftPanelClick = useCallback((label) => {
-    if(leftPanel === label){
-      setLeftPanel(null);
-    }
-    else{
-      if(label !== 'trade' || (G.races.length > 1)){
-        setLeftPanel(label);
+  useMemo(() => {
+    PLANETS.forEach(planet => {
+      if(planet.exhausted){
+        const pname = planet.name;
+        if(globalPayment.influence.includes(pname) || globalPayment.resources.includes(pname)){
+          setGlobalPayment(produce(globalPayment, draft => {
+              draft.influence = draft.influence.filter(p => p !== pname);
+              draft.resources = draft.resources.filter(p => p !== pname);
+          }));
+        }
       }
+    });
+  }, [globalPayment, PLANETS]);
+
+  const globalPayPlanet = useCallback((e, planet, type) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if(!globalPayment.influence.includes(planet.name) && !globalPayment.resources.includes(planet.name) && !planet.exhausted){
+        setGlobalPayment(produce(globalPayment, draft => {
+            draft[type].push(planet.name);
+        }));
     }
-  //eslint-disable-next-line
-  }, [leftPanel]);
+  }, [globalPayment]);
 
-  const MyNavbar = () =>
-    <div style={{ position: 'fixed', height: 0, width: '100%', zIndex: '2', display: 'flex', justifyContent: 'space-between', padding: '0'}}>
-      <ButtonGroup className='borderedPanel' style={{minHeight: '3rem', margin: '2.5rem 0 0 2.5rem', fontFamily:'Handel Gothic'}}>
-        <button className={'styledButton ' + (leftPanel === 'objectives' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('objectives')}>{t("board.nav.objectives")}</button>
-        <button className={'styledButton ' + (leftPanel === 'planets' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('planets')}>{t("board.nav.planets")}</button>
-        <button className={'styledButton ' + (leftPanel === 'units' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('units')}>{t("board.nav.units")}</button>
-        <button className={'styledButton ' + (leftPanel === 'techno' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('techno')}>{t("board.nav.technologies")}</button>
-        <button className={'styledButton ' + (leftPanel === 'trade' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('trade')}>{t("board.nav.trade")}</button>
-      </ButtonGroup>
-    
-      <div style={{marginTop: '2rem', marginRight: 0, display: 'flex'}}>
-        <Nav className='comboPanel-left' style={{height: '5.5rem', marginTop: '-1rem', padding: '1.5rem 3rem 1rem 2rem'}}>
-          <UncontrolledAccordion open='0' defaultOpen='0' id='turnLine' style={{width: '30rem', opacity: '.9', marginTop: '.5rem', background: 'transparent'}}>
-            <AccordionItem style={{border: 'none', background: 'transparent'}}>
-              <AccordionHeader targetId='1' style={{border: 'none', background: 'transparent'}}>
-                <span style={{display: 'flex', width: '100%', background: 'transparent'}}>
-                  <CardImg style={{width: '2rem', maxHeight: '2rem', marginRight: '1rem'}} src={'race/icons/'+G.races[ctx.currentPlayer].rid+'.png'} />
-                  <h5 style={{margin: 0, alignSelf: 'center', flex: 'auto'}}>{t('races.' + G.races[ctx.currentPlayer].rid + '.name')}
-                  {G.speaker === G.races[ctx.currentPlayer].rid ? ' (' + t('board.speaker') + ')': ''}
-                  </h5>
-                </span>
-              </AccordionHeader>
-              <AccordionBody style={{padding: '1rem', overflow: 'hidden', background: '0% 0% / 100% auto url(/bg1.png)', backgroundColor: 'rgba(33, 37, 41, 1)', marginTop: '1rem', marginRight: '-1rem', border: 'solid 5px #424242'}} accordionId='1'>
-                {[...ctx.playOrder.slice(ctx.playOrderPos+1), ...ctx.playOrder.slice(0, ctx.playOrderPos)].map((pid, idx) => 
-                  <Row key={idx} style={{background: 'transparent'}}>
-                    <Col xs='1' style={{}}>
-                      <CardImg style={{width: '2rem', maxHeight: '2rem', margin: '.5rem'}} src={'race/icons/'+G.races[pid].rid+'.png'} />
-                    </Col>
-                    <Col xs='8' style={{padding: '1rem 1rem 0 2rem', fontFamily: 'Handel Gothic', textDecoration: G.passedPlayers.includes(''+pid) ? 'line-through':''}}>
-                      {t('races.' + G.races[pid].rid + '.name')} {G.speaker === G.races[pid].rid ? ' (' + t('board.speaker') + ')': ''}</Col>
-                    <Col xs='3' style={{padding: '.5rem 0'}}>
-                      {G.races[pid].strategy.map((s, i) => 
-                        <p key={i} style={{fontSize: '75%', margin: 0, textDecoration: s.exhausted ? 'line-through':''}}>
-                          {t('cards.strategy.' + s.id + '.label') + ' [' + (s.init+1) + ']'}</p>)}
-                    </Col>
-                  </Row>
-                )}
-              </AccordionBody>
-            </AccordionItem>
-          </UncontrolledAccordion>
-        </Nav>
+  const globalPayCancelPlanet = useCallback((pname) => {
+      if(globalPayment.influence.includes(pname) || globalPayment.resources.includes(pname)){
+          setGlobalPayment(produce(globalPayment, draft => {
+              draft.influence = draft.influence.filter(p => p !== pname);
+              draft.resources = draft.resources.filter(p => p !== pname);
+          }));
+      }
+  }, [globalPayment]);
 
-        <Nav className='comboPanel-right' style={{height: '3.5rem', zIndex: 1, padding: '.5rem 2.75em 0 .5rem', minWidth: '30rem', display: 'flex', justifyContent: 'flex-end'}}>
-          {false && <><NavItem style={{marginRight: '1rem'}}>
-            <Button color='light' outline={!tilesPng} onClick={()=>setTilesPng(!tilesPng)}>Tiles</Button>
-          </NavItem>
-          <NavItem style={{marginRight: '1rem'}}>
-            <Button color='light' outline={!tilesTxt} onClick={()=>setTilesTxt(!tilesTxt)}>Text</Button>
-          </NavItem></>}
+  const GP = useMemo(() => {
 
-          <NavItem style={{}}>
-            {ctx.phase === 'acts' && <>
-              <button className='styledButton black' style={{}} disabled={ctx.numMoves == 0 || !isMyTurn} onClick={() => undo()}><h5 style={{margin: '.5rem'}}>{t("board.nav.undo")}</h5></button>
-              {!G.spaceCannons && <>
-                {!(activeTile && activeTile.tdata.attacker) && <button className='styledButton yellow' style={{}} disabled={!isMyTurn} onClick={()=>moves.endTurn()}><h5 style={{margin: '.5rem'}}>{t("board.nav.end_turn")}</h5></button>}
-                {activeTile && activeTile.tdata.attacker && <button className='styledButton yellow' style={{}} disabled={!isMyTurn} onClick={()=>moves.antiFighterBarrage()}><h5 style={{margin: '.5rem'}}>{t("board.nav.space_combat")}</h5></button>}
-                </>
-              }
-              {isMyTurn && G.spaceCannons && <button className='styledButton yellow' style={{}} onClick={()=>moves.spaceCannonAttack()}><h5 style={{margin: '.5rem'}}>{t("board.nav.space_cannon")}</h5></button>}
-            </>}
-            {ctx.phase !== 'strat' && ctx.phase !== 'agenda' && <button className='styledButton red' style={{}} disabled={!isMyTurn} onClick={()=>moves.pass()}><h5 style={{margin: '.5rem'}}>{t("board.nav.pass")}</h5></button>}
-          </NavItem>
-        </Nav>
-      </div>
-    </div>;
+      let result = {resources: 0, influence: 0}
+      if(globalPayment.resources && globalPayment.resources.length){
+          globalPayment.resources.forEach(pname => {
+              const planet = PLANETS.find(p => p.name === pname);
+              if(planet && planet.resources && !planet.exhausted) result.resources += planet.resources
+          });
+      }
+      if(globalPayment.influence && globalPayment.influence.length){
+          globalPayment.influence.forEach(pname => {
+              const planet = PLANETS.find(p => p.name === pname);
+              if(planet && planet.influence && !planet.exhausted) result.influence += planet.influence
+          });
+      }
+      return result;
+
+  }, [globalPayment, PLANETS])
+
+  /*const globalPayTg = useCallback((inc) => {
+      setGlobalPayment(produce(globalPayment, draft => {
+          draft.tg += inc;
+      }));
+  }, [globalPayment]);*/
+
 
   const completeObjective = (oid) => {
     let objective = G.pubObjectives.find(o => o.id === oid);
@@ -825,11 +806,11 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
         
         return <Container key={index}>
                 
-                {tilesPng && <Sprite cacheAsBitmap={true} interactive={true} pointerdown={ (e)=>tileClick(e, index) } 
+                <Sprite cacheAsBitmap={true} interactive={true} pointerdown={ (e)=>tileClick(e, index) } 
                             image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }}
                             x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5} alpha={.9}>
-                            </Sprite>}
-                {tilesTxt && <>
+                            </Sprite>
+                {false && <>
                   <Text style={{fontSize: 20, fill:'white'}} text={'(' + element.q + ',' + element.r + ')'} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
                   <Text style={{fontSize: 25, fill: fill}} text={ element.tid } x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2}/>
                     { element.tdata.occupied!==undefined && <Text style={{fontSize: 22, fill: 'green'}} 
@@ -1043,7 +1024,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   }
 
   const AbilAction = ({abilId}) => { 
-    let disabled = race.actions.length >= maxActs;
+    let disabled = race.actions && race.actions.length >= maxActs;
     //let ability = race.abilities.find(a => a.id === abilId);
 
   
@@ -1063,7 +1044,6 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
       }
     }
 
-
     const onClick = ()=>{
       moves.useRacialAbility({abilId, selectedTile, selectedPlanet})
     }
@@ -1075,6 +1055,32 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
               {t('races.' + race.rid + '.' + abilId + '.effect')}
             </CardsPagerItem>
+  }
+
+  const MechDeploy = () => {
+    let disabled = true;
+
+    if(race.rid === 1 && race.actions && race.actions.length && race.actions[race.actions.length - 1] === 'ORBITAL_DROP'){
+      if(!UNITS['mech'] || (UNITS['mech'] < UNITS_LIMIT['mech'])){
+        if(GP.resources + race.tg > 2){
+          disabled = false;
+        }
+      }
+    }
+
+    const onClick = () => {
+      moves.deployMech({planet: race.lastUsedPlanet, payment: globalPayment})
+    }
+
+    return  <>
+              <CardsPagerItem tag='context'>
+                <button style={{width: '100%', marginBottom: '1rem'}} disabled={disabled} className = {'styledButton yellow'} onClick={onClick}>
+                  {t('races.' + race.rid + '.MECH.label')}
+                </button>
+
+                {t('races.' + race.rid + '.MECH.deploy')}
+              </CardsPagerItem>
+            </>
   }
 
   const stateContext = useMemo(() => ({G, ctx, playerID, /*matchID, credentials,*/ moves, selectedTech, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}), [G, ctx, playerID, moves, selectedTech, exhaustedCards, exhaustTechCard, prevStages, PLANETS, UNITS]);
@@ -1288,7 +1294,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
   return (<StateContext.Provider value={stateContext}>
               <Overlay/>      
-              <MyNavbar />
+              <MyNavbar leftPanel={leftPanel} setLeftPanel={setLeftPanel} undo={undo} isMyTurn={isMyTurn} activeTile={activeTile}/>
               <CardColumns style={{margin: '4rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '42rem', zIndex: '1'}}>
                 {!race.isSpectator && <>
                   {leftPanel === 'techno' && <TechnologyDialog selected={selectedTech && selectedTech.techno ? [selectedTech.techno.id]:[]} onSelect={({techno, rid}) => setSelectedTech({techno, rid})}/>}
@@ -1301,7 +1307,10 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                     <CardTitle></CardTitle>
                       <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
                         <Cont style={{border: 'none'}}>
-                          {<PlanetsRows PLANETS={PLANETS} />}
+                          {<PlanetsRows PLANETS={PLANETS} exhausted={[...globalPayment.influence, ...globalPayment.resources]}
+                                                          resClick={(e, p) => globalPayPlanet(e, p, 'resources')} 
+                                                          infClick={(e, p) => globalPayPlanet(e, p, 'influence')}
+                                                          onClick={(pname) => globalPayCancelPlanet(pname)}/>}
                         </Cont>
                       </div>
                   </Card>}
@@ -1379,6 +1388,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                         {haveTechnology(race, 'INTEGRATED_ECONOMY') && <TechAction techId='INTEGRATED_ECONOMY'/>}
                         {haveTechnology(race, 'INFANTRY2') && <TechAction techId='INFANTRY2'/>}
                         {haveAbility(race, 'ORBITAL_DROP') && <AbilAction abilId='ORBITAL_DROP'/>}
+                        {race.rid === 1 && <MechDeploy />}
                       </CardsPager>
                       
                     </>}
@@ -1472,9 +1482,12 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                 <CardColumns style={{paddingRight: '2rem', display: 'flex', height: 'max-content', 
                             width: '100%', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end', position: 'relative' }}>
                     
-                    {race && race.strategy.length > 0 && ctx.phase !== 'strat' && <div className='comboPanel-left-vertical' style={{display: 'flex', position: 'absolute', padding: '.5rem', top: '-5rem', right: '3rem'}}>
-                      {race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
-                    </div>}
+                    <div style={{display: 'flex', position: 'absolute', top: '-5rem', right: '3rem'}}>
+                      <GlobalPayment globalPayment={globalPayment} GP={GP}/>
+                      {race && race.strategy.length > 0 && ctx.phase !== 'strat' && <div className='comboPanel-left-vertical' style={{display: 'flex', padding: '.5rem'}}>
+                        {race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
+                      </div>}
+                    </div>
                     <div className='borderedPanel-vertical' style={{display: 'flex', height: 'max-content', backgroundColor: 'rgba(33, 37, 41, 0.95)',
                             width: '100%', flexDirection: 'column', justifyContent: 'flex-end', margin: '0 0 2rem 0', zIndex: 1}}>
                       {race && subcardVisible === 'stuff' && <Stuff groundUnitSelected={groundUnitSelected} R_UNITS={R_UNITS} tempCt={tempCt} setTempCt={setTempCt} exhaustedCards={exhaustedCards}/>}
