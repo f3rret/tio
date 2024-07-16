@@ -15,7 +15,7 @@ export const App = Client({
     /*playerID: props.playerID,
     matchID: props.matchID,
     credentials: props.credentials,*/
-    multiplayer: SocketIO({ server: settings.ip + ':8000' })
+    multiplayer: SocketIO({ server: window.location.protocol + '//' + settings.ip + ':8000' })
 });
 
 export const AppLocal = Client({ 

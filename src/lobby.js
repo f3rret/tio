@@ -43,7 +43,7 @@ export const Lobby = (args)=> {
     const [cookie, setCookie] = useCookies(['matchID', 'playerID', 'playerCreds']);
     //const [playerName, setPlayerName] = useState(playerNames[0]);
     
-    const lobbyClient = useMemo(() => new LobbyClient({ server: 'http://' + settings.ip + ':8000' }), []);
+    const lobbyClient = useMemo(() => new LobbyClient({ server: window.location.protocol + '//' + settings.ip + ':8000' }), []);
     const prematchInfoString = useMemo(() => {
         return JSON.stringify(prematchInfo);
     }, [prematchInfo]); //for optimization memo recalc

@@ -8,5 +8,5 @@ export const PrematchApp = Client({
     game: prematch,
     board: PrematchBoard,
     debug: false,
-    multiplayer: SocketIO({ server: settings.ip + ':8000' })
+    multiplayer: SocketIO({ server: window.location.protocol + '//' + settings.ip + ':8000' })
 });
