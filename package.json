@@ -2,7 +2,7 @@
   "name": "tio",
   "version": "0.1.0",
   "private": true,
-  "ip": "twilight-imperium.online",
+  "ip": "localhost",
   "dependencies": {
     "@pixi/react": "^7.0.3",
     "@testing-library/jest-dom": "^5.16.5",
@@ -26,6 +26,7 @@
     "react-string-replace": "^1.1.1",
     "reactstrap": "^9.1.8",
     "sass": "^1.61.0",
+    "use-immer": "^0.10.0",
     "use-iterator": "^1.2.0",
     "web-vitals": "^2.1.4"
   },

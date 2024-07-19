@@ -3,16 +3,18 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { LocalizationContext } from '../utils';
 import { colors, trueColors } from '../colors';
 
-export const PrematchChat = ({sendChatMessage, chatMessages}) => {
+const PrematchChat = ({sendChatMessage, chatMessages}) => {
 
     const { t } = useContext(LocalizationContext);
     const [msg, setMsg] = useState('');
+    
     const onKeyDown = useCallback((e)=> {
         if(e.keyCode === 13){ 
             sendChatMessage(e.target.value);
             setMsg('');
         }
     }, [sendChatMessage]);
+
     const onChange = useCallback((e)=>{
         setMsg(e.target.value)
     }, []);
@@ -41,5 +43,6 @@ export function PrematchBoard ({G, ctx, sendChatMessage, chatMessages}) {
         sendChatMessage(t('lobby.fate'));
          // eslint-disable-next-line
     }, []);
+    
     return (<PrematchChat sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>);
 }

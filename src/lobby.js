@@ -20,7 +20,7 @@ import './scss/custom.scss';
 
 let interval = null;
 
-export const Lobby = (args)=> {
+export const Lobby = ({dispatch})=> {
 
 
     const { t, locale, setLocale } = useContext(LocalizationContext);
@@ -287,9 +287,15 @@ export const Lobby = (args)=> {
                 setCookie('playerCreds', data.playerCredentials);
                 setCookie('playerName', playerName);
 
-                args.setPlayerID(playerID);
+                /*args.setPlayerID(playerID);
                 args.setMatchID(mid);
-                args.setPlayerCreds(data.playerCredentials);
+                args.setPlayerCreds(data.playerCredentials);*/
+                dispatch({
+                    type: 'connect',
+                    playerID,
+                    matchID: mid,
+                    playerCreds: data.playerCredentials
+                });
             }
         })
         .catch(console.err);
@@ -305,9 +311,15 @@ export const Lobby = (args)=> {
             clearInterval(interval);
             setMatchID(prematchInfo.matchID);
 
-            args.setPlayerID(String(cookie.playerID));
+            /*args.setPlayerID(String(cookie.playerID));
             args.setMatchID(prematchInfo.matchID);
-            args.setPlayerCreds(cookie.playerCreds);
+            args.setPlayerCreds(cookie.playerCreds);*/
+            dispatch({
+                type: 'reconnect',
+                playerID: String(cookie.playerID),
+                matchID: prematchInfo.matchID,
+                playerCreds: cookie.playerCreds
+            });
         }
     // eslint-disable-next-line
     }, [cookie, prematchInfoString]);

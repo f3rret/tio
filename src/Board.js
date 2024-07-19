@@ -1,70 +1,48 @@
 /* eslint eqeqeq: 0 */
-import { useApp, Stage, Text, Container, Sprite } from '@pixi/react';
-import { memo, useMemo, useCallback, useState, useEffect, useRef, useContext } from 'react';
+
+import { useMemo, useCallback, useEffect, useRef, useContext } from 'react';
 import { Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, CardBody, Tooltip, ListGroup, Container as Cont, CardColumns,
    } from 'reactstrap';
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList,
 ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover} from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
-import { PixiViewport } from './viewport';
-import { checkObjective, StateContext, haveTechnology, haveAbility, wormholesAreAdjacent, LocalizationContext, UNITS_LIMIT } from './utils';
-import { lineTo, pathFromCoordinates } from './Grid';
+import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT } from './utils';
+
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion, ChooseAndDestroy } from './combat';
-import { produce } from 'immer';
+import { useImmerReducer } from 'use-immer';
 import techData from './techData.json';
-import tileData from './tileData.json';
-import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep, SectorUnderAttack, PlanetUnderAttack, SelectedPlanet } from './animated';
+
 import useImagePreloader, {getTilesAndRacesImgs} from './imgUtils.js';
 import imgSrc from './imgsrc.json';
 import { Blocks } from 'react-loader-spinner';
 import { Persons, Stuff, CARD_STYLE, TOKENS_STYLE, MyNavbar, GlobalPayment } from './components';
-
+import { hudReducer } from './reducers.js';
+import { PixiStage } from './pixiStage.js';
 
 export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages }) {
 
-  const stagew = window.innerWidth;
-  const stageh = window.innerHeight;
+  const [hud, dispatch] = useImmerReducer(hudReducer, {producing: null, exhaustedCards: [], leftPanel: null, advUnitView: undefined, 
+    groundUnitSelected: {}, payloadCursor: {i:0, j:0}, subcardVisible: 'stuff', rightBottomVisible: null, rightBottomSubVisible: null,
+    selectedTile: -1, selectedPlanet: -1, selectedTech: {}, moveSteps: [], tempCt: {t: 0, s: 0, f: 0, new: 0}, justOccupied: null, payObj: null,
+    globalPayment: { influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0}} });
 
-  const race = useMemo(() => {
-    if(playerID !== null){
-      return G.races[playerID];
-    }
-    else return {isSpectator: true, color: ['white', 'white'], knownTechs: [], technologies:[], abilities:[], strategy:[], actionCards:[], secretObjectives:[], exhaustedCards: [], reinforcement: {},
-      exploration:[], vp: 0, tg: 0, tokens: { t: 0, f: 0, s: 0, new: 0}, fragments: {u: 0, c: 0, h: 0, i: 0}, relics: []};
-  }, [G.races, playerID]);
-
-  const [exhaustedCards, setExhaustedCards] = useState([]);
-  const [producing, setProducing] = useState(null);
-  const [leftPanel, setLeftPanel] = useState(null);
-  const [advUnitView, setAdvUnitView] = useState(undefined);
-  const [groundUnitSelected, setGroundUnitSelected] = useState({});
-  const [payloadCursor, setPayloadCursor] = useState({i:0, j:0});
-  const [subcardVisible, setSubcardVisible] = useState('stuff');
-  const [globalPayment, setGlobalPayment] = useState({ influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0} });
-  
-  const [rightBottomVisible, setRightBottomVisible] = useState(null);
-  const [rightBottomSubVisible, setRightBottomSubVisible] = useState(null);
-  const [selectedTile, setSelectedTile] = useState(-1);
-  const [selectedPlanet, setSelectedPlanet] = useState(-1);
-  const [selectedTech, setSelectedTech] = useState({});
-  const [moveSteps, setMoveSteps] = useState([]);
-  const isMyTurn = useMemo(() => ctx.currentPlayer == playerID, [ctx.currentPlayer, playerID]);
   const prevStages = useRef(null);
-  const [tempCt, setTempCt] = useState({t: 0, s: 0, f: 0, new: 0});
-  const [justOccupied, setJustOccupied] = useState(null);
   const { t } = useContext(LocalizationContext);
   
-  const [payObj, setPayObj] = useState(null);
   const togglePaymentDialog = (payment) => {
     if(payment && Object.keys(payment).length > 0){
-      moves.completeObjective(payObj, payment);
+      moves.completeObjective(hud.payObj, payment);
     }
-    setPayObj(null);
+    dispatch({type: 'pay_obj', payload: null})
   };
+
+  const race = useMemo(() => G.races[playerID], [G.races, playerID]);
+  const isMyTurn = useMemo(() => ctx.currentPlayer === playerID, [ctx.currentPlayer, playerID]);
 
   const PLANETS = useMemo(()=> {
     const arr = [];
+
     G.tiles.forEach( t => {
       if(t.tdata.planets && t.tdata.planets.length){
         t.tdata.planets.forEach((p, pidx) => {
@@ -74,6 +52,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
         })
       }
     });
+
     return arr;
   }, [G.tiles, playerID]);
 
@@ -150,64 +129,35 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     return result;
   }, [race, G.pubObjectives, playerID]);
 
-  useMemo(() => {
-    PLANETS.forEach(planet => {
-      if(planet.exhausted){
-        const pname = planet.name;
-        if(globalPayment.influence.includes(pname) || globalPayment.resources.includes(pname)){
-          setGlobalPayment(produce(globalPayment, draft => {
-              draft.influence = draft.influence.filter(p => p !== pname);
-              draft.resources = draft.resources.filter(p => p !== pname);
-          }));
-        }
-      }
-    });
-  }, [globalPayment, PLANETS]);
-
   const globalPayPlanet = useCallback((e, planet, type) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if(!globalPayment.influence.includes(planet.name) && !globalPayment.resources.includes(planet.name) && !planet.exhausted){
-        setGlobalPayment(produce(globalPayment, draft => {
-            draft[type].push(planet.name);
-        }));
-    }
-  }, [globalPayment]);
+    dispatch({type: 'global_payment', payload: {planet, type}})
+  }, [dispatch]);
 
   const globalPayCancelPlanet = useCallback((pname) => {
-      if(globalPayment.influence.includes(pname) || globalPayment.resources.includes(pname)){
-          setGlobalPayment(produce(globalPayment, draft => {
-              draft.influence = draft.influence.filter(p => p !== pname);
-              draft.resources = draft.resources.filter(p => p !== pname);
-          }));
-      }
-  }, [globalPayment]);
+      dispatch({type: 'global_payment', payload: {planet: pname, type: 'cancel'}})
+  }, [dispatch]);
 
   const GP = useMemo(() => {
 
       let result = {resources: 0, influence: 0}
-      if(globalPayment.resources && globalPayment.resources.length){
-          globalPayment.resources.forEach(pname => {
+      if(hud.globalPayment.resources && hud.globalPayment.resources.length){
+          hud.globalPayment.resources.forEach(pname => {
               const planet = PLANETS.find(p => p.name === pname);
               if(planet && planet.resources && !planet.exhausted) result.resources += planet.resources
           });
       }
-      if(globalPayment.influence && globalPayment.influence.length){
-          globalPayment.influence.forEach(pname => {
+      if(hud.globalPayment.influence && hud.globalPayment.influence.length){
+          hud.globalPayment.influence.forEach(pname => {
               const planet = PLANETS.find(p => p.name === pname);
               if(planet && planet.influence && !planet.exhausted) result.influence += planet.influence
           });
       }
       return result;
 
-  }, [globalPayment, PLANETS])
-
-  /*const globalPayTg = useCallback((inc) => {
-      setGlobalPayment(produce(globalPayment, draft => {
-          draft.tg += inc;
-      }));
-  }, [globalPayment]);*/
+  }, [hud.globalPayment, PLANETS])
 
 
   const completeObjective = (oid) => {
@@ -216,7 +166,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     if(!objective) return;
 
     if(objective.type === 'SPEND'){
-      setPayObj(oid);
+      dispatch({type: 'pay_obj', payload: oid})
     }
     else{
       if(checkObjective(G, playerID, oid)){
@@ -243,13 +193,13 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   }, [race, isMyTurn]);
 
   const rightBottomSwitch = useCallback((val) => {
-    if(rightBottomVisible === val){
-      setRightBottomVisible(null);
+    if(hud.rightBottomVisible === val){
+      dispatch({type: 'right_bottom_visible', payload: null});
     }
     else{
-      setRightBottomVisible(val);
+      dispatch({type: 'right_bottom_visible', payload: val});
     }
-  }, [rightBottomVisible]);
+  }, [hud.rightBottomVisible, dispatch]);
 
   const StrategyCard = ({card, idx}) => {
 
@@ -300,558 +250,40 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     return ctx.activePlayers && ctx.activePlayers[playerID] && ctx.activePlayers[playerID].startsWith('invasion');
   }, [ctx.activePlayers, playerID]);
 
-  
-  const tileClick = useCallback((e, index, planetIndex) => {
-    e.preventDefault(); 
-    if(groundUnitSelected && groundUnitSelected.unit){
-      setGroundUnitSelected({});
-    }
-    setSelectedTile(index);
-    setSelectedPlanet(planetIndex === undefined ? -1:planetIndex);
-  }, [groundUnitSelected]);
-
-
-  const advUnitViewTechnology = useMemo(() => {
-    if(race && advUnitView && advUnitView.unit){
-      return race.technologies.find( t => t.id === advUnitView.unit.toUpperCase());
-    }
-  },[advUnitView, race]);
-
-  const movePayloadCursor = useCallback(()=>{
-    let nexti = payloadCursor.i;
-    let nextj = payloadCursor.j;
-    const tile = G.tiles[advUnitView.tile];
-    const carrier = tile.tdata.fleet[advUnitView.unit];
-
-    if(advUnitViewTechnology && nextj < advUnitViewTechnology.capacity - 1){
-      nextj++;
-    }
-    else{
-      nextj = 0;
-      if(nexti < carrier.length - 1){
-        nexti++;
-      }
-      else{
-        nexti = 0;
-      }
-    }
-
-    setPayloadCursor({i: nexti, j: nextj})
-  }, [advUnitViewTechnology, G.tiles, advUnitView, payloadCursor]);
-
-  const unloadUnit = useCallback((pid) => {
-    const i = payloadCursor.i;
-    const j = payloadCursor.j;
-    const tile = G.tiles[advUnitView.tile];
-
-    if(advUnitView && String(tile.tdata.occupied) === String(playerID)){
-      const unit = G.tiles[advUnitView.tile].tdata.fleet[advUnitView.unit];
-      if(unit[i] && unit[i].payload && unit[i].payload[j]){
-        moves.unloadUnit({src: {...advUnitView, i, j}, dst: {tile: advUnitView.tile, planet: pid}});
-      }
-
-      //movePayloadCursor();
-    }
-
-  }, [G.tiles, advUnitView, moves, payloadCursor, playerID]);
-
-  const loadUnit = useCallback((args)=>{
-    const event = args.e;
-    if(event){
-      event.stopPropagation();
-      event.preventDefault();
-    }
-
-    const tile = G.tiles[args.tile];
-    if(String(tile.tdata.occupied) === String(playerID)){
-
-      if(exhaustedCards.indexOf('TRANSIT_DIODES') > -1){
-        if(!race.reinforcement.transit ||  race.reinforcement.transit.length < 4){
-          moves.moveToTransit(args);
-        }
-      }
-      else if(advUnitView && advUnitViewTechnology && advUnitView.tile !== undefined && advUnitView.tile === args.tile){
-        if(['infantry', 'fighter', 'mech'].indexOf(args.unit) > -1){
-          if(tile && tile.tdata.fleet){
-            const carrier = tile.tdata.fleet[advUnitView.unit];
-            if(!(payloadCursor && payloadCursor.i <= carrier.length - 1 && payloadCursor.j <= advUnitViewTechnology.capacity)){
-              setPayloadCursor({i:0, j:0});
-            }
-
-            moves.loadUnit({src: {...args, e: undefined}, dst: {...advUnitView, ...payloadCursor}});
-            movePayloadCursor();
-          }
-        }
-      }
-      else if(['infantry', 'fighter', 'mech'].indexOf(args.unit) > -1){
-        if(groundUnitSelected.tile === args.tile && groundUnitSelected.unit === args.unit){
-          setGroundUnitSelected({});
-        }
-        else{
-          setGroundUnitSelected({tile: args.tile, unit: args.unit, planet: args.planet});
-        }
-      }
-
-    }
-
-  },[G.tiles, advUnitView, advUnitViewTechnology, moves, payloadCursor, groundUnitSelected, movePayloadCursor, playerID, exhaustedCards, race])
-
+ 
   const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
 
-  const getMovePath = useMemo(() => {
-
-    if(activeTile && advUnitView && advUnitView.tile !== undefined){
-      if(String(activeTile.tid) === String(G.tiles[advUnitView.tile].tid)) return [];
-      let line;
-
-      if(moveSteps && moveSteps.length){
-        let ar = [advUnitView.tile, ...moveSteps].map(t => ({q: G.tiles[t].q, r: G.tiles[t].r, wormhole: G.tiles[t].tdata.wormhole}));
-        ar = [...ar, {q: activeTile.q, r: activeTile.r, wormhole: activeTile.tdata.wormhole}];
-        line = pathFromCoordinates(G.HexGrid, ar);
-
-        let first = line[0];
-        let result = [];
-        
-        for(var i=1; i<line.length; i++){
-          result.push(first);
-
-          if(!ar[i-1].wormhole || !wormholesAreAdjacent(G, ar[i-1].wormhole, ar[i].wormhole)){
-            const segment = lineTo(G.HexGrid, [first.q, first.r], [line[i].q, line[i].r]);
-            if(segment.length > 1){
-              result = [...result, ...segment.splice(1, segment.length-2)];
-            }
-          }
-          
-          first = line[i];
-        }
-        result.push(line[line.length-1]);
-        return result;
-      }
-      else if(activeTile.tdata.wormhole && wormholesAreAdjacent(G, activeTile.tdata.wormhole, G.tiles[advUnitView.tile].tdata.wormhole)){
-        return [activeTile.tid, G.tiles[advUnitView.tile].tid];
-      }
-      else{
-        line = lineTo(G.HexGrid, [G.tiles[advUnitView.tile].q, G.tiles[advUnitView.tile].r], [activeTile.q, activeTile.r]);
-        return line;
-      }
-    }
-    else{
-      return [];
-    }
-
-  }, [activeTile, advUnitView, moveSteps, G]);
-
-  const getPureMovePath = useMemo(() => {
-    return getMovePath.filter(t => tileData.hyperlanes.indexOf(t.tileId) === -1).map(t => t.tileId !== undefined ? String(t.tileId):t);
-  }, [getMovePath])
-  
-  const canMoveThatPath = useMemo(() => {
-    const getMySide = (prev, cur) => {
-      let side;
-      if(cur.q > prev.q){
-        if(cur.r === prev.r) side = 5;
-        else side = 4;
-      }
-      else if(cur.q === prev.q){
-        if(cur.r < prev.r) side = 3;
-        else side = 0;
-      }
-      else {
-        if(cur.r === prev.r) side = 2;
-        else side = 1;
-      }
-      return side;
-    }
-  
-    const isBrokenLine = (line) => {
-      return line.some((t,i) => {
-        if(tileData.hyperlanes.indexOf(t.tileId) > -1 && i > 0){
-          let sidein = getMySide(line[i-1], t);
-          let linein = tileData.all[t.tileId].hyperlanes.some(h => h.indexOf(sidein) > -1);
-
-          if(!linein) return true;
-  
-          if(i < line.length){
-            let sideout = getMySide(line[i+1], t);
-            let lineout = tileData.all[t.tileId].hyperlanes.some(h =>  h.indexOf(sidein) > -1 && h.indexOf(sideout) > -1);
-
-            if(!lineout) return true;
-          }
-        }
-        return false;
-      });
-    }
-
-    if(!advUnitViewTechnology) return false;
-    
-    let adj = 0;
-    if(exhaustedCards.indexOf('GRAVITY_DRIVE')>-1) adj++;
-    if(race.moveBoost) adj += race.moveBoost;
-
-    if(advUnitViewTechnology && (advUnitViewTechnology.move+adj) >= getPureMovePath.length-1){
-      if(isBrokenLine(getMovePath)) return false;
-      if(getPureMovePath && getPureMovePath.length){
-        return !getPureMovePath.some(p => {
-          const tile = G.tiles.find(t => String(t.tid) === String(p));
-
-          if(tile.tdata.type === 'red'){
-            if(tile.tdata.anomaly === 'asteroid-field' && !haveTechnology(G.races[playerID], 'ANTIMASS_DEFLECTORS')){
-              return true;
-            }
-            else if(tile.tdata.anomaly === 'nebula'){
-              return getPureMovePath.length > 2;
-            }
-            else if(tile.tdata.anomaly === 'supernova'){
-              return true;
-            }
-            else if(tile.tdata.anomaly === 'gravity-rift'){
-              return false;
-            }
-          }
-          else if(tile.tdata.occupied && String(tile.tdata.occupied) !== String(playerID) && String(activeTile.tid) !== String(p)){
-            return !(haveTechnology(race, 'LIGHTWAVE_DEFLECTOR') || String(race.moveThroughEnemysFleet) === String(tile.tid));
-          }
-          return false;
-        });
-
-      }
-    }
-    return false;
-  },[G.tiles, G.races, race, getMovePath, getPureMovePath, advUnitViewTechnology, playerID, activeTile, exhaustedCards]);
-
-  const distanceInfo = useCallback(()=>{
-    if(race && advUnitViewTechnology && advUnitViewTechnology.move && getPureMovePath.length){
-      let adj = 0;
-
-      if(exhaustedCards.indexOf('GRAVITY_DRIVE')>-1) adj++;
-      if(race.moveBoost) adj += race.moveBoost;
-      return [t('board.move_path_distance') + ': ' + (getPureMovePath.length-1), 
-              t('board.move_power_reserve') + ': ' + advUnitViewTechnology.move, 
-              t('board.move_boost') + ': ' + adj];
-    }
-    else{
-      return ['-', '-', '-'];
-    }
-  //eslint-disable-next-line
-  }, [advUnitViewTechnology, getPureMovePath, exhaustedCards, race]);
-
-  const moveToClick = useCallback((idx) => {
-
-    if(advUnitView && idx === advUnitView.tile){
-      if(canMoveThatPath){
-        let shipIdx = payloadCursor.i;
-        if(shipIdx > G.tiles[idx].tdata.fleet[advUnitView.unit].length){
-          shipIdx = 0;
-        }
-        
-        moves.moveShip({...advUnitView, shipIdx, exhaustedCards, path: [advUnitView.tile, ...moveSteps]})
-        setPayloadCursor({i: 0, j: 0});
-
-        // change advUnitView after move!
-        if(G.tiles[idx].tdata.fleet[advUnitView.unit].length <= 1){
-          setAdvUnitView({})
-        }
-      }
-    }
-
-  }, [G.tiles, advUnitView, payloadCursor, moves, canMoveThatPath, exhaustedCards, moveSteps])
-
-  
- 
-  const modifyMoveStep = useCallback((index) => {
-    if(G.tiles[index].tid === activeTile.tid) return;
-
-    setMoveSteps(produce(moveSteps, draft =>{
-      const idx = moveSteps.indexOf(index);
-
-      if(idx === -1){
-        draft.push(index);
-      }
-      else{
-        draft.splice(idx, 1);
-      }
-      
-    }));
-
-  }, [moveSteps, G.tiles, activeTile]);
-
   const flushTempCt = useCallback(() =>{
-    setTempCt({s: 0, t: 0, f: 0, new: 0})
-  }, []);
+    dispatch({type: 'temp_ct', payload: {s: 0, t: 0, f: 0, new: 0}})
+  }, [dispatch]);
 
   const exhaustTechCard = useCallback((techId) => {
-    if(G.races[playerID].exhaustedCards.indexOf(techId)>-1){
+    if(race.exhaustedCards.includes(techId)){
       return false;
     }
 
-    if(techId === 'INTEGRATED_ECONOMY'){
-      if(exhaustedCards.indexOf(techId) === -1){
-        if(justOccupied && !producing){
-          setProducing(justOccupied);
-        }
-      }
-      else{
-        setProducing(null);
-      }
-    }
+    dispatch({
+      type: 'exhaust_card',
+      cardId: techId,
+      planet: techId === 'INTEGRATED_ECONOMY' ? hud.justOccupied : 
+              techId === 'SLING_RELAY' ? G.tiles[hud.selectedTile].tdata.planets.find(p => p.units.spacedock && String(p.occupied) === String(playerID))?.name : null
+    })
 
-    setExhaustedCards(produce(exhaustedCards, draft => {
-      const idx = draft.indexOf(techId)
-      if( idx > -1){
-        draft.splice(idx, 1);
-      }
-      else{
-        draft.push(techId);
-      }
-    }));
-
-    if(techId === 'SLING_RELAY'){
-      if(!producing){
-        setProducing(G.tiles[selectedTile].tdata.planets.find(p => p.units.spacedock && String(p.occupied) === String(playerID)).name);
-      }
-      else{
-        setProducing(null);
-      }
-    }
-    else if(techId === 'PREDICTIVE_INTELLIGENCE'){
+    if(techId === 'PREDICTIVE_INTELLIGENCE'){
       flushTempCt();
     }
     
-  }, [exhaustedCards, setExhaustedCards, G.races, producing, G.tiles, selectedTile, playerID, flushTempCt, justOccupied]);
+  }, [race.exhaustedCards, dispatch, G.tiles, hud.selectedTile, playerID, flushTempCt, hud.justOccupied]);
 
 
   const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);
-  const isDMZ = useCallback((p) => p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1, []);
-
-  const getColorByRid = useCallback((rid) => {
-    const r = G.races.find(rc => rc.rid === rid);
-    if(r){
-      return r.color;
-    }
-    else{
-      return ['white', 'white']
-    }
-  }, [G.races]);
   
-  const TileContent2 = ({element, index}) => {
-    const [firstCorner] = element.corners;
-
-    return  <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
-             
-              {element.tdata.attacker && <SectorUnderAttack w={element.w} rid={G.races[ctx.currentPlayer].rid} rname={t('races.' + G.races[ctx.currentPlayer].rid + '.name')} 
-                                  text={t('board.sector_under_attack')} fleet={element.tdata.attacker} color={G.races[ctx.currentPlayer].color[0]}/>}
-
-              {isMyTurn && activeTile && advUnitView && advUnitView.tile === index && element.tdata.occupied == playerID && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 && 
-                            <MoveDialog  x={-240} y={-50} canMoveThatPath={canMoveThatPath} pointerdown={() => moveToClick(index)} 
-                                        distanceInfo={distanceInfo(element, activeTile)} buttonLabel={t('board.go')}/>}
-            </Container>
-  }
-
-  const TileContent = ({element, index}) => {
-
-    //eslint-disable-next-line
-    const pathIdxs = getPureMovePath.reduce((acc, p, i) => ( (i > 0 && String(p) === String(element.tid)) && acc.push(i), acc), []);
-    const [firstCorner] = element.corners;
-    const moveTint = useMemo(() => {
-      let tint = element.tdata.type === 'blue' ? 'yellowgreen' :  element.tdata.type !== 'hyperlane' ? element.tdata.type: 'white';
-      if(element.tdata.occupied && String(element.tdata.occupied)!==String(playerID)) tint = 'purple';
-      if(tint === 'red' && canMoveThatPath) tint = 'yellowgreen';
-
-      return tint;
-    }, [element.tdata]);
-
-
-    return <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
-        {element.tdata.mirage && <Sprite x={element.w/4} y={element.w/6} scale={.35} alpha={.9} image={'icons/mirage_token.webp'}/>}
-        {element.tdata.wormhole === 'gamma' && <Sprite x={-15} y={element.w/4 + 30} scale={.5} alpha={.9} image={'icons/gamma.png'}/>}
-        {element.tdata.ionstorm && element.tdata.wormhole === 'alpha' && <Sprite x={-15} y={element.w/4 + 30} scale={1} alpha={.85} image={'icons/alpha.png'}/>}
-        {element.tdata.ionstorm && element.tdata.wormhole === 'beta' && <Sprite x={-15} y={element.w/4 + 30} scale={1} alpha={.85} image={'icons/beta.png'}/>}
-        {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier.png'}/>}
-        {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
-            
-            return <Sprite tint={getColorByRid(t)[0]} alpha={.9} key={i} x={element.w/2 + element.w/4 - i*15} y={element.w/4 - i*20} scale={.4} image={'icons/ct.png'}>
-                    <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={47} y={65} alpha={.85}></Sprite>
-                  </Sprite>}
-        )}
-        
-        
-        {element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map((p,i) => { 
-          return p.hitCenter && <Container key={i} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}>
-            {selectedTile === index && selectedPlanet === i && <SelectedPlanet radius={p.hitRadius}/>}
-            <Sprite image={'icons/empty.png'} scale={1} width={p.hitRadius * 2} height={p.hitRadius * 2} 
-            interactive={true} pointerdown={ (e)=>tileClick(e, index, i) }>
-              
-              <Container sortableChildren={true} x={0} y={50}>
-                {isDMZ(p) &&
-                    <Sprite image={'icons/dmz.png'} x={0} y={35} scale={1} alpha={.75}/>
-                  }
-                
-                {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) => {
-                  return <Container x={-10 + ui*100} y={-10} zIndex={u === 'spacedock' ? 3:1} key={ui}  > 
-                      <Sprite  tint={G.races[p.occupied].color[0]} scale={.5} anchor={0} image={'icons/unit_ground_bg.png'}/>
-                      <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-10} scale={.4} alpha={1}/>
-                      <Text style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
-                      x={65} y={5} text={p.units[u].length}/>
-                      {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
-                      <Sprite image={'icons/producing.png'} cursor='pointer' scale={.2} x={45} y={-20} interactive={true} pointerdown={()=>setProducing(p.name)} 
-                            style={{}}/>}
-                    </Container>
-                  }
-                )}
-
-                {advUnitView && advUnitView.tile === index && (p.occupied === undefined || String(element.tdata.occupied) === String(p.occupied)) &&
-                  !isDMZ(p) && <LandingGreen pointerdown={()=>unloadUnit(i)} x={0} y={0}/>
-                  }
-                {activeTile && element.tdata.occupied == playerID && !G.spaceCannons && element.tdata.fleet && 
-                  p.occupied !== undefined && String(element.tdata.occupied) !== String(p.occupied) && !isDMZ(p) &&
-                    <LandingRed pointerdown={()=>moves.invasion(p)} x={0} y={0}/>
-                }
-
-                {p.invasion && <PlanetUnderAttack w={element.w} x={p.hitRadius * 1.5} y={-p.hitRadius * 1.5} text={t('board.planet_under_attack')} rid={G.races[ctx.currentPlayer].rid} 
-                            rname={t('races.' + G.races[ctx.currentPlayer].rid + '.name')} fleet={p.invasion.troops} color={G.races[ctx.currentPlayer].color[0]}/>}
-              </Container>
-
-              <Container x={50} y={110}>
-              {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>{
-                const isSelected = groundUnitSelected && groundUnitSelected.tile === index && groundUnitSelected.unit === u;
-
-                return <Container x={-30 + ui*55} y={-20} key={ui} interactive={true} pointerdown={(e)=>loadUnit({tile: index, planet: i, unit: u, e})} >
-                          <Sprite tint={isSelected ? '#f44336':G.races[p.occupied].color[0]} scale={.25}  image={'icons/unit_inf_bg.png'}/>
-                          <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={0} scale={.25} alpha={1}/>
-                          <Text style={{fontSize: 13, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={18} y={40} text={p.units[u].length}/>
-                      </Container>}
-              )}
-              {element.tdata.producing_done === true && exhaustedCards.indexOf('SELF_ASSEMBLY_ROUTINES') > -1 &&
-                <Text interactive={true} pointerdown={()=>moves.fromReinforcement(p.name, {mech: 1}, exhaustedCards)} y={40} x={-30} style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} 
-                text={'► Place 1 mech'}/>
-              }
-              {exhaustedCards.indexOf('TRANSIT_DIODES') > -1 && String(p.occupied) === String(playerID) && race.reinforcement.transit && race.reinforcement.transit.length > 0 &&
-                <Text interactive={true} pointerdown={()=>moves.moveFromTransit(index, i, exhaustedCards)} y={40} x={-30} 
-                  style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} 
-                  text={'► Place ' + race.reinforcement.transit.length + ' units'}/>
-              }
-              </Container>
-
-              {p.occupied !== undefined && (!p.units || Object.keys(p.units).length === 0) && 
-                <Container x={100} y={50} alpha={.9}>
-                  <Sprite anchor={0.5} rotation={45} tint={G.races[p.occupied].color[0]} scale={.2} image={'icons/ct.png'}/>
-                  <Sprite alpha={.85} scale={.25} x={-10} y={-7} image={'race/icons/'+G.races[p.occupied].rid+'.png'}/>
-                </Container>}
-  
-            </Sprite>
-            </Container>
-          }
-        )}
-        
-
-        {element.tdata.fleet && <Container x={10} y={-30}>
-          
-
-          {Object.keys(element.tdata.fleet).map((f, i) => {
-            const isCurrentAdvUnit = advUnitView && advUnitView.tile === index && advUnitView.unit === f;
-            return <Container interactive={true} key={i} x={element.w/4 - 50 + i*100} y={0} pointerdown={()=>isCurrentAdvUnit ? setAdvUnitView({}):setAdvUnitView({tile: index, unit: f})} >
-                    <Sprite tint={isCurrentAdvUnit ? 'gold':G.races[element.tdata.occupied].color[0]} scale={.25} anchor={0} image={'icons/unit_bg.png'}/>
-                    <Sprite image={'units/' + f.toUpperCase() + '.png'} x={30} y={5} scale={.3} alpha={1}/>
-                    <Text style={{fontSize: 25, fontFamily:'Handel Gothic', fill: '#FFFFFF', dropShadow: true, dropShadowDistance: 1}} 
-                      x={60} y={53} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
-                </Container>
-          })}
-        </Container>}
-
-        {advUnitView && advUnitView.tile === index && <Container x={30} y={-55}>
-          {element.tdata.fleet && element.tdata.fleet[advUnitView.unit] && element.tdata.fleet[advUnitView.unit].map((ship, i) =>{
-            const cap = advUnitViewTechnology.capacity || 0;
-            const row = [];
-
-            for(let j=0; j<cap; j++){
-              row.push(<Sprite tint={payloadCursor && payloadCursor.i === i && payloadCursor.j === j ? 'gold':G.races[element.tdata.occupied].color[0]} 
-                  pointerdown={()=>setPayloadCursor({i, j})} interactive={true} key={j} x={20 + j*50} y={-30-i*50} scale={.3} anchor={0} image={'icons/unit_pl_bg.png'}>
-                    {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite image={'units/' + ship.payload[j].id.toUpperCase() + '.png'} 
-                    x={10} y={10} scale={1} alpha={.85}/>}
-              </Sprite>);
-            }
-            return row;
-          })}
-        </Container>}
-
-
-
-        {ctx.phase === 'acts' && isMyTurn && selectedTile === index && race.actions.length < maxActs && !activeTile && 
-        element.tdata.type !== 'hyperlane' && !(element.tdata.tokens && element.tdata.tokens.indexOf(race.rid) > -1) && 
-          <Container x={30} y={element.w/2 + 60} alpha={.8} anchor={0.5} cursor='pointer' interactive={true} pointerdown={()=>moves.activateTile(index)} 
-              mouseover={(e) => e.target.alpha = 1} mouseout={(e) => e.target.alpha = .8} >
-            <Sprite x={20} y={-20} scale={.7} image={'label.png'} alpha={.95}/>
-            <Text x={100} y={17} text={t('board.activate_system')} style={{fontSize: 22, fontFamily:'system-ui', fill: '#faebd7', dropShadow: true, dropShadowDistance: 1}}>
-            </Text>
-          </Container>}
-        
-        {activeTile && advUnitView && pathIdxs.length > 0 && <MoveStep tint={moveTint} text={pathIdxs.join(',')} pointerdown={()=>modifyMoveStep(index)} y={element.w * .66} x={element.w * .58} />}
-
-        {activeTile && advUnitView && element.tdata.type === 'hyperlane' && getMovePath.find(p => String(p.tileId) === String(element.tid)) && 
-          <MoveStep tint={moveTint} pointerdown={()=>modifyMoveStep(index)} y={element.w * .66} x={element.w * .58} />
-        }
-
-        {activeTile && advUnitView && advUnitView.tile !== undefined && advUnitView.tile !== index && pathIdxs.length === 0 && selectedTile === index &&
-           <MoveStep tint={moveTint} text={'+'} pointerdown={()=>modifyMoveStep(index)} y={element.w * .66} x={element.w * .58} />
-        }
-
-    </Container>
-  }
-
-  const TilesMap1 = memo(function TilesMap1({tiles}){
-
-    return tiles.map((element, index) => {
-        const [firstCorner] = element.corners;
-        const fill = element.tdata.type !== 'hyperlane' ? element.tdata.type: 'gray';
-        
-        return <Container key={index}>
-                
-                <Sprite cacheAsBitmap={true} interactive={true} pointerdown={ (e)=>tileClick(e, index) } 
-                            image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }}
-                            x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5} alpha={.9}>
-                            </Sprite>
-                {false && <>
-                  <Text style={{fontSize: 20, fill:'white'}} text={'(' + element.q + ',' + element.r + ')'} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
-                  <Text style={{fontSize: 25, fill: fill}} text={ element.tid } x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2}/>
-                    { element.tdata.occupied!==undefined && <Text style={{fontSize: 22, fill: 'green'}} 
-                    text={element.tdata.occupied + ':' + (element.tdata.fleet ? getUnitsString(element.tdata.fleet) : '-')} 
-                    x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2 + element.w/1.5} /> }
-                    { element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map( (p, i) => 
-                      <Text key={i} 
-                        text={ (p.specialty ? '[' + p.specialty[0] + '] ':'') + p.name + (p.trait ? ' [' + p.trait[0] + '] ':'') + ' ' + p.resources + '/' + p.influence + 
-                        (p.occupied !== undefined ? ' [' + p.occupied + ':' + (p.units ? getUnitsString(p.units) : '-') + ']':'') } 
-                        style={{ fontSize: 20, fill: 'white' }} 
-                        x={firstCorner.x + stagew/2 - element.w/1.5} y={firstCorner.y + stageh/2 + element.w/6 + element.w/8 * (i+1)} />
-                      )}
-                </>}
-                
-              </Container>
-      })
-  });
-
-  const TilesMap2 = memo(function TilesMap2({tiles}){ 
-      return tiles.map((element, index) => {
-        const [firstCorner] = element.corners;
-        
-        return <Container key={index}>
-                {selectedTile === index && element.active !== true && <SelectedHex x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2 + element.w/2 - 20}/>}
-                {element.active === true && <ActiveHex x={firstCorner.x + stagew/2 - element.w/4} y={firstCorner.y + stageh/2 + element.w/2 - 20}/>}
-                <TileContent key={index} element={element} index={index} />
-              </Container>
-      })
-  });
-
-  const TilesMap3 = memo(function TilesMap3({tiles}){ 
-    return tiles.map((element, index) => {
-      return <TileContent2 key={index} element={element} index={index} />
-    })
-  });
-
+ 
   const advUnitSwitch = useMemo(()=> {
-    if(advUnitView){
-      return advUnitView.tile;
+    if(hud.advUnitView){
+      return hud.advUnitView.tile;
     }
-  }, [advUnitView]);
+  }, [hud.advUnitView]);
 
   const activeTileSwitch = useMemo(() => {
     if(activeTile){
@@ -861,14 +293,14 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
   const TechAction = (args) => { 
 
-    let disabled = race.exhaustedCards.indexOf(args.techId) > -1;
+    let disabled = race.exhaustedCards.includes(args.techId);
     let technology = techData.find(t => t.id === args.techId);
     let icon = technology ? technology.type:'propulsion';
     let addText = '';
     let units = {};
 
     if(!disabled && args.techId === 'INTEGRATED_ECONOMY'){
-      if(ctx.phase !== 'acts' || !justOccupied) disabled = true;
+      if(ctx.phase !== 'acts' || !hud.justOccupied) disabled = true;
     }
     if(!disabled && args.techId === 'SCANLINK_DRONE_NETWORK'){
       if(ctx.phase !== 'acts') disabled = true;
@@ -905,11 +337,11 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     }
     if(!disabled && args.techId === 'SLING_RELAY'){
       if(ctx.phase !== 'acts') disabled = true;
-      if(selectedTile < 0){
+      if(hud.selectedTile < 0){
         disabled = true;
       }
       else{
-        const tdata = G.tiles[selectedTile].tdata;
+        const tdata = G.tiles[hud.selectedTile].tdata;
         if(tdata.occupied && String(tdata.occupied) !== String(playerID)){
           disabled = true;
         }
@@ -938,50 +370,36 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     }
 
     const onClick = ()=>{
-      if(args.techId === 'BIO_STIMS'){
-        exhaustTechCard(args.techId);
-        setRightBottomSubVisible(exhaustedCards.indexOf(args.techId) === -1 ? true:false);
-      }
-      else if(args.techId === 'SCANLINK_DRONE_NETWORK'){
-        exhaustTechCard(args.techId);
-        setRightBottomSubVisible(exhaustedCards.indexOf(args.techId) === -1 ? true:false);
-      }
-      else if(args.techId === 'INFANTRY2'){
-        exhaustTechCard(args.techId);
-        setRightBottomSubVisible(exhaustedCards.indexOf(args.techId) === -1 ? true:false);
-      }
-      else{
-        exhaustTechCard(args.techId);
-      }
+      exhaustTechCard(args.techId);
     }
 
     return  <CardsPagerItem tag='context'>
               <button style={{width: '100%', marginBottom: '1rem'}} disabled={disabled} 
-                  className = {'styledButton ' + (exhaustedCards.indexOf(args.techId) > -1 ? 'white':'yellow')} onClick={onClick}>
+                  className = {'styledButton ' + (hud.exhaustedCards.includes(args.techId) ? 'white':'yellow')} onClick={onClick}>
                 <img alt='tech type' src={'icons/'+icon+'.png'} style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}}/>
                 {t('cards.techno.' + args.techId + '.label') + addText}
               </button>
 
-              {args.techId === 'SCANLINK_DRONE_NETWORK' && rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
+              {args.techId === 'SCANLINK_DRONE_NETWORK' && hud.rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
                 <b>{t('board.explore_one')+ ':'}</b>
                 {activeTile.tdata.planets.map((p, i) => {
                   if(p.trait){
-                    return <button key={i} onClick={() => {moves.explorePlanet(p.name, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton yellow'>
+                    return <button key={i} onClick={() => {moves.explorePlanet(p.name, hud.exhaustedCards); dispatch({type: 'right_bottom_sub_visible', payload: null})}} style={{width: '100%', margin: '.25rem'}} className='styledButton yellow'>
                       {t('planets.' + p.name)}
                     </button>
                   }
                   return <div key={i}></div>
                 })}
-                <button onClick={() => {setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton black'>
+                <button onClick={() => dispatch({type: 'right_bottom_sub_visible', payload: null})} style={{width: '100%', margin: '.25rem'}} className='styledButton black'>
                           {t('board.cancel')}
                         </button>
               </ListGroup>}
 
-              {args.techId === 'BIO_STIMS' && rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
+              {args.techId === 'BIO_STIMS' && hud.rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
                       <b>{t('board.ready_one') + ':'}</b>
                       {PLANETS.map((p, i) => {
                         if(p.specialty && p.exhausted){
-                          return <button key={i} onClick={() => {moves.readyPlanet(p.name, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton yellow'>
+                          return <button key={i} onClick={() => {moves.readyPlanet(p.name, hud.exhaustedCards); dispatch({type: 'right_bottom_sub_visible', payload: null})}} style={{width: '100%', margin: '.25rem'}} className='styledButton yellow'>
                             {t('planets.' + p.name)}
                           </button>
                         }
@@ -990,21 +408,21 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                         }
                       })}
                       {race.exhaustedCards.map((c, i)=>{
-                        return <button key={i} onClick={() => {moves.readyTechnology(c, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton blue'>
+                        return <button key={i} onClick={() => {moves.readyTechnology(c, hud.exhaustedCards); dispatch({type: 'right_bottom_sub_visible', payload: null})}} style={{width: '100%', margin: '.25rem'}} className='styledButton blue'>
                           {t('cards.techno.' + c + '.label')}
                         </button>
                       })}
-                      <button onClick={() => {setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton black'>
+                      <button onClick={() => dispatch({type: 'right_bottom_sub_visible', payload: null})} style={{width: '100%', margin: '.25rem'}} className='styledButton black'>
                           {t('board.cancel')}
                         </button>
                     </ListGroup>}
 
-              {args.techId === 'INFANTRY2' && rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
+              {args.techId === 'INFANTRY2' && hud.rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
                 <b>{t('board.choose_one') + ':'}</b>
                 {G.tiles.filter(t => t.tid === race.rid).map((tile, j) => {
                   if(tile && tile.tdata && tile.tdata.planets){
                     return tile.tdata.planets.map((p, i) =>
-                      <button key={j+i} onClick={() => {moves.fromReinforcement(p.name, units, exhaustedCards); setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton yellow'>
+                      <button key={j+i} onClick={() => {moves.fromReinforcement(p.name, units, hud.exhaustedCards); dispatch({type: 'right_bottom_sub_visible', payload: null})}} style={{width: '100%', margin: '.25rem'}} className='styledButton yellow'>
                         {t('planets.' + p.name)}
                       </button>)
                   }
@@ -1013,7 +431,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                   }
                 })}
 
-                <button onClick={() => {setRightBottomSubVisible(null)}} style={{width: '100%', margin: '.25rem'}} className='styledButton black'>
+                <button onClick={() => dispatch({type: 'right_bottom_sub_visible', payload: null})} style={{width: '100%', margin: '.25rem'}} className='styledButton black'>
                     {t('board.cancel')}
                   </button>
               </ListGroup>}
@@ -1031,11 +449,11 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     if(!disabled && abilId === 'ORBITAL_DROP'){
       disabled = true;
 
-      if(selectedTile > -1 && selectedPlanet > -1){
-        const tile = G.tiles[selectedTile];
+      if(hud.selectedTile > -1 && hud.selectedPlanet > -1){
+        const tile = G.tiles[hud.selectedTile];
 
         if(tile && tile.tdata && tile.tdata.planets){
-          const planet = tile.tdata.planets[selectedPlanet];
+          const planet = tile.tdata.planets[hud.selectedPlanet];
 
           if(planet && String(planet.occupied) === String(playerID)){
             disabled = false;
@@ -1045,7 +463,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     }
 
     const onClick = ()=>{
-      moves.useRacialAbility({abilId, selectedTile, selectedPlanet})
+      moves.useRacialAbility({abilId, selectedTile: hud.selectedTile, selectedPlanet: hud.selectedPlanet})
     }
 
     return  <CardsPagerItem tag='context'>
@@ -1069,7 +487,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     }
 
     const onClick = () => {
-      moves.deployMech({planet: race.lastUsedPlanet, payment: globalPayment})
+      moves.deployMech({planet: race.lastUsedPlanet, payment: hud.globalPayment})
     }
 
     return  <>
@@ -1083,7 +501,9 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
             </>
   }
 
-  const stateContext = useMemo(() => ({G, ctx, playerID, /*matchID, credentials,*/ moves, selectedTech, exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}), [G, ctx, playerID, moves, selectedTech, exhaustedCards, exhaustTechCard, prevStages, PLANETS, UNITS]);
+  const stateContext = useMemo(() => ({G, ctx, playerID, /*matchID, credentials,*/ moves, selectedTech: hud.selectedTech, exhaustedCards: hud.exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}), 
+  [G, ctx, playerID, moves, hud.selectedTech, hud.exhaustedCards, exhaustTechCard, prevStages, PLANETS, UNITS]);
+
 
   useEffect(() => {
     let overlay = document.getElementById('tempOverlay');
@@ -1091,38 +511,43 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
       overlay.remove();
     }
   }, [])
+
+  useEffect(() => {
+    dispatch({type: 'planets_change', payload: PLANETS})
+  //eslint-disable-next-line
+  }, [PLANETS]);
   
   useEffect(() => {
-    if(groundUnitSelected.unit !== undefined){
-      const t = G.tiles[groundUnitSelected.tile];
+    if(hud.groundUnitSelected.unit !== undefined){
+      const t = G.tiles[hud.groundUnitSelected.tile];
       if(t && t.tdata){
-        const p = t.tdata.planets[groundUnitSelected.planet];
-        if(!p || !p.units || !p.units[groundUnitSelected.unit]){
-          setGroundUnitSelected({});
+        const p = t.tdata.planets[hud.groundUnitSelected.planet];
+        if(!p || !p.units || !p.units[hud.groundUnitSelected.unit]){
+          dispatch({type: 'ground_unit_selected', payload: {}});
         }
       }
     }
-  }, [groundUnitSelected, G.tiles, race.reinforcement]);
+  }, [hud.groundUnitSelected, G.tiles, race.reinforcement, dispatch]);
 
   useEffect(()=>{
-    //if(!activeTile || !advUnitView || !advUnitView.tile){
-      setMoveSteps([]);
-    //}
-  }, [advUnitSwitch, activeTileSwitch]);
+    dispatch({type: 'move_steps'})
+  }, [advUnitSwitch, activeTileSwitch, dispatch]);
 
   useEffect(()=>{
     if(race.exhaustedCards.length){
-      setExhaustedCards([]);
+      dispatch({
+        type: 'flush_exhausted_cards'
+      })
     }
     flushTempCt();
-  },[race.exhaustedCards, flushTempCt]);
+  },[race.exhaustedCards, dispatch, flushTempCt]);
 
   useEffect(()=>{
     if(mustSecObj){
-      setLeftPanel('objectives');
+      dispatch({type: 'left_panel', payload: 'objectives'});
     }
     
-  }, [mustSecObj]);
+  }, [dispatch, mustSecObj]);
 
   const PREV_TECHNODATA = useRef([]); //todo: replace with bgio-effects
   useEffect(() => {
@@ -1192,25 +617,25 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
             return !oldOne;
           });
           if(newOne){
-            setJustOccupied(newOne.name);
+            dispatch({type: 'just_occupied', payload: newOne.name});
             sendChatMessage(t('board.has_occupied_planet') + ' ' + t('planets.' + newOne.name));
             if(newOne.exploration === 'Freelancers'){
-              setProducing(newOne.name);
+              dispatch({type: 'producing', planet: newOne.name});
             }
           }
         }
       }
       PREV_PLANETS.current = PLANETS;
     }
-  }, [PLANETS, sendChatMessage, t]);
+  }, [PLANETS, sendChatMessage, t, dispatch]);
 
   useEffect(() => { //switch TechAction
-    if(!producing && justOccupied){
-      if(exhaustedCards.indexOf('INTEGRATED_ECONOMY') > -1){
+    if(!hud.producing && hud.justOccupied){
+      if(hud.exhaustedCards.includes('INTEGRATED_ECONOMY')){
         exhaustTechCard('INTEGRATED_ECONOMY');
       }
     }
-  }, [producing, exhaustTechCard, exhaustedCards, justOccupied])
+  }, [hud.producing, hud.exhaustedCards, exhaustTechCard, hud.justOccupied])
   
   useEffect(() => {
     if(ctx.activePlayers && Object.keys(ctx.activePlayers).filter(ap => !ap.endsWith('ctionCard')).length){
@@ -1245,12 +670,12 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
   useEffect(() => {
     if(ctx.phase === 'stats'){
-      setLeftPanel('objectives');
+      dispatch({type: 'left_panel', payload: 'objectives'});
     }
     else if(ctx.phase === 'strat' || ctx.phase === 'agenda'){
-      setLeftPanel('');
+      dispatch({type: 'left_panel', payload: ''});
     }
-  }, [ctx.phase])
+  }, [dispatch, ctx.phase])
 
   useEffect(() => {
     if(race.commanderIsUnlocked){
@@ -1273,7 +698,12 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   //eslint-disable-next-line
   }, [race.heroIsExhausted])
 
-  const { imagesPreloaded, lastLoaded, loadingError } = useImagePreloader([...imgSrc.boardImages, ...getTilesAndRacesImgs(G.tiles)])
+
+
+  
+  //eslint-disable-next-line
+  const initialImgs = useMemo(() => [...imgSrc.boardImages, ...getTilesAndRacesImgs(G.tiles)], []);
+  const { imagesPreloaded, lastLoaded, loadingError } = useImagePreloader(initialImgs);
 
   if (!imagesPreloaded) {
     return <div style={{width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, backgroundColor: 'black', zIndex: 101, display: 'flex', justifyContent: 'center', alignItems: 'center', flexFlow: 'column'}}>
@@ -1291,35 +721,35 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
               {loadingError && <span style={{fontFamily: 'system-ui', color: 'red'}}>{'ошибка загрузки ' + loadingError}</span>}
           </div>
   }
-
+console.log('render');
   return (<StateContext.Provider value={stateContext}>
               <Overlay/>      
-              <MyNavbar leftPanel={leftPanel} setLeftPanel={setLeftPanel} undo={undo} isMyTurn={isMyTurn} activeTile={activeTile}/>
+              <MyNavbar leftPanel={hud.leftPanel} setLeftPanel={(payload) => dispatch({type: 'left_panel', payload})} undo={undo} isMyTurn={isMyTurn} activeTile={activeTile}/>
               <CardColumns style={{margin: '4rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '42rem', zIndex: '1'}}>
                 {!race.isSpectator && <>
-                  {leftPanel === 'techno' && <TechnologyDialog selected={selectedTech && selectedTech.techno ? [selectedTech.techno.id]:[]} onSelect={({techno, rid}) => setSelectedTech({techno, rid})}/>}
-                  {leftPanel === 'objectives' && <Card id='objListMain' className='subPanel' style={{ padding: '4rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                  {hud.leftPanel === 'techno' && <TechnologyDialog selected={hud.selectedTech && hud.selectedTech.techno ? [hud.selectedTech.techno.id]:[]} onSelect={({techno, rid}) => dispatch({type: 'selected_tech', payload: {techno, rid}})}/>}
+                  {hud.leftPanel === 'objectives' && <Card id='objListMain' className='subPanel' style={{ padding: '4rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                       <CardTitle><h6 style={{textAlign: 'right', margin: 0}}>{t('board.victory_points').toUpperCase() + ': ' + VP + '/' + G.vp}</h6></CardTitle>
                       <ObjectivesList playerID={playerID} mustSecObj={mustSecObj} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective: mustSecObj ? dropSecretObjective: ()=>{}}/>
                     </Card>}
                   
-                  {leftPanel === 'planets' && <Card className='subPanel' style={{ padding: '3rem 1rem 2rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                  {hud.leftPanel === 'planets' && <Card className='subPanel' style={{ padding: '3rem 1rem 2rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                     <CardTitle></CardTitle>
                       <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
                         <Cont style={{border: 'none'}}>
-                          {<PlanetsRows PLANETS={PLANETS} exhausted={[...globalPayment.influence, ...globalPayment.resources]}
+                          {<PlanetsRows PLANETS={PLANETS} exhausted={[...hud.globalPayment.influence, ...hud.globalPayment.resources]}
                                                           resClick={(e, p) => globalPayPlanet(e, p, 'resources')} 
                                                           infClick={(e, p) => globalPayPlanet(e, p, 'influence')}
                                                           onClick={(pname) => globalPayCancelPlanet(pname)}/>}
                         </Cont>
                       </div>
                   </Card>}
-                  {leftPanel === 'units' && <Card className='subPanel' style={{ padding: '3rem 1rem 2rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                  {hud.leftPanel === 'units' && <Card className='subPanel' style={{ padding: '3rem 1rem 2rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                     <CardTitle></CardTitle>
                     <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} rid={G.races[playerID].rid}/>
                   </Card>}
                 </>}
-                {!race.isSpectator && leftPanel === 'trade' && <Card className='subPanel' style={{ padding: '3rem 2rem 2rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                {!race.isSpectator && hud.leftPanel === 'trade' && <Card className='subPanel' style={{ padding: '3rem 2rem 2rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                   <TradePanel onTrade={moves.trade}/>
                 </Card>}
 
@@ -1328,9 +758,9 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
               <ChatBoard sendChatMessage={sendChatMessage} chatMessages={chatMessages}/>
 
-              {!race.isSpectator && producing && <ProducingPanel 
-                  onCancel={(finish)=>{setProducing(null); if(finish && justOccupied && exhaustedCards.indexOf('INTEGRATED_ECONOMY')>-1){setJustOccupied(null)}}} 
-                  pname={producing} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
+              {!race.isSpectator && hud.producing && <ProducingPanel 
+                  onCancel={(finish)=>{dispatch({type: 'producing', planet: null}); if(finish && hud.justOccupied && hud.exhaustedCards.includes('INTEGRATED_ECONOMY')){dispatch({type: 'just_occupied', payload: null});}}} 
+                  pname={hud.producing} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
               {!race.isSpectator && ctx.phase === 'strat' && <StrategyPick actionCardStage={actionCardStage}/>}
               
 
@@ -1339,14 +769,14 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
               {race.secretObjectiveConfirm && (ctx.phase !== 'agenda' || isMyTurn) && <ChoiceDialog args={race.secretObjectiveConfirm} onSelect={(i)=>moves.secretObjectiveConfirm(race.secretObjectiveConfirm.oid, i)}/>}
               
               {strategyStage && <StrategyDialog R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
-                    onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={selectedTile}  selectedPlanet={selectedPlanet}/>}
-              {actionCardStage && <ActionCardDialog selectedTile={selectedTile} selectedPlanet={selectedPlanet} selectedUnit={advUnitView}/> }
+                    onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={hud.selectedTile}  selectedPlanet={hud.selectedPlanet}/>}
+              {actionCardStage && <ActionCardDialog selectedTile={hud.selectedTile} selectedPlanet={hud.selectedPlanet} selectedUnit={hud.advUnitView}/> }
               
               {!race.secretObjectiveConfirm && <>
                 {spaceCannonAttack && <SpaceCannonAttack />}
-                {antiFighterBarrage && <AntiFighterBarrage selectedTile={selectedTile}/>}
-                {spaceCombat && <SpaceCombat prevStages={prevStages} selectedTile={selectedTile}/>}
-                {combatRetreat && <CombatRetreat selectedTile={selectedTile}/>}
+                {antiFighterBarrage && <AntiFighterBarrage selectedTile={hud.selectedTile}/>}
+                {spaceCombat && <SpaceCombat prevStages={prevStages} selectedTile={hud.selectedTile}/>}
+                {combatRetreat && <CombatRetreat selectedTile={hud.selectedTile}/>}
                 {bombardment && <Bombardment />}
                 {invasion && <Invasion />}
                 {race.mustChooseAndDestroy && <ChooseAndDestroy />}
@@ -1360,14 +790,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                 </CardBody>
               </Card>}
 
-              <Stage width={stagew} height={stageh} options={{antialias: true, backgroundAlpha: 0, resizeTo: window, autoDensity: true }}>
-                <TickerSettings fps={30}/>
-                <PixiViewport home={G.tiles.find(t => t.tid === G.races[playerID].rid)}>
-                  <TilesMap1 tiles={G.tiles}/>
-                  <TilesMap2 tiles={G.tiles}/>
-                  <TilesMap3 tiles={G.tiles}/>
-                </PixiViewport> 
-              </Stage>
+              <PixiStage stagew={window.innerWidth} stageh={window.innerHeight} dispatch={dispatch} hud={hud}/>
               
               {!race.isSpectator && <div style={{ display:'flex', flexDirection: 'row', justifyContent: 'flex-end', position:'fixed', 
                                                   alignItems: 'flex-end', right: 0, bottom: 0, width: '30%' }}>
@@ -1375,7 +798,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                 flexDirection: 'column', justifyContent: 'space-between', alignSelf: 'flex-start'}}>
 
                   <div style={{display: 'flex', flexDirection: 'column', position: 'fixed', bottom: '4rem', width: '13rem'}}>
-                    {rightBottomVisible === 'context' && <>
+                    {hud.rightBottomVisible === 'context' && <>
                       <CardsPager>
                         {haveTechnology(race, 'GRAVITY_DRIVE') && <TechAction techId='GRAVITY_DRIVE'/>}
                         {haveTechnology(race, 'SLING_RELAY') && <TechAction techId='SLING_RELAY'/>}
@@ -1392,7 +815,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                       </CardsPager>
                       
                     </>}
-                    {rightBottomVisible === 'promissory' && race.promissory.length > 0 && <CardsPager>
+                    {hud.rightBottomVisible === 'promissory' && race.promissory.length > 0 && <CardsPager>
                       {race.promissory.map((pr, i) => <CardsPagerItem key={i} tag='promissory'>
                         <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
                           {pr.sold ? <img alt='to other player' style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}} src={'race/icons/' + pr.sold + '.png'} />:''}
@@ -1406,7 +829,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                       </CardsPagerItem>)}
                     </CardsPager>}
 
-                    {((rightBottomVisible === 'actions' && race.actionCards.length > 0) || race.actionCards.length > 7) && <CardsPager>
+                    {((hud.rightBottomVisible === 'actions' && race.actionCards.length > 0) || race.actionCards.length > 7) && <CardsPager>
                       {race.actionCards.map((pr, i) => {
                         let disabled = !mustAction && !(pr.when === 'ACTION' && ctx.phase === 'acts' && ctx.currentPlayer === playerID) && 
                                                         !(pr.when === 'AGENDA' && ctx.phase === 'agenda') &&
@@ -1445,7 +868,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                       )}
                     </CardsPager>}
 
-                    {rightBottomVisible === 'relics' && race.relics.length > 0 && <CardsPager>
+                    {hud.rightBottomVisible === 'relics' && race.relics.length > 0 && <CardsPager>
                       {race.relics.map((pr, i) => <CardsPagerItem key={i} tag='relic'>
                         <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
                           <b>{t('cards.relics.' + pr.id + '.label').toUpperCase()}</b>
@@ -1455,7 +878,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                       </CardsPagerItem>)}
                     </CardsPager>}
 
-                    {rightBottomVisible === 'agenda' && G.laws.length > 0 && <CardsPager>
+                    {hud.rightBottomVisible === 'agenda' && G.laws.length > 0 && <CardsPager>
                       {G.laws.map((pr, i) => <CardsPagerItem key={i} tag='agenda'>
                         <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
                           <b>{t('cards.agenda.' + pr.id + '.label').toUpperCase()}</b>
@@ -1466,15 +889,15 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                     </CardsPager>}
                   </div>
                   <ButtonGroup className='comboPanel-left-vertical' style={{alignSelf: 'flex-end', fontFamily:'Handel Gothic', position: 'fixed', bottom: '2rem', padding: '.5rem', right: '35%'}}>
-                      <button className={'styledButton ' + (rightBottomVisible === 'promissory' ? 'white':'black')} onClick={()=>rightBottomSwitch('promissory')} 
+                      <button className={'styledButton ' + (hud.rightBottomVisible === 'promissory' ? 'white':'black')} onClick={()=>rightBottomSwitch('promissory')} 
                         style={{width: '7rem', padding: 0}}>{t("board.nav.promissory")}</button>
-                      <button className={'styledButton ' + (rightBottomVisible === 'relics' ? 'white':'black')} onClick={()=>rightBottomSwitch('relics')} 
+                      <button className={'styledButton ' + (hud.rightBottomVisible === 'relics' ? 'white':'black')} onClick={()=>rightBottomSwitch('relics')} 
                         style={{width: '7rem', padding: 0}}>{t("board.nav.relics")}</button> 
-                      <button className={'styledButton ' + (rightBottomVisible === 'agenda' ? 'white':'black')} onClick={()=>rightBottomSwitch('agenda')} 
+                      <button className={'styledButton ' + (hud.rightBottomVisible === 'agenda' ? 'white':'black')} onClick={()=>rightBottomSwitch('agenda')} 
                         style={{width: '7rem', padding: 0}}>{t("board.nav.agenda")}</button>
-                      <button className={'styledButton ' + (rightBottomVisible === 'actions' ? 'white':'black')} onClick={()=>rightBottomSwitch('actions')} 
+                      <button className={'styledButton ' + (hud.rightBottomVisible === 'actions' ? 'white':'black')} onClick={()=>rightBottomSwitch('actions')} 
                         style={{width: '7rem', padding: 0}}>{t("board.nav.actions")}</button>
-                      <button className={'styledButton ' + (rightBottomVisible === 'context' ? 'white':'black')} onClick={()=>rightBottomSwitch('context')} 
+                      <button className={'styledButton ' + (hud.rightBottomVisible === 'context' ? 'white':'black')} onClick={()=>rightBottomSwitch('context')} 
                         style={{width: '7rem', padding: 0}}>{t("board.nav.context")}</button>
                   </ButtonGroup>
                 </CardColumns>
@@ -1483,16 +906,16 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                             width: '100%', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end', position: 'relative' }}>
                     
                     <div style={{display: 'flex', position: 'absolute', top: '-5rem', right: '3rem'}}>
-                      <GlobalPayment globalPayment={globalPayment} GP={GP}/>
+                      <GlobalPayment globalPayment={hud.globalPayment} GP={GP}/>
                       {race && race.strategy.length > 0 && ctx.phase !== 'strat' && <div className='comboPanel-left-vertical' style={{display: 'flex', padding: '.5rem'}}>
                         {race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
                       </div>}
                     </div>
                     <div className='borderedPanel-vertical' style={{display: 'flex', height: 'max-content', backgroundColor: 'rgba(33, 37, 41, 0.95)',
                             width: '100%', flexDirection: 'column', justifyContent: 'flex-end', margin: '0 0 2rem 0', zIndex: 1}}>
-                      {race && subcardVisible === 'stuff' && <Stuff groundUnitSelected={groundUnitSelected} R_UNITS={R_UNITS} tempCt={tempCt} setTempCt={setTempCt} exhaustedCards={exhaustedCards}/>}
-                      {race && subcardVisible === 'persons' && <Persons />}
-                      {race && subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, minHeight: '16.5rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex'}}>
+                      {race && hud.subcardVisible === 'stuff' && <Stuff groundUnitSelected={hud.groundUnitSelected} R_UNITS={R_UNITS} tempCt={hud.tempCt} setTempCt={(pl) => dispatch({type: 'temp_ct', payload: pl})}/>}
+                      {race && hud.subcardVisible === 'persons' && <Persons />}
+                      {race && hud.subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, minHeight: '16.5rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex'}}>
                           {race.abilities.map((a, i) => 
                             <CardText key={i} style={{fontSize: '90%'}}>
                               <b>{t('races.' + race.rid + '.' + a.id + '.label')}</b><br/>
@@ -1503,9 +926,9 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                       </>}
 
                       {race && <ButtonGroup style={{marginTop: '1rem'}}>
-                        <button className={'bi bi-stack styledButton ' + (subcardVisible === 'stuff' ? 'white':'black')} onClick={()=>setSubcardVisible('stuff')} style={{flexBasis: '33%'}}></button>
-                        <button className={'bi bi-people-fill styledButton ' + (subcardVisible === 'persons' ? 'white':'black')} onClick={()=>setSubcardVisible('persons')} style={{flexBasis: '33%'}}></button>
-                        <button className={'bi bi-lightning-fill styledButton ' + (subcardVisible === 'abilities' ? 'white':'black')} onClick={()=>setSubcardVisible('abilities')} style={{flexBasis: '33%'}}></button>
+                        <button className={'bi bi-stack styledButton ' + (hud.subcardVisible === 'stuff' ? 'white':'black')} onClick={()=>dispatch({type: 'subcard_visible', payload: 'stuff'})} style={{flexBasis: '33%'}}></button>
+                        <button className={'bi bi-people-fill styledButton ' + (hud.subcardVisible === 'persons' ? 'white':'black')} onClick={()=>dispatch({type: 'subcard_visible', payload: 'persons'})} style={{flexBasis: '33%'}}></button>
+                        <button className={'bi bi-lightning-fill styledButton ' + (hud.subcardVisible === 'abilities' ? 'white':'black')} onClick={()=>dispatch({type: 'subcard_visible', payload: 'abilities'})} style={{flexBasis: '33%'}}></button>
                       </ButtonGroup>}
 
                       {race && <Card style={{...CARD_STYLE, backgroundColor: race.color[1], margin: 0}}>
@@ -1524,10 +947,10 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                 </CardColumns>
               </div>}
 
-              {payObj !== null && <PaymentDialog oid={payObj} G={G} race={race} planets={PLANETS} 
-                              isOpen={payObj !== null} toggle={(payment)=>togglePaymentDialog(payment)}/>}
+              {hud.payObj !== null && <PaymentDialog oid={hud.payObj} G={G} race={race} planets={PLANETS} 
+                              isOpen={hud.payObj !== null} toggle={(payment)=>togglePaymentDialog(payment)}/>}
           
-              {ctx.phase === 'acts' && leftPanel === 'objectives' && mustSecObj && 
+              {ctx.phase === 'acts' && hud.leftPanel === 'objectives' && mustSecObj && 
                 <Tooltip isOpen={document.getElementById('objListMain')} target='objListMain' placement='right' className='todoTooltip'>
                   <b>{t('board.tooltips.drop_secret_obj_header')}</b>
                   <p>{t('board.tooltips.drop_secret_obj_body')}</p>
@@ -1538,55 +961,6 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 }
 
 
-const getUnitsString = (units) => {
-  var s = '';
-  Object.keys(units).forEach(k => {
-    switch(k){
-      case 'flagship':
-        s += 'F' + units[k].length;
-        break;
-      case 'warsun':
-        s += 'W' + units[k].length;
-        break;
-      case 'dreadnought':
-        s += 'D' + units[k].length;
-        break;
-      case 'carrier':
-        s += 't' + units[k].length;
-        break;
-      case 'destroyer':
-        s += 'd' + units[k].length;
-        break;
-      case 'cruiser':
-        s += 'c' + units[k].length;
-        break;
-      case 'fighter':
-        s += 'f' + units[k].length;
-        break;
-      case 'infantry':
-        s += 'i' + units[k].length;
-        break;
-      case 'mech':
-        s += 'm' + units[k].length;
-        break;
-      case 'pds':
-        s += 'p' + units[k].length;
-        break;
-      case 'spacedock':
-        s += 'd' + units[k].length;
-        break;
-      default:
-        s += '';
-    }
-  });
-  return s;
-}
 
-const TickerSettings = memo(function TickerSettings(args) {
-  
-  const app = useApp();
-  app.ticker.maxFPS = args.fps;
 
-  return <></>
-})
 

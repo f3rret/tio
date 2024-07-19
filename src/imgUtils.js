@@ -16,15 +16,16 @@ function preloadImage (src, cb) {
 }
 
 export default function useImagePreloader(imageList) {
-  const [imagesPreloaded, setImagesPreloaded] = useState(false)
+  const [imagesPreloaded, setImagesPreloaded] = useState(false);
   const [lastLoaded, setLastLoaded] = useState('');
   const [loadingError, setLoadingError] = useState('');
 
   useEffect(() => {
+    console.log('use effect');
     let isCancelled = false
 
     async function effect() {
-      //console.log('PRELOAD')
+      console.log('PRELOAD')
 
       if (isCancelled) {
         return

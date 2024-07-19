@@ -71,9 +71,9 @@ export const Persons = () => {
     </>
 }
 
-export const Stuff = ({exhaustedCards, tempCt, setTempCt, R_UNITS, groundUnitSelected}) => {
+export const Stuff = ({tempCt, setTempCt, R_UNITS, groundUnitSelected}) => {
 
-    const { G, playerID, moves, ctx, UNITS } = useContext(StateContext);
+    const { G, playerID, moves, ctx, UNITS, exhaustedCards } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
     const [midPanelInfo, setMidPanelInfo] = useState('tokens');
     const race = useMemo(() => G.races[playerID], [G.races, playerID]);
