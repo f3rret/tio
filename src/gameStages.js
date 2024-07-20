@@ -29,6 +29,101 @@ export const secretObjectiveConfirm = ({G, playerID, events}, oid, y) => {
 
 }
 
+export const producing = ({G, playerID, ctx, events}, pname, deploy, payment, exhaustedCards) => {
+
+  if(deploy){
+    let activeTile;
+
+    if(exhaustedCards && exhaustedCards.includes('SLING_RELAY')){
+      activeTile = G.tiles.find(t => t.tdata.planets && t.tdata.planets.find(p => p.name === pname));
+    }
+    else{
+      activeTile = G.tiles.find(t => t.active === true);
+    }
+
+    if(exhaustedCards && exhaustedCards.indexOf('SLING_RELAY') > -1){
+      const maxActs = G.races[playerID].knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
+      if(G.races[playerID].actions.length > maxActs){
+        console.log('too many actions');
+        return INVALID_MOVE;
+      }
+    }
+
+    const exhausted = [...payment.resources, ...payment.influence];
+
+    if(exhausted && exhausted.length){
+      G.tiles.forEach(tile => {
+        const planets = tile.tdata.planets;
+
+        if(planets && planets.length){
+          planets.forEach( p => {
+            if(String(p.occupied) === String(playerID)){
+              if(exhausted.includes(p.name)){
+                p.exhausted = true;
+              }
+            }
+          });
+        }
+      });
+    }
+
+    if(payment.tg){
+      G.races[playerID].tg -= payment.tg;
+    }
+    
+    let planet;
+
+    if(pname){
+      planet = activeTile.tdata.planets.find(p => p.name === pname);
+      if(planet.attach && planet.attach.length && planet.attach.indexOf('Demilitarized Zone')>-1) return;
+      if(planet.exploration === 'Freelancers') delete planet['exploration'];
+    }
+    else if(!G.races[playerID].makeCustomProducing){
+      return 'NO PLANET';
+    }
+
+    const ukeys = Object.keys(deploy);
+
+    ukeys.forEach(uk => {
+      const ukl = uk.toLowerCase();
+      var l = 0;
+      if(['carrier', 'cruiser', 'destroyer', 'dreadnought', 'flagship', 'warsun'].indexOf(ukl) > -1){
+        if(!activeTile.tdata.fleet[ukl]) activeTile.tdata.fleet[ukl] = [];
+        if(activeTile.tdata.occupied === undefined) activeTile.tdata.occupied = playerID;
+        for(l=0; l<deploy[uk]; l++){
+          activeTile.tdata.fleet[ukl].push({});
+        }
+      }
+      else if(planet){
+        if(!planet.units[ukl]) planet.units[ukl] = [];
+        for(l=0; l<deploy[uk]; l++){
+          planet.units[ukl].push({});
+        }                                    
+      }
+    });
+      
+    if(exhaustedCards && exhaustedCards.indexOf('SLING_RELAY') > -1){
+      G.races[playerID].exhaustedCards.push('SLING_RELAY');
+      G.races[playerID].actions.push('PRODUCING');
+    }
+
+    if(exhaustedCards && exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1){
+      G.races[playerID].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
+    }
+
+    activeTile.tdata.producing_done = true;
+  }
+
+  if(G.races[playerID].makeCustomProducing){
+    if(G.races[playerID].makeCustomProducing.onClose === 'endStage'){
+      if(ctx.activePlayers){
+        events.endStage();
+      }
+    }
+    delete G.races[playerID]['makeCustomProducing'];
+  }
+}
+
 export const ACTION_CARD_STAGE = {
     moves: {
       cancel: ({G, ctx, playerID, events}) => {
@@ -1250,7 +1345,7 @@ export const ACTS_STAGES = {
                 }
                 else if(car.payload && remain > 0){
                   car.payload.forEach((p, i) => {
-                    if(p.id === 'fighter' && remain > 0){
+                    if(p && p.id === 'fighter' && remain > 0){
                       delete car.payload[i];
                       remain--;
                     }
@@ -1568,8 +1663,16 @@ export const ACTS_STAGES = {
           }
         }
 
+        if(haveTechnology(G.races[playerID], 'SALVAGE_OPERATIONS')){
+          G.races[playerID].tg++;
+          if(looser !== undefined && String(looser) !== String(playerID)){
+            G.races[playerID].makeCustomProducing = {units: [...G.races[looser].destroyedUnits, ...G.races[playerID].destroyedUnits], count: 1, onClose: 'endStage'};
+            endLater = true;
+          }
+        }
         if(!endLater) { events.endStage(); }
-      }
+      },
+      producing
     }
   },
   combatRetreat: {

@@ -2,7 +2,7 @@
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
 import cardData from './cardData.json';
 import { getHexGrid, neighbors } from './Grid';
-import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm } from './gameStages';
+import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing } from './gameStages';
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
@@ -484,80 +484,7 @@ export const TIO = {
               G.races[playerID].exhaustedCards.push(techId);
             }
           },
-          producing: ({G, playerID}, pname, deploy, exhausted, tg, exhaustedCards) => {
-
-            if(!pname || !deploy) return;
-
-            if(exhaustedCards && exhaustedCards.indexOf('SLING_RELAY') > -1){
-              const maxActs = G.races[playerID].knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
-              if(G.races[playerID].actions.length > maxActs){
-                console.log('too many actions');
-                return INVALID_MOVE;
-              }
-            }
-
-            if(exhausted && exhausted.length){
-              G.tiles.forEach(tile => {
-                const planets = tile.tdata.planets;
-
-                if(planets && planets.length){
-                  planets.forEach( p => {
-                    if(String(p.occupied) === String(playerID)){
-                      if(exhausted.indexOf(p.name) > -1){
-                        p.exhausted = true;
-                      }
-                    }
-                  });
-                }
-              });
-            }
-
-            if(tg){
-              G.races[playerID].tg -= tg;
-            }
-            
-            let activeTile;
-            if(exhaustedCards && exhaustedCards.indexOf('SLING_RELAY') > -1){
-              activeTile = G.tiles.find(t => t.tdata.planets && t.tdata.planets.find(p => p.name === pname));
-            }
-            else{
-              activeTile = G.tiles.find(t => t.active === true);
-            }
-            
-            const planet = activeTile.tdata.planets.find(p => p.name === pname);
-            if(planet.attach && planet.attach.length && planet.attach.indexOf('Demilitarized Zone')>-1) return;
-            if(planet.exploration === 'Freelancers') delete planet['exploration'];
-            const ukeys = Object.keys(deploy);
-
-            ukeys.forEach(uk => {
-              const ukl = uk.toLowerCase();
-              var l = 0;
-              if(['carrier', 'cruiser', 'destroyer', 'dreadnought', 'flagship', 'warsun'].indexOf(ukl) > -1){
-                if(!activeTile.tdata.fleet[ukl]) activeTile.tdata.fleet[ukl] = [];
-                if(activeTile.tdata.occupied == undefined) activeTile.tdata.occupied = playerID;
-                for(l=0; l<deploy[uk]; l++){
-                  activeTile.tdata.fleet[ukl].push({});
-                }
-              }
-              else{
-                if(!planet.units[ukl]) planet.units[ukl] = [];
-                for(l=0; l<deploy[uk]; l++){
-                  planet.units[ukl].push({});
-                }                                    
-              }
-            });
-               
-            if(exhaustedCards && exhaustedCards.indexOf('SLING_RELAY') > -1){
-              G.races[playerID].exhaustedCards.push('SLING_RELAY');
-              G.races[playerID].actions.push('PRODUCING');
-            }
-
-            if(exhaustedCards && exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1){
-              G.races[playerID].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
-            }
-
-            activeTile.tdata.producing_done = true;
-          },
+          producing,
           invasion: ({G, playerID, events}, planet) => {
             const activeTile = G.tiles.find(t => t.active === true);
             const activePlanet = activeTile.tdata.planets.find(p => p.name === planet.name);

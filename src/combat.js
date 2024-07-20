@@ -906,6 +906,7 @@ export const SpaceCombat = ({selectedTile}) => {
 
         Object.keys(ctx.activePlayers).forEach(pid => {
             let fleet = (String(pid) === String(ctx.currentPlayer)) ? activeTile.tdata.attacker : activeTile.tdata.fleet;
+            if(!fleet) fleet = {};
             const technologies = getUnitsTechnologies([...Object.keys(fleet), 'fighter'], G.races[pid]);
             result[pid] = 0;
 

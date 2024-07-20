@@ -274,6 +274,19 @@ li.list-group-item{
     font-weight: bold;
     line-height: 1.5rem
 }
+.GPcol{
+    font-family: 'Handel Gothic';
+    width: 4rem!important;
+    height: 4rem;
+    background-repeat: no-repeat;
+    background-size: contain;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-text-stroke: 2px black;
+    color: antiquewhite
+}
 
 @import "../../node_modules/bootstrap/scss/bootstrap";
 

@@ -44,6 +44,16 @@ export const hudReducer = (hudDraft, action) => {
                     }
                 }
             }
+            else if(action.payload && action.payload.tg){
+                hudDraft.globalPayment = produce(hudDraft.globalPayment, draft => {
+                    draft.tg += action.payload.tg;
+                });
+            }
+            else if(action.payload && action.payload.cancel){
+                hudDraft.globalPayment = produce(hudDraft.globalPayment, draft => {
+                    draft[action.payload.cancel] = [];
+                })
+            }
             break;
         }
         case 'planets_change' : {

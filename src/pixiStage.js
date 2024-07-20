@@ -481,7 +481,7 @@ const TilesMap3 = ({G, playerID, moves, ctx, t, stagew, stageh, isMyTurn, active
     return G.tiles.map((element, index) => {
         const [firstCorner] = element.corners;
 
-        return <Container x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
+        return <Container key={index} x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
                     {element.tdata.attacker && <SectorUnderAttack w={element.w} rid={G.races[ctx.currentPlayer].rid} rname={t('races.' + G.races[ctx.currentPlayer].rid + '.name')} 
                                         text={t('board.sector_under_attack')} fleet={element.tdata.attacker} color={G.races[ctx.currentPlayer].color[0]}/>}
 

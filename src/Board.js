@@ -129,6 +129,29 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     return result;
   }, [race, G.pubObjectives, playerID]);
 
+  const GP = useMemo(() => {
+
+    let result = {resources: 0, influence: 0, tg: 0}
+
+    if(hud.globalPayment.resources && hud.globalPayment.resources.length){
+        hud.globalPayment.resources.forEach(pname => {
+            const planet = PLANETS.find(p => p.name === pname);
+            if(planet && planet.resources && !planet.exhausted) result.resources += planet.resources
+        });
+    }
+    if(hud.globalPayment.influence && hud.globalPayment.influence.length){
+        hud.globalPayment.influence.forEach(pname => {
+            const planet = PLANETS.find(p => p.name === pname);
+            if(planet && planet.influence && !planet.exhausted) result.influence += planet.influence
+        });
+    }
+    if(hud.globalPayment.tg && hud.globalPayment.tg > 0){
+      result.tg = hud.globalPayment.tg;
+    }
+    return result;
+
+  }, [hud.globalPayment, PLANETS]);
+
   const globalPayPlanet = useCallback((e, planet, type) => {
     e.preventDefault();
     e.stopPropagation();
@@ -136,30 +159,17 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     dispatch({type: 'global_payment', payload: {planet, type}})
   }, [dispatch]);
 
+  const globalPayTg = useCallback((inc) => {
+    if(race.tg - GP.tg > 0){
+      dispatch({type: 'global_payment', payload: {tg: inc}});
+    }
+  }, [dispatch, race, GP]);
+
   const globalPayCancelPlanet = useCallback((pname) => {
       dispatch({type: 'global_payment', payload: {planet: pname, type: 'cancel'}})
   }, [dispatch]);
 
-  const GP = useMemo(() => {
-
-      let result = {resources: 0, influence: 0}
-      if(hud.globalPayment.resources && hud.globalPayment.resources.length){
-          hud.globalPayment.resources.forEach(pname => {
-              const planet = PLANETS.find(p => p.name === pname);
-              if(planet && planet.resources && !planet.exhausted) result.resources += planet.resources
-          });
-      }
-      if(hud.globalPayment.influence && hud.globalPayment.influence.length){
-          hud.globalPayment.influence.forEach(pname => {
-              const planet = PLANETS.find(p => p.name === pname);
-              if(planet && planet.influence && !planet.exhausted) result.influence += planet.influence
-          });
-      }
-      return result;
-
-  }, [hud.globalPayment, PLANETS])
-
-
+  
   const completeObjective = (oid) => {
     let objective = G.pubObjectives.find(o => o.id === oid);
     if(!objective) objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
@@ -698,8 +708,9 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   //eslint-disable-next-line
   }, [race.heroIsExhausted])
 
-
-
+  useEffect(() => {
+    dispatch({type: 'global_payment', payload: {tg: -race.tg}});
+  }, [race.tg, dispatch])
   
   //eslint-disable-next-line
   const initialImgs = useMemo(() => [...imgSrc.boardImages, ...getTilesAndRacesImgs(G.tiles)], []);
@@ -721,7 +732,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
               {loadingError && <span style={{fontFamily: 'system-ui', color: 'red'}}>{'ошибка загрузки ' + loadingError}</span>}
           </div>
   }
-console.log('render');
+
+
   return (<StateContext.Provider value={stateContext}>
               <Overlay/>      
               <MyNavbar leftPanel={hud.leftPanel} setLeftPanel={(payload) => dispatch({type: 'left_panel', payload})} undo={undo} isMyTurn={isMyTurn} activeTile={activeTile}/>
@@ -760,7 +772,8 @@ console.log('render');
 
               {!race.isSpectator && hud.producing && <ProducingPanel 
                   onCancel={(finish)=>{dispatch({type: 'producing', planet: null}); if(finish && hud.justOccupied && hud.exhaustedCards.includes('INTEGRATED_ECONOMY')){dispatch({type: 'just_occupied', payload: null});}}} 
-                  pname={hud.producing} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} />}
+                  pname={hud.producing} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} payment={hud.globalPayment} GP={GP}/>}
+              {!race.isSpectator && race.makeCustomProducing && <ProducingPanel onCancel={(finish) => {if(!finish){moves.producing()}}} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} payment={hud.globalPayment} GP={GP}/>}
               {!race.isSpectator && ctx.phase === 'strat' && <StrategyPick actionCardStage={actionCardStage}/>}
               
 
@@ -775,7 +788,7 @@ console.log('render');
               {!race.secretObjectiveConfirm && <>
                 {spaceCannonAttack && <SpaceCannonAttack />}
                 {antiFighterBarrage && <AntiFighterBarrage selectedTile={hud.selectedTile}/>}
-                {spaceCombat && <SpaceCombat prevStages={prevStages} selectedTile={hud.selectedTile}/>}
+                {spaceCombat && !race.makeCustomProducing && <SpaceCombat prevStages={prevStages} selectedTile={hud.selectedTile}/>}
                 {combatRetreat && <CombatRetreat selectedTile={hud.selectedTile}/>}
                 {bombardment && <Bombardment />}
                 {invasion && <Invasion />}
@@ -906,7 +919,7 @@ console.log('render');
                             width: '100%', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end', position: 'relative' }}>
                     
                     <div style={{display: 'flex', position: 'absolute', top: '-5rem', right: '3rem'}}>
-                      <GlobalPayment globalPayment={hud.globalPayment} GP={GP}/>
+                      <GlobalPayment globalPayment={hud.globalPayment} GP={GP} dispatch={dispatch}/>
                       {race && race.strategy.length > 0 && ctx.phase !== 'strat' && <div className='comboPanel-left-vertical' style={{display: 'flex', padding: '.5rem'}}>
                         {race.strategy.map((s, i) => <StrategyCard key={i} card={s} idx={i}/>)}
                       </div>}
@@ -935,7 +948,7 @@ console.log('render');
                         <div style={{display: 'flex'}}>
                           <div style={{display: 'flex', flexFlow: 'column'}}>
                             <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{(race.commodity || 0) + '/' + race.commCap}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.commodity')}</b></Button>
-                            <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{race.tg}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.trade_goods')}</b></Button>
+                            <Button style={{...TOKENS_STYLE, width: '10rem'}} onClick={() => globalPayTg(1)}><h6 style={{fontSize: 50}}>{race.tg - GP.tg}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.trade_goods')}</b></Button>
                           </div>
                           <CardImg src={'race/'+race.rid+'.png'} style={{width: '14rem', height: 'auto', marginLeft: '4rem'}}/>
                           

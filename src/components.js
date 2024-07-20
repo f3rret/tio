@@ -303,15 +303,22 @@ export const MyNavbar = ({leftPanel, setLeftPanel, undo, activeTile, isMyTurn}) 
 }
 
 
-export const GlobalPayment = ({globalPayment, GP}) => {
+export const GlobalPayment = ({globalPayment, GP, dispatch}) => {
 
-    const colStyle = useMemo(() => ({width: '4rem', height: '4rem', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', display: 'flex', alignItems: 'center', justifyContent: 'center'}), []);
+    const decrTg = useCallback(() => {
+      dispatch({type: 'global_payment', payload: {tg: -1}});
+    }, [dispatch])
+
+    const cancel = useCallback((c) => {
+      dispatch({type: 'global_payment', payload: {cancel: c}});
+    }, [dispatch])
+    
 
     return <div style={{fontSize: '2rem', marginRight: '1rem'}}>
         {globalPayment && <Row>
-            {GP.resources > 0 && <Col xs='1' style={{background: 'url(icons/resources_bg.png)', ...colStyle}}><b style={{paddingLeft: '0.1rem'}}>{GP.resources}</b></Col>}
-            {GP.influence > 0 && <Col xs='1' style={{background: 'url(icons/influence_bg.png)', ...colStyle}}><b style={{paddingLeft: '0.1rem'}}>{GP.influence}</b></Col>}
-            {globalPayment.tg > 0 && <Col xs='1' style={{background: 'url(icons/trade_good_1.png)', ...colStyle}}><b style={{paddingLeft: '0.1rem'}}>{globalPayment.tg}</b></Col>}
+            {GP.resources > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('resources')} style={{backgroundImage: 'url(icons/resources_bg.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.resources}</b></Col>}
+            {GP.influence > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('influence')} style={{backgroundImage: 'url(icons/influence_bg.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.influence}</b></Col>}
+            {GP.tg > 0 && <Col className='GPcol' xs='1' onClick={() => decrTg()} style={{backgroundImage: 'url(icons/trade_good_3.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.tg}</b></Col>}
         </Row>}
     </div>
 
