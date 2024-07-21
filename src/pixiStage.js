@@ -485,7 +485,7 @@ const TilesMap3 = ({G, playerID, moves, ctx, t, stagew, stageh, isMyTurn, active
                     {element.tdata.attacker && <SectorUnderAttack w={element.w} rid={G.races[ctx.currentPlayer].rid} rname={t('races.' + G.races[ctx.currentPlayer].rid + '.name')} 
                                         text={t('board.sector_under_attack')} fleet={element.tdata.attacker} color={G.races[ctx.currentPlayer].color[0]}/>}
 
-                    {isMyTurn && activeTile && hud.advUnitView && hud.advUnitView.tile === index && String(element.tdata.occupied) === String(playerID) && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 && 
+                    {isMyTurn && activeTile && hud.advUnitView && hud.advUnitView.tile === index && String(element.tdata.occupied) === String(playerID) && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 && ctx.phase === 'acts' && 
                                 <MoveDialog  x={-240} y={-50} canMoveThatPath={canMoveThatPath} pointerdown={() => moveToClick(index)} 
                                             distanceInfo={distanceInfo(element, activeTile)} buttonLabel={t('board.go')}/>}
                 </Container>

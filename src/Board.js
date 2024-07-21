@@ -1,7 +1,7 @@
 /* eslint eqeqeq: 0 */
 
 import { useMemo, useCallback, useEffect, useRef, useContext } from 'react';
-import { Button, ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, CardBody, Tooltip, ListGroup, Container as Cont, CardColumns,
+import { ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, CardBody, Tooltip, ListGroup, Container as Cont, CardColumns,
    } from 'reactstrap';
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList,
 ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover} from './dialogs';
@@ -16,7 +16,7 @@ import techData from './techData.json';
 import useImagePreloader, {getTilesAndRacesImgs} from './imgUtils.js';
 import imgSrc from './imgsrc.json';
 import { Blocks } from 'react-loader-spinner';
-import { Persons, Stuff, CARD_STYLE, TOKENS_STYLE, MyNavbar, GlobalPayment } from './components';
+import { Persons, Stuff, CARD_STYLE, MyNavbar, GlobalPayment } from './components';
 import { hudReducer } from './reducers.js';
 import { PixiStage } from './pixiStage.js';
 
@@ -25,7 +25,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   const [hud, dispatch] = useImmerReducer(hudReducer, {producing: null, exhaustedCards: [], leftPanel: null, advUnitView: undefined, 
     groundUnitSelected: {}, payloadCursor: {i:0, j:0}, subcardVisible: 'stuff', rightBottomVisible: null, rightBottomSubVisible: null,
     selectedTile: -1, selectedPlanet: -1, selectedTech: {}, moveSteps: [], tempCt: {t: 0, s: 0, f: 0, new: 0}, justOccupied: null, payObj: null,
-    globalPayment: { influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0}} });
+    globalPayment: { influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0}, propulsion: [], biotic: [], cybernetic: [], warfare: [] }});
 
   const prevStages = useRef(null);
   const { t } = useContext(LocalizationContext);
@@ -131,19 +131,44 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
   const GP = useMemo(() => {
 
-    let result = {resources: 0, influence: 0, tg: 0}
+    let result = {resources: 0, influence: 0, tg: 0, propulsion: 0, biotic: 0, cybernetic: 0, warfare: 0}
 
     if(hud.globalPayment.resources && hud.globalPayment.resources.length){
-        hud.globalPayment.resources.forEach(pname => {
-            const planet = PLANETS.find(p => p.name === pname);
-            if(planet && planet.resources && !planet.exhausted) result.resources += planet.resources
-        });
+      hud.globalPayment.resources.forEach(pname => {
+          const planet = PLANETS.find(p => p.name === pname);
+          if(planet && planet.resources && !planet.exhausted) result.resources += planet.resources
+      });
     }
+    
     if(hud.globalPayment.influence && hud.globalPayment.influence.length){
-        hud.globalPayment.influence.forEach(pname => {
-            const planet = PLANETS.find(p => p.name === pname);
-            if(planet && planet.influence && !planet.exhausted) result.influence += planet.influence
-        });
+      hud.globalPayment.influence.forEach(pname => {
+          const planet = PLANETS.find(p => p.name === pname);
+          if(planet && planet.influence && !planet.exhausted) result.influence += planet.influence
+      });
+    }
+    if(hud.globalPayment.propulsion && hud.globalPayment.propulsion.length){
+      hud.globalPayment.propulsion.forEach(pname => {
+          const planet = PLANETS.find(p => p.name === pname);
+          if(planet && planet.specialty && !planet.exhausted) result.propulsion += 1
+      });
+    }
+    if(hud.globalPayment.biotic && hud.globalPayment.biotic.length){
+      hud.globalPayment.biotic.forEach(pname => {
+          const planet = PLANETS.find(p => p.name === pname);
+          if(planet && planet.specialty && !planet.exhausted) result.biotic += 1
+      });
+    }
+    if(hud.globalPayment.cybernetic && hud.globalPayment.cybernetic.length){
+      hud.globalPayment.cybernetic.forEach(pname => {
+          const planet = PLANETS.find(p => p.name === pname);
+          if(planet && planet.specialty && !planet.exhausted) result.cybernetic += 1
+      });
+    }
+    if(hud.globalPayment.warfare && hud.globalPayment.warfare.length){
+      hud.globalPayment.warfare.forEach(pname => {
+          const planet = PLANETS.find(p => p.name === pname);
+          if(planet && planet.specialty && !planet.exhausted) result.warfare += 1
+      });
     }
     if(hud.globalPayment.tg && hud.globalPayment.tg > 0){
       result.tg = hud.globalPayment.tg;
@@ -169,6 +194,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
       dispatch({type: 'global_payment', payload: {planet: pname, type: 'cancel'}})
   }, [dispatch]);
 
+  const globalPaymentExhaustedPlanets = useMemo(() => [...hud.globalPayment.influence, ...hud.globalPayment.resources, 
+    ...hud.globalPayment.propulsion, ...hud.globalPayment.biotic, ...hud.globalPayment.cybernetic, ...hud.globalPayment.warfare], [hud.globalPayment])
   
   const completeObjective = (oid) => {
     let objective = G.pubObjectives.find(o => o.id === oid);
@@ -712,6 +739,12 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     dispatch({type: 'global_payment', payload: {tg: -race.tg}});
   }, [race.tg, dispatch])
   
+
+
+
+
+
+
   //eslint-disable-next-line
   const initialImgs = useMemo(() => [...imgSrc.boardImages, ...getTilesAndRacesImgs(G.tiles)], []);
   const { imagesPreloaded, lastLoaded, loadingError } = useImagePreloader(initialImgs);
@@ -734,6 +767,10 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   }
 
 
+
+
+
+
   return (<StateContext.Provider value={stateContext}>
               <Overlay/>      
               <MyNavbar leftPanel={hud.leftPanel} setLeftPanel={(payload) => dispatch({type: 'left_panel', payload})} undo={undo} isMyTurn={isMyTurn} activeTile={activeTile}/>
@@ -749,7 +786,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                     <CardTitle></CardTitle>
                       <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
                         <Cont style={{border: 'none'}}>
-                          {<PlanetsRows PLANETS={PLANETS} exhausted={[...hud.globalPayment.influence, ...hud.globalPayment.resources]}
+                          {<PlanetsRows PLANETS={PLANETS} exhausted={globalPaymentExhaustedPlanets}
+                                                          specClick={(e, p) => p && p.specialty && globalPayPlanet(e, p, p.specialty)}
                                                           resClick={(e, p) => globalPayPlanet(e, p, 'resources')} 
                                                           infClick={(e, p) => globalPayPlanet(e, p, 'influence')}
                                                           onClick={(pname) => globalPayCancelPlanet(pname)}/>}
@@ -781,7 +819,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
               {!race.isSpectator && ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote} mini={actionCardStage}/>}
               {race.secretObjectiveConfirm && (ctx.phase !== 'agenda' || isMyTurn) && <ChoiceDialog args={race.secretObjectiveConfirm} onSelect={(i)=>moves.secretObjectiveConfirm(race.secretObjectiveConfirm.oid, i)}/>}
               
-              {strategyStage && <StrategyDialog R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES}
+              {strategyStage && <StrategyDialog R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} payment={hud.globalPayment} GP={GP}
                     onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={hud.selectedTile}  selectedPlanet={hud.selectedPlanet}/>}
               {actionCardStage && <ActionCardDialog selectedTile={hud.selectedTile} selectedPlanet={hud.selectedPlanet} selectedUnit={hud.advUnitView}/> }
               
@@ -947,8 +985,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                       {race && <Card style={{...CARD_STYLE, backgroundColor: race.color[1], margin: 0}}>
                         <div style={{display: 'flex'}}>
                           <div style={{display: 'flex', flexFlow: 'column'}}>
-                            <Button style={{...TOKENS_STYLE, width: '10rem'}}><h6 style={{fontSize: 50}}>{(race.commodity || 0) + '/' + race.commCap}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.commodity')}</b></Button>
-                            <Button style={{...TOKENS_STYLE, width: '10rem'}} onClick={() => globalPayTg(1)}><h6 style={{fontSize: 50}}>{race.tg - GP.tg}</h6><b style={{backgroundColor: race.color[1], width: '100%'}}>{t('board.trade_goods')}</b></Button>
+                            <button className='styledButton black tgButton'><h6 style={{fontSize: 50}}>{(race.commodity || 0) + '/' + race.commCap}</h6><b>{t('board.commodity')}</b></button>
+                            <button className='styledButton black tgButton' onClick={() => globalPayTg(1)}><h6>{race.tg - GP.tg}</h6><b>{t('board.trade_goods')}</b></button>
                           </div>
                           <CardImg src={'race/'+race.rid+'.png'} style={{width: '14rem', height: 'auto', marginLeft: '4rem'}}/>
                           

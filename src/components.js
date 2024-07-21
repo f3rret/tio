@@ -318,6 +318,10 @@ export const GlobalPayment = ({globalPayment, GP, dispatch}) => {
         {globalPayment && <Row>
             {GP.resources > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('resources')} style={{backgroundImage: 'url(icons/resources_bg.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.resources}</b></Col>}
             {GP.influence > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('influence')} style={{backgroundImage: 'url(icons/influence_bg.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.influence}</b></Col>}
+            {GP.propulsion > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('propulsion')} style={{backgroundImage: 'url(icons/propulsion.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.propulsion}</b></Col>}
+            {GP.biotic > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('biotic')} style={{backgroundImage: 'url(icons/biotic.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.biotic}</b></Col>}
+            {GP.cybernetic > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('cybernetic')} style={{backgroundImage: 'url(icons/cybernetic.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.cybernetic}</b></Col>}
+            {GP.warfare > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('warfare')} style={{backgroundImage: 'url(icons/warfare.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.warfare}</b></Col>}
             {GP.tg > 0 && <Col className='GPcol' xs='1' onClick={() => decrTg()} style={{backgroundImage: 'url(icons/trade_good_3.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.tg}</b></Col>}
         </Row>}
     </div>

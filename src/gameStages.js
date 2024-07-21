@@ -887,7 +887,7 @@ export const ACTS_STAGES = {
   actionCard: ACTION_CARD_STAGE,
   strategyCard: {
     moves: {
-      joinStrategy: ({ G, ctx, playerID, events }, {exhausted, tg, result, exhaustedCards}) => {
+      joinStrategy: ({ G, ctx, playerID, events }, {exhausted, tg, payment, result, exhaustedCards}) => {
         const exhaustPlanet = (revert) => {
           if(exhausted && exhausted.length){
             G.tiles.forEach(tile => {
@@ -910,7 +910,7 @@ export const ACTS_STAGES = {
           case 'LEADERSHIP':
             exhaustPlanet();
 
-            G.races[playerID].tg -= tg;
+            G.races[playerID].tg -= payment.tg;
             G.races[playerID].tokens.new = result;
             break;
           case 'DIPLOMACY':
@@ -1021,8 +1021,8 @@ export const ACTS_STAGES = {
                   G.races[playerID].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
                 }
 
-                if(tg){
-                  G.races[playerID].tg -= tg;
+                if(payment.tg){
+                  G.races[playerID].tg -= payment.tg;
                 }
                 
                 G.tiles.some(tile => {
@@ -1070,7 +1070,7 @@ export const ACTS_STAGES = {
 
             if(keys.length){
               exhaustPlanet();
-              if(tg){ G.races[playerID].tg -= tg;}
+              G.races[playerID].tg -= payment.tg;
 
               keys.forEach(k => {
                 G.races[playerID].knownTechs.push(result[k].id);

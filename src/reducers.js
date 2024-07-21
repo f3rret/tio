@@ -28,7 +28,12 @@ export const hudReducer = (hudDraft, action) => {
 
                 if(type !== 'cancel'){
                     if(!hudDraft.globalPayment.influence.includes(planet.name) && 
-                        !hudDraft.globalPayment.resources.includes(planet.name) && !planet.exhausted){
+                        !hudDraft.globalPayment.resources.includes(planet.name) && 
+                        !hudDraft.globalPayment.propulsion.includes(planet.name) && 
+                        !hudDraft.globalPayment.biotic.includes(planet.name) && 
+                        !hudDraft.globalPayment.cybernetic.includes(planet.name) && 
+                        !hudDraft.globalPayment.warfare.includes(planet.name) &&
+                        !planet.exhausted){
                         hudDraft.globalPayment = produce(hudDraft.globalPayment, draft => {
                             draft[type].push(planet.name);
                         });
@@ -36,10 +41,16 @@ export const hudReducer = (hudDraft, action) => {
                 }
                 else if(type === 'cancel'){
                     const pname = action.payload.planet;
-                    if(hudDraft.globalPayment.influence.includes(pname) || hudDraft.globalPayment.resources.includes(pname)){
+                    if(hudDraft.globalPayment.influence.includes(pname) || hudDraft.globalPayment.resources.includes(pname) ||
+                        hudDraft.globalPayment.propulsion.includes(pname)|| hudDraft.globalPayment.biotic.includes(pname) ||
+                        hudDraft.globalPayment.cybernetic.includes(pname) || hudDraft.globalPayment.warfare.includes(pname)){
                         hudDraft.globalPayment = produce(hudDraft.globalPayment, draft => {
                             draft.influence = draft.influence.filter(p => p !== pname);
                             draft.resources = draft.resources.filter(p => p !== pname);
+                            draft.propulsion = draft.propulsion.filter(p => p !== pname);
+                            draft.biotic = draft.biotic.filter(p => p !== pname);
+                            draft.cybernetic = draft.cybernetic.filter(p => p !== pname);
+                            draft.warfare = draft.warfare.filter(p => p !== pname);
                         });
                     }
                 }
@@ -61,10 +72,16 @@ export const hudReducer = (hudDraft, action) => {
                 action.payload.planets.forEach(planet => {
                     if(planet.exhausted){
                         const pname = planet.name;
-                        if(hudDraft.globalPayment.influence.includes(pname) || hudDraft.globalPayment.resources.includes(pname)){
+                        if(hudDraft.globalPayment.influence.includes(pname) || hudDraft.globalPayment.resources.includes(pname) || 
+                        hudDraft.globalPayment.propulsion.includes(pname) || hudDraft.globalPayment.biotic.includes(pname) ||
+                        hudDraft.globalPayment.cybernetic.includes(pname) || hudDraft.globalPayment.warfare.includes(pname)){
                             hudDraft.globalPayment = produce(hudDraft.globalPayment, draft => {
                                 draft.influence = draft.influence.filter(p => p !== pname);
                                 draft.resources = draft.resources.filter(p => p !== pname);
+                                draft.propulsion = draft.propulsion.filter(p => p !== pname);
+                                draft.biotic = draft.biotic.filter(p => p !== pname);
+                                draft.cybernetic = draft.cybernetic.filter(p => p !== pname);
+                                draft.warfare = draft.warfare.filter(p => p !== pname);
                             });
                         }
                     }
