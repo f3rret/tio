@@ -887,16 +887,17 @@ export const ACTS_STAGES = {
   actionCard: ACTION_CARD_STAGE,
   strategyCard: {
     moves: {
-      joinStrategy: ({ G, ctx, playerID, events }, {exhausted, tg, payment, result, exhaustedCards}) => {
+      joinStrategy: ({ G, ctx, playerID, events }, {exhausted, payment, result, exhaustedCards}) => {
         const exhaustPlanet = (revert) => {
           if(exhausted && exhausted.length){
+            
             G.tiles.forEach(tile => {
               const planets = tile.tdata.planets;
 
               if(planets && planets.length){
                 planets.forEach( p => {
                   if(String(p.occupied) === String(playerID)){
-                    if(exhausted.indexOf(p.name) > -1){
+                    if(exhausted.includes(p.name)){
                       p.exhausted = !revert;
                     }
                   }
@@ -914,7 +915,7 @@ export const ACTS_STAGES = {
             G.races[playerID].tokens.new = result;
             break;
           case 'DIPLOMACY':
-            if(result > 0){
+            if(result > 0 && ctx.currentPlayer === playerID){
               G.races.forEach((r, i) => {
                 if(String(i) !== String(playerID)){
                   G.tiles[result].tdata.tokens.push(r.rid);

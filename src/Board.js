@@ -46,7 +46,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     G.tiles.forEach( t => {
       if(t.tdata.planets && t.tdata.planets.length){
         t.tdata.planets.forEach((p, pidx) => {
-          if(p.occupied == playerID){
+          if(String(p.occupied) === String(playerID)){
             arr.push({...p, tid: t.tid, pidx});
           }
         })
@@ -816,12 +816,12 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
               
 
               {race.explorationDialog && <ChoiceDialog args={race.explorationDialog} onSelect={(i)=>moves.choiceDialog(i)}/>}
-              {!race.isSpectator && ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote} mini={actionCardStage}/>}
+              {!race.isSpectator && ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote} mini={actionCardStage} payment={hud.globalPayment} GP={GP}/>}
               {race.secretObjectiveConfirm && (ctx.phase !== 'agenda' || isMyTurn) && <ChoiceDialog args={race.secretObjectiveConfirm} onSelect={(i)=>moves.secretObjectiveConfirm(race.secretObjectiveConfirm.oid, i)}/>}
               
               {strategyStage && <StrategyDialog R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} payment={hud.globalPayment} GP={GP}
                     onComplete={moves.joinStrategy} onDecline={moves.passStrategy} selectedTile={hud.selectedTile}  selectedPlanet={hud.selectedPlanet}/>}
-              {actionCardStage && <ActionCardDialog selectedTile={hud.selectedTile} selectedPlanet={hud.selectedPlanet} selectedUnit={hud.advUnitView}/> }
+              {actionCardStage && <ActionCardDialog selectedTile={hud.selectedTile} selectedPlanet={hud.selectedPlanet} selectedUnit={hud.advUnitView} GP={GP} payment={hud.globalPayment}/>}
               
               {!race.secretObjectiveConfirm && <>
                 {spaceCannonAttack && <SpaceCannonAttack />}

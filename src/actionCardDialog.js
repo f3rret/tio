@@ -2,11 +2,11 @@ import { Card, CardImg,  CardTitle, CardBody, CardFooter, ButtonGroup, Button, R
 import { useState, useMemo, useContext, useCallback, useEffect, useRef } from 'react';
 import { produce } from 'immer';
 //import techData from './techData.json';
-import { StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT, getPlanetByName, getMyNeighbors, wormholesAreAdjacent} from './utils';
+import { StateContext, LocalizationContext, UNITS_LIMIT, getPlanetByName, getMyNeighbors, wormholesAreAdjacent} from './utils';
 import { neighbors } from './Grid.js'
 import { UnmeetReqs, PlanetsRows, GetTechType } from './dialogs.js';
 
-export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) => {
+export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit, GP, payment}) => {
     const {G, ctx, playerID, moves, exhaustedCards, exhaustTechCard, PLANETS, UNITS, selectedTech} = useContext(StateContext);
     const {t} = useContext(LocalizationContext);
     const [selection, setSelection] = useState();
@@ -43,27 +43,14 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
         if(['Focused Research', 'Technology Rider', 'Enigmatic Device'].indexOf(card.id) > -1 && selection){
             
             if(selection){ //technology
-                let adjSpec = [];
-                if(haveTechnology(G.races[cardOwner], 'PSYCHOARCHAEOLOGY')){
-                    PLANETS.forEach(p => {
-                        if(p.specialty){
-                            adjSpec.push(p.name);
-                        }
-                    });
-                }
-                else{
-                    adjSpec = Object.keys(exhausted2);
-                }
-
                 const ex2 = {};
                 ex2[selection.id] = selection; //ex2[selection] = technology;
-                const reqs = UnmeetReqs({separate: true, PLANETS, ex2, adjSpec, G, playerID: cardOwner});
-                reqs.adjSpec = adjSpec;
+                const reqs = UnmeetReqs({separate: true, PLANETS, ex2, G, GP, playerID: cardOwner});
                 return reqs;
             }
 
         }
-    }, [G, card, cardOwner, PLANETS, selection, exhausted2]);
+    }, [G, GP, card, cardOwner, PLANETS, selection]);
 
     const myTarget = useMemo(() => {
         
@@ -155,7 +142,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
             }
             else if(card.id === 'Enigmatic Device'){
                 if(selection){
-                    if(exhausted){
+                    /*if(exhausted){
                         let sum = 0;
                         Object.keys(exhausted).forEach(pname => {
                             const planet = getPlanetByName(G.tiles, pname);
@@ -163,7 +150,10 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                         });
                         
                         if(sum >= 6) result = {tech: selection, exhausted}
-                    }
+                    }*/
+                   if(GP && (GP.resources + GP.tg >= 6)){
+                    result = {tech: selection, payment}
+                   }
                 }
             }
             else if(card.id === 'Plague' || card.id === 'Uprising'){
@@ -401,7 +391,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
         return result;
     }, [card, selectedPlanet, selectedTile, notarget, selection, selection2,
         requirements, exhaustedCards, exhausted, exhausted2, G, 
-        cardOwner, UNITS, selectedUnit, playerID]);
+        cardOwner, UNITS, selectedUnit, playerID, GP, payment]);
 
     const isMine = useMemo(() => {
         return String(playerID) === String(cardOwner);
@@ -500,6 +490,13 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
     if(card.when === 'COMBAT'){
         style = {...style, right: '25%', bottom: '5%'}
     }
+/**
+ * <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                                    <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} specClick={(e,p) => planetsRowsClick2(p.name)}/>
+                                </div>
+ */
+
+    //todo: remove planetsrows from codex actions
 
     return <Card style={style} className='borderedPanel bigDialog'>
                 <CardTitle style={{borderBottom: '1px solid coral', color: 'black'}}><h3>{t('board.action_card')}</h3></CardTitle>
@@ -531,9 +528,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit}) =
                             {['Lucky Shot'].indexOf(card.id) > -1 && <UnitInfo selectedUnit={selectedUnit} />}
                             {card.id === 'Enigmatic Device' && <>
                                 <TechnologySelect races={[G.races[playerID]]} requirements={requirements}/>
-                                <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                                    <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} specClick={(e,p) => planetsRowsClick2(p.name)}/>
-                                </div>
+                                
                                 </>}
                             {card.id === 'Plagiarize' && <>
                                 <TechnologySelect races={myNeighbors.map(n => G.races[n])}/>

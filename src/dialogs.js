@@ -65,10 +65,10 @@ export const getStratColor = (strat, op) => {
     return color;
 }
 
-export const AgendaDialog = ({ onConfirm, mini }) => {
-    const { G, playerID, exhaustedCards, PLANETS, moves, ctx } = useContext(StateContext);
+export const AgendaDialog = ({ onConfirm, mini, payment, GP }) => {
+    const { G, playerID, exhaustedCards, moves, ctx } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
-    const [ex, setEx] = useState({});
+    //const [ex, setEx] = useState({});
     const [voteRadio, setVoteRadio] = useState('for');
     const [agendaNumber, setAgendaNumber] = useState(1);
     const voteSelect = useRef(null);
@@ -77,7 +77,7 @@ export const AgendaDialog = ({ onConfirm, mini }) => {
         return G.races[playerID].voteResults.length >= agendaNumber;
     }, [G.races, playerID, agendaNumber])
 
-    const planetRowClick = useCallback((pname) => {
+    /*const planetRowClick = useCallback((pname) => {
         if(imVoted) return;
         if(!PLANETS.find(p => p.name === pname).exhausted){
             setEx(produce(ex, draft => {
@@ -89,21 +89,21 @@ export const AgendaDialog = ({ onConfirm, mini }) => {
                 }
             }));
         }
-    }, [PLANETS, ex, imVoted]);
+    }, [PLANETS, ex, imVoted]);*/
 
     const votes = useMemo(()=>{
-        let result = PLANETS.filter(p => ex[p.name]).reduce((a,b) => b.influence + a, 0);
+        let result = GP.influence;//PLANETS.filter(p => ex[p.name]).reduce((a,b) => b.influence + a, 0);
         if(exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1){
             result += 3;
         }
         return result;
-    },[ex, PLANETS, exhaustedCards]);
+    },[exhaustedCards, GP]);
 
     const confirmClick = useCallback(() => {
-        onConfirm({vote: voteSelect.current ? voteSelect.current.value : voteRadio, ex, exhaustedCards});
-        setEx({});
+        onConfirm({vote: voteSelect.current ? voteSelect.current.value : voteRadio, payment, exhaustedCards});
+        //setEx({});
         setVoteRadio('for');
-    }, [ex, onConfirm, voteRadio, exhaustedCards]);
+    }, [payment, onConfirm, voteRadio, exhaustedCards]);
 
     const afterVoteActions = useMemo(() => {
         if(ctx.activePlayers && ctx.activePlayers[playerID] === 'afterVoteActionCard'){
@@ -133,6 +133,13 @@ export const AgendaDialog = ({ onConfirm, mini }) => {
 G.races[playerID].actions.length === agendaNumber &&
 {afterVoteActions && <p><i>{'You can now select one of your action card to use it after this round: '}<b>{afterVoteActions.join(', ')}</b></i></p>}
 */
+/**
+ * {!mini && <div style={{width: '50%', overflowY: 'auto', maxHeight: '30rem', marginLeft: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>
+            </div>}
+ */
+
+
     return <Card className='borderedPanel bigDialog' style={{width: mini ? '25%':'50%'}}>
         <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>{t('board.agenda_vote')}</h3></CardTitle>
         <CardBody style={{display: 'flex'}}>
@@ -213,9 +220,7 @@ G.races[playerID].actions.length === agendaNumber &&
                 {myTurn && !afterVoteStage && !actionCardStage && G.vote2 && G.vote2.decision && agendaNumber === 2 && !iAmFinished &&
                     <button className='styledButton black' onClick={()=>moves.endVote()} style={{marginTop: '2rem'}}>{t('board.end')}</button>}
             </div>
-            {!mini && <div style={{width: '50%', overflowY: 'auto', maxHeight: '30rem', marginLeft: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                <PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>
-            </div>}
+            
         </CardBody>
     </Card>
 
@@ -236,10 +241,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
     const [currentUnit, setCurrentUnit] = useState('FLAGSHIP');
     const [deploy, setDeploy] = useState({});
     const [ex, setEx] = useState({}); //exhausted
-    //const [adjSpec, setAdjSpec] = useState([]);
     const [ex2, setEx2] = useState({});
-    //const [result, setResult] = useState(0);
-    //const [tg, setTg] = useState(0);
     const [selectedRace, setSelectedRace] = useState(-1);
     const [agendaCards, setAgendaCards] = useState(G.agendaDeck.slice(-2));
     const [ct, setCt] = useState(() => {
@@ -252,7 +254,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
         case 'LEADERSHIP':
             break;
         case 'DIPLOMACY':
-            lastStep = 2;
+            lastStep = 1;
             break;
         case 'POLITICS':
             if(isMine)
@@ -345,7 +347,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
         else{
             return [...payment.propulsion, ...payment.biotic, ...payment.cybernetic, ...payment.warfare]
         }
-    }, [GP, playerID, G, PLANETS])
+    }, [playerID, G, PLANETS, payment])
 
     const maxDeployUnits = useMemo(() => {
         if(sid === 'WARFARE' && !isMine){
@@ -397,37 +399,8 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
         return 0;
     }, [deploy, sid, isMine, R_UNITS, G.races, playerID, exhaustedCards]);
 
-    /*const planetRowClickSpecialty = useCallback((pname) =>{
-
-        if(!haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY') && !PLANETS.find(p => p.name === pname).exhausted){
-            setEx(produce(ex, draft => {
-                if(draft[pname]){
-                    delete draft[pname];
-                    setAdjSpec(adjSpec.filter(a => a !== pname));
-                }
-                else{
-                    draft[pname] = true;
-                    setAdjSpec([...adjSpec, pname]);
-                }
-            }));
-        }
-
-    }, [PLANETS, adjSpec, ex, G.races, playerID]);*/
-
     const planetRowClick = useCallback((pname) => {
-        if(sid === 'LEADERSHIP' || sid === 'TECHNOLOGY'){
-            if(!PLANETS.find(p => p.name === pname).exhausted){
-                setEx(produce(ex, draft => {
-                    if(draft[pname]){
-                        delete draft[pname];
-                    }
-                    else{
-                        draft[pname] = true;
-                    }
-                }));
-            }
-        }
-        else if(sid === 'DIPLOMACY'){
+        if(sid === 'DIPLOMACY'){
             if(PLANETS.find(p => p.name === pname).exhausted){
                 setEx(produce(ex, draft => {
                     if(draft[pname]){
@@ -440,55 +413,6 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
                     }
                 }));
             }
-        }
-        else if(sid === 'CONSTRUCTION'){
-            /*if(step === 1){
-                setEx(produce(ex, draft => {
-                    if(draft[pname]){
-                        delete draft[pname];
-                    }
-                    else{
-                        Object.keys(ex).forEach(k=>delete draft[k]);
-                        draft[pname] = 'pds';
-                    }
-                }));
-            }
-            else if(step === 2){
-                setEx2(produce(ex2, draft => {
-                    if(draft[pname]){
-                        delete draft[pname];
-                    }
-                    else{
-                        Object.keys(ex2).forEach(k=>delete draft[k]);
-                        draft[pname] = 'pds';
-                    }
-                }));
-            }*/
-        }
-        if(sid === 'WARFARE'){
-            /*if(step === 1){
-                setEx(produce(ex, draft => {
-                    if(draft[pname]){
-                        delete draft[pname];
-                    }
-                    else{
-                        Object.keys(ex).forEach(k=>delete draft[k]);
-                        draft[pname] = 'spacedock';
-                    }
-                }));
-            }
-            else if(step === 2){
-                if(!PLANETS.find(p => p.name === pname).exhausted){
-                    setEx2(produce(ex2, draft => {
-                        if(draft[pname]){
-                            delete draft[pname];
-                        }
-                        else{
-                            draft[pname] = true;
-                        }
-                    }));
-                }
-            }*/
         }
     }, [ex, sid, PLANETS]);
 
@@ -517,15 +441,6 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
             }
         }));
     }, [selectedRace]);
-
-    /*const tgClick = useCallback(() => {
-    
-        const max = G.races[playerID].tg;
-        if(tg < max){
-            setTg(tg+1);
-        }
-
-    }, [tg, G.races, playerID]);*/
 
     const Tokens = ({count}) => {
         const result = [];
@@ -703,7 +618,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
         return d + u >= UNITS_LIMIT[unit];
     }, [UNITS, deploy]);
 
-    const doneButtonClick = ()=>{ 
+    const doneButtonClick = () => { 
         let r = result;
         
         if(sid === 'DIPLOMACY') r = selectedTile;
@@ -726,6 +641,21 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
         else if(sid === 'TECHNOLOGY'){
             exhausted = [...payment.resources, ...payment.influence, ...payment.propulsion, ...payment.biotic, ...payment.cybernetic, ...payment.warfare]
         }
+        else if(sid === 'DIPLOMACY' && isMine){
+            const tile = G.tiles[selectedTile];
+
+            if(tile){
+                const planets = tile.tdata.planets;
+                if(planets && planets.length){
+                    exhausted = planets.filter(p => p.exhausted).map(p => p.name);
+                }
+            }
+        }
+        else if(sid === 'DIPLOMACY' && !isMine){
+            if(ex){
+                exhausted = Object.keys(ex);
+            }
+        }
         else{
             exhausted = ex;
         }
@@ -736,7 +666,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
 
     const nextButtonClick = ()=>{
         let inc = 1; 
-        if(['DIPLOMACY', 'POLITICS'].indexOf(sid) > -1 && !isMine){
+        if(sid === 'POLITICS' && !isMine){
             inc = 2
         }
         else if(sid === 'IMPERIAL'){
@@ -760,7 +690,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
 
     const backButtonClick = ()=>{
         let inc = 1;
-        if(['DIPLOMACY', 'POLITICS'].indexOf(sid) > -1 && !isMine){
+        if(sid === 'POLITICS' && !isMine){
             inc = 2
         }
         else if(sid === 'IMPERIAL'){
@@ -804,21 +734,6 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
         }
     }
     
-    /*useEffect(()=>{
-        if(step === 1 && sid === 'TECHNOLOGY'){
-            if(haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY')){
-                const specs = [];
-                PLANETS.forEach(p => {
-                    if(p.specialty){
-                        specs.push(p.name);
-                    }
-                });
-                setAdjSpec(specs);
-            }
-        }
-    // eslint-disable-next-line
-    }, [step]);*/
-
     useEffect(() => {
         if(sid === 'CONSTRUCTION' && selectedTile > -1){
             const tile = G.tiles[selectedTile];
@@ -878,11 +793,14 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
                             <div style={{display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', marginLeft: '2rem'}}><Tokens count={result}/></div>
                             
                         </div>}
-                        {sid === 'DIPLOMACY' && <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
+                        {sid === 'DIPLOMACY' && isMine && <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
                             <div style={{width: '60%', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                                 {selectedTile === -1 && <h5 style={{margin: '2rem'}}>{t('board.select_system')}</h5>}
                                 {selectedTile > -1 && <CardImg style={{width: '75%'}} src={'tiles/ST_'+G.tiles[selectedTile].tid+'.png'} />}
                             </div>
+                        </div>}
+                        {sid === 'DIPLOMACY' && !isMine && <div style={{width: '70%', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+                            {<PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>}
                         </div>}
                         {sid === 'POLITICS' && <div style={{margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                             <RaceList races={G.races} onClick={raceRowClick} selected={selectedRace} speaker={G.speaker}/>
@@ -950,9 +868,6 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
                     </div>}
                     {step === 2 && lastStep > 1 && <div style={{width: '100%', display: 'flex', flexFlow: 'column'}}>
                         <p style={{margin: 0, minWidth: '40rem'}}>{isMine ? t('cards.strategy.' + sid + '.primary') : t('cards.strategy.' + sid + '.secondary')}</p>
-                        {sid === 'DIPLOMACY' && <div style={{width: '70%', overflowY: 'auto', maxHeight: '30rem', margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                            {<PlanetsRows PLANETS={PLANETS} onClick={planetRowClick} exhausted={ex}/>}
-                        </div>}
                         {sid === 'POLITICS' && <div style={{display: 'flex', padding: '1rem', flexDirection: 'column', fontSize: '.8rem'}}>
                             <h5 style={{margin: '.5rem'}}>{t('board.you_gain_2_ac') + ': '}</h5>
                             {G.actionsDeck.slice(-2 * (parseInt(playerID)+1)).slice(0, 2).map((a,i) => 
@@ -1841,7 +1756,7 @@ export const ProducingPanel = (args) => {
 
 export const UnmeetReqs = (args) => {
 
-    const {separate, PLANETS, ex2, adjSpec, GP, G, playerID} = args;
+    const {separate, ex2, GP, G, PLANETS, playerID} = args;
     const { t } = useContext(LocalizationContext);
     const keys = Object.keys(ex2);
     let result=[];
@@ -1856,14 +1771,22 @@ export const UnmeetReqs = (args) => {
 
     const learning = {biotic: 0, warfare: 0, propulsion: 0, cybernetic: 0, unit: 0};
 
-    if(adjSpec){//todo: delete adjSpec
+    /*if(adjSpec){//todo: delete adjSpec
         adjSpec.forEach(pname => {
             const planet = PLANETS.find(p => p.name === pname);
             if(planet && planet.specialty) learning[planet.specialty]++;
         }); 
-    }
+    }*/
 
-    if(GP){
+
+    if(haveTechnology(G.races[playerID], 'PSYCHOARCHAEOLOGY')){
+        PLANETS.forEach(p => {
+            if(p.specialty){
+                learning[p.specialty]++;
+            }
+        });
+    }
+    else if(GP){
         ['propulsion', 'biotic', 'cybernetic', 'warfare'].forEach(spec => learning[spec] = GP[spec]);
     }
 

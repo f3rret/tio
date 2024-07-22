@@ -1134,7 +1134,7 @@ export const TIO = {
               G.races[playerID].exhaustedCards.push('PREDICTIVE_INTELLIGENCE');
             }
 
-            exhaustPlanet(Object.keys(result.ex));
+            exhaustPlanet(result.payment.influence);
             
             let vr = {vote: result.vote, count: votes};
             if(result.exhaustedCards && result.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE')>-1){

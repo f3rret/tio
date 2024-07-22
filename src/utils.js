@@ -44,7 +44,7 @@ export const getInitRaces = (hexGrid, numPlayers, simpleColors) => {
     r.promissory.push(...cd.filter(c => !c.racial));
     r.promissory.forEach(p => p.color = colors[idx][2]);
 
-    //r.actionCards.push(...cardData.actions.slice(70, 76)); //test only
+    r.actionCards.push(cardData.actions.find(a => a.id === 'Enigmatic Device')); //test only
   });
 
   return races;
