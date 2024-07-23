@@ -1039,7 +1039,9 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect, rid}) => {
             <CardImg src={'units/' + showUnit + '.png'} style={{width: 'auto', float: 'left'}}/>
             <div style={{padding: '1rem', position: 'absolute', right: '1rem', textAlign: 'end'}}>
             {R_UNITS[showUnit].racial && <h5>{t('races.' + rid + '.' + R_UNITS[showUnit].id + '.label')}</h5>}
-            {!R_UNITS[showUnit].racial && R_UNITS[showUnit].description && <h5>{t('cards.techno.' + R_UNITS[showUnit].id + '.description')}</h5>}
+            {!R_UNITS[showUnit].racial && R_UNITS[showUnit].description && !R_UNITS[showUnit].alreadyUpgraded && <h5>{t('cards.techno.' + R_UNITS[showUnit].id + '.description')}</h5>}
+            {!R_UNITS[showUnit].racial && R_UNITS[showUnit].alreadyUpgraded && <h5>{t('cards.techno.' + R_UNITS[showUnit].id + '2.label')}</h5>}
+            {!R_UNITS[showUnit].racial && R_UNITS[showUnit].alreadyUpgraded && t('cards.techno.' + R_UNITS[showUnit].id + '2.description')}
             
             {R_UNITS[showUnit].sustain && <h6>♦ {t('board.sustain_damage')}</h6>}
             {R_UNITS[showUnit].bombardment && <h6>♦ {t('board.bombardment')} {R_UNITS[showUnit].bombardment.value + ' x ' + R_UNITS[showUnit].bombardment.count}</h6>}
@@ -1102,9 +1104,14 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect, rid}) => {
                 {R_UNITS[showUnit].action && <CardText style={{fontSize: '0.7rem'}}>{t('races.' + rid + '.' + R_UNITS[showUnit].id + '.action')}</CardText>}
             </>}
             {!R_UNITS[showUnit].racial && <>
-                {R_UNITS[showUnit].effect && <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '.effect')}</CardText>}
-                {R_UNITS[showUnit].deploy && <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '.deploy')}</CardText>}
-                {R_UNITS[showUnit].action && <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '.action')}</CardText>}
+                {!R_UNITS[showUnit].alreadyUpgraded && <>
+                    {R_UNITS[showUnit].effect && <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '.effect')}</CardText>}
+                    {R_UNITS[showUnit].deploy && <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '.deploy')}</CardText>}
+                    {R_UNITS[showUnit].action && <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '.action')}</CardText>}
+                </>}
+                {R_UNITS[showUnit].alreadyUpgraded && 
+                    <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '2.effect')}</CardText>
+                }
             </>}
         </div>}
       </div>

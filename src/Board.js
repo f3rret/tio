@@ -27,6 +27,16 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     selectedTile: -1, selectedPlanet: -1, selectedTech: {}, moveSteps: [], tempCt: {t: 0, s: 0, f: 0, new: 0}, justOccupied: null, payObj: null,
     globalPayment: { influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0}, propulsion: [], biotic: [], cybernetic: [], warfare: [] }});
 
+ 
+
+  const G_stringify = useMemo(() => JSON.stringify(G), [G]);
+  const G_tiles_stringify = useMemo(() => JSON.stringify(G.tiles), [G]);
+  const G_races_stringify = useMemo(() => JSON.stringify(G.races), [G]);
+  const ctx_stringify = useMemo(() => JSON.stringify(ctx), [ctx]);
+
+  //eslint-disable-next-line
+  const race = useMemo(() => G.races[playerID], [G_races_stringify, playerID]);
+  const isMyTurn = useMemo(() => ctx.currentPlayer === playerID, [ctx.currentPlayer, playerID]);
   const prevStages = useRef(null);
   const { t } = useContext(LocalizationContext);
   
@@ -36,9 +46,6 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     }
     dispatch({type: 'pay_obj', payload: null})
   };
-
-  const race = useMemo(() => G.races[playerID], [G.races, playerID]);
-  const isMyTurn = useMemo(() => ctx.currentPlayer === playerID, [ctx.currentPlayer, playerID]);
 
   const PLANETS = useMemo(()=> {
     const arr = [];
@@ -54,7 +61,10 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     });
 
     return arr;
-  }, [G.tiles, playerID]);
+  //eslint-disable-next-line
+  }, [G_tiles_stringify, playerID]);
+
+  const PLANETS_stringify = useMemo(() => JSON.stringify(PLANETS), [PLANETS]);
 
   const UNITS = useMemo(()=> {
     const units = [];
@@ -95,7 +105,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     });
     
     return units;
-  }, [G.tiles, playerID]);
+  //eslint-disable-next-line
+  }, [G_tiles_stringify, playerID]);
 
   const R_UNITS = useMemo(() => {
     if(race){
@@ -174,8 +185,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
       result.tg = hud.globalPayment.tg;
     }
     return result;
-
-  }, [hud.globalPayment, PLANETS]);
+//eslint-disable-next-line
+  }, [hud.globalPayment, PLANETS_stringify]);
 
   const globalPayPlanet = useCallback((e, planet, type) => {
     e.preventDefault();
@@ -287,12 +298,13 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     return ctx.activePlayers && ctx.activePlayers[playerID] && ctx.activePlayers[playerID].startsWith('invasion');
   }, [ctx.activePlayers, playerID]);
 
- 
-  const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
+ //eslint-disable-next-line
+  const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G_tiles_stringify]);
 
   const flushTempCt = useCallback(() =>{
     dispatch({type: 'temp_ct', payload: {s: 0, t: 0, f: 0, new: 0}})
-  }, [dispatch]);
+  //eslint-disable-next-line
+  }, []);
 
   const exhaustTechCard = useCallback((techId) => {
     if(race.exhaustedCards.includes(techId)){
@@ -309,8 +321,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     if(techId === 'PREDICTIVE_INTELLIGENCE'){
       flushTempCt();
     }
-    
-  }, [race.exhaustedCards, dispatch, G.tiles, hud.selectedTile, playerID, flushTempCt, hud.justOccupied]);
+  //eslint-disable-next-line
+  }, [race.exhaustedCards, G.tiles, hud.selectedTile, playerID, hud.justOccupied]);
 
 
   const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);
@@ -517,7 +529,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
     if(race.rid === 1 && race.actions && race.actions.length && race.actions[race.actions.length - 1] === 'ORBITAL_DROP'){
       if(!UNITS['mech'] || (UNITS['mech'] < UNITS_LIMIT['mech'])){
-        if(GP.resources + race.tg > 2){
+        if(GP.resources + GP.tg > 2){
           disabled = false;
         }
       }
@@ -539,7 +551,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   }
 
   const stateContext = useMemo(() => ({G, ctx, playerID, /*matchID, credentials,*/ moves, selectedTech: hud.selectedTech, exhaustedCards: hud.exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}), 
-  [G, ctx, playerID, moves, hud.selectedTech, hud.exhaustedCards, exhaustTechCard, prevStages, PLANETS, UNITS]);
+  //eslint-disable-next-line
+  [G_stringify, ctx_stringify, playerID, moves, hud.selectedTech, hud.exhaustedCards, exhaustTechCard, prevStages, PLANETS_stringify, UNITS]);
 
 
   useEffect(() => {
@@ -552,7 +565,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   useEffect(() => {
     dispatch({type: 'planets_change', payload: PLANETS})
   //eslint-disable-next-line
-  }, [PLANETS]);
+  }, [PLANETS_stringify]);
   
   useEffect(() => {
     if(hud.groundUnitSelected.unit !== undefined){
@@ -564,7 +577,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
         }
       }
     }
-  }, [hud.groundUnitSelected, G.tiles, race.reinforcement, dispatch]);
+  //eslint-disable-next-line
+  }, [hud.groundUnitSelected, G_tiles_stringify, race.reinforcement]);
 
   useEffect(()=>{
     dispatch({type: 'move_steps'})
@@ -576,8 +590,9 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
         type: 'flush_exhausted_cards'
       })
     }
-    flushTempCt();
-  },[race.exhaustedCards, dispatch, flushTempCt]);
+  //flushTempCt();
+  //eslint-disable-next-line
+  },[race.exhaustedCards]);
 
   useEffect(()=>{
     if(mustSecObj){
@@ -664,7 +679,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
       }
       PREV_PLANETS.current = PLANETS;
     }
-  }, [PLANETS, sendChatMessage, t, dispatch]);
+  //eslint-disable-next-line
+  }, [PLANETS_stringify]);
 
   useEffect(() => { //switch TechAction
     if(!hud.producing && hud.justOccupied){
@@ -736,8 +752,9 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   }, [race.heroIsExhausted])
 
   useEffect(() => {
-    dispatch({type: 'global_payment', payload: {tg: -race.tg}});
-  }, [race.tg, dispatch])
+    dispatch({type: 'global_payment', payload: {tg: -hud.globalPayment.tg}});
+  //eslint-disable-next-line
+  }, [race.tg])
   
 
 
@@ -765,10 +782,6 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
               {loadingError && <span style={{fontFamily: 'system-ui', color: 'red'}}>{'ошибка загрузки ' + loadingError}</span>}
           </div>
   }
-
-
-
-
 
 
   return (<StateContext.Provider value={stateContext}>

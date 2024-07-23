@@ -923,7 +923,7 @@ export const TIO = {
                     }
                   })
                 }
-                if(pay > 0) race.tg -= pay;
+                if(pay > 0) race.tg -= args.payment.tg;
                 if(!planet.units) planet.units={};
                 if(!planet.units.mech) planet.units.mech = [];
                 planet.units.mech.push({});

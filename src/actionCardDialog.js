@@ -523,7 +523,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit, GP
                             {card.id === 'Focused Research' && <TechnologySelect  races={[G.races[playerID]]}  requirements={requirements} 
                                 exhausted={exhausted} setExhausted={setExhausted}/>}
                             {['Impersonation', 'Mining Initiative'].indexOf(card.id) > -1 && <div style={{overflowY: 'auto', maxHeight: '11rem', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                                <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} specClick={(e,p) => planetsRowsClick2(p.name)} /></div>}
+                                <PlanetsRows PLANETS={PLANETS} exhausted={exhausted} onClick={planetsRowsClick} /></div>}
                             {['Insubordination', 'Spy', 'Forward Supply Base'].indexOf(card.id) > -1 && <PlayerSelect selected={selection} onSelect={setSelection}/>}
                             {['Lucky Shot'].indexOf(card.id) > -1 && <UnitInfo selectedUnit={selectedUnit} />}
                             {card.id === 'Enigmatic Device' && <>

@@ -191,8 +191,8 @@ export const ACTION_CARD_STAGE = {
 
         let sabotage;
         if(String(card.playerID) === String(playerID)){
-          
-          if(card.reaction && Object.keys(card.reaction).length){
+
+          if(ctx.numPlayers === 1 || (card.reaction && Object.keys(card.reaction).length)){
             sabotage = Object.keys(card.reaction).find(pid => card.reaction[pid] === 'sabotage');
 
             if(sabotage === undefined){
@@ -328,14 +328,35 @@ export const ACTION_CARD_STAGE = {
                   G.races[playerID].tg += tg;
                 }
                 else if(card.id === 'Plagiarize' || card.id === 'Enigmatic Device'){
-                  G.races[ctx.currentPlayer].knownTechs.push(card.target.tech.id);
+                  /*G.races[ctx.currentPlayer].knownTechs.push(card.target.tech.id);
                   
                   if(card.target.exhausted){
                     Object.keys(card.target.exhausted).forEach(pname => {
                       const planet = getPlanetByName(G.tiles, pname);
                       if(planet) planet.exhausted = true;
                     });
+                  }*/
+                  G.races[ctx.currentPlayer].knownTechs.push(card.target.tech.id);
+                  
+                  if(card.target.tech.type === 'unit' && card.target.tech.upgrade === true){
+                    const idx = G.races[playerID].technologies.findIndex(t => t.id + '2' === card.target.tech.id);
+                    if(idx > -1) G.races[playerID].technologies[idx] = {...card.target.tech, upgrade: false, alreadyUpgraded: true, id: G.races[playerID].technologies[idx].id};
                   }
+
+                  if(card.target.AI_DEVELOPMENT){
+                    G.races[ctx.currentPlayer].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
+                  }
+                  let payment = card.target.payment;
+                  
+                  if(payment){
+                    let ex = [...payment.resources, ...payment.influence, ...payment.propulsion, ...payment.biotic, 
+                      ...payment.cybernetic, ...payment.warfare];
+                    ex.forEach(pname => {
+                      const planet = getPlanetByName(G.tiles, pname);
+                      if(planet) planet.exhausted = true;
+                    });
+                  }
+                  G.races[ctx.currentPlayer].tg -= payment.tg;
                 }
                 else if(card.id === 'Plague'){
                   if(card.target.tidx > -1 && card.target.pidx > -1){
@@ -437,9 +458,6 @@ export const ACTION_CARD_STAGE = {
                     if(!tile.tdata.fleet['cruiser']) tile.tdata.fleet.cruiser = [];
                     tile.tdata.fleet['cruiser'].push({});
                   }
-                }
-                else if(card.id === 'Enigmatic Device'){ //from frontier
-
                 }
               }
               else if(card.when === 'TACTICAL'){
