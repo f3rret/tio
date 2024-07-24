@@ -975,8 +975,8 @@ export const TIO = {
           },
           completeObjective: ({G, playerID, events}, oid, payment) => {
             completeObjective({G, playerID, oid, payment});
-            G.passedPlayers.push(playerID);
-            events.endTurn();
+            //G.passedPlayers.push(playerID);
+            //events.endTurn();
           },
           dropActionCard: dropACard,
           pass: ({ G, playerID, events }) => {
@@ -1005,6 +1005,7 @@ export const TIO = {
           G.races.forEach( r => { 
             if(r.exhaustedCards.indexOf('Political Stability') === -1) r.strategy = []; 
             r.initiative = undefined;
+            r.lastScoredObjType = undefined;
             let c = haveTechnology(r, 'HYPER_METABOLISM') ? 3:2;
             if(r.rid === 1) c++;
             r.tokens.new += c;
@@ -1108,7 +1109,7 @@ export const TIO = {
 
         moves: {
           secretObjectiveConfirm,
-          vote: ({G, ctx, playerID, events}, result) => {
+          vote: ({G, playerID, events}, result) => {
             let votes = 0;
             const exhaustPlanet = (exhausted, revert) => {
               if(exhausted && exhausted.length){
@@ -1147,7 +1148,7 @@ export const TIO = {
             if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
               votingProcessDone({G, agendaNumber, playerID, events});
               
-              if(G['vote' + agendaNumber].type === 'LAW' && G['vote' + agendaNumber].decision.toUpperCase() !== 'AGAINST'){
+              if(G['vote' + agendaNumber].type === 'LAW' && G['vote' + agendaNumber].decision && G['vote' + agendaNumber].decision.toUpperCase() !== 'AGAINST'){
                 G.laws.push(G['vote' + agendaNumber]);
               }
 

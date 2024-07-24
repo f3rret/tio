@@ -1625,7 +1625,7 @@ export const ProducingPanel = (args) => {
             sum -= 1;
         }
 
-        if(haveTechnology(G.races[playerID], 'SARWEEN_TOOLS')){
+        if(haveTechnology(G.races[playerID], 'SARWEEN_TOOLS') && !exhaustedCards.includes('SLING_RELAY')){
             sum -= 1;
         }
 

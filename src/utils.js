@@ -1011,8 +1011,13 @@ export const repairAllActiveTileUnits = (G, playerID) => {
 
 export const completeObjective = ({G, playerID, oid, payment}) => {
 
+  let objType = 'public';
   let objective = G.pubObjectives.find(o => o.id === oid);
-  if(!objective) objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
+
+  if(!objective){
+    objType = 'private';
+    objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
+  }
   if(objective && objective.players && objective.players.indexOf(playerID) === -1){
 
     const req = objective.req;
@@ -1078,12 +1083,16 @@ export const completeObjective = ({G, playerID, oid, payment}) => {
           }
       }           
 
-      objective.players.push(playerID);
+      objective.players.push(playerID)
+      G.races[playerID].lastScoredObjType = objType; 
+
       checkHeroUnlock(G, playerID);
     }
     else if(objective.type === 'HAVE'){
       if(checkObjective(G, playerID, oid) === true){
         objective.players.push(playerID);
+        G.races[playerID].lastScoredObjType = objType; 
+        
         checkHeroUnlock(G, playerID);
       }
     }

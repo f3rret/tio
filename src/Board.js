@@ -209,8 +209,9 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     ...hud.globalPayment.propulsion, ...hud.globalPayment.biotic, ...hud.globalPayment.cybernetic, ...hud.globalPayment.warfare], [hud.globalPayment])
   
   const completeObjective = (oid) => {
-    let objective = G.pubObjectives.find(o => o.id === oid);
-    if(!objective) objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
+    let objective;
+    if(race.lastScoredObjType !== 'public') objective = G.pubObjectives.find(o => o.id === oid);
+    if(!objective && race.lastScoredObjType !== 'private') objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
     if(!objective) return;
 
     if(objective.type === 'SPEND'){
