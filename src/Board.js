@@ -855,7 +855,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                 </CardBody>
               </Card>}
 
-              <PixiStage stagew={window.innerWidth} stageh={window.innerHeight} dispatch={dispatch} hud={hud}/>
+              <PixiStage stagew={window.innerWidth} stageh={window.innerHeight} dispatch={dispatch} hud={hud} GP={GP}/>
               
               {!race.isSpectator && <div style={{ display:'flex', flexDirection: 'row', justifyContent: 'flex-end', position:'fixed', 
                                                   alignItems: 'flex-end', right: 0, bottom: 0, width: '30%' }}>

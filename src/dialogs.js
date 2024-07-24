@@ -6,7 +6,7 @@ import { useCookies } from 'react-cookie';
 import { produce } from 'immer';
 import cardData from './cardData.json';
 import techData from './techData.json';
-import { checkObjective, StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT, getPlanetByName } from './utils';
+import { checkObjective, StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT, getPlanetByName, normalizeName } from './utils';
 //import { LobbyClient } from 'boardgame.io/client';
 import settings from '../package.json';
 
@@ -1344,8 +1344,8 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
                                     {p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1 ? 
                                         <img alt='dmz' style={{width: '1.5rem', margin: '0 0.1rem'}} src={'icons/dmz.png'}/>:'' } 
                                     {t('planets.' + p.name)}
-                                    {p.attach && p.attach.length && <><Badge style={{margin: '0 .2rem', padding: '.3rem .5rem'}} color='success' pill id={p.name.replaceAll(' ', '_') + '_attach_badge'}>+</Badge>
-                                    <UncontrolledTooltip target={'#' + p.name.replaceAll(' ', '_') + '_attach_badge'}>{p.attach.join(',')}</UncontrolledTooltip></>}
+                                    {p.attach && p.attach.length && <><Badge style={{margin: '0 .2rem', padding: '.3rem .5rem'}} color='success' pill id={normalizeName(p.name) + '_attach_badge'}>+</Badge>
+                                    <UncontrolledTooltip target={'#' + normalizeName(p.name) + '_attach_badge'}>{p.attach.join(',')}</UncontrolledTooltip></>}
                         </Col>
                         <Col xs='1' onClick={(e)=>{if(specialty){specClick(e, p)}}} style={{cursor: 'pointer', padding: 0}}>{specialty}</Col>
                         <Col xs='1' style={{padding: 0}}>{trait}</Col>

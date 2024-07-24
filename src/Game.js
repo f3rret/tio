@@ -650,7 +650,7 @@ export const TIO = {
             }
 
           },
-          unloadUnit: ({G, playerID}, {src, dst}) => {
+          unloadUnit: ({G, playerID}, {src, dst, payment}) => {
             
             let to = G.tiles[dst.tile].tdata.planets[dst.planet];
             if(to.attach && to.attach.length && to.attach.indexOf('Demilitarized Zone')>-1) return;
@@ -658,6 +658,22 @@ export const TIO = {
             const from = G.tiles[src.tile].tdata.fleet[src.unit];
            
             if(from && to){
+              if(to.name === 'Mecatol Rex' && to.occupied === undefined){
+                if(G.races[playerID].rid !== 7){
+                  if(payment){
+                    if(payment.influence){
+                      payment.influence.forEach(pname => {
+                        const planet = getPlanetByName(G.tiles, pname);
+                        if(planet) planet.exhausted = true
+                      });
+                    }
+                    if(payment.tg){
+                      G.races[playerID].tg -= payment.tg;
+                    }
+                  }
+                }
+              }
+
               if(!to.units){
                 to.units = {}
               }

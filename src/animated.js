@@ -53,7 +53,7 @@ export const ActiveHex = ({x, y}) => {
 
 };
 
-const Landing = ({x, y, pointerdown, png}) => {
+const Landing = ({x, y, pointerdown, png, children}) => {
 
     const [sc, setSc] = useState(0);
     const [sign, setSign] = useState(1);
@@ -65,7 +65,7 @@ const Landing = ({x, y, pointerdown, png}) => {
         return r + (0.1 * delta * sign);
     }));
 
-    return <Sprite zIndex={4} pointerdown={pointerdown} interactive={true} image={png} x={x} y={y + sc} scale={.5} alpha={.85}/>
+    return <Sprite zIndex={4} pointerdown={pointerdown} interactive={true} image={png} x={x} y={y + sc} scale={.5} alpha={.85}>{children}</Sprite>
 }
 
 export const LandingGreen = (args) => {

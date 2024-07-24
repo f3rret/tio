@@ -1636,3 +1636,7 @@ export const doFlagshipAbility = ({G, rid}) => {
   }
 
 }
+
+export const normalizeName = (name) => {
+  return name.replace(/[_\s']/igm, '');
+}

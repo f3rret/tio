@@ -6,7 +6,7 @@ import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep,
 import tileData from './tileData.json';
 import { lineTo, pathFromCoordinates } from './Grid';
 
-export const PixiStage = ({stagew, stageh, dispatch, hud}) => {
+export const PixiStage = ({stagew, stageh, dispatch, hud, GP}) => {
 
     const { G, playerID, ctx, moves } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
@@ -160,7 +160,7 @@ export const PixiStage = ({stagew, stageh, dispatch, hud}) => {
                 <TickerSettings fps={30}/>
                 <PixiViewport home={G.tiles.find(t => t.tid === G.races[playerID].rid)}>
                     <TilesMap1 tiles={G.tiles} stagew={stagew} stageh={stageh} tileClick={tileClick}/>
-                    <TilesMap2 G={G} playerID={playerID} moves={moves} ctx={ctx} t={t} stagew={stagew} stageh={stageh} hud={hud} tileClick={tileClick} canMoveThatPath={canMoveThatPath} getColorByRid={getColorByRid} dispatch={dispatch} activeTile={activeTile} advUnitViewTechnology={advUnitViewTechnology} maxActs={maxActs} getMovePath={getMovePath} getPureMovePath={getPureMovePath} isMyTurn={isMyTurn}/>
+                    <TilesMap2 G={G} GP={GP} playerID={playerID} moves={moves} ctx={ctx} t={t} stagew={stagew} stageh={stageh} hud={hud} tileClick={tileClick} canMoveThatPath={canMoveThatPath} getColorByRid={getColorByRid} dispatch={dispatch} activeTile={activeTile} advUnitViewTechnology={advUnitViewTechnology} maxActs={maxActs} getMovePath={getMovePath} getPureMovePath={getPureMovePath} isMyTurn={isMyTurn}/>
                     <TilesMap3 G={G} playerID={playerID} moves={moves} ctx={ctx} t={t} stagew={stagew} stageh={stageh} isMyTurn={isMyTurn} activeTile={activeTile} hud={hud} canMoveThatPath={canMoveThatPath} dispatch={dispatch} advUnitViewTechnology={advUnitViewTechnology} getPureMovePath={getPureMovePath}/>
                 </PixiViewport> 
             </Stage>
@@ -197,7 +197,7 @@ const TilesMap1 = ({tiles, stagew, stageh, tileClick}) => {
     })
 };
 
-const TilesMap2 = ({G, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hud, activeTile, dispatch, canMoveThatPath, getColorByRid, tileClick, advUnitViewTechnology, maxActs, getMovePath, getPureMovePath}) => {
+const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hud, activeTile, dispatch, canMoveThatPath, getColorByRid, tileClick, advUnitViewTechnology, maxActs, getMovePath, getPureMovePath}) => {
 
     const race = G.races[playerID];
 
@@ -222,38 +222,46 @@ const TilesMap2 = ({G, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hud, a
     
         dispatch({type: 'payload_cursor', payload: {i: nexti, j: nextj}});
         }, [advUnitViewTechnology, G.tiles, hud.advUnitView, dispatch, hud.payloadCursor]);
+
     const unloadUnit = useCallback((pid) => {
         const i = hud.payloadCursor.i;
         const j = hud.payloadCursor.j;
         const tile = G.tiles[hud.advUnitView?.tile];
     
-        if(hud.advUnitView && String(tile.tdata.occupied) === String(playerID)){
-            const unit = G.tiles[hud.advUnitView.tile].tdata.fleet[hud.advUnitView.unit];
+        if(tile && hud.advUnitView && String(tile.tdata.occupied) === String(playerID)){
+            const unit = tile.tdata.fleet[hud.advUnitView.unit];
             if(unit[i] && unit[i].payload && unit[i].payload[j]){
-            moves.unloadUnit({src: {...hud.advUnitView, i, j}, dst: {tile: hud.advUnitView.tile, planet: pid}});
+              if(tile.tid === 18 && pid === 0 && tile.tdata.planets[pid].occupied === undefined){
+                if(G.races[playerID].rid !== 7){
+                  if(GP.influence + GP.tg < 6) return;
+                }
+              }
+              moves.unloadUnit({src: {...hud.advUnitView, i, j}, dst: {tile: hud.advUnitView.tile, planet: pid}, payment: hud.globalPayment});
             }
     
             //movePayloadCursor();
         }
-    }, [G.tiles, hud.advUnitView, moves, hud.payloadCursor, playerID]);
+    }, [G, GP, hud.globalPayment, hud.advUnitView, moves, hud.payloadCursor, playerID]);
+
     const loadUnit = useCallback((args)=>{
-        const event = args.e;
-        if(event){
-            event.stopPropagation();
-            event.preventDefault();
-        }
-    
-        const tile = G.tiles[args.tile];
-        if(String(tile.tdata.occupied) === String(playerID)){
-    
-            if(hud.exhaustedCards.includes('TRANSIT_DIODES')){
+      
+      const event = args.e;
+      if(event){
+          event.stopPropagation();
+          event.preventDefault();
+      }
+  
+      const tile = G.tiles[args.tile];
+      if(String(tile.tdata.occupied) === String(playerID) || tile.tdata.occupied === undefined){
+  
+          if(hud.exhaustedCards.includes('TRANSIT_DIODES')){
             if(!race.reinforcement.transit ||  race.reinforcement.transit.length < 4){
                 moves.moveToTransit(args);
             }
-            }
-            else if(hud.advUnitView && advUnitViewTechnology && hud.advUnitView.tile !== undefined && hud.advUnitView.tile === args.tile){
-            if(['infantry', 'fighter', 'mech'].indexOf(args.unit) > -1){
-                if(tile && tile.tdata.fleet){
+          }
+          else if(hud.advUnitView && advUnitViewTechnology && hud.advUnitView.tile !== undefined && hud.advUnitView.tile === args.tile){
+            if(['infantry', 'fighter', 'mech'].includes(args.unit)){
+              if(tile && tile.tdata.fleet){
                 const carrier = tile.tdata.fleet[hud.advUnitView.unit];
                 if(!(hud.payloadCursor && hud.payloadCursor.i <= carrier.length - 1 && hud.payloadCursor.j <= advUnitViewTechnology.capacity)){
                     dispatch({type: 'payload_cursor', payload: {i:0, j:0}});
@@ -261,21 +269,22 @@ const TilesMap2 = ({G, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hud, a
     
                 moves.loadUnit({src: {...args, e: undefined}, dst: {...hud.advUnitView, ...hud.payloadCursor}});
                 movePayloadCursor();
-                }
+              }
             }
-            }
-            else if(['infantry', 'fighter', 'mech'].indexOf(args.unit) > -1){
-            if(hud.groundUnitSelected.tile === args.tile && hud.groundUnitSelected.unit === args.unit){
-                dispatch({type: 'ground_unit_selected', payload: {}});
+          }
+          else if(['infantry', 'fighter', 'mech'].includes(args.unit)){
+
+            if(hud.groundUnitSelected.tile === args.tile && hud.groundUnitSelected.unit === args.unit && hud.groundUnitSelected.planet === args.planet){
+                //dispatch({type: 'ground_unit_selected', payload: {}});
             }
             else{
                 dispatch({type: 'ground_unit_selected', payload: {tile: args.tile, unit: args.unit, planet: args.planet}});
             }
-            }
+          }
+
+      }
     
-        }
-    
-        },[G.tiles, hud.exhaustedCards, hud.advUnitView, advUnitViewTechnology, moves, hud.payloadCursor, hud.groundUnitSelected, movePayloadCursor, playerID, race, dispatch]);
+    },[G.tiles, hud.exhaustedCards, hud.advUnitView, advUnitViewTechnology, moves, hud.payloadCursor, hud.groundUnitSelected, movePayloadCursor, playerID, race, dispatch]);
     
     const modifyMoveStep = useCallback((index) => {
         if(G.tiles[index].tid === activeTile.tid) return;
@@ -336,7 +345,11 @@ const TilesMap2 = ({G, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hud, a
                                 )}
                     
                                 {hud.advUnitView && hud.advUnitView.tile === index && (p.occupied === undefined || String(element.tdata.occupied) === String(p.occupied)) &&
-                                    !isDMZ(p) && <LandingGreen pointerdown={()=>unloadUnit(i)} x={0} y={0}/>
+                                    !isDMZ(p) && <LandingGreen pointerdown={()=>unloadUnit(i)} x={0} y={0}>
+                                      {p.occupied === undefined && p.name === 'Mecatol Rex' && <Sprite image={'icons/influence_bg.png'} x={18} y={25} scale={.75}>
+                                        <Text x={18} y={15} text={race.rid === 7 ? 0:6} style={{fontSize: 35, fontFamily:'Handel Gothic', fill: 'white'}}/>
+                                      </Sprite>}
+                                    </LandingGreen>
                                     }
                                 {activeTile && String(element.tdata.occupied) === String(playerID) && !G.spaceCannons && element.tdata.fleet && 
                                     p.occupied !== undefined && String(element.tdata.occupied) !== String(p.occupied) && !isDMZ(p) &&
@@ -349,7 +362,7 @@ const TilesMap2 = ({G, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hud, a
                     
                                 <Container x={50} y={110}>
                                 {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>{
-                                const isSelected = hud.groundUnitSelected && hud.groundUnitSelected.tile === index && hud.groundUnitSelected.unit === u;
+                                const isSelected = hud.groundUnitSelected && hud.groundUnitSelected.tile === index && hud.groundUnitSelected.planet === i && hud.groundUnitSelected.unit === u;
                     
                                 return <Container x={-30 + ui*55} y={-20} key={ui} interactive={true} pointerdown={(e)=>loadUnit({tile: index, planet: i, unit: u, e})} >
                                             <Sprite tint={isSelected ? 'gold':G.races[p.occupied].color[0]} scale={.25}  image={'icons/unit_inf_bg.png'}/>
