@@ -4,11 +4,11 @@ function preloadImage (src, cb) {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = function() {
-        cb(src)
+        //cb(src)
       resolve(img)
     }
     img.onerror = img.onabort = function() {
-        cb('error: ' + src)
+        //cb('error: ' + src)
       reject(src)
     }
     img.src = src
@@ -17,7 +17,8 @@ function preloadImage (src, cb) {
 
 export default function useImagePreloader(imageList) {
   const [imagesPreloaded, setImagesPreloaded] = useState(false);
-  const [lastLoaded, setLastLoaded] = useState('');
+  //const [lastLoaded, setLastLoaded] = useState('загрузка...');
+  const lastLoaded = 'загрузка';
   const [loadingError, setLoadingError] = useState('');
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function useImagePreloader(imageList) {
 
       const imagesPromiseList = []
       for (const i of imageList) {
-        imagesPromiseList.push(preloadImage(i, (p)=>setLastLoaded(p)))
+        imagesPromiseList.push(preloadImage(i/*, (p)=>setLastLoaded(p)*/))
       }
       
       try{
@@ -46,8 +47,9 @@ export default function useImagePreloader(imageList) {
         return
       }
 
-      setLastLoaded('загрузка завершена')
-      setTimeout(()=> setImagesPreloaded(true), 2000)
+      /*setLastLoaded('загрузка завершена')
+      setTimeout(()=> setImagesPreloaded(true), 2000)*/
+      setImagesPreloaded(true)
     }
 
     effect()

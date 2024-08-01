@@ -7,9 +7,24 @@ import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology,
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
  getInitRaces, getInitTiles, checkCommanderUnlock, doFlagshipAbility } from './utils';
- 
+import { EffectsPlugin } from 'bgio-effects/plugin';
+
+const effectsConfig = EffectsPlugin({
+  effects: {
+    trade: {
+      create: (value) => value,
+      //duration: 1
+    },
+    tg: {
+      create: () => {}
+    },
+    
+  },
+});
+
 export const TIO = {
     name: 'TIO',
+    plugins: [effectsConfig],
     validateSetupData: (setupData, numPlayers) => {
       if(!setupData || !setupData.mapArray){
         return 'setup data not valid';
@@ -45,7 +60,7 @@ export const TIO = {
 
     minPlayers: 1,
     maxPlayers: 8,
-    
+
     phases: {
       strat: {
         start: true,
@@ -199,12 +214,17 @@ export const TIO = {
               });
             },
 
-            onMove: ({ G, ctx, playerID }) => {
+            onMove: ({ G, ctx, playerID, ...plugins }) => {
               if(!ctx.activePlayers || !ctx.activePlayers[playerID]){
                 G.races[playerID].combatActionCards = [];
+
+                if(G.races[playerID].preCombatActionCards && G.races[playerID].preCombatActionCards.length){
+                  G.races[playerID].combatActionCards.push(...G.races[playerID].preCombatActionCards);
+                  G.races[playerID].preCombatActionCards = [];
+                }
               }
 
-              //space cannon
+              //space cannon todo: make this check more selective, not after each move
               if(!G.spaceCannons && !ctx.activePlayers){
                 const activeTile = G.tiles.find(t => t.active === true);
 
@@ -343,7 +363,7 @@ export const TIO = {
               G.tiles[tile].tdata.planets[planet].units = undefined;
             }
           },
-          moveToReinforcements: ({G, playerID}, args) => {
+          moveToReinforcements: ({G, playerID, ...plugins}, args) => {
             const { tile, planet, unit } = args;
             if(tile === undefined || planet === undefined || unit === undefined) return;
 
@@ -360,6 +380,7 @@ export const TIO = {
 
             if(p.exploration === 'Core Mine' && unit === 'infantry'){
               G.races[playerID].tg++;
+              plugins.effects.tg();
               delete p['exploration'];
             }
             else if(p.exploration === 'Expedition' && unit === 'infantry'){
@@ -372,7 +393,7 @@ export const TIO = {
             }
 
           },
-          choiceDialog : ({G, playerID}, cidx) => {
+          choiceDialog : ({G, playerID, ...plugins}, cidx) => {
             if(G.races[playerID].explorationDialog){
               if(G.races[playerID].explorationDialog.id === 'Abandoned Warehouses'){
                 if(cidx === 0){
@@ -427,10 +448,12 @@ export const TIO = {
               }
 
               delete G.races[playerID]['explorationDialog'];
+              plugins.effects.tg();
             }
           },
-          explorePlanet: ({G, playerID}, pname, exhaustedCards) => {
+          explorePlanet: ({G, playerID, ...plugins}, pname, exhaustedCards) => {
             explorePlanetByName(G, playerID, pname, exhaustedCards);
+            plugins.effects.tg();
           },
           fromReinforcement: ({G, playerID}, pname, units, exhaustedCards) => {
             const planet = getPlanetByName(G.tiles, pname);
@@ -469,15 +492,15 @@ export const TIO = {
               G.races[playerID].exhaustedCards.push('BIO_STIMS');
             }
           },
-          exhaustForTg: ({G, playerID}, pname) => {
+          exhaustForTg: ({G, playerID, ...plugins}, pname) => {
             if(pname){
               const planet = getPlanetByName(G.tiles, pname);
               if(!planet.exhausted){
                 planet.exhausted = true;
                 G.races[playerID].tg += 1;
               }
+              plugins.effects.tg();
             }
-
           },
           exhaustCard: ({G, playerID}, techId) => {
             if(G.races[playerID].exhaustedCards.indexOf(techId) === -1){
@@ -527,6 +550,11 @@ export const TIO = {
               events.setActivePlayers({value: sc, currentPlayer: {stage: 'spaceCannonAttack'}});
               const activeTile = G.tiles.find(t => t.active === true);
               if(activeTile) activeTile.tdata.spaceCannons_done = true; 
+
+              //mentak FLAGSHIP
+              if(G.races[activeTile.tdata.occupied].rid === 2 && Object.keys(activeTile.tdata.fleet).includes('flagship')){
+                G.races[activeTile.tdata.occupied].combatActionCards.push('FLAGSHIP');
+              }
             }
           },
           antiFighterBarrage: ({G, playerID, events}) => {
@@ -562,7 +590,18 @@ export const TIO = {
               
               G.dice[activeTile.tdata.occupied] = {};
               G.dice[playerID] = {};
+
               events.setActivePlayers({value: def});
+
+              //mentak FLAGSHIP
+              if(G.races[playerID].rid === 2 && Object.keys(activeTile.tdata.attacker).includes('flagship')){
+                if(!G.races[playerID].preCombatActionCards) G.races[playerID].preCombatActionCards = []; //preCombat!
+                G.races[playerID].preCombatActionCards.push('FLAGSHIP');
+              }
+              else if(G.races[activeTile.tdata.occupied].rid === 2 && Object.keys(activeTile.tdata.fleet).includes('flagship')){
+                G.races[activeTile.tdata.occupied].combatActionCards.push('FLAGSHIP'); //combat
+              }
+
             }
           },
           purgeFragments: ({G, playerID}, purgingFragments) => {
@@ -636,13 +675,15 @@ export const TIO = {
               if(from && to && technology){
                 if(dst.i <= to.length){
                   if(technology.capacity && dst.j <= technology.capacity){
-                    if(!to[dst.i].payload){
-                      to[dst.i].payload = new Array(technology.capacity);
-                    }
-                    if(!to[dst.i].payload[dst.j]){
-                      const unit = {...G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].pop(), id: src.unit};
-                      if(G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].length === 0) delete G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
-                      G.tiles[src.tile].tdata.fleet[dst.unit][dst.i].payload[dst.j] = unit;
+                    if(to[dst.i]){
+                      if(!to[dst.i].payload){
+                        to[dst.i].payload = new Array(technology.capacity);
+                      }
+                      if(!to[dst.i].payload[dst.j]){
+                        const unit = {...G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].pop(), id: src.unit};
+                        if(G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].length === 0) delete G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
+                        G.tiles[src.tile].tdata.fleet[dst.unit][dst.i].payload[dst.j] = unit;
+                      }
                     }
                   }
                 }
@@ -650,7 +691,7 @@ export const TIO = {
             }
 
           },
-          unloadUnit: ({G, playerID}, {src, dst, payment}) => {
+          unloadUnit: ({G, playerID, ...plugins}, {src, dst, payment}) => {
             
             let to = G.tiles[dst.tile].tdata.planets[dst.planet];
             if(to.attach && to.attach.length && to.attach.indexOf('Demilitarized Zone')>-1) return;
@@ -696,7 +737,10 @@ export const TIO = {
                 to.exhausted = true;
                 to.occupied = playerID;
                 checkCommanderUnlock(G, playerID);
-                if(to.trait){explorePlanetByName(G, playerID, to.name)}
+                if(to.trait){
+                  explorePlanetByName(G, playerID, to.name)
+                  plugins.effects.tg();
+                }
               }
               else if(to.occupied != playerID && G.races[to.occupied]){
                 checkSecretObjective(G, to.occupied, 'Become a Martyr');
@@ -841,7 +885,7 @@ export const TIO = {
 
             if(!endLater){ events.endTurn();}
           },
-          trade: ({G, playerID}, args) => {
+          trade: ({G, playerID, ctx, ...plugins}, args) => {
             const src = G.races[playerID];
             const dst = G.races.find(r => r.rid === args.rid);
            
@@ -896,9 +940,11 @@ export const TIO = {
                 src.actionCards.splice(src.actionCards.findIndex(c => c.id === cid), 1);
               }
             }
+
+            plugins.effects.trade({src: src.rid, dst: dst.rid});
           },
           dropActionCard: dropACard,
-          useRacialAbility: ({G, playerID}, args) => {
+          useRacialAbility: ({G, playerID, ...plugins}, args) => {
             const race = G.races[playerID];
             race.actions.push(args.abilId);
 
@@ -921,6 +967,22 @@ export const TIO = {
                 }
               }
             }
+            else if(args.abilId === 'PILLAGE'){
+              const {playerID: enemyID, param} = args;
+              if(enemyID !== undefined && param){
+                const enemy = G.races[enemyID];
+                if(param === 'tg' && enemy.tg > 0){
+                  enemy.tg--;
+                  race.tg++;
+                }
+                else if(param === 'commodity'){
+                  race.tg += enemy.commodity;
+                  enemy.commodity = 0;
+                }
+              }
+            }
+
+            plugins.effects.tg();
           },
           deployMech: ({G, playerID}, args) => {
             const race = G.races[playerID];
@@ -1125,7 +1187,7 @@ export const TIO = {
 
         moves: {
           secretObjectiveConfirm,
-          vote: ({G, playerID, events}, result) => {
+          vote: ({G, playerID, events, ...plugins}, result) => {
             let votes = 0;
             const exhaustPlanet = (exhausted, revert) => {
               if(exhausted && exhausted.length){
@@ -1197,6 +1259,7 @@ export const TIO = {
               events.endTurn();
             }
             
+            plugins.effects.tg();
           },
           endVote: ({G, playerID, events}) => {
             G.passedPlayers.push(playerID);

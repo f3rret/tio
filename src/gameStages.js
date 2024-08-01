@@ -2,7 +2,8 @@ import { produce } from 'immer';
 import { INVALID_MOVE } from 'boardgame.io/core';
 import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveTechnology, getPlanetByName, 
   completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits, 
-  spliceCombatAC, checkIonStorm, checkSecretObjective, checkCommanderUnlock, useCommanderAbility } from './utils';
+  spliceCombatAC, checkIonStorm, checkSecretObjective, checkCommanderUnlock, useCommanderAbility, 
+  adjustTechnologies} from './utils';
 
   
 export const secretObjectiveConfirm = ({G, playerID, events}, oid, y) => {
@@ -184,7 +185,7 @@ export const ACTION_CARD_STAGE = {
           }
         }
       },
-      done: ({G, ctx, events, playerID, random}) => {
+      done: ({G, ctx, events, playerID, random, ...plugins}) => {
         let card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
         if(ctx.phase === 'agenda') card = G.currentAgendaActionCard;
         if(!card) card = G.currentCombatActionCard;
@@ -819,6 +820,8 @@ export const ACTION_CARD_STAGE = {
           
           if(card.when !== 'COMBAT') events.setActivePlayers({});
         }
+
+        plugins.effects.tg();
       },
       sabotage: ({G, ctx, playerID}) => {
         let card = G.races[ctx.currentPlayer].currentActionCard || G.currentTacticalActionCard;
@@ -905,7 +908,7 @@ export const ACTS_STAGES = {
   actionCard: ACTION_CARD_STAGE,
   strategyCard: {
     moves: {
-      joinStrategy: ({ G, ctx, playerID, events }, {exhausted, payment, result, exhaustedCards}) => {
+      joinStrategy: ({ G, ctx, playerID, events, ...plugins }, {exhausted, payment, result, exhaustedCards}) => {
         const exhaustPlanet = (revert) => {
           if(exhausted && exhausted.length){
             
@@ -1137,6 +1140,7 @@ export const ACTS_STAGES = {
         }
 
         events.endStage();
+        plugins.effects.tg();
       },
       passStrategy: ({ G, ctx, events }) => {
         if(Object.keys(ctx.activePlayers).length === 1){
@@ -1145,13 +1149,14 @@ export const ACTS_STAGES = {
         }
         events.endStage();
       },
-      exhaustForTg: ({G, playerID}, pname) => {
+      exhaustForTg: ({G, playerID, ...plugins}, pname) => {
         if(pname){
           const planet = getPlanetByName(G.tiles, pname);
           if(!planet.exhausted){
             planet.exhausted = true;
             G.races[playerID].tg += 1;
           }
+          plugins.effects.tg();
         }
       }
     }
@@ -1232,7 +1237,7 @@ export const ACTS_STAGES = {
     actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
     secretObjectiveConfirm,
 
-    nextStep: ({G, playerID, ctx, events}, hits) => {
+    nextStep: ({G, playerID, ctx, events, ...plugins}, hits) => {
       let fleet;
       let endLater = false;
       const activeTile = G.tiles.find(t => t.active === true);
@@ -1282,6 +1287,7 @@ export const ACTS_STAGES = {
                     delete fleet[f][i].payload[j];
                     if(p.id === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
                       G.races[playerID].tg += 1;
+                      plugins.effects.tg();
                     }
                   }
                 }
@@ -1498,7 +1504,7 @@ export const ACTS_STAGES = {
      secretObjectiveConfirm,
 
      chooseAndDestroy: chooseAndDestroyMove,
-     nextStep: ({G, playerID, ctx, events}, hits, assaultCannon) => {
+     nextStep: ({G, playerID, ctx, events, ...plugins}, hits, assaultCannon) => {
       let fleet;
       const activeTile = G.tiles.find(t => t.active === true);
        
@@ -1509,7 +1515,8 @@ export const ACTS_STAGES = {
         fleet = activeTile.tdata.fleet;
       }
       
-      const technologies = getUnitsTechnologies([...Object.keys(fleet), 'fighter', 'mech'], G.races[playerID]);
+      let technologies = getUnitsTechnologies([...Object.keys(fleet), 'fighter', 'mech'], G.races[playerID]);
+      technologies = adjustTechnologies(G, ctx, playerID, technologies);
 
       hits && Object.keys(hits).forEach(unit => { //hits assignment
         if(hits[unit].length){
@@ -1560,6 +1567,7 @@ export const ACTS_STAGES = {
                 delete fleet[f][i].payload[idx];
                 if(p.id === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
                   G.races[playerID].tg += 1;
+                  plugins.effects.tg();
                 }
               }
             });
@@ -1569,6 +1577,10 @@ export const ACTS_STAGES = {
         fleet[f] = fleet[f].filter(car => car);
         if(fleet[f].length === 0) delete fleet[f];
       });
+
+      if(G.races[playerID].destroyedUnits.includes('flagship') &&  G.races[playerID].combatActionCards.includes('FLAGSHIP')){
+        G.races[playerID].combatActionCards =  G.races[playerID].combatActionCards.filter(ac => ac !== 'FLAGSHIP')
+      }
       
       if(!(activeTile.tdata.attacker && Object.keys(activeTile.tdata.attacker).length) ||
         !(activeTile.tdata.fleet && Object.keys(activeTile.tdata.fleet).length)){
@@ -1632,7 +1644,7 @@ export const ACTS_STAGES = {
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
       secretObjectiveConfirm,
       chooseAndDestroy: chooseAndDestroyMove,
-      endBattle: ({G, events, playerID, ctx}) => {
+      endBattle: ({G, events, playerID, ctx, ...plugins}) => {
         const activeTile = G.tiles.find(t => t.active === true);
         let looser;
         let endLater = false;
@@ -1684,6 +1696,7 @@ export const ACTS_STAGES = {
 
         if(haveTechnology(G.races[playerID], 'SALVAGE_OPERATIONS')){
           G.races[playerID].tg++;
+          plugins.effects.tg();
           if(looser !== undefined && String(looser) !== String(playerID)){
             G.races[playerID].makeCustomProducing = {units: [...G.races[looser].destroyedUnits, ...G.races[playerID].destroyedUnits], count: 1, onClose: 'endStage'};
             endLater = true;
@@ -1817,12 +1830,13 @@ export const ACTS_STAGES = {
         });
       },
       nextStep: ({G, events, playerID, ctx}, hits) => {
+        const activeTile = G.tiles.find(t => t.active === true);
+        const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+
         if(String(playerID) === String(ctx.currentPlayer)){
           events.setStage('invasion_await');
         }
         else if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){ //defenser takes no hits
-          const activeTile = G.tiles.find(t => t.active === true);
-          const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
 
           if(ctx.activePlayers[ctx.currentPlayer] === 'invasion_await' && activePlanet.invasion.troops){
             if(haveTechnology(G.races[playerID], 'MAGEN_DEFENSE_GRID')){
@@ -1913,7 +1927,7 @@ export const ACTS_STAGES = {
             events.setStage('invasion_step2');
           }
         }
-       
+    
       },
       useCommander: ({G, playerID}) => {
         useCommanderAbility(G, playerID)
@@ -1935,7 +1949,7 @@ export const ACTS_STAGES = {
           draft[playerID][unit] = {dice};
         });
       },
-      nextStep: ({G, playerID, ctx, events, random}, hits, prevStages) => {
+      nextStep: ({G, playerID, ctx, events, random, ...plugins}, hits, prevStages) => {
         let fleet = {};
         const activeTile = G.tiles.find(t => t.active === true);
         const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
@@ -1962,6 +1976,7 @@ export const ACTS_STAGES = {
             if(enemyHaveTechnology(G.races, ctx.activePlayers, playerID, 'X89_BACTERIAL_WEAPON')){
               bacterialWeapon = true;
             }
+
           }
         }
         
@@ -1995,6 +2010,12 @@ export const ACTS_STAGES = {
           fleet[f] = fleet[f].filter(car => car);
           if(fleet[f].length === 0) delete fleet[f];
         });
+
+        if(G.races[playerID].destroyedUnits.includes('mech') &&  G.races[playerID].combatActionCards.includes('MECH')){
+          if(!fleet['mech']){
+            G.races[playerID].combatActionCards =  G.races[playerID].combatActionCards.filter(ac => ac !== 'MECH')
+          }
+        }
 
         if(bacterialWeapon && hits['infantry'] && hits['infantry'].length){
           delete fleet['infantry'];
@@ -2038,6 +2059,7 @@ export const ACTS_STAGES = {
         spliceCombatAC(G.races[playerID], 'Morale Boost');
         spliceCombatAC(G.races[playerID], 'Scramble Frequency');
 
+        plugins.effects.tg();
       } 
     }
   },
@@ -2171,6 +2193,20 @@ export const ACTS_STAGES = {
           else{
             events.setStage('invasion_await');
           }
+
+
+          if(G.races[playerID].rid === 2){ //mentak MECH
+            if(activePlanet.invasion.troops && Object.keys(activePlanet.invasion.troops).includes('mech')){
+              if(!G.races[playerID].combatActionCards.includes('MECH')) G.races[playerID].combatActionCards.push('MECH');
+            }
+          }
+          else if(G.races[activePlanet.occupied].rid === 2){
+            if(activePlanet.units && Object.keys(activePlanet.units).includes('mech')){
+              if(!G.races[activePlanet.occupied].combatActionCards.includes('MECH')) G.races[activePlanet.occupied].combatActionCards.push('MECH');
+            }
+          }
+
+
         }
       },
 

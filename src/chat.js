@@ -19,18 +19,23 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
         setMsg(e.target.value)
     }, [])
     const messages = useMemo(()=>{
-        return [...chatMessages].slice(-20).reverse().map((m, i) => <p key={i} style={{margin: '0 0 .5rem 0'}}>
+        return [...chatMessages].slice(-20).reverse().map((m, i) => {
+          let payload;
+
+          if(m.payload && m.payload.indexOf('/') > -1) {
+            payload = wrapTags(m.payload) 
+          }
+          else {
+            payload = m.payload;
+          }
+
+          return <p key={i} style={{margin: '0 0 .5rem 0'}}>
             <b style={{color: G.races[m.sender].color[0]}}>{t('races.' + G.races[m.sender].rid + '.name') + ': '}</b>
-            {wrapTags(m.payload)}
-          </p>)
+            {payload}
+          </p>})
     // eslint-disable-next-line
-      }, [G.races,chatMessages]);
-/**
- * <ButtonGroup vertical style={{height: 'min-content', padding: '.5rem'}}>
-        <Button size='sm' className='hoverable bi-chat-left' onClick={()=>{setChatVisible(!chatVisible)}} 
-          style={{borderRadius: '5px', fontSize: '2rem', padding: '0 1rem', background:'none', borderColor: 'transparent'}}/>
-      </ButtonGroup>
- */
+    }, [G.races,chatMessages]);
+
     return <>
       {!chatVisible && messages && messages.length > 0 && <div onClick={()=>{setChatVisible(!chatVisible)}} style={{fontFamily: 'system-ui, arial', marginLeft: '1rem', width: '40rem', height: '3.25rem', lineHeight: '1.25rem', overflow: 'hidden', padding: '.25rem 0 .25rem 1rem', position: 'fixed', bottom: '5rem', left: '3rem' }}>
         {messages[0]}
@@ -56,13 +61,42 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
   const wrapTags = (text) => {
     const tags={
       'chat-dice': /(\/dice\s\d{1,2})/,
-      'chat-dice-green': /(\/dice-green\s\d{1,2})/
+      'chat-dice-green': /(\/dice-green\s\d{1,2})/,
+      'chat-gain-tg': /(\/gain-tg\s\d{1,2})/,
+      /*'chat-gain-comm': /(\/gain-comm\s\d{1,2})/,
+      'chat-ability': /(\/ability\s\S+\s\d\s\S+)/*/
     }
 
     let result = text;
     Object.keys(tags).forEach(className => {
-      result = reactStringReplace(result, tags[className], (match, i) => 
-        <span key={className + i} className={className}>{match.replace(/\/\S*\s/, '')}</span>
+      result = reactStringReplace(result, tags[className], (match, i) => {
+          if(className === 'chat-gain-tg'){
+            return <span key={className + i} className={className}>
+              <b>{match.replace(/\/\S*\s/, '+')}</b>
+              <img alt='tg' src='/icons/trade_good_1.png'/>
+            </span>
+          }
+          /*else if(className === 'chat-gain-comm'){
+            return <span key={className + i} className={className}>
+              <b>{match.replace(/\/\S*\s/, '+')}</b>
+              <img alt='tg' src='/icons/commodity_1.png'/>
+            </span>
+          }
+          else if(className === 'chat-ability'){
+            const params = match.split(' ');
+            if(params && params.length > 2){
+              return <span key={className + i} className={className}>
+                {params[1]}
+              </span>
+            }
+            else{
+              return match;
+            }
+          }*/
+          else{
+            return <span key={className + i} className={className}>{match.replace(/\/\S*\s/, '')}</span>
+          }
+        }
       )
     })
 

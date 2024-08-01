@@ -164,6 +164,7 @@ export const checkSpend = (G, req, playerID) => {
     const rkeys = Object.keys(req);
     const planets = getPlayerPlanets(G.tiles, playerID);
     const race = G.races[playerID];
+    //todo: tgMultiplier
   
     let influence = 0;
     let resource = 0;
@@ -273,8 +274,11 @@ export const checkObjective = (G, playerID, oid) => {
       if(req.technology.color){
         const colors = {'biotic': 0, 'warfare': 0, 'cybernetic': 0, 'propulsion': 0};
         race.knownTechs.forEach(t => {
-          const tech = techData.find(td => td.id === t);
-          if(tech.type !== 'unit' && colors[tech.type] !== undefined){ colors[tech.type]++; }
+          let tech = techData.find(td => td.id === t);
+          if(!tech){//probably racial
+            tech = race.technologies.find(td => td.id === t);
+          } 
+          if(tech && tech.type !== 'unit' && colors[tech.type] !== undefined){ colors[tech.type]++; }
         });
 
         let goals = 0;
@@ -736,9 +740,46 @@ export const enemyHaveTechnology = (races, players, myId, techId) => {
 
 }
 
+export const adjustTechnologies = (G, ctx, owner, techs) => {
+
+  if(!techs || !Object.keys(techs) || !Object.keys(techs).length) return techs;
+
+  let result = {...techs};
+  const enemyId = getEnemyId(ctx.activePlayers, owner);
+
+  if(enemyId !== undefined){
+      if(G.races[enemyId].rid === 2){ //mentak
+          if(enemyHaveCombatAC(G.races, ctx.activePlayers, owner, 'FLAGSHIP')){
+
+              Object.keys(result).forEach(t => {
+                  if(result[t].sustain && ['FLAGSHIP', 'DREADNOUGHT', 'WARSUN', 'CARRIER', 'CRUISER'].includes(result[t].id)){
+                      result[t].sustain = false;
+                  }
+                  
+              })
+          }
+          else if(enemyHaveCombatAC(G.races, ctx.activePlayers, owner, 'MECH')){
+              Object.keys(result).forEach(t => {
+                  if(result[t].sustain && ['MECH', 'PDS'].includes(result[t].id)){
+                    result[t].sustain = false
+                  }
+              })
+          }
+      }
+  }
+
+  return result;
+
+}
+
+export const getEnemyId = (players, myId) => {
+  const enemyId = Object.keys(players).find(k => String(k) !== String(myId));
+  return enemyId;
+}
+
 export const enemyHaveCombatAC = (races, players, myId, acId) => {
 
-  const enemyId = Object.keys(players).find(k => String(k) !== String(myId));
+  const enemyId = getEnemyId(players, myId);
   
   if(enemyId){
     return races[enemyId].combatActionCards.indexOf(acId) > -1;  
@@ -749,24 +790,30 @@ export const enemyHaveCombatAC = (races, players, myId, acId) => {
 
 }
 
+
 export const getMyNeighbors = (G, playerID) => {
   let systems = G.tiles.filter( t => String(t.tdata.occupied) === String(playerID) || (t.tdata.planets && t.tdata.planets.some( p => String(p.occupied) === String(playerID))) );
   let neigh = [];
 
-  systems.forEach( s => neighbors(G.HexGrid, [s.q, s.r]).forEach( n => {
-    const tile = G.tiles.find(t => t.tid === n.tileId);
-      if(tile){
-        if(tile.tdata.occupied !== undefined && String(tile.tdata.occupied) !== String(playerID)){
-            if(neigh.indexOf(tile.tdata.occupied) === -1) neigh.push(tile.tdata.occupied);
+  try{
+    systems.forEach( s => neighbors(G.HexGrid, [s.q, s.r]).forEach( n => {
+      const tile = G.tiles.find(t => t.tid === n.tileId);
+        if(tile){
+          if(tile.tdata.occupied !== undefined && String(tile.tdata.occupied) !== String(playerID)){
+              if(neigh.indexOf(tile.tdata.occupied) === -1) neigh.push(tile.tdata.occupied);
+          }
+          else if(tile.tdata.planets){
+            tile.tdata.planets.forEach( p => { if(p.occupied !== undefined && String(p.occupied) !== String(playerID)){ 
+              if(neigh.indexOf(tile.tdata.occupied) === -1) neigh.push(p.occupied) 
+              } })
+          }
         }
-        else if(tile.tdata.planets){
-          tile.tdata.planets.forEach( p => { if(p.occupied !== undefined && String(p.occupied) !== String(playerID)){ 
-            if(neigh.indexOf(tile.tdata.occupied) === -1) neigh.push(p.occupied) 
-            } })
-        }
-      }
-    })
-  );
+      })
+    );
+  }
+  catch(e){
+    console.log(e)
+  }
 
   return neigh;
 }
@@ -1022,13 +1069,14 @@ export const completeObjective = ({G, playerID, oid, payment}) => {
 
     const req = objective.req;
     const race = G.races[playerID];
+    const tgMultiplier = (payment && payment.tgMultiplier !== undefined) ? payment.tgMultiplier : 1; 
     
     if(objective.type === 'SPEND'){
       const rkeys = Object.keys(req);
 
       const check = rkeys.every((k) => {
         if(k === 'influence' || k === 'resources'){
-            return payment[k] && payment[k].planets.reduce((a,b) => b[k] + a, 0) + payment[k].tg >= req[k]
+            return payment[k] && payment[k].planets.reduce((a,b) => b[k] + a, 0) + (payment[k].tg * tgMultiplier) >= req[k]
         }
         else if(k === 'tg'){
             return G.races[playerID].tg >= req[k]

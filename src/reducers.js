@@ -21,6 +21,29 @@ export const credsReducer = (state, action) => {
 export const hudReducer = (hudDraft, action) => {
 
     switch(action.type){
+        case 'ability': {
+            if(action.tag === 'pillage'){
+                if(action.add && action.playerID){
+                    if(!hudDraft.abilityData.pillage){ hudDraft.abilityData.pillage = [] }
+                    if(!hudDraft.abilityData.pillage.includes(action.playerID)){ hudDraft.abilityData.pillage.push(action.playerID) }
+                }
+                else if(action.del && action.playerID){
+                    if(hudDraft.abilityData.pillage){ hudDraft.abilityData.pillage = hudDraft.abilityData.pillage.filter(a => String(a) !== String(action.playerID)) }
+                    hudDraft.rightBottomSubVisible = null;
+                }
+            }
+
+            break;
+        }
+        /*case 'chat_msg': {
+            if(action.tag && action.tag === 'pillage' && action.sender !== undefined){//mentak pillage
+                if(!hudDraft.abilityData.pillage){
+                    hudDraft.abilityData.pillage = [];
+                }
+                if(!hudDraft.abilityData.pillage.includes(action.sender)) hudDraft.abilityData.pillage.push(action.sender)
+            }
+            break;
+        }*/
         case 'global_payment': {
             if(action.payload && action.payload.planet && action.payload.type){
                 const planet = action.payload.planet;
@@ -54,10 +77,14 @@ export const hudReducer = (hudDraft, action) => {
                         });
                     }
                 }
+                
             }
             else if(action.payload && action.payload.tg){
                 hudDraft.globalPayment = produce(hudDraft.globalPayment, draft => {
                     draft.tg += action.payload.tg;
+                    if(action.payload.tgMultiplier !== undefined){
+                        draft.tgMultiplier = action.payload.tgMultiplier;
+                    }
                 });
             }
             else if(action.payload && action.payload.cancel){
@@ -65,6 +92,10 @@ export const hudReducer = (hudDraft, action) => {
                     draft[action.payload.cancel] = [];
                 })
             }
+            else if(action.payload && action.payload.wipe){
+                hudDraft.globalPayment = { influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0}, propulsion: [], biotic: [], cybernetic: [], warfare: [] }
+            }
+            
             break;
         }
         case 'planets_change' : {

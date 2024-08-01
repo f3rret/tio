@@ -233,7 +233,7 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
             if(unit[i] && unit[i].payload && unit[i].payload[j]){
               if(tile.tid === 18 && pid === 0 && tile.tdata.planets[pid].occupied === undefined){
                 if(G.races[playerID].rid !== 7){
-                  if(GP.influence + GP.tg < 6) return;
+                  if(GP.influence + (GP.tg* GP.tgMultiplier) < 6) return;
                 }
               }
               moves.unloadUnit({src: {...hud.advUnitView, i, j}, dst: {tile: hud.advUnitView.tile, planet: pid}, payment: hud.globalPayment});

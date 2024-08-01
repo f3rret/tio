@@ -1,7 +1,7 @@
 import { Card, CardBody, CardTitle, CardFooter, CardText, CardImg, Button, ButtonGroup, Container, Row, Col,
 UncontrolledDropdown, DropdownMenu, DropdownItem, DropdownToggle, Badge } from 'reactstrap'; 
 import { useContext, useMemo, useCallback, useState, useEffect } from 'react';
-import { LocalizationContext, StateContext, getUnitsTechnologies, haveTechnology, wormholesAreAdjacent, enemyHaveCombatAC } from './utils';
+import { LocalizationContext, StateContext, getUnitsTechnologies, haveTechnology, wormholesAreAdjacent, enemyHaveCombatAC, adjustTechnologies } from './utils';
 import { neighbors } from './Grid';
 import { produce } from 'immer';
 import { ActionCardDialog } from './actionCardDialog';
@@ -258,18 +258,20 @@ export const SpaceCannonAttack = () => {
 
 const HitAssign = (args) => {
 
-    const { playerID } = useContext(StateContext);
+    const { G, playerID, ctx } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
     const {race, units, hits, setHits, owner, allowRepair} = args;
     
     const technologies = useMemo(()=>{
+        let result = {};
+
         if(units){
-            return getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech'], race);
+            result = getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech'], race);
+            result = adjustTechnologies(G, ctx, owner, result);
         }
-        else{
-            return {};
-        }
-    },[race, units]);
+
+        return result;
+    },[G, ctx, owner, race, units]);
 
     const hitAssign = useCallback((tag, idx, pidx, payloadId) => {
 
@@ -459,7 +461,16 @@ const HitAssign = (args) => {
             </div>
         </div>
         {race.combatActionCards && <div style={{display: 'flex', flexDirection: 'row-reverse'}}>
-            {race.combatActionCards.map((ca, i) => <Badge key={i} color='warning' style={{color: 'black'}}>{ca}</Badge>)}
+                {race.combatActionCards.map((ca, i) => {
+                    let label;
+                    if(['FLAGSHIP', 'MECH'].includes(ca)){
+                        label = t('races.' + race.rid + '.' + ca + '.label');
+                    }
+                    else{
+                        label = t('cards.actions.' + ca + '.label');
+                    }
+
+                return <Badge key={i} color='warning' style={{color: 'black'}}>{label}</Badge>})}
             </div>
         }
         </div>
@@ -499,8 +510,11 @@ const CombatantForces = (args) => {
     }, [fleet])
 
     const technologies = useMemo(()=>{
-        return getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech', 'infantry'], race);
-    },[race, units]);
+        let result = getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech', 'infantry'], race);
+        result = adjustTechnologies(G, ctx, owner, result);
+
+        return result;
+    },[G, ctx, owner, race, units]);
 
     const fireClick = useCallback((u, withTech) => {
         const count = Array.isArray(units[u]) ? units[u].length : units[u];
@@ -678,7 +692,16 @@ const CombatantForces = (args) => {
             </Container>
         </div>
         {race.combatActionCards && <div style={{display: 'flex', flexDirection: 'row-reverse'}}>
-            {race.combatActionCards.map((ca, i) => <Badge key={i} color='warning' style={{color: 'black'}}>{t('cards.actions.' + ca + '.label')}</Badge>)}
+            {race.combatActionCards.map((ca, i) => {
+                let label;
+                if(['FLAGSHIP', 'MECH'].includes(ca)){
+                    label = t('races.' + race.rid + '.' + ca + '.label');
+                }
+                else{
+                    label = t('cards.actions.' + ca + '.label');
+                }
+
+                return <Badge key={i} color='warning' style={{color: 'black'}}>{label}</Badge>})}
             </div>
         }
         </div>
@@ -1086,8 +1109,11 @@ export const CombatRetreat = (args) => {
     }, [possibleTiles, selectedTile, G.tiles]);
 
     const technologies = useMemo(()=>{
-        return getUnitsTechnologies([...Object.keys(fleet), 'fighter', 'mech'], race);
-    },[race, fleet]);
+        let result = getUnitsTechnologies([...Object.keys(fleet), 'fighter', 'mech'], race);
+        result = adjustTechnologies(G, ctx, playerID, result);
+
+        return result;
+    },[G, ctx, playerID, race, fleet]);
 
     const haveHit = useCallback((tag, idx, pidx) => {
 

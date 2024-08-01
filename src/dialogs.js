@@ -16,11 +16,19 @@ export function PaymentDialog(args) {
     let objective = args.G.pubObjectives.find(o => o.id === args.oid);
     if(!objective) objective = args.race.secretObjectives.find(o => o.id === args.oid);
     const [payment, setPayment] = useState({});
+    const tgMultiplier = useMemo(() => {
+        if(args.GP && args.GP.tgMultiplier !== undefined){
+            return args.GP.tgMultiplier
+        }
+        else{
+            return 1;
+        }
+    }, [args])
 
     const acceptable = useMemo(()=>{
         return Object.keys(objective.req).every((k) => {
             if(k === 'influence' || k === 'resources'){
-                return payment[k] && payment[k].planets.reduce((a,b) => b[k] + a, 0) + payment[k].tg >= objective.req[k]
+                return payment[k] && payment[k].planets.reduce((a,b) => b[k] + a, 0) + (payment[k].tg * tgMultiplier) >= objective.req[k]
             }
             else if(k === 'tg'){
                 return args.race.tg >= objective.req[k]
@@ -33,7 +41,7 @@ export function PaymentDialog(args) {
             }
             else return false;
         })
-    }, [payment, args, objective])
+    }, [payment, args, objective, tgMultiplier])
 
     return (
         <Modal className='borderedPanel' style={{maxWidth: '35rem', margin: '10rem', background: "no-repeat 0% 0% / 100% 100% url('/bg1.png')"}} isOpen={args.isOpen} toggle={()=>args.toggle()}>
@@ -289,7 +297,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
 
     const result = useMemo(()=>{
         if(sid === 'LEADERSHIP'){
-            let influence = GP.influence + GP.tg;
+            let influence = GP.influence + (GP.tg* GP.tgMultiplier);
             /*Object.keys(ex).forEach(e =>{
                 const planet = PLANETS.find(p => p.name === e)
                 if(ex[e]){
@@ -306,7 +314,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
                     resources += planet.resources;
                 }
             });*/
-            return GP.resources + GP.tg;
+            return GP.resources + (GP.tg* GP.tgMultiplier);
         }
         else if(sid === 'TECHNOLOGY'){
             /*let resources = 0;
@@ -325,7 +333,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
                 }
             });*/
             let pay = isMine ? GP.resources : GP.influence;
-            let r = Math.floor((pay + GP.tg) / (isMine ? 6:4));
+            let r = Math.floor((pay + (GP.tg* GP.tgMultiplier)) / (isMine ? 6:4));
             if(r > 1) r = 1;
             if(isMine) r++;
             return r;
@@ -354,7 +362,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
             const pnames = Object.keys(ex);
             const planet = PLANETS.find(p => p.name === pnames[0]);
             
-            if(planet){
+            if(planet && planet.units['spacedock']){
                 let sd = planet.units['spacedock'].length * R_UNITS['SPACEDOCK'].production;
                 let max = planet.resources + sd;
 
@@ -504,23 +512,31 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
         }
         else if(sid === 'WARFARE'){
             if(step === 1 && !isMine){
-                const keys = Object.keys(ex);
-                stopThere = ! (keys.length > 0 && ex[keys[0]] === 'spacedock')
-                if(!stopThere){
-                    const planet = getPlanetByName(G.tiles, keys[0]);
+                if(selectedTile > -1){
+                    const tile = G.tiles[selectedTile];
+
+                    stopThere = !(tile && tile.tdata && tile.tid === G.races[playerID].rid)
                     
-                    if(planet){
-                        if(String(planet.occupied) !== String(playerID)){
-                            stopThere = true;
-                        }
-                        else if(ex[keys[0]] === 'spacedock'){
-                            if(!(planet.units && planet.units['spacedock'] && planet.units['spacedock'].length)){
+                    if(!stopThere){
+                        const keys = Object.keys(ex);
+                        stopThere = ! (keys.length > 0 && ex[keys[0]] === 'spacedock')
+                        if(!stopThere){
+                            const planet = getPlanetByName(G.tiles, keys[0]);
+                            
+                            if(planet){
+                                if(String(planet.occupied) !== String(playerID)){
+                                    stopThere = true;
+                                }
+                                else if(ex[keys[0]] === 'spacedock'){
+                                    if(!(planet.units && planet.units['spacedock'] && planet.units['spacedock'].length)){
+                                        stopThere = true;
+                                    }
+                                }
+                            }
+                            else{
                                 stopThere = true;
                             }
                         }
-                    }
-                    else{
-                        stopThere = true;
                     }
                 }
             }
@@ -833,8 +849,8 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
                             {!isMine && <p style={{marginTop: '1rem', fontSize: '.8rem'}}>
                                 {Object.keys(ctx.activePlayers).indexOf(ctx.currentPlayer) > -1 && <>{t('board.awaiting_trade_owner') + '...'}</>}
                                 {Object.keys(ctx.activePlayers).indexOf(ctx.currentPlayer) === -1 && <>
-                                    {G.races[ctx.currentPlayer].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES.indexOf(G.races[playerID].rid) > -1 && <b style={{color: 'green'}}>{t('board.trade_owner_allow')}</b>}
-                                    {G.races[ctx.currentPlayer].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES.indexOf(G.races[playerID].rid) === -1 && <b>{t('board.trade_owner_disallow')}</b>}
+                                    {G.races[ctx.currentPlayer].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES?.indexOf(G.races[playerID].rid) > -1 && <b style={{color: 'green'}}>{t('board.trade_owner_allow')}</b>}
+                                    {G.races[ctx.currentPlayer].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES?.indexOf(G.races[playerID].rid) === -1 && <b>{t('board.trade_owner_disallow')}</b>}
                                 </>}
                             </p>}
                         </div>}
@@ -1165,6 +1181,15 @@ const PaymentCard = (args) => {
     const fragments = useMemo(() => ({h: args.race.fragments.h - payment.fragment.h, i: args.race.fragments.i - payment.fragment.i,
         c: args.race.fragments.c - payment.fragment.c, u: args.race.fragments.u - payment.fragment.u}), [payment, args]);
 
+    const tgMultiplier = useMemo(() => {
+        if(args.GP && args.GP.tgMultiplier !== undefined){
+            return args.GP.tgMultiplier
+        }
+        else{
+            return 1;
+        }
+    }, [args])
+
     const payPlanet = useCallback((e, planet, type) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1282,7 +1307,7 @@ const PaymentCard = (args) => {
                                 <h6 style={{textAlign: 'end'}}>{t('board.total') + ' ' + t('board.' + k) + ': '}
                                     {payment[k].planets && payment[k].planets.reduce((a,b) => b[k] + a, 0)}
                                     {!payment[k].planets && k!=='token' && k!=='fragment' && tg}
-                                    {k!=='token' && k!=='fragment' && payment[k].tg > 0 && '+' + payment[k].tg + ' ' + t('board.tg')}
+                                    {k!=='token' && k!=='fragment' && payment[k].tg > 0 && '+' + payment[k].tg + (tgMultiplier !== 1 ? '(' + payment[k].tg * tgMultiplier + ')': '') + ' ' + t('board.tg')}
                                     {k==='token' && payment[k].t + payment[k].s}
                                     {k==='fragment' && payment[k].h + payment[k].i + payment[k].u + payment[k].c}
                                     {' / '}{args.objective.req[k]}
@@ -1704,7 +1729,7 @@ export const ProducingPanel = (args) => {
         return banned;
     }, [exhaustedCards]);
 
-    const result = useMemo(() => GP.tg + GP.resources + (freelancers ? GP.influence : 0), [GP, freelancers]);
+    const result = useMemo(() => (GP.tg* GP.tgMultiplier) + GP.resources + (freelancers ? GP.influence : 0), [GP, freelancers]);
 
     const onCancelClick = (finish) => {
         if(exhaustedCards.indexOf('SLING_RELAY')>-1){
@@ -1875,6 +1900,25 @@ export const ChoiceDialog = ({args, onSelect}) => {
 
 }
 
+/*export const AdvancedChoiceDialog = ({args, onSelect}) => {
+
+    const title = args.title;
+    const text = args.text;
+
+    return  <Card key={args.key || 1} className='subPanel' style={{position: 'absolute', padding: '2rem', right: '50rem', bottom: '20rem', 
+                            backgroundColor: 'rgba(33, 37, 41, 0.95)', width: '30rem'}}>
+                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{title}</h6></CardTitle>
+                <div style={{display: 'flex', flexDirection: 'column', margin: '1rem'}}>
+                    <CardText>{text}</CardText>
+
+                    {args.options && args.options.map((o, i) => 
+                        <button style={{width: '75%', marginTop: '.5rem'}} key={i} className='styledButton yellow' onClick={() => onSelect(i)}>{o.label}</button>
+                    )}
+                </div>
+            </Card>
+
+}*/
+
 export const CardsPager = ({children}) => {
 
     return <ListGroup horizontal style={{position: 'absolute', pointerEvents: 'none', bottom: '3rem', right: '3rem', fontSize: '65%', background: 'none', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', width: '60rem'}}>
@@ -1931,6 +1975,7 @@ export const StrategyPick = ({actionCardStage}) => {
 //    const [strategyHover, setStrategyHover] = useState('LEADERSHIP');
     const race = G.races[playerID];
 //onMouseEnter={()=>setStrategyHover(key)} 
+ /**/
     return <Card className='borderedPanel bigDialog' style={{width: '30%', margin: actionCardStage ? '5rem 0 0 40%':''}}>
                 <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>{t("board.strategy_pick")}</h3></CardTitle>
                 <CardBody style={{display: 'flex'}}>

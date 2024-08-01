@@ -31,7 +31,7 @@ export const Persons = () => {
         return false;
     }, [race.rid, race.exhaustedCards]);
 
-    return <><Card style={{...CARD_STYLE, minHeight: '14rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
+    return <><Card style={{...CARD_STYLE, paddingRight: '2rem', minHeight: '14rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
         {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
             <CardImg src={'race/agent/'+race.rid+'.png'} style={{width: '100px', height: '130px', opacity: '.75', marginRight: '1rem'}}/>
             <div>
@@ -302,7 +302,6 @@ export const MyNavbar = ({leftPanel, setLeftPanel, undo, activeTile, isMyTurn}) 
     </div>;
 }
 
-
 export const GlobalPayment = ({globalPayment, GP, dispatch}) => {
 
     const decrTg = useCallback(() => {
@@ -312,9 +311,8 @@ export const GlobalPayment = ({globalPayment, GP, dispatch}) => {
     const cancel = useCallback((c) => {
       dispatch({type: 'global_payment', payload: {cancel: c}});
     }, [dispatch])
-    
 
-    return <div style={{fontSize: '2rem', marginRight: '1rem'}}>
+    return <div style={{fontSize: '1.5rem', marginRight: '1rem'}}>
         {globalPayment && <Row>
             {GP.resources > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('resources')} style={{backgroundImage: 'url(icons/resources_bg.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.resources}</b></Col>}
             {GP.influence > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('influence')} style={{backgroundImage: 'url(icons/influence_bg.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.influence}</b></Col>}
@@ -322,7 +320,7 @@ export const GlobalPayment = ({globalPayment, GP, dispatch}) => {
             {GP.biotic > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('biotic')} style={{backgroundImage: 'url(icons/biotic.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.biotic}</b></Col>}
             {GP.cybernetic > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('cybernetic')} style={{backgroundImage: 'url(icons/cybernetic.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.cybernetic}</b></Col>}
             {GP.warfare > 0 && <Col className='GPcol' xs='1' onClick={() => cancel('warfare')} style={{backgroundImage: 'url(icons/warfare.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.warfare}</b></Col>}
-            {GP.tg > 0 && <Col className='GPcol' xs='1' onClick={() => decrTg()} style={{backgroundImage: 'url(icons/trade_good_3.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.tg}</b></Col>}
+            {GP.tg > 0 && <Col className='GPcol' xs='1' onClick={() => decrTg()} style={{backgroundImage: 'url(icons/trade_good_3.png)'}}><b style={{paddingLeft: '0.1rem'}}>{GP.tg + (GP.tgMultiplier &&  GP.tgMultiplier !== 1 ? '(' + (GP.tg * GP.tgMultiplier) + ')' : '')}</b></Col>}
         </Row>}
     </div>
 

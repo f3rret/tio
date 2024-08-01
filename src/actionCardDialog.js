@@ -151,7 +151,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit, GP
                         
                         if(sum >= 6) result = {tech: selection, exhausted}
                     }*/
-                   if(GP && (GP.resources + GP.tg >= 6)){
+                   if(GP && (GP.resources + (GP.tg * GP.tgMultiplier) >= 6)){
                     result = {tech: selection, payment}
                    }
                 }

@@ -6,7 +6,7 @@ import { ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, C
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList,
 ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover} from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
-import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT } from './utils';
+import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT, getMyNeighbors } from './utils';
 
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion, ChooseAndDestroy } from './combat';
@@ -20,14 +20,14 @@ import { Persons, Stuff, CARD_STYLE, MyNavbar, GlobalPayment } from './component
 import { hudReducer } from './reducers.js';
 import { PixiStage } from './pixiStage.js';
 
-export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages }) {
+import { EffectsBoardWrapper, useEffectListener } from 'bgio-effects/react';
+
+function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages }) {
 
   const [hud, dispatch] = useImmerReducer(hudReducer, {producing: null, exhaustedCards: [], leftPanel: null, advUnitView: undefined, 
     groundUnitSelected: {}, payloadCursor: {i:0, j:0}, subcardVisible: 'stuff', rightBottomVisible: null, rightBottomSubVisible: null,
     selectedTile: -1, selectedPlanet: -1, selectedTech: {}, moveSteps: [], tempCt: {t: 0, s: 0, f: 0, new: 0}, justOccupied: null, payObj: null,
-    globalPayment: { influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0}, propulsion: [], biotic: [], cybernetic: [], warfare: [] }});
-
- 
+    globalPayment: { influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0}, propulsion: [], biotic: [], cybernetic: [], warfare: [] }, abilityData: {}});
 
   const G_stringify = useMemo(() => JSON.stringify(G), [G]);
   const G_tiles_stringify = useMemo(() => JSON.stringify(G.tiles), [G]);
@@ -39,13 +39,6 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   const isMyTurn = useMemo(() => ctx.currentPlayer === playerID, [ctx.currentPlayer, playerID]);
   const prevStages = useRef(null);
   const { t } = useContext(LocalizationContext);
-  
-  const togglePaymentDialog = (payment) => {
-    if(payment && Object.keys(payment).length > 0){
-      moves.completeObjective(hud.payObj, payment);
-    }
-    dispatch({type: 'pay_obj', payload: null})
-  };
 
   const PLANETS = useMemo(()=> {
     const arr = [];
@@ -142,7 +135,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
   const GP = useMemo(() => {
 
-    let result = {resources: 0, influence: 0, tg: 0, propulsion: 0, biotic: 0, cybernetic: 0, warfare: 0}
+    let result = {resources: 0, influence: 0, tg: 0, propulsion: 0, biotic: 0, cybernetic: 0, warfare: 0, tgMultiplier: 1}
 
     if(hud.globalPayment.resources && hud.globalPayment.resources.length){
       hud.globalPayment.resources.forEach(pname => {
@@ -184,9 +177,21 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     if(hud.globalPayment.tg && hud.globalPayment.tg > 0){
       result.tg = hud.globalPayment.tg;
     }
+
+    if(haveTechnology(race, "MIRROR_COMPUTING")){
+      result.tgMultiplier = 2;
+    }
+
     return result;
 //eslint-disable-next-line
   }, [hud.globalPayment, PLANETS_stringify]);
+
+  const togglePaymentDialog = (payment) => {
+    if(payment && Object.keys(payment).length > 0){
+      moves.completeObjective(hud.payObj, {...payment, tgMultiplier: GP.tgMultiplier});
+    }
+    dispatch({type: 'pay_obj', payload: null})
+  };
 
   const globalPayPlanet = useCallback((e, planet, type) => {
     e.preventDefault();
@@ -197,7 +202,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
   const globalPayTg = useCallback((inc) => {
     if(race.tg - GP.tg > 0){
-      dispatch({type: 'global_payment', payload: {tg: inc}});
+      dispatch({type: 'global_payment', payload: {tg: inc, tgMultiplier: GP.tgMultiplier}});
     }
   }, [dispatch, race, GP]);
 
@@ -328,6 +333,35 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
   const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);
   
+  //eslint-disable-next-line
+  const neighbors = useMemo(() => getMyNeighbors(G, playerID), [G_tiles_stringify]);
+
+ /* const TGS_PREV = useRef([]);
+
+  useMemo(() => {
+    const tgs = G.races.map(r => r.tg)
+
+    if(TGS_PREV.current && TGS_PREV.current.length){
+      tgs.forEach((tg, pid) => {
+        if(String(pid) === String(playerID)){//mine
+          if(TGS_PREV.current[pid] < tg){ 
+            sendChatMessage('/gain-tg ' + (tg - TGS_PREV.current[pid]))
+          }
+        }
+        else{
+          if(race.rid === 2 && neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){ //mentak pillage
+            if(TGS_PREV.current[pid] < tg){
+              dispatch({ type: 'ability', tag: 'pillage', add: true, playerID: pid })
+            }
+          }
+        }
+      });
+    }
+
+    TGS_PREV.current = tgs;
+    return tgs;
+  //eslint-disable-next-line
+  }, [G_races_stringify, neighbors]);*/
  
   const advUnitSwitch = useMemo(()=> {
     if(hud.advUnitView){
@@ -345,6 +379,9 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
     let disabled = race.exhaustedCards.includes(args.techId);
     let technology = techData.find(t => t.id === args.techId);
+    if(!technology){//probably racial
+      technology = race.technologies.find(td => td.id === t);
+    } 
     let icon = technology ? technology.type:'propulsion';
     let addText = '';
     let units = {};
@@ -492,34 +529,74 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
   }
 
   const AbilAction = ({abilId}) => { 
-    let disabled = race.actions && race.actions.length >= maxActs;
+    let disabled;
     //let ability = race.abilities.find(a => a.id === abilId);
 
-  
-    if(!disabled && abilId === 'ORBITAL_DROP'){
+    if(abilId === 'ORBITAL_DROP'){
       disabled = true;
 
-      if(hud.selectedTile > -1 && hud.selectedPlanet > -1){
-        const tile = G.tiles[hud.selectedTile];
+      if(!race.actions || race.actions.length < maxActs){
+        if(hud.selectedTile > -1 && hud.selectedPlanet > -1){
+          const tile = G.tiles[hud.selectedTile];
 
-        if(tile && tile.tdata && tile.tdata.planets){
-          const planet = tile.tdata.planets[hud.selectedPlanet];
+          if(tile && tile.tdata && tile.tdata.planets){
+            const planet = tile.tdata.planets[hud.selectedPlanet];
 
-          if(planet && String(planet.occupied) === String(playerID)){
-            disabled = false;
+            if(planet && String(planet.occupied) === String(playerID)){
+              disabled = false;
+            }
           }
         }
       }
     }
 
+    if(abilId === 'PILLAGE'){
+      disabled = true;
+
+      if(hud.abilityData && hud.abilityData.pillage && hud.abilityData.pillage.length > 0){
+        disabled = false;
+      }
+    }
+
     const onClick = ()=>{
-      moves.useRacialAbility({abilId, selectedTile: hud.selectedTile, selectedPlanet: hud.selectedPlanet})
+      if(abilId === 'ORBITAL_DROP'){
+        moves.useRacialAbility({abilId, selectedTile: hud.selectedTile, selectedPlanet: hud.selectedPlanet})
+        sendChatMessage(t('races.' + race.rid + '.' + abilId + '.label'));
+      }
+      else if(abilId === 'PILLAGE'){
+        dispatch({type: 'right_bottom_sub_visible', payload: 'pillage'})
+      }
+        
+    }
+
+    const onSubClick = (args)=> {
+      if(abilId === 'PILLAGE'){
+        if(!isMyTurn) return;
+        moves.useRacialAbility({abilId, ...args});
+        sendChatMessage(t('races.' + race.rid + '.' + abilId + '.label'));
+        dispatch({ type: 'ability', tag: 'pillage', del: true, playerID: args.playerID })
+      }
     }
 
     return  <CardsPagerItem tag='context'>
               <button style={{width: '100%', marginBottom: '1rem'}} disabled={disabled} className = {'styledButton yellow'} onClick={onClick}>
                 {t('races.' + race.rid + '.' + abilId + '.label')}
               </button>
+
+              {abilId === 'PILLAGE' && hud.abilityData.pillage && hud.rightBottomSubVisible === 'pillage' && <div className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', minWidth: '15rem', padding: '1rem', fontSize: '1rem'}}>
+                      {hud.abilityData.pillage.map((p, i) => {
+                          const pilRace = G.races[p];
+
+                          return <span key={p} className='rightBottomSub_complex'>
+                            <b>{t('races.' + p + '.name')}</b>
+                            <button onClick={() => onSubClick({playerID: p, param: 'tg'})} className='styledButton black'>{'1 / ' + pilRace.tg}<img alt='tg' src='/icons/trade_good_1.png'/></button>
+                            <button onClick={() => onSubClick({playerID: p, param: 'commodity'})} className='styledButton black'>{pilRace.commodity}<img alt='tg' src='/icons/commodity_1.png'/></button>
+                          </span>
+                      })}
+                      <button onClick={() => dispatch({type: 'right_bottom_sub_visible', payload: null})} style={{width: '10rem', margin: '.5rem'}} className='styledButton black'>
+                          {t('board.cancel')}
+                        </button>
+                    </div>}
 
               {t('races.' + race.rid + '.' + abilId + '.effect')}
             </CardsPagerItem>
@@ -530,7 +607,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
     if(race.rid === 1 && race.actions && race.actions.length && race.actions[race.actions.length - 1] === 'ORBITAL_DROP'){
       if(!UNITS['mech'] || (UNITS['mech'] < UNITS_LIMIT['mech'])){
-        if(GP.resources + GP.tg > 2){
+        if(GP.resources + (GP.tg * GP.tgMultiplier) > 2){
           disabled = false;
         }
       }
@@ -538,6 +615,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
 
     const onClick = () => {
       moves.deployMech({planet: race.lastUsedPlanet, payment: hud.globalPayment})
+      sendChatMessage(t('races.' + race.rid + '.MECH.label'));
     }
 
     return  <>
@@ -550,6 +628,26 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
               </CardsPagerItem>
             </>
   }
+
+  
+
+  /*const advancedChoiceDialogSelect = (result) => {
+    console.log(result);
+
+    if(result && result.ability === 'pillage' && result.opts !== 2){
+      let options;
+
+      if(result.opts === 0){
+        options = ' tg '
+      }
+      else if(result.opts === 1){
+        options = ' comm '
+      }
+
+      sendChatMessage('/ability pillage ' + result.sender + options);
+      dispatch({type: 'ability', tag: 'pillage', mid: result.mid});
+    }
+  }*/
 
   const stateContext = useMemo(() => ({G, ctx, playerID, /*matchID, credentials,*/ moves, selectedTech: hud.selectedTech, exhaustedCards: hud.exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}), 
   //eslint-disable-next-line
@@ -729,6 +827,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     else if(ctx.phase === 'strat' || ctx.phase === 'agenda'){
       dispatch({type: 'left_panel', payload: ''});
     }
+    dispatch({type: 'global_payment', payload: {wipe: true}})
   }, [dispatch, ctx.phase])
 
   useEffect(() => {
@@ -756,19 +855,58 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
     dispatch({type: 'global_payment', payload: {tg: -hud.globalPayment.tg}});
   //eslint-disable-next-line
   }, [race.tg])
+
+  useEffectListener('*', (effectName, effectProps, boardProps) => { //! may doubled!!
+   
+    if(effectName === 'tg' || effectName === 'trade'){
+      if(boardProps.G && boardProps.G.races){
+        boardProps.G.races.forEach((nr, pid) => {
+
+          if(String(pid) === String(playerID)){//mine
+            if(G.races[pid].tg < nr.tg){
+              sendChatMessage('/gain-tg ' + (nr.tg - G.races[pid].tg)) //todo: why dont react after pillage?
+            }
+          }
+          else{
+            if(race.rid === 2 && neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){ //mentak pillage
+              if(G.races[pid].tg < nr.tg){
+                dispatch({ type: 'ability', tag: 'pillage', add: true, playerID: pid })
+              }
+            }
+          }
+
+        })
+      }
+
+    }
+    if(effectName === 'trade' && race.rid === 2){
+      const {src, dst} = effectProps;
+
+      let pid = G.races.findIndex((r) => r.rid === src);
+      if(pid > -1 && src !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(src))){
+        if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
+          dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
+        }
+      }
+
+      pid = G.races.findIndex((r) => r.rid === dst);
+      if(pid > -1 && dst !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(dst))){
+        if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
+          dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
+        }
+      }
+    }
+  }, [G_stringify, playerID, neighbors]);
   
-
-
-
-
-
+  
 
   //eslint-disable-next-line
   const initialImgs = useMemo(() => [...imgSrc.boardImages, ...getTilesAndRacesImgs(G.tiles)], []);
   const { imagesPreloaded, lastLoaded, loadingError } = useImagePreloader(initialImgs);
 
-  if (!imagesPreloaded) {
-    return <div style={{width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, backgroundColor: 'black', zIndex: 101, display: 'flex', justifyContent: 'center', alignItems: 'center', flexFlow: 'column'}}>
+
+  return (<>
+            {!imagesPreloaded && <div style={{width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, backgroundColor: 'black', zIndex: 101, display: 'flex', justifyContent: 'center', alignItems: 'center', flexFlow: 'column'}}>
               
               <Blocks
                   height="80"
@@ -781,11 +919,8 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                   />
               {!loadingError && <span style={{fontFamily: 'system-ui', color: 'antiquewhite'}}>{lastLoaded}</span>}
               {loadingError && <span style={{fontFamily: 'system-ui', color: 'red'}}>{'ошибка загрузки ' + loadingError}</span>}
-          </div>
-  }
-
-
-  return (<StateContext.Provider value={stateContext}>
+            </div>}
+            {imagesPreloaded && <StateContext.Provider value={stateContext}>
               <Overlay/>      
               <MyNavbar leftPanel={hud.leftPanel} setLeftPanel={(payload) => dispatch({type: 'left_panel', payload})} undo={undo} isMyTurn={isMyTurn} activeTile={activeTile}/>
               <CardColumns style={{margin: '4rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '42rem', zIndex: '1'}}>
@@ -876,6 +1011,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                         {haveTechnology(race, 'INTEGRATED_ECONOMY') && <TechAction techId='INTEGRATED_ECONOMY'/>}
                         {haveTechnology(race, 'INFANTRY2') && <TechAction techId='INFANTRY2'/>}
                         {haveAbility(race, 'ORBITAL_DROP') && <AbilAction abilId='ORBITAL_DROP'/>}
+                        {haveAbility(race, 'PILLAGE') && <AbilAction abilId='PILLAGE'/>}
                         {race.rid === 1 && <MechDeploy />}
                       </CardsPager>
                       
@@ -1012,7 +1148,7 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                 </CardColumns>
               </div>}
 
-              {hud.payObj !== null && <PaymentDialog oid={hud.payObj} G={G} race={race} planets={PLANETS} 
+              {hud.payObj !== null && <PaymentDialog oid={hud.payObj} G={G} race={race} planets={PLANETS} GP={GP}
                               isOpen={hud.payObj !== null} toggle={(payment)=>togglePaymentDialog(payment)}/>}
           
               {ctx.phase === 'acts' && hud.leftPanel === 'objectives' && mustSecObj && 
@@ -1022,10 +1158,35 @@ export function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatM
                 </Tooltip>}
 
                 {ctx.gameover && <Gameover isOpen={true}/>}
-          </StateContext.Provider>)
+          </StateContext.Provider>}
+          
+          </>)
 }
 
 
+export const BoardWithEffects = EffectsBoardWrapper(TIOBoard, {
+  // Delay passing the updated boardgame.io state to your board
+  // until after the last effect has been triggered.
+  // Default: false
+  updateStateAfterEffects: true,
 
+  // Global control of the speed of effect playback.
+  // Default: 1
+  //speed: 10000,
+});
+
+/**
+ * {race.rid === 2 && hud.abilityData.pillage && hud.abilityData.pillage.length > 0 && 
+                hud.abilityData.pillage.map((a,i) => {
+                  return <AdvancedChoiceDialog key={i} args={{
+                                title: t('races.2.PILLAGE.label') + ' ' + t('races.' + a.sender + '.name'), 
+                                text: t('races.2.PILLAGE.effect'),  
+                                options: [{label: t('board.trade_good')}, 
+                                          {label: t('board.commodity')}]
+                                }}
+                          onSelect={(opts) => advancedChoiceDialogSelect({ability: 'pillage', ...a, opts})} />
+                }
+              )}
+ */
 
 
