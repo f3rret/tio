@@ -187,6 +187,7 @@
             "capacity": "capacity",
             "shot": "shot",
             "agent": "agent",
+            "with_agent": "use agent",
             "commander": "commander",
             "hero": "hero",
             "tokens": "tokens",

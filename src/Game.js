@@ -271,6 +271,7 @@ export const TIO = {
 
             onEnd: ({G, ctx}) => {
               G.strategy = undefined;
+              G.spaceCombat = {};
               if(G.wormholesAdjacent) delete G['wormholesAdjacent'];
               if(G.races[ctx.currentPlayer].moveBoost) delete G.races[ctx.currentPlayer]['moveBoost'];
               if(G.races[ctx.currentPlayer].moveThroughEnemysFleet) delete G.races[ctx.currentPlayer]['moveThroughEnemysFleet'];
@@ -557,10 +558,11 @@ export const TIO = {
               }
             }
           },
-          antiFighterBarrage: ({G, playerID, events}) => {
+          antiFighterBarrage: ({G, playerID, events, random}) => {
             const activeTile = G.tiles.find(t => t.active === true);
             if(activeTile && activeTile.tdata.attacker){
               const def = {};
+              let assaultCannon = false;
               
               const assaultReq = (my, enemy) => {
                 let myFleet = 0;
@@ -581,15 +583,44 @@ export const TIO = {
               if(haveTechnology(G.races[playerID], 'ASSAULT_CANNON') && assaultReq(activeTile.tdata.attacker, activeTile.tdata.fleet)){
                 def[activeTile.tdata.occupied] = {stage: 'spaceCombat_step2'};
                 def[playerID] = {stage: 'spaceCombat_await'};
+                assaultCannon = true;
               }
 
               if(haveTechnology(G.races[activeTile.tdata.occupied], 'ASSAULT_CANNON') && assaultReq(activeTile.tdata.fleet, activeTile.tdata.attacker)){
                 if(def[activeTile.tdata.occupied].stage !== 'spaceCombat_step2') def[activeTile.tdata.occupied] = {stage: 'spaceCombat_await'};
                 def[playerID] = {stage: 'spaceCombat_step2'};
+                assaultCannon = true;
               }
-              
+
               G.dice[activeTile.tdata.occupied] = {};
               G.dice[playerID] = {};
+              G.spaceCombat = {assaultCannon};
+
+              if(!assaultCannon && (G.races[playerID].rid === 2 || G.races[activeTile.tdata.occupied].rid === 2)){ //mentak ambush
+                def[activeTile.tdata.occupied] = {stage: 'spaceCombat_step2'};
+                def[playerID] = {stage: 'spaceCombat_step2'};
+
+                const doAmbush = (pid, fleet) => {
+                  let count = 0;
+
+                  if(fleet['cruiser'] && fleet['cruiser'].length > 0){
+                    count = fleet['cruiser'].length;
+                    G.dice[pid] = {cruiser: {withTech: 'ambush', dice: random.D10(Math.min(count, 2))}}
+                  }
+                  if(count < 2 && fleet['destroyer'] && fleet['destroyer'].length > 0){
+                    G.dice[pid] = {...G.dice[pid], destroyer: {withTech: 'ambush', dice: random.D10(Math.min(2 - count, fleet['destroyer'].length))}}
+                  }
+
+                  G.spaceCombat = {...G.spaceCombat, ambush: true};
+                }
+
+                if(G.races[playerID].rid === 2){
+                  doAmbush(playerID, activeTile.tdata.attacker);
+                }
+                else if(G.races[activeTile.tdata.occupied].rid === 2){
+                  doAmbush(activeTile.tdata.occupied, activeTile.tdata.fleet);
+                }
+              }
 
               events.setActivePlayers({value: def});
 
@@ -968,7 +999,7 @@ export const TIO = {
               }
             }
             else if(args.abilId === 'PILLAGE'){
-              const {playerID: enemyID, param} = args;
+              const {playerID: enemyID, param, withAgent} = args;
               if(enemyID !== undefined && param){
                 const enemy = G.races[enemyID];
                 if(param === 'tg' && enemy.tg > 0){
@@ -978,6 +1009,12 @@ export const TIO = {
                 else if(param === 'commodity'){
                   race.tg += enemy.commodity;
                   enemy.commodity = 0;
+                }
+
+                if(withAgent && !race.exhaustedCards.includes('AGENT')){
+                  race.exhaustedCards.push('AGENT');
+                  race.actionCards.push(G.actionsDeck.pop());
+                  enemy.actionCards.push(G.actionsDeck.pop());
                 }
               }
             }

@@ -15,7 +15,7 @@ export const Persons = () => {
     const race = useMemo(() => G.races[playerID], [G.races, playerID]);
     const agentAbilityIsActive = useMemo(() => {
         if(race.exhaustedCards.indexOf('AGENT') === -1){
-          if(race.rid === 1){
+          if(race.rid === 1 || race.rid === 2){
             return true;
           }
         }

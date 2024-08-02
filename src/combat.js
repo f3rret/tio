@@ -802,9 +802,18 @@ export const SpaceCombat = ({selectedTile}) => {
     const [ahitsA, setAhitsA] = useState({});
     const [ahitsD, setAhitsD] = useState({});
 
+    const ambush = useMemo(() => {
+        /*return Object.keys(ctx.activePlayers).find(pid => 
+            G.dice[pid] && ((G.dice[pid]['cruiser'] && G.dice[pid]['cruiser'].withTech === 'ambush') || 
+            (G.dice[pid]['destroyer'] && G.dice[pid]['destroyer'].withTech === 'ambush'))
+        );*/
+        return G.spaceCombat && G.spaceCombat.ambush;
+    }, [G.spaceCombat])
+
     const assaultCannon = useMemo(() => {
-        return !prevStages || (prevStages[playerID] && prevStages[playerID].length === 1 && prevStages[playerID][0] === 'spaceCombat_step2'); //before anti-fighter barrage 
-    }, [prevStages, playerID]);
+        //return !ambush && (!prevStages || (prevStages[playerID] && prevStages[playerID].length === 1 && prevStages[playerID][0] === 'spaceCombat_step2')); //before anti-fighter barrage 
+        return !ambush && G.spaceCombat && G.spaceCombat.assaultCannon;
+    }, [G.spaceCombat, ambush]);
 
     const hits = useMemo(() => {
         let result = {};
@@ -1019,7 +1028,7 @@ export const SpaceCombat = ({selectedTile}) => {
 
     return (<>
     <Card className='borderedPanel combatPanel' style={{minWidth: '40%', maxWidth: '60%'}}>
-        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{assaultCannon ? t('board.Assault_cannon'): t('board.Space_combat')}</h3></CardTitle>
+        <CardTitle style={{margin: 0, borderBottom: 'solid 1px rgba(119, 22, 31, 0.6)'}}><h3>{assaultCannon ? t('board.Assault_cannon'): ambush ? t('races.2.AMBUSH.label') : t('board.Space_combat')}</h3></CardTitle>
         <CardBody style={{display: 'flex', flexDirection: 'column', padding: 0 }}>
             {(ctx.activePlayers[playerID] === 'spaceCombat' || ctx.activePlayers[playerID] === 'spaceCombat_await') && <>
                 {!needAwait && <>
@@ -1053,8 +1062,8 @@ export const SpaceCombat = ({selectedTile}) => {
                 <button className='styledButton red' disabled = {everyoneRolls || (anyoneRetreat !== undefined) || haveACDialog} onClick={()=>moves.retreat()}>{t('board.Retreat')}</button>
             </>}
             {ctx.activePlayers[playerID] === 'spaceCombat_step2' && <>
-                {!assaultCannon && <button className='styledButton yellow' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD)}>{t('board.next')}</button>}
-                {assaultCannon && <button className='styledButton yellow' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(ahitsA, true)}>{t('board.next')}</button>}
+                {!assaultCannon && <button className='styledButton yellow' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(playerID === ctx.currentPlayer ? ahitsA:ahitsD, ambush ? 'ambush':null)}>{t('board.next')}</button>}
+                {assaultCannon && <button className='styledButton yellow' disabled = {!allHitsAssigned || haveACDialog} onClick={() => moves.nextStep(ahitsA, 'assaultCannon')}>{t('board.next')}</button>}
                 <HitsInfo />
             </>}
         </CardFooter>}

@@ -1337,6 +1337,7 @@ export const ACTS_STAGES = {
         });
       },
       nextStep: ({G, events, ctx, playerID}) => {
+        G.spaceCombat = {}; //flush assault_cannon and ambush flags
         spliceCombatAC(G.races[playerID], 'Scramble Frequency');
         let enemyId;
         let hits = {};
@@ -1504,7 +1505,7 @@ export const ACTS_STAGES = {
      secretObjectiveConfirm,
 
      chooseAndDestroy: chooseAndDestroyMove,
-     nextStep: ({G, playerID, ctx, events, ...plugins}, hits, assaultCannon) => {
+     nextStep: ({G, playerID, ctx, events, random, ...plugins}, hits, ability) => {
       let fleet;
       const activeTile = G.tiles.find(t => t.active === true);
        
@@ -1602,13 +1603,44 @@ export const ACTS_STAGES = {
           if(needAwait){
             events.setStage('spaceCombat_await');
           }
-          else if(assaultCannon){
+          else if(ability === 'assaultCannon' || ability === 'ambush'){
             const val = {};
             val[activeTile.tdata.occupied] = {stage: 'antiFighterBarrage'};
             val[ctx.currentPlayer] = {stage: 'antiFighterBarrage'};
             
             G.dice[activeTile.tdata.occupied] = {};
             G.dice[ctx.currentPlayer] = {};
+            delete G.spaceCombat['assaultCannon'];
+
+            if(ability === 'assaultCannon' && (G.races[playerID].rid === 2 || G.races[activeTile.tdata.occupied].rid === 2)){ //mentak ambush
+              val[activeTile.tdata.occupied] = {stage: 'spaceCombat_step2'};
+              val[playerID] = {stage: 'spaceCombat_step2'};
+
+              const doAmbush = (pid, fleet) => {
+                let count = 0;
+
+                if(fleet['cruiser'] && fleet['cruiser'].length > 0){
+                  count = fleet['cruiser'].length;
+                  G.dice[pid] = {cruiser: {withTech: 'ambush', dice: random.D10(Math.min(count, 2))}}
+                }
+                if(count < 2 && fleet['destroyer'] && fleet['destroyer'].length > 0){
+                  G.dice[pid] = {...G.dice[pid], destroyer: {withTech: 'ambush', dice: random.D10(Math.min(2 - count, fleet['destroyer'].length))}}
+                }
+              }
+
+              if(G.races[playerID].rid === 2){
+                doAmbush(playerID, activeTile.tdata.attacker);
+                G.spaceCombat.ambush = true;
+              }
+              else if(G.races[activeTile.tdata.occupied].rid === 2){
+                doAmbush(activeTile.tdata.occupied, activeTile.tdata.fleet);
+                G.spaceCombat.ambush = true;
+              }
+            }
+            else if(ability === 'ambush'){
+              delete G.spaceCombat['ambush']
+            }
+
             events.setActivePlayers({value: val});
           }
           else{

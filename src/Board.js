@@ -1,7 +1,7 @@
 /* eslint eqeqeq: 0 */
 
 import { useMemo, useCallback, useEffect, useRef, useContext } from 'react';
-import { ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, CardBody, Tooltip, ListGroup, Container as Cont, CardColumns,
+import { ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, CardBody, Tooltip, ListGroup, Container as Cont, CardColumns, Input, Label
    } from 'reactstrap';
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList,
 ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover} from './dialogs';
@@ -27,7 +27,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   const [hud, dispatch] = useImmerReducer(hudReducer, {producing: null, exhaustedCards: [], leftPanel: null, advUnitView: undefined, 
     groundUnitSelected: {}, payloadCursor: {i:0, j:0}, subcardVisible: 'stuff', rightBottomVisible: null, rightBottomSubVisible: null,
     selectedTile: -1, selectedPlanet: -1, selectedTech: {}, moveSteps: [], tempCt: {t: 0, s: 0, f: 0, new: 0}, justOccupied: null, payObj: null,
-    globalPayment: { influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0}, propulsion: [], biotic: [], cybernetic: [], warfare: [] }, abilityData: {}});
+    globalPayment: { influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0}, propulsion: [], biotic: [], cybernetic: [], warfare: [] }, abilityData: {}, withAgent: true});
 
   const G_stringify = useMemo(() => JSON.stringify(G), [G]);
   const G_tiles_stringify = useMemo(() => JSON.stringify(G.tiles), [G]);
@@ -336,32 +336,6 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   //eslint-disable-next-line
   const neighbors = useMemo(() => getMyNeighbors(G, playerID), [G_tiles_stringify]);
 
- /* const TGS_PREV = useRef([]);
-
-  useMemo(() => {
-    const tgs = G.races.map(r => r.tg)
-
-    if(TGS_PREV.current && TGS_PREV.current.length){
-      tgs.forEach((tg, pid) => {
-        if(String(pid) === String(playerID)){//mine
-          if(TGS_PREV.current[pid] < tg){ 
-            sendChatMessage('/gain-tg ' + (tg - TGS_PREV.current[pid]))
-          }
-        }
-        else{
-          if(race.rid === 2 && neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){ //mentak pillage
-            if(TGS_PREV.current[pid] < tg){
-              dispatch({ type: 'ability', tag: 'pillage', add: true, playerID: pid })
-            }
-          }
-        }
-      });
-    }
-
-    TGS_PREV.current = tgs;
-    return tgs;
-  //eslint-disable-next-line
-  }, [G_races_stringify, neighbors]);*/
  
   const advUnitSwitch = useMemo(()=> {
     if(hud.advUnitView){
@@ -464,10 +438,10 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
               <button style={{width: '100%', marginBottom: '1rem'}} disabled={disabled} 
                   className = {'styledButton ' + (hud.exhaustedCards.includes(args.techId) ? 'white':'yellow')} onClick={onClick}>
                 <img alt='tech type' src={'icons/'+icon+'.png'} style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}}/>
-                {t('cards.techno.' + args.techId + '.label') + addText}
+                <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.techno.' + args.techId + '.label') + addText}</b>
               </button>
 
-              {args.techId === 'SCANLINK_DRONE_NETWORK' && hud.rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
+              {args.techId === 'SCANLINK_DRONE_NETWORK' && hud.rightBottomSubVisible === args.techId && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
                 <b>{t('board.explore_one')+ ':'}</b>
                 {activeTile.tdata.planets.map((p, i) => {
                   if(p.trait){
@@ -482,7 +456,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                         </button>
               </ListGroup>}
 
-              {args.techId === 'BIO_STIMS' && hud.rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
+              {args.techId === 'BIO_STIMS' && hud.rightBottomSubVisible === args.techId && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
                       <b>{t('board.ready_one') + ':'}</b>
                       {PLANETS.map((p, i) => {
                         if(p.specialty && p.exhausted){
@@ -504,7 +478,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                         </button>
                     </ListGroup>}
 
-              {args.techId === 'INFANTRY2' && hud.rightBottomSubVisible === true && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
+              {args.techId === 'INFANTRY2' && hud.rightBottomSubVisible === args.techId && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
                 <b>{t('board.choose_one') + ':'}</b>
                 {G.tiles.filter(t => t.tid === race.rid).map((tile, j) => {
                   if(tile && tile.tdata && tile.tdata.planets){
@@ -572,7 +546,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     const onSubClick = (args)=> {
       if(abilId === 'PILLAGE'){
         if(!isMyTurn) return;
-        moves.useRacialAbility({abilId, ...args});
+        moves.useRacialAbility({abilId, ...args, withAgent: hud.withAgent});
         sendChatMessage(t('races.' + race.rid + '.' + abilId + '.label'));
         dispatch({ type: 'ability', tag: 'pillage', del: true, playerID: args.playerID })
       }
@@ -580,7 +554,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
     return  <CardsPagerItem tag='context'>
               <button style={{width: '100%', marginBottom: '1rem'}} disabled={disabled} className = {'styledButton yellow'} onClick={onClick}>
-                {t('races.' + race.rid + '.' + abilId + '.label')}
+                <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('races.' + race.rid + '.' + abilId + '.label')}</b>
               </button>
 
               {abilId === 'PILLAGE' && hud.abilityData.pillage && hud.rightBottomSubVisible === 'pillage' && <div className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', minWidth: '15rem', padding: '1rem', fontSize: '1rem'}}>
@@ -593,9 +567,15 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                             <button onClick={() => onSubClick({playerID: p, param: 'commodity'})} className='styledButton black'>{pilRace.commodity}<img alt='tg' src='/icons/commodity_1.png'/></button>
                           </span>
                       })}
-                      <button onClick={() => dispatch({type: 'right_bottom_sub_visible', payload: null})} style={{width: '10rem', margin: '.5rem'}} className='styledButton black'>
-                          {t('board.cancel')}
+                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end'}}>
+                        <button onClick={() => dispatch({type: 'right_bottom_sub_visible', payload: null})} style={{width: '10rem', margin: '.5rem'}} className='styledButton black'>
+                            {t('board.cancel')}
                         </button>
+                        <div style={{fontSize: '125%'}}>
+                          <Input disabled={race.exhaustedCards.includes('AGENT')} type="checkbox" id="withAgent" name="withAgent" checked={!race.exhaustedCards.includes('AGENT') && hud.withAgent} onChange={() => dispatch({type: 'with_agent'})} />
+                          <Label style={{marginLeft: '.5rem'}} for="withAgent">{t('board.with_agent')}</Label>
+                        </div>
+                      </div>
                     </div>}
 
               {t('races.' + race.rid + '.' + abilId + '.effect')}
@@ -621,7 +601,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     return  <>
               <CardsPagerItem tag='context'>
                 <button style={{width: '100%', marginBottom: '1rem'}} disabled={disabled} className = {'styledButton yellow'} onClick={onClick}>
-                  {t('races.' + race.rid + '.MECH.label')}
+                  <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('races.' + race.rid + '.MECH.label')}</b>
                 </button>
 
                 {t('races.' + race.rid + '.MECH.deploy')}
@@ -864,7 +844,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
           if(String(pid) === String(playerID)){//mine
             if(G.races[pid].tg < nr.tg){
-              sendChatMessage('/gain-tg ' + (nr.tg - G.races[pid].tg)) //todo: why dont react after pillage?
+              sendChatMessage('/gain-tg ' + (nr.tg - G.races[pid].tg))
             }
           }
           else{
@@ -903,7 +883,6 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   //eslint-disable-next-line
   const initialImgs = useMemo(() => [...imgSrc.boardImages, ...getTilesAndRacesImgs(G.tiles)], []);
   const { imagesPreloaded, lastLoaded, loadingError } = useImagePreloader(initialImgs);
-
 
   return (<>
             {!imagesPreloaded && <div style={{width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, backgroundColor: 'black', zIndex: 101, display: 'flex', justifyContent: 'center', alignItems: 'center', flexFlow: 'column'}}>
@@ -1061,7 +1040,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                           <button disabled={disabled} style={{width: '100%', marginBottom: '1rem'}} onClick={()=> { if(mustAction){moves.dropActionCard(pr.id)} else if(!disabled){ moves.playActionCard(pr);}}} className={'styledButton ' + (mustAction ? 'red':'yellow')} >
                             {mustAction && race.actionCards.length > 7 && 
                               <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', left: '0', top: '0', position: 'absolute'}}>{t('board.drop')}</b>}
-                            <b>{t('cards.actions.' + pr.id + '.label').toUpperCase()}</b>
+                            <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.actions.' + pr.id + '.label').toUpperCase()}</b>
                           </button>
 
                           {t('cards.actions.' + pr.id + '.description')}
@@ -1072,7 +1051,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                     {hud.rightBottomVisible === 'relics' && race.relics.length > 0 && <CardsPager>
                       {race.relics.map((pr, i) => <CardsPagerItem key={i} tag='relic'>
                         <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
-                          <b>{t('cards.relics.' + pr.id + '.label').toUpperCase()}</b>
+                          <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.relics.' + pr.id + '.label').toUpperCase()}</b>
                         </button>
 
                           {t('cards.relics.' + pr.id + '.effect')}
@@ -1082,7 +1061,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                     {hud.rightBottomVisible === 'agenda' && G.laws.length > 0 && <CardsPager>
                       {G.laws.map((pr, i) => <CardsPagerItem key={i} tag='agenda'>
                         <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
-                          <b>{t('cards.agenda.' + pr.id + '.label').toUpperCase()}</b>
+                          <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.agenda.' + pr.id + '.label').toUpperCase()}</b>
                         </button>
 
                         {t('cards.agenda.' + pr.id + '.for')}
@@ -1175,18 +1154,5 @@ export const BoardWithEffects = EffectsBoardWrapper(TIOBoard, {
   //speed: 10000,
 });
 
-/**
- * {race.rid === 2 && hud.abilityData.pillage && hud.abilityData.pillage.length > 0 && 
-                hud.abilityData.pillage.map((a,i) => {
-                  return <AdvancedChoiceDialog key={i} args={{
-                                title: t('races.2.PILLAGE.label') + ' ' + t('races.' + a.sender + '.name'), 
-                                text: t('races.2.PILLAGE.effect'),  
-                                options: [{label: t('board.trade_good')}, 
-                                          {label: t('board.commodity')}]
-                                }}
-                          onSelect={(opts) => advancedChoiceDialogSelect({ability: 'pillage', ...a, opts})} />
-                }
-              )}
- */
 
 

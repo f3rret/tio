@@ -21,6 +21,10 @@ export const credsReducer = (state, action) => {
 export const hudReducer = (hudDraft, action) => {
 
     switch(action.type){
+        case 'with_agent': {
+            hudDraft.withAgent = !hudDraft.withAgent;
+            break;
+        }
         case 'ability': {
             if(action.tag === 'pillage'){
                 if(action.add && action.playerID){
@@ -28,8 +32,12 @@ export const hudReducer = (hudDraft, action) => {
                     if(!hudDraft.abilityData.pillage.includes(action.playerID)){ hudDraft.abilityData.pillage.push(action.playerID) }
                 }
                 else if(action.del && action.playerID){
-                    if(hudDraft.abilityData.pillage){ hudDraft.abilityData.pillage = hudDraft.abilityData.pillage.filter(a => String(a) !== String(action.playerID)) }
-                    hudDraft.rightBottomSubVisible = null;
+                    if(hudDraft.abilityData.pillage){ 
+                        hudDraft.abilityData.pillage = hudDraft.abilityData.pillage.filter(a => String(a) !== String(action.playerID)) 
+                    }
+                    if(!hudDraft.abilityData.pillage || hudDraft.abilityData.pillage.length === 0){
+                        hudDraft.rightBottomSubVisible = null;
+                    }
                 }
             }
 
@@ -94,6 +102,8 @@ export const hudReducer = (hudDraft, action) => {
             }
             else if(action.payload && action.payload.wipe){
                 hudDraft.globalPayment = { influence: [], resources: [], tg: 0, token: { s:0, t:0 }, fragment: {h:0, i:0, c:0, u:0}, propulsion: [], biotic: [], cybernetic: [], warfare: [] }
+                //phase changed
+                hudDraft.abilityData = {}
             }
             
             break;
@@ -233,7 +243,7 @@ export const hudReducer = (hudDraft, action) => {
             });
 
             if(['BIO_STIMS', 'SCANLINK_DRONE_NETWORK', 'INFANTRY2'].includes(action.cardId)){
-                hudDraft.rightBottomSubVisible(!hudDraft.exhaustedCards.includes(action.cardId));
+                hudDraft.rightBottomSubVisible(hudDraft.exhaustedCards.includes(action.cardId) ? null:action.cardId);
             }
 
 
