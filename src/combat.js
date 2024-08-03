@@ -466,6 +466,9 @@ const HitAssign = (args) => {
                     if(['FLAGSHIP', 'MECH'].includes(ca)){
                         label = t('races.' + race.rid + '.' + ca + '.label');
                     }
+                    else if(ca === 'HERO'){
+                        label = t('board.hero').toUpperCase();
+                    }
                     else{
                         label = t('cards.actions.' + ca + '.label');
                     }
@@ -680,7 +683,7 @@ const CombatantForces = (args) => {
                             </span>
                         </Col>
                     })}
-                    {race.rid === 1 && race.commanderIsUnlocked && race.exhaustedCards.indexOf('COMMANDER') === -1 && G.races[ctx.currentPlayer].rid !== 1 && isInvasion &&prevStages && prevStages[race.pid] && prevStages[race.pid].indexOf('invasion') === prevStages[race.pid].length - 1 && 
+                    {race.rid === 1 && race.commanderIsUnlocked && race.exhaustedCards.indexOf('COMMANDER') === -1 && G.races[ctx.currentPlayer].rid !== 1 && isInvasion && prevStages && prevStages[race.pid] && prevStages[race.pid].indexOf('invasion') === prevStages[race.pid].length - 1 && 
                     <Col className='col-md-auto' style={{marginLeft: '1rem', minHeight: '7rem', padding: '.5rem', background: 'rgba(255,255,255,.15)', fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'}}>
                         <span style={{position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
                             <CardImg style={{width: '3rem', marginLeft: '2rem'}} src={'units/INFANTRY.png'} />
@@ -696,6 +699,9 @@ const CombatantForces = (args) => {
                 let label;
                 if(['FLAGSHIP', 'MECH'].includes(ca)){
                     label = t('races.' + race.rid + '.' + ca + '.label');
+                }
+                else if(ca === 'HERO'){
+                    label = t('board.hero').toUpperCase();
                 }
                 else{
                     label = t('cards.actions.' + ca + '.label');
@@ -1008,6 +1014,20 @@ export const SpaceCombat = ({selectedTile}) => {
         return undefined;
     }, [activeTile.tdata, ctx.currentPlayer]);
 
+    const looser = useMemo(() => {
+        const attacker = activeTile.tdata.attacker;
+        const defenser = activeTile.tdata.fleet;
+
+        if(!(attacker && Object.keys(attacker).length)){
+            return ctx.currentPlayer;
+        } 
+        else if(!(defenser && Object.keys(defenser).length)){
+            return activeTile.tdata.occupied;
+        }
+
+        return undefined;
+    }, [activeTile.tdata, ctx.currentPlayer]);
+
     const haveACDialog = useMemo(() => {
         return G.currentCombatActionCard !== undefined;
     }, [G.currentCombatActionCard]);
@@ -1038,7 +1058,12 @@ export const SpaceCombat = ({selectedTile}) => {
                 {needAwait && <>
                     {winner === undefined && <h5 style={{margin: '5rem', textAlign: 'center'}}>{t('board.awaiting_opponent')}...</h5>}
                     {winner !== undefined && <>
-                        {String(winner) === String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'yellowgreen'}}>{t('board.enemys_fleet_defeated')}</h5>}
+                        {String(winner) === String(playerID) && <div style={{margin: '5rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                            <h5 style={{textAlign: 'center', color: 'yellowgreen'}}>{t('board.enemys_fleet_defeated')}</h5>
+                            {G.races[playerID].rid === 2 && G.races[playerID].commanderIsUnlocked && ctx.activePlayers[looser] !== 'reparations' &&
+                            <button className='styledButton black' style={{width: 'max-content', marginTop: '2rem', padding: '1rem 2rem'}} onClick={() => moves.claimPromissoryCard(looser)}>{t('board.claim_promissory_card')}</button>}
+                            
+                        </div>}
                         {String(winner) !== String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'red'}}>{t('board.your_fleet_defeated')}</h5>}
                     </>}
                 </>}

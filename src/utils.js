@@ -643,6 +643,7 @@ export const checkCommanderUnlock = (G, playerID) => {
   if(race.commanderIsUnlocked) return;
 
   if(race){
+    
     if(race.rid === 1){
       const planets = getPlayerPlanets(G.tiles, playerID);
       let res = 0;
@@ -653,6 +654,24 @@ export const checkCommanderUnlock = (G, playerID) => {
         race.commanderIsUnlocked = true;
       }
     }
+    else if(race.rid === 2){
+      let crcount = 0;
+
+      G.tiles.forEach( t => {
+        if(String(t.tdata.occupied) === String(playerID)){
+          if(t.tdata.fleet){ //todo: or invasion fleet
+            if(t.tdata.fleet['cruiser'] && t.tdata.fleet['cruiser'].length){
+              crcount += t.tdata.fleet['cruiser'].length;
+              if(crcount > 3){
+                race.commanderIsUnlocked = true;
+                return;
+              }
+            }
+          }
+        }
+      })
+    }
+
   }
 
 }

@@ -101,6 +101,8 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   //eslint-disable-next-line
   }, [G_tiles_stringify, playerID]);
 
+  const UNITS_stringify = useMemo(() => JSON.stringify(UNITS), [UNITS])
+
   const R_UNITS = useMemo(() => {
     if(race){
       const all_units = race.technologies.filter(t => t.type === 'unit' && (!t.upgrade || (t.id === 'WARSUN' && race.knownTechs.indexOf('WARSUN')>-1)));
@@ -238,6 +240,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     }
   }
 
+
   const mustAction = useMemo(() => {
     if(race && race.actionCards && isMyTurn) return race.actionCards.length > 7
   }, [race, isMyTurn]);
@@ -306,6 +309,18 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
  //eslint-disable-next-line
   const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G_tiles_stringify]);
+
+  const reparations = useMemo(() => {
+    if(ctx.activePlayers && ctx.activePlayers[playerID] === 'reparations' && race.reparation && race.reparation.type){
+      return race.reparation.type
+    }
+  }, [ctx, race, playerID]);
+
+  const promissoryClick = useCallback((pr) => {
+    if(reparations === 'promissory'){
+      moves.transferPromissoryCard(pr.id)
+    }
+  }, [moves, reparations]);
 
   const flushTempCt = useCallback(() =>{
     dispatch({type: 'temp_ct', payload: {s: 0, t: 0, f: 0, new: 0}})
@@ -631,7 +646,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
   const stateContext = useMemo(() => ({G, ctx, playerID, /*matchID, credentials,*/ moves, selectedTech: hud.selectedTech, exhaustedCards: hud.exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}), 
   //eslint-disable-next-line
-  [G_stringify, ctx_stringify, playerID, moves, hud.selectedTech, hud.exhaustedCards, exhaustTechCard, prevStages, PLANETS_stringify, UNITS]);
+  [G_stringify, ctx_stringify, playerID, moves, hud.selectedTech, hud.exhaustedCards, exhaustTechCard, prevStages, PLANETS_stringify, UNITS_stringify]);
 
 
   useEffect(() => {
@@ -645,7 +660,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     dispatch({type: 'planets_change', payload: PLANETS})
   //eslint-disable-next-line
   }, [PLANETS_stringify]);
-  
+
   useEffect(() => {
     if(hud.groundUnitSelected.unit !== undefined){
       const t = G.tiles[hud.groundUnitSelected.tile];
@@ -995,9 +1010,10 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                       </CardsPager>
                       
                     </>}
-                    {hud.rightBottomVisible === 'promissory' && race.promissory.length > 0 && <CardsPager>
+                    {((hud.rightBottomVisible === 'promissory' && race.promissory.length > 0) || reparations === 'promissory') && <CardsPager>
                       {race.promissory.map((pr, i) => <CardsPagerItem key={i} tag='promissory'>
-                        <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
+                        <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow' onClick={() => promissoryClick(pr)}>
+                          {reparations === 'promissory' && <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', left: '0', top: '0', position: 'absolute'}}>{t('board.drop')}</b>}
                           {pr.sold ? <img alt='to other player' style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}} src={'race/icons/' + pr.sold + '.png'} />:''}
                           <b style={{textDecoration: pr.sold ? 'line-through':''}}>{t('cards.promissory.' + pr.id + '.label').toUpperCase()}</b>
                           {pr.racial && !pr.owner ? <img alt='racial' style={{width: '2rem', position: 'absolute', bottom: '1rem'}} src={'race/icons/' + race.rid + '.png'} />:''}

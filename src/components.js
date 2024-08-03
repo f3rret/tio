@@ -8,7 +8,7 @@ export const TOKENS_STYLE = { display: 'flex', width: '30%', alignItems: 'center
 
 export const Persons = () => {
     
-    const { G, playerID, moves } = useContext(StateContext);
+    const { G, playerID, moves, ctx, prevStages } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
     const [agentVisible, setAgentVisible] = useState('agent');
 
@@ -24,12 +24,24 @@ export const Persons = () => {
 
     const commanderAbilityIsActive = useMemo(() => {
         if(race.exhaustedCards.indexOf('COMMANDER') === -1){
-          if(race.rid === 1){
+          if(race.rid === 1 || race.rid === 2){
             return true;
           }
         }
         return false;
     }, [race.rid, race.exhaustedCards]);
+
+    const useHeroAbility = useCallback(() => {
+      if(race.rid === 1){
+        moves.useHeroAbility()
+      }
+      else if(race.rid === 2){
+        if(ctx.activePlayers && ctx.activePlayers[playerID] && (!prevStages || !prevStages[playerID] || prevStages[playerID].length > 1)){
+          moves.useHeroAbility();
+        }
+      }
+    //eslint-disable-next-line
+    }, [race])
 
     return <><Card style={{...CARD_STYLE, paddingRight: '2rem', minHeight: '14rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex', fontSize: '.8rem'}}>
         {agentVisible === 'agent' && <Card style={{...CARD_STYLE, padding: '1rem 0', margin: 0, border: 'none', display: 'flex', flexFlow: 'row'}}>
@@ -50,7 +62,7 @@ export const Persons = () => {
             <div>
                 <CardText><b>{race.heroAbilityType ? t('board.' + race.heroAbilityType).toUpperCase() : ''}</b>{' ' + t('races.' + race.rid + '.heroAbility')}</CardText>
                 {!race.heroIsUnlocked && <CardText><b>{t('board.unlock') + ': '}</b> {t('board.complete_3_objectives')}</CardText>}
-                {race.heroIsUnlocked && !race.heroIsExhausted && <button onClick={()=>moves.useHeroAbility()} className='styledButton green'>{t('board.activate')}</button>}
+                {race.heroIsUnlocked && !race.heroIsExhausted && <button onClick={useHeroAbility} className='styledButton green'>{t('board.activate')}</button>}
             </div>
         </Card>}
     </Card>

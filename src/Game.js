@@ -2,7 +2,7 @@
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
 import cardData from './cardData.json';
 import { getHexGrid, neighbors } from './Grid';
-import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing } from './gameStages';
+import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility } from './gameStages';
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
@@ -1045,23 +1045,7 @@ export const TIO = {
               }
             }
           },
-          useHeroAbility: ({G, playerID}) => {
-            const race = G.races[playerID];
-            if(race && race.heroIsUnlocked && !race.heroIsExhausted){
-              if(race.rid === 1){
-                G.tiles.forEach(t => {
-                  if(t && t.tdata && t.tdata.tokens){
-                    const idx = t.tdata.tokens.indexOf(race.rid);
-                    if(idx > -1){
-                      t.tdata.tokens.splice(idx, 1);
-                    }
-                  }
-                })
-              }
-
-              race.heroIsExhausted = true;
-            }
-          }
+          useHeroAbility
         },
         onEnd: ({ G }) => {
           G.tiles.forEach( t => t.tdata.tokens = []);

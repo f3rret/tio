@@ -3,7 +3,8 @@ import { INVALID_MOVE } from 'boardgame.io/core';
 import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveTechnology, getPlanetByName, 
   completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits, 
   spliceCombatAC, checkIonStorm, checkSecretObjective, checkCommanderUnlock, useCommanderAbility, 
-  adjustTechnologies} from './utils';
+  adjustTechnologies,
+  enemyHaveCombatAC} from './utils';
 
   
 export const secretObjectiveConfirm = ({G, playerID, events}, oid, y) => {
@@ -122,6 +123,31 @@ export const producing = ({G, playerID, ctx, events}, pname, deploy, payment, ex
       }
     }
     delete G.races[playerID]['makeCustomProducing'];
+  }
+
+  if(G.races[playerID].rid === 2 && !G.races[playerID].commanderIsUnlocked){ //mentak
+    checkCommanderUnlock(G, playerID);
+  }
+}
+
+export const useHeroAbility = ({G, playerID}) => {
+  const race = G.races[playerID];
+  if(race && race.heroIsUnlocked && !race.heroIsExhausted){
+    if(race.rid === 1){
+      G.tiles.forEach(t => {
+        if(t && t.tdata && t.tdata.tokens){
+          const idx = t.tdata.tokens.indexOf(race.rid);
+          if(idx > -1){
+            t.tdata.tokens.splice(idx, 1);
+          }
+        }
+      })
+    }
+    else if(race.rid === 2){
+      race.combatActionCards.push('HERO');
+    }
+
+    race.heroIsExhausted = true;
   }
 }
 
@@ -1329,6 +1355,7 @@ export const ACTS_STAGES = {
       actionCardDone: ACTION_CARD_STAGE.moves.done,
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
       secretObjectiveConfirm,
+      useHeroAbility,
 
       rollDice: ({G, playerID, random}, unit, count) => {
         const dice = random.D10(count || 1);
@@ -1337,97 +1364,120 @@ export const ACTS_STAGES = {
         });
       },
       nextStep: ({G, events, ctx, playerID}) => {
-        G.spaceCombat = {}; //flush assault_cannon and ambush flags
-        spliceCombatAC(G.races[playerID], 'Scramble Frequency');
-        let enemyId;
-        let hits = {};
-        Object.keys(ctx.activePlayers).forEach(pid => {
-          if(String(playerID) !== String(pid)){ enemyId = pid; }
-          let h = 0;
-          if(G.dice[pid]){
-              Object.keys(G.dice[pid]).forEach(unit => {
-                  const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
-                  if(technology && technology.barrage){
-                      h += G.dice[pid][unit].dice.filter(d => d >= technology.barrage.value).length;
-                  }
-              });
-          }
-          hits[pid] = h;
-        });
-        
-        const activeTile = G.tiles.find(t => t.active === true);
-        const attackerHits = hits[ctx.currentPlayer];
-        const defenderHits = hits[activeTile.tdata.occupied];
 
-        const makeHit = (fleet, count) => {
-          let remain = count;
-
-          Object.keys(fleet).forEach(tag => {
-            if(remain > 0){
-              fleet[tag].forEach((car, c) => {
-                if(remain > 0 && tag === 'fighter'){
-                  delete fleet[tag][c];
-                  remain--;
-                }
-                else if(car.payload && remain > 0){
-                  car.payload.forEach((p, i) => {
-                    if(p && p.id === 'fighter' && remain > 0){
-                      delete car.payload[i];
-                      remain--;
-                    }
-                  });
-                  car.payload = car.payload.filter(p => p);
-                }
-              });
-              fleet[tag] = fleet[tag].filter(car => car);
-            }
-          });
-
-        }
-
-        if(playerID !== ctx.currentPlayer){
-          makeHit(activeTile.tdata.attacker, defenderHits);
-          if(defenderHits > 0 && enemyId !== undefined){
-            checkSecretObjective(G, playerID, 'Fight with Precision', activeTile.tdata.attacker);
-          }
-        }
-        else{
-          makeHit(activeTile.tdata.fleet, attackerHits);
-          if(attackerHits > 0 && enemyId !== undefined){
-            checkSecretObjective(G, playerID, 'Fight with Precision', activeTile.tdata.fleet);
-          }
-        }
-
-        /*if(Object.keys(ctx.activePlayers).filter(k => ctx.activePlayers[k] === 'antiFighterBarrage').length === 1){
-          G.dice[activeTile.tdata.occupied] = {};
-          G.dice[ctx.currentPlayer] = {};
-        }*/
-
-        if(Object.keys(activeTile.tdata.attacker).length && Object.keys(activeTile.tdata.fleet).length){
-          /*const ap = {...ctx.activePlayers};
-          Object.keys(ap).forEach(k => ap[k] = 'spaceCombat');
-          events.setActivePlayers({value: ap});*/
-          
-          let needAwait = true;
+        try{
+          G.spaceCombat = {}; //flush assault_cannon and ambush flags
+          spliceCombatAC(G.races[playerID], 'Scramble Frequency');
+          let enemyId;
+          let hits = {};
           Object.keys(ctx.activePlayers).forEach(pid => {
-            if(ctx.activePlayers[pid] === 'spaceCombat_await') needAwait = false;
+            if(String(playerID) !== String(pid)){ enemyId = pid; }
+            let h = 0;
+            if(G.dice[pid]){
+                Object.keys(G.dice[pid]).forEach(unit => {
+                    const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                    if(technology && technology.barrage){
+                        h += G.dice[pid][unit].dice.filter(d => d >= technology.barrage.value).length;
+                    }
+                });
+            }
+            hits[pid] = h;
           });
           
-          if(needAwait){
-            events.setStage('spaceCombat_await');
+          const activeTile = G.tiles.find(t => t.active === true);
+          const attackerHits = hits[ctx.currentPlayer];
+          const defenderHits = hits[activeTile.tdata.occupied];
+
+          const enemyUseHero = enemyHaveCombatAC(G.races, ctx.activePlayers, playerID, 'HERO');
+
+          const makeHit = (fleet, count, enemyFleet) => {
+            let remain = count;
+
+            Object.keys(fleet).forEach(tag => {
+              if(remain > 0){
+                fleet[tag].forEach((car, c) => {
+                  if(remain > 0 && tag === 'fighter'){
+                    delete fleet[tag][c];
+                    G.races[playerID].destroyedUnits.push(tag);
+
+                    if(G.races[enemyId] && G.races[enemyId].rid === 2 && enemyUseHero){//mentak
+                      if(!enemyFleet[tag]) enemyFleet[tag] = [];
+                      enemyFleet[tag].push({...fleet[tag][c], hit: 0});
+                    }
+
+                    remain--;
+                  }
+                  else if(car.payload && remain > 0){
+                    car.payload.forEach((p, i) => {
+                      if(p && p.id === 'fighter' && remain > 0){
+                        delete car.payload[i];
+                        G.races[playerID].destroyedUnits.push(p.id);
+
+                        if(G.races[enemyId] && G.races[enemyId].rid === 2 && enemyUseHero){//mentak
+                          if(!enemyFleet[p.id]) enemyFleet[p.id] = [];
+                          enemyFleet[p.id].push({...p, hit: 0});
+                        }
+
+                        remain--;
+                      }
+                    });
+                    car.payload = car.payload.filter(p => p);
+                  }
+                });
+                fleet[tag] = fleet[tag].filter(car => car);
+              }
+            });
+
+          }
+
+          if(playerID !== ctx.currentPlayer){
+            makeHit(activeTile.tdata.attacker, defenderHits);
+            if(defenderHits > 0 && enemyId !== undefined){
+              checkSecretObjective(G, playerID, 'Fight with Precision', activeTile.tdata.attacker);
+            }
           }
           else{
-            const val = {};
-            val[activeTile.tdata.occupied] = {stage: 'spaceCombat'};
-            val[ctx.currentPlayer] = {stage: 'spaceCombat'};
-            
+            makeHit(activeTile.tdata.fleet, attackerHits);
+            if(attackerHits > 0 && enemyId !== undefined){
+              checkSecretObjective(G, playerID, 'Fight with Precision', activeTile.tdata.fleet);
+            }
+          }
+
+          /*if(Object.keys(ctx.activePlayers).filter(k => ctx.activePlayers[k] === 'antiFighterBarrage').length === 1){
             G.dice[activeTile.tdata.occupied] = {};
             G.dice[ctx.currentPlayer] = {};
-            events.setActivePlayers({value: val});
+          }*/
+
+          if(Object.keys(activeTile.tdata.attacker).length && Object.keys(activeTile.tdata.fleet).length){
+            /*const ap = {...ctx.activePlayers};
+            Object.keys(ap).forEach(k => ap[k] = 'spaceCombat');
+            events.setActivePlayers({value: ap});*/
+            
+            let needAwait = true;
+            Object.keys(ctx.activePlayers).forEach(pid => {
+              if(ctx.activePlayers[pid] === 'spaceCombat_await') needAwait = false;
+            });
+            
+            if(needAwait){
+              events.setStage('spaceCombat_await');
+            }
+            else{
+              const val = {};
+              val[activeTile.tdata.occupied] = {stage: 'spaceCombat'};
+              val[ctx.currentPlayer] = {stage: 'spaceCombat'};
+              
+              G.dice[activeTile.tdata.occupied] = {};
+              G.dice[ctx.currentPlayer] = {};
+              events.setActivePlayers({value: val});
+            }
           }
+          else{
+            events.endStage();
+          }
+
         }
-        else{
-          events.endStage();
+        catch(e){
+          console.log(e)
         }
 
       },
@@ -1496,174 +1546,198 @@ export const ACTS_STAGES = {
   },
   spaceCombat_step2: {
     moves: {
-     playActionCard: playCombatAC,
-     actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
-     actionCardNext: ACTION_CARD_STAGE.moves.next,
-     actionCardPass: ACTION_CARD_STAGE.moves.pass,
-     actionCardDone: ACTION_CARD_STAGE.moves.done,
-     actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
-     secretObjectiveConfirm,
+      playActionCard: playCombatAC,
+      actionCardCancel: ACTION_CARD_STAGE.moves.cancel,
+      actionCardNext: ACTION_CARD_STAGE.moves.next,
+      actionCardPass: ACTION_CARD_STAGE.moves.pass,
+      actionCardDone: ACTION_CARD_STAGE.moves.done,
+      actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
+      secretObjectiveConfirm,
+      useHeroAbility,
 
-     chooseAndDestroy: chooseAndDestroyMove,
-     nextStep: ({G, playerID, ctx, events, random, ...plugins}, hits, ability) => {
-      let fleet;
-      const activeTile = G.tiles.find(t => t.active === true);
-       
-      if(String(playerID) === String(ctx.currentPlayer)){
-        fleet = activeTile.tdata.attacker;
-      }
-      else{
-        fleet = activeTile.tdata.fleet;
-      }
-      
-      let technologies = getUnitsTechnologies([...Object.keys(fleet), 'fighter', 'mech'], G.races[playerID]);
-      technologies = adjustTechnologies(G, ctx, playerID, technologies);
+      chooseAndDestroy: chooseAndDestroyMove,
+      nextStep: ({G, playerID, ctx, events, random, ...plugins}, hits, ability) => {
+        try{
+          let fleet;
+          let enemyFleet;
 
-      hits && Object.keys(hits).forEach(unit => { //hits assignment
-        if(hits[unit].length){
-          hits[unit].forEach((car, i) => {
-            if(car.hit){
-              if(!unit.startsWith('-')){
-                if(!fleet[unit][car.idx].hit) fleet[unit][car.idx].hit = 0;
-                fleet[unit][car.idx].hit += car.hit;
-              }
-              else{ //repair
-                fleet[unit.replace('-', '')][car.idx].hit = 0;
-              }
-            }
-
-            if(car.payload && car.payload.length){
-              car.payload.forEach((p, j) => {
-                if(p.hit){
-                  if(!unit.startsWith('-')){
-                    const pl = fleet[unit][car.idx].payload[p.pidx];
-                    if(!pl.hit) pl.hit = 0;
-                    pl.hit += p.hit;
-                  }
-                  else{ //repair
-                    fleet[unit][car.idx].payload[p.pidx].hit = 0;
-                  }
-                }
-              })
-            }
-          });
-        }  
-      });
-
-      Object.keys(fleet).forEach(f => { //remove destroyed units
-        fleet[f].forEach((car, i) => {
-          if(car.hit > 1 || (car.hit === 1 && !technologies[f].sustain)){
-            G.races[playerID].destroyedUnits.push(f); //remember destroyed units
-            delete fleet[f][i];
-
-            if(['flagship', 'warsun'].includes(f) && ctx.activePlayers && Object.keys(ctx.activePlayers).length){ //todo: make this check for any kind of destruction
-              const enemyId = Object.keys(ctx.activePlayers).find(a => String(a)!== String(playerID));
-              if(!isNaN(enemyId)) checkSecretObjective(G, parseInt(enemyId), 'Destroy Their Greatest Ship');
-            }
-          }
-          else if(car.payload && car.payload.length){
-            car.payload.forEach((p, idx) => {
-              if(p && (p.hit > 1 || (p.hit === 1 && !technologies[p.id].sustain))){
-                G.races[playerID].destroyedUnits.push(p.id);
-                delete fleet[f][i].payload[idx];
-                if(p.id === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
-                  G.races[playerID].tg += 1;
-                  plugins.effects.tg();
-                }
-              }
-            });
-            car.payload = car.payload.filter(p => p);
-          }
-        });
-        fleet[f] = fleet[f].filter(car => car);
-        if(fleet[f].length === 0) delete fleet[f];
-      });
-
-      if(G.races[playerID].destroyedUnits.includes('flagship') &&  G.races[playerID].combatActionCards.includes('FLAGSHIP')){
-        G.races[playerID].combatActionCards =  G.races[playerID].combatActionCards.filter(ac => ac !== 'FLAGSHIP')
-      }
-      
-      if(!(activeTile.tdata.attacker && Object.keys(activeTile.tdata.attacker).length) ||
-        !(activeTile.tdata.fleet && Object.keys(activeTile.tdata.fleet).length)){
-        events.setStage('spaceCombat_await'); //end space battle
-      }
-      else{
-        if(G.races[playerID].retreat === true){ //if I retreat
-          events.setStage('combatRetreat');
-        }
-        else{
-          if(G.races[playerID].retreat === 'cancel'){
-            G.races[playerID].retreat = undefined;
-          }
-          let needAwait = true; //wait before new round or while enemy retreat
-          Object.keys(ctx.activePlayers).forEach(pid => {
-            if(ctx.activePlayers[pid] === 'spaceCombat_await') needAwait = false;
-          });
+          const activeTile = G.tiles.find(t => t.active === true);
           
-          if(needAwait){
-            events.setStage('spaceCombat_await');
-          }
-          else if(ability === 'assaultCannon' || ability === 'ambush'){
-            const val = {};
-            val[activeTile.tdata.occupied] = {stage: 'antiFighterBarrage'};
-            val[ctx.currentPlayer] = {stage: 'antiFighterBarrage'};
-            
-            G.dice[activeTile.tdata.occupied] = {};
-            G.dice[ctx.currentPlayer] = {};
-            delete G.spaceCombat['assaultCannon'];
-
-            if(ability === 'assaultCannon' && (G.races[playerID].rid === 2 || G.races[activeTile.tdata.occupied].rid === 2)){ //mentak ambush
-              val[activeTile.tdata.occupied] = {stage: 'spaceCombat_step2'};
-              val[playerID] = {stage: 'spaceCombat_step2'};
-
-              const doAmbush = (pid, fleet) => {
-                let count = 0;
-
-                if(fleet['cruiser'] && fleet['cruiser'].length > 0){
-                  count = fleet['cruiser'].length;
-                  G.dice[pid] = {cruiser: {withTech: 'ambush', dice: random.D10(Math.min(count, 2))}}
-                }
-                if(count < 2 && fleet['destroyer'] && fleet['destroyer'].length > 0){
-                  G.dice[pid] = {...G.dice[pid], destroyer: {withTech: 'ambush', dice: random.D10(Math.min(2 - count, fleet['destroyer'].length))}}
-                }
-              }
-
-              if(G.races[playerID].rid === 2){
-                doAmbush(playerID, activeTile.tdata.attacker);
-                G.spaceCombat.ambush = true;
-              }
-              else if(G.races[activeTile.tdata.occupied].rid === 2){
-                doAmbush(activeTile.tdata.occupied, activeTile.tdata.fleet);
-                G.spaceCombat.ambush = true;
-              }
-            }
-            else if(ability === 'ambush'){
-              delete G.spaceCombat['ambush']
-            }
-
-            events.setActivePlayers({value: val});
+          if(String(playerID) === String(ctx.currentPlayer)){
+            fleet = activeTile.tdata.attacker;
+            enemyFleet = activeTile.tdata.fleet;
           }
           else{
-            const val = {};
-            val[activeTile.tdata.occupied] = {stage: 'spaceCombat'};
-            val[ctx.currentPlayer] = {stage: 'spaceCombat'};
-            
-            G.dice[activeTile.tdata.occupied] = {};
-            G.dice[ctx.currentPlayer] = {};
-            events.setActivePlayers({value: val});
+            fleet = activeTile.tdata.fleet;
+            enemyFleet = activeTile.tdata.attacker;
           }
+          
+          let technologies = getUnitsTechnologies([...Object.keys(fleet), 'fighter', 'mech'], G.races[playerID]);
+          technologies = adjustTechnologies(G, ctx, playerID, technologies);
+
+          hits && Object.keys(hits).forEach(unit => { //hits assignment
+            if(hits[unit].length){
+              hits[unit].forEach((car, i) => {
+                if(car.hit){
+                  if(!unit.startsWith('-')){
+                    if(!fleet[unit][car.idx].hit) fleet[unit][car.idx].hit = 0;
+                    fleet[unit][car.idx].hit += car.hit;
+                  }
+                  else{ //repair
+                    fleet[unit.replace('-', '')][car.idx].hit = 0;
+                  }
+                }
+
+                if(car.payload && car.payload.length){
+                  car.payload.forEach((p, j) => {
+                    if(p.hit){
+                      if(!unit.startsWith('-')){
+                        const pl = fleet[unit][car.idx].payload[p.pidx];
+                        if(!pl.hit) pl.hit = 0;
+                        pl.hit += p.hit;
+                      }
+                      else{ //repair
+                        fleet[unit][car.idx].payload[p.pidx].hit = 0;
+                      }
+                    }
+                  })
+                }
+              });
+            }  
+          });
+
+          const enemyId = Object.keys(ctx.activePlayers).find(a => String(a)!== String(playerID));
+          const enemyUseHero = enemyHaveCombatAC(G.races, ctx.activePlayers, playerID, 'HERO');
+
+          Object.keys(fleet).forEach(f => { //remove destroyed units
+            fleet[f].forEach((car, i) => {
+              if(car.hit > 1 || (car.hit === 1 && !technologies[f].sustain)){
+                G.races[playerID].destroyedUnits.push(f); //remember destroyed units
+                delete fleet[f][i];
+
+                if(G.races[enemyId] && G.races[enemyId].rid === 2 && enemyUseHero){//mentak
+                  if(!enemyFleet[f]) enemyFleet[f] = [];
+                  enemyFleet[f].push({...car, hit: 0});
+                }
+
+                if(['flagship', 'warsun'].includes(f) && ctx.activePlayers && Object.keys(ctx.activePlayers).length){ //todo: make this check for any kind of destruction
+                  if(!isNaN(enemyId)) checkSecretObjective(G, parseInt(enemyId), 'Destroy Their Greatest Ship');
+                }
+              }
+              else if(car.payload && car.payload.length){
+                car.payload.forEach((p, idx) => {
+                  if(p && (p.hit > 1 || (p.hit === 1 && !technologies[p.id].sustain))){
+                    G.races[playerID].destroyedUnits.push(p.id);
+                    delete fleet[f][i].payload[idx];
+
+                    if(p.id === 'fighter' && G.races[enemyId] && G.races[enemyId].rid === 2 && enemyUseHero){//mentak
+                      if(!enemyFleet[p.id]) enemyFleet[p.id] = [];
+                      enemyFleet[p.id].push({...p, hit: 0});
+                    }
+
+                    if(p.id === 'mech' && haveTechnology(G.races[playerID], 'SELF_ASSEMBLY_ROUTINES')){
+                      G.races[playerID].tg += 1;
+                      plugins.effects.tg();
+                    }
+                  }
+                });
+                car.payload = car.payload.filter(p => p);
+              }
+            });
+            fleet[f] = fleet[f].filter(car => car);
+            if(fleet[f].length === 0) delete fleet[f];
+          });
+
+          if(G.races[playerID].destroyedUnits.includes('flagship') &&  G.races[playerID].combatActionCards.includes('FLAGSHIP')){
+            G.races[playerID].combatActionCards =  G.races[playerID].combatActionCards.filter(ac => ac !== 'FLAGSHIP')
+          }
+          
+          if(!(activeTile.tdata.attacker && Object.keys(activeTile.tdata.attacker).length) ||
+            !(activeTile.tdata.fleet && Object.keys(activeTile.tdata.fleet).length)){
+            events.setStage('spaceCombat_await'); //end space battle
+          }
+          else{
+            if(G.races[playerID].retreat === true){ //if I retreat
+              events.setStage('combatRetreat');
+            }
+            else{
+              if(G.races[playerID].retreat === 'cancel'){
+                G.races[playerID].retreat = undefined;
+              }
+              let needAwait = true; //wait before new round or while enemy retreat
+              Object.keys(ctx.activePlayers).forEach(pid => {
+                if(ctx.activePlayers[pid] === 'spaceCombat_await') needAwait = false;
+              });
+              
+              if(needAwait){
+                events.setStage('spaceCombat_await');
+              }
+              else if(ability === 'assaultCannon' || ability === 'ambush'){
+                const val = {};
+                val[activeTile.tdata.occupied] = {stage: 'antiFighterBarrage'};
+                val[ctx.currentPlayer] = {stage: 'antiFighterBarrage'};
+                
+                G.dice[activeTile.tdata.occupied] = {};
+                G.dice[ctx.currentPlayer] = {};
+                delete G.spaceCombat['assaultCannon'];
+
+                if(ability === 'assaultCannon' && (G.races[playerID].rid === 2 || G.races[activeTile.tdata.occupied].rid === 2)){ //mentak ambush
+                  val[activeTile.tdata.occupied] = {stage: 'spaceCombat_step2'};
+                  val[playerID] = {stage: 'spaceCombat_step2'};
+
+                  const doAmbush = (pid, fleet) => {
+                    let count = 0;
+
+                    if(fleet['cruiser'] && fleet['cruiser'].length > 0){
+                      count = fleet['cruiser'].length;
+                      G.dice[pid] = {cruiser: {withTech: 'ambush', dice: random.D10(Math.min(count, 2))}}
+                    }
+                    if(count < 2 && fleet['destroyer'] && fleet['destroyer'].length > 0){
+                      G.dice[pid] = {...G.dice[pid], destroyer: {withTech: 'ambush', dice: random.D10(Math.min(2 - count, fleet['destroyer'].length))}}
+                    }
+                  }
+
+                  if(G.races[playerID].rid === 2){
+                    doAmbush(playerID, activeTile.tdata.attacker);
+                    G.spaceCombat.ambush = true;
+                  }
+                  else if(G.races[activeTile.tdata.occupied].rid === 2){
+                    doAmbush(activeTile.tdata.occupied, activeTile.tdata.fleet);
+                    G.spaceCombat.ambush = true;
+                  }
+                }
+                else if(ability === 'ambush'){
+                  delete G.spaceCombat['ambush']
+                }
+
+                events.setActivePlayers({value: val});
+              }
+              else{
+                const val = {};
+                val[activeTile.tdata.occupied] = {stage: 'spaceCombat'};
+                val[ctx.currentPlayer] = {stage: 'spaceCombat'};
+                
+                G.dice[activeTile.tdata.occupied] = {};
+                G.dice[ctx.currentPlayer] = {};
+                events.setActivePlayers({value: val});
+              }
+            }
+          }
+
+
+          if(spliceCombatAC(G.races[playerID], 'Emergency Repairs')){
+            repairAllActiveTileUnits(G, playerID);
+          }
+          spliceCombatAC(G.races[playerID], 'Morale Boost');
+          spliceCombatAC(G.races[playerID], 'Reflective Shielding');
+          spliceCombatAC(G.races[playerID], 'Shields Holding');
+
         }
+        catch(e){
+          console.log(e)
+        } 
       }
 
-
-      if(spliceCombatAC(G.races[playerID], 'Emergency Repairs')){
-        repairAllActiveTileUnits(G, playerID);
-      }
-      spliceCombatAC(G.races[playerID], 'Morale Boost');
-      spliceCombatAC(G.races[playerID], 'Reflective Shielding');
-      spliceCombatAC(G.races[playerID], 'Shields Holding');
-
-     } 
     }
   },
   spaceCombat_await:{
@@ -1736,7 +1810,59 @@ export const ACTS_STAGES = {
         }
         if(!endLater) { events.endStage(); }
       },
-      producing
+      producing,
+      claimPromissoryCard: ({G, events, playerID}, looser) => {
+        try{
+          const looserRace = G.races[looser];
+          if(looserRace && looserRace.promissory && looserRace.promissory.find(p => p.sold === undefined || String(p.sold) === String(looser))){
+            looserRace.reparation = { to: playerID, type: 'promissory' }
+            let val = {};
+            val[looser] = {stage: 'reparations'};
+            val[playerID] = {stage: 'spaceCombat_await'}
+
+            events.setActivePlayers({value: val})
+          }
+        }
+        catch(e){
+          console.log(e)
+        }
+      }
+    }
+  },
+  reparations: {
+    moves: {
+
+      transferPromissoryCard: ({ G, playerID, events }, cid) => {
+        try{
+          const src = G.races[playerID];
+          const dst = G.races[src.reparation.to];
+          const card = src.promissory.find(c => c.id === cid);
+
+          if(card){
+            if(card.owner){
+              if(card.owner === dst.rid){
+                dst.promissory.find(c => c.id === cid && c.sold === src.rid).sold = undefined;
+              }
+              else{
+                dst.promissory.push({...card});
+                G.races.find(r => r.rid === card.owner).promissory.find(c => c.id === cid && c.sold === src.rid).sold = dst.rid;
+              }
+              src.promissory.splice(src.promissory.findIndex(c => c.id === cid && c.owner === dst.rid), 1);
+            }
+            else if(!card.sold){
+              dst.promissory.push({...card, owner: src.rid});
+              card.sold = dst.rid;
+            }
+          }
+
+          delete src['reparation'];
+          events.endStage();
+        }
+        catch(e){
+          console.log(e)
+        }
+      }
+
     }
   },
   combatRetreat: {
