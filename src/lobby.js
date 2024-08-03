@@ -587,6 +587,7 @@ export const Lobby = ({dispatch})=> {
                                 <h6>Глеб Гаврилов</h6>
                                 <h6>Ксюша Нисютина</h6>
                                 <h6>Владислав Коровин</h6>
+                                <h6>Николай Андриянов</h6>
                                 <h6>shadow azray</h6>
                             </div>
                             <div style={{flexBasis: '67%'}}>
