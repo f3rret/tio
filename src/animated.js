@@ -82,13 +82,13 @@ export const MoveDialog = ({x, y, pointerdown, canMoveThatPath, distanceInfo, bu
     const [dpos, setDpos] = useState(dialog_pos);
 
     return <Container y={y} x={x*dpos} interactive={true} pointerdown={() => {dialog_pos = -dialog_pos; setDpos(dialog_pos)}}>
-                <Sprite scale={.5} image={'move_dialog.png'} />
+                <Sprite scale={.5} image={'move_dialog.png'} tint='gold'/>
                 {distanceInfo && distanceInfo.length > 2 && <Container x={40} y={30}>
-                <Text text={distanceInfo[0]} y={0} style={{fontSize: 20, fontFamily:'system-ui', fill: '#faebd7'}}/>
-                <Text text={distanceInfo[1]} y={30} style={{fontSize: 20, fontFamily:'system-ui', fill: '#faebd7'}}/>
-                <Text text={distanceInfo[2]} y={60} style={{fontSize: 20, fontFamily:'system-ui', fill: '#faebd7'}}/>
+                <Text text={distanceInfo[0]} y={10} style={{fontSize: 15, fontFamily:'Handel Gothic', fill: '#faebd7'}}/>
+                <Text text={distanceInfo[1]} y={40} style={{fontSize: 15, fontFamily:'Handel Gothic', fill: '#faebd7'}}/>
+                <Text text={distanceInfo[2]} y={70} style={{fontSize: 15, fontFamily:'Handel Gothic', fill: '#faebd7'}}/>
                 </Container>}
-                {buttonLabel && canMoveThatPath && <PixiButton pointerdown={pointerdown} label={buttonLabel} x={10} y={120} width={300}/>}
+                {buttonLabel && canMoveThatPath && <PixiButton pointerdown={pointerdown} label={buttonLabel} x={50} y={150} width={175}/>}
             </Container>
     
 }
@@ -100,9 +100,9 @@ const PixiButton = (args) => {
     }
 
     return <Container alpha={.9} interactive={true} {...args} pointerdown={(e) => pointerdown(e)} cursor='pointer' mouseover={(e) => e.target.alpha = 1} mouseout={(e) => e.target.alpha = .9}>
-        <Sprite scale={.7} width={args.width} image={'pixi-button.png'}/>
-        <Text text={args.label} y={15} x={args.width / 4}  
-            style={{fontSize: 20, fontFamily:'system-ui', fill: '#ffac00'}}/>
+        <Sprite scale={.3} width={args.width} image={'pixi-button.png'}/>
+        <Text text={args.label} y={10} x={args.width / 4}  
+            style={{fontSize: 15, fontFamily:'Handel Gothic', fill: '#faebd7'}}/>
     </Container>
 
 }
@@ -129,10 +129,10 @@ export const MoveStep = ({pointerdown, x, y, text, tint}) => {
 export const PlanetUnderAttack = ({w, x, y, text, rname, rid, fleet, color}) => {
 
     return  <Container x={x} y={y}>
-                <Sprite scale={.5} image='underattack.png' alpha={0.85}/>
-                <Text x={40} y={40} style={{fontSize: 25, fontFamily:'system-ui', fill: 'white'}} text={text} />
+                <Sprite scale={.5} image='underattack.png' alpha={0.95} tint='red'/>
+                <Text x={40} y={40} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white'}} text={text} />
                 <Sprite x={40} y={80} image={'race/icons/'+ rid +'.png'} scale={.5}/>
-                <Text x={80} y={80} style={{fontSize: 15, fontFamily:'system-ui', fill: 'white'}} text={rname} />
+                <Text x={80} y={85} style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'white'}} text={rname} />
 
                 <Container y={75} x={100}>
                     <InvasionForce fleet={fleet} color={color}/>
@@ -167,10 +167,10 @@ export const SectorUnderAttack = ({w, rid, fleet, text, color, rname}) => {
     const x = dpos * (w-150);
 
     return  <Container x={x} y={-350 * dpos} interactive={true} pointerdown={() => {dialog_pos = -dialog_pos; setDpos(dialog_pos)}}>
-                <Sprite scale={0.85} image='underattack.png' alpha={0.85}/>
-                <Text x={70} y={40} style={{fontSize: 30, fontFamily:'system-ui', fill: 'white'}} text={text} />
+                <Sprite scale={0.85} image='underattack.png' alpha={0.85} tint='red'/>
+                <Text x={70} y={40} style={{fontSize: 30, fontFamily:'Handel Gothic', fill: 'white'}} text={text} />
                 <Sprite x={70} y={80} image={'race/icons/'+ rid +'.png'} scale={.5}/>
-                <Text x={110} y={80} style={{fontSize: 20, fontFamily:'system-ui', fill: 'white'}} text={rname} />
+                <Text x={110} y={80} style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white'}} text={rname} />
 
                 <Container y={135} x={70}>
                     <AttackerForce fleet={fleet} color={color}/>
