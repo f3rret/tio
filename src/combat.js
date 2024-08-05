@@ -260,7 +260,7 @@ const HitAssign = (args) => {
 
     const { G, playerID, ctx } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
-    const {race, units, hits, setHits, owner, allowRepair} = args;
+    const {race, units, hits, setHits, owner, allowRepair, ambush, assaultCannon} = args;
     
     const technologies = useMemo(()=>{
         let result = {};
@@ -277,16 +277,22 @@ const HitAssign = (args) => {
 
         if(String(playerID) !== String(owner)) return;
         if(payloadId && payloadId !== 'fighter' && payloadId !== 'mech') return;
+        if(assaultCannon && (tag === 'fighter' || payloadId)) return;
+        if(ambush && race.rid === 2) return; //mentak
 
         setHits(produce(hits, draft => {
             if(!draft[tag]) draft[tag]=[];
             if(pidx === undefined){
                 const dmg = draft[tag].findIndex(ship => ship.idx === idx);
                 if(dmg === -1){
-                    draft[tag].push({idx, payload:[], hit: 1});
+                    draft[tag].push({idx, payload:[], hit: (assaultCannon && technologies[tag].sustain) ? 2:1});
                 }
                 else{
-                    if(technologies[tag].sustain && !units[tag][dmg].hit){
+                    if(assaultCannon && technologies[tag].sustain){
+                        draft[tag][dmg].hit += 2;
+                        if(draft[tag][dmg].hit > 2) draft[tag][dmg].hit = 0;
+                    }
+                    else if(technologies[tag].sustain && !units[tag][dmg].hit){
                         draft[tag][dmg].hit = (draft[tag][dmg].hit || 0 ) + 1;
                         if(draft[tag][dmg].hit > 2) draft[tag][dmg].hit = 0;
                     }
@@ -318,7 +324,7 @@ const HitAssign = (args) => {
                 }
             }
         }));
-    }, [hits, playerID, technologies, owner, setHits, units]);
+    }, [hits, playerID, technologies, owner, setHits, units, ambush, race.rid, assaultCannon]);
 
     const haveHit = useCallback((tag, idx, pidx) => {
         let result = 0;
@@ -420,16 +426,28 @@ const HitAssign = (args) => {
                         {units[u].map((t, j) =>{
                             const hh = haveHit(u, j);
                             const canRep = canRepair(u, j);
+                            let dice;
+                            let diceColor = 'light';
+
+                            if(ambush && race.rid === 2 && G.dice[owner] && G.dice[owner][u] && G.dice[owner][u].dice[j] !== undefined){
+                                dice = G.dice[owner][u].dice[j];
+                                if(dice >= technologies[u].combat){
+                                    diceColor = 'success';
+                                }
+                            }
 
                             let className=technologies[u].sustain ? 'sustain_ability':'';
                             className += ' hit_assigned' + hh;
 
                             return <div key={j} style={{margin: '0.25rem 1rem 0 0', display: 'flex', alignItems: 'flex-start'}}>
-                                <div style={{display: 'flex', flexDirection: 'column'}}>
+                                <div style={{display: 'flex', flexDirection: 'column', position: 'relative'}}>
                                     <Button disabled={canRep > 1} style={{width: '5rem', padding: 0, backgroundColor: '', border: 'none'}} 
                                         className={className} outline onClick={() => hitAssign(u, j)}>
                                         <img alt='unit' src={'units/' + u.toUpperCase() + '.png'} style={{width: '100%'}}/>
                                     </Button>
+                                    {dice && <Button size='sm' color={diceColor} style={{borderRadius: '5px', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', maxWidth:'1.25rem', height: '1.25rem', position: 'absolute', right: 0}}>
+                                            {('' + dice).substr(-1)}
+                                    </Button>}
                                     {duranium && technologies[u].sustain && hh > 0 &&
                                     <Button disabled={canRep !== 1} size='sm' color={canRep > 1 ? 'success':'light'} onClick={()=> hitAssign('-'+u, j)} style={{padding: 0}}>{t('board.repair')}</Button> }
                                 </div>
@@ -809,15 +827,10 @@ export const SpaceCombat = ({selectedTile}) => {
     const [ahitsD, setAhitsD] = useState({});
 
     const ambush = useMemo(() => {
-        /*return Object.keys(ctx.activePlayers).find(pid => 
-            G.dice[pid] && ((G.dice[pid]['cruiser'] && G.dice[pid]['cruiser'].withTech === 'ambush') || 
-            (G.dice[pid]['destroyer'] && G.dice[pid]['destroyer'].withTech === 'ambush'))
-        );*/
         return G.spaceCombat && G.spaceCombat.ambush;
     }, [G.spaceCombat])
 
     const assaultCannon = useMemo(() => {
-        //return !ambush && (!prevStages || (prevStages[playerID] && prevStages[playerID].length === 1 && prevStages[playerID][0] === 'spaceCombat_step2')); //before anti-fighter barrage 
         return !ambush && G.spaceCombat && G.spaceCombat.assaultCannon;
     }, [G.spaceCombat, ambush]);
 
@@ -977,7 +990,7 @@ export const SpaceCombat = ({selectedTile}) => {
     const allHitsAssigned = useMemo(() => {
 
         if(assaultCannon){
-            return assignedA === 1;
+            return assignedA === 1 || assignedA === 2;
         }
 
         else if(playerID === ctx.currentPlayer){
@@ -1070,12 +1083,12 @@ export const SpaceCombat = ({selectedTile}) => {
             </>}
             {ctx.activePlayers[playerID] === 'spaceCombat_step2' && <>
                 {!assaultCannon && <>
-                    <HitAssign race={G.races[ctx.currentPlayer]} units={activeTile.tdata.attacker} owner={ctx.currentPlayer} hits={ahitsA} setHits={setAhitsA} allowRepair={allHitsAssigned}/>
-                    <HitAssign race={G.races[activeTile.tdata.occupied]} units={activeTile.tdata.fleet} owner={String(activeTile.tdata.occupied)} hits={ahitsD} setHits={setAhitsD} allowRepair={allHitsAssigned}/>
+                    <HitAssign race={G.races[ctx.currentPlayer]} units={activeTile.tdata.attacker} owner={ctx.currentPlayer} hits={ahitsA} setHits={setAhitsA} allowRepair={allHitsAssigned} ambush={ambush}/>
+                    <HitAssign race={G.races[activeTile.tdata.occupied]} units={activeTile.tdata.fleet} owner={String(activeTile.tdata.occupied)} hits={ahitsD} setHits={setAhitsD} allowRepair={allHitsAssigned} ambush={ambush}/>
                 </>}
                 {assaultCannon && 
                     <HitAssign race={G.races[playerID]} units={String(playerID) === String(activeTile.tdata.occupied) ? activeTile.tdata.fleet : activeTile.tdata.attacker} 
-                    owner={playerID} hits={ahitsA} setHits={setAhitsA}/>
+                    owner={playerID} hits={ahitsA} setHits={setAhitsA} assaultCannon={true}/>
                 }
             </>}
         </CardBody>

@@ -1707,7 +1707,30 @@ export const ACTS_STAGES = {
                   }
                 }
                 else if(ability === 'ambush'){
-                  delete G.spaceCombat['ambush']
+                  delete G.spaceCombat['ambush'];
+
+                  /*const assaultReq = (my, enemy) => {
+                    let myFleet = 0;
+                    Object.keys(my).filter(k => k!=='fighter').forEach(k => myFleet += my[k].length);
+    
+                    let enemyFleet = 0;
+                    Object.keys(enemy).filter(k => k!=='fighter').forEach(k => enemyFleet += enemy[k].length);
+    
+                    return (myFleet >= 3) && (enemyFleet > 0);
+                  }
+
+                  if(haveTechnology(G.races[ctx.currentPlayer], 'ASSAULT_CANNON') && assaultReq(activeTile.tdata.attacker, activeTile.tdata.fleet)){
+                    val[activeTile.tdata.occupied] = {stage: 'spaceCombat_step2'};
+                    val[ctx.currentPlayer] = {stage: 'spaceCombat_await'};
+                    G.spaceCombat['assaultCannon'] = true;
+                  }
+    
+                  if(haveTechnology(G.races[activeTile.tdata.occupied], 'ASSAULT_CANNON') && assaultReq(activeTile.tdata.fleet, activeTile.tdata.attacker)){
+                    if(val[activeTile.tdata.occupied].stage !== 'spaceCombat_step2') val[activeTile.tdata.occupied] = {stage: 'spaceCombat_await'};
+                    val[ctx.currentPlayer] = {stage: 'spaceCombat_step2'};
+                    G.spaceCombat['assaultCannon'] = true;
+                  }*/
+                  
                 }
 
                 events.setActivePlayers({value: val});

@@ -1125,7 +1125,7 @@ export const UnitsList = ({UNITS, R_UNITS, R_UPGRADES, onSelect, rid}) => {
                     {R_UNITS[showUnit].deploy && <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '.deploy')}</CardText>}
                     {R_UNITS[showUnit].action && <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '.action')}</CardText>}
                 </>}
-                {R_UNITS[showUnit].alreadyUpgraded && 
+                {R_UNITS[showUnit].alreadyUpgraded && R_UPGRADES[showUnit+'2'].effect &&
                     <CardText style={{fontSize: '0.7rem'}}>{t('cards.techno.' + R_UNITS[showUnit].id + '2.effect')}</CardText>
                 }
             </>}
@@ -1499,28 +1499,29 @@ export const TradePanel = ({ onTrade }) => {
 
     const { G, playerID } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
-    const races =  useMemo(() => G.races.filter(r => r.rid !== G.races[playerID].rid), [G.races, playerID]);
-    const [srid, setSrid] = useState(races[0].rid);
+    //const races =  useMemo(() => G.races.filter(r => r.rid !== G.races[playerID].rid), [G.races, playerID]);
+    const [pid, setPid] = useState(G.races.findIndex((r,i) => String(i) !== String(playerID)));
     const [tradeItem, setTradeItem] = useState(undefined);
     const tradeClick = useCallback(()=>{
-        const item = tradeItem;
-        onTrade({tradeItem: item, rid: srid});
+        //const item = tradeItem;
+        onTrade({tradeItem, pid});
         if(tradeItem && (tradeItem.startsWith('relic') || tradeItem.startsWith('promissory') || tradeItem.startsWith('action'))){
             setTradeItem(undefined);
         }
-    }, [onTrade, srid, tradeItem]);
+    }, [onTrade, pid, tradeItem]);
 
     return <>
             <CardTitle>
             <ButtonGroup>
-                {races.map((r, i) => <button onClick={()=>setSrid(r.rid)} className={'styledButton ' + (r.rid === srid ? 'white':'black')} 
-                    style={{padding: '.5rem', width: '4rem'}} 
-                    key={i}><img alt={r.rid} style={{height: '1.5rem'}} src={'/race/icons/' + r.rid + '.png'}/></button>)}
+                {G.races.map((r, i) => String(i) !== String(playerID) && 
+                    <button onClick={()=>setPid(i)} className={'styledButton ' + (String(i) === String(pid) ? 'white':'black')} style={{padding: '.5rem', width: '4rem'}} 
+                    key={i}><img alt={r.rid} style={{height: '1.5rem'}} src={'/race/icons/' + r.rid + '.png'}/>
+                    </button>)}
             </ButtonGroup>
             </CardTitle>
 
             <RacePanel rid={G.races[playerID].rid} onSelect={setTradeItem}/>
-            {races.length > 0 && <>
+            {G.races.length > 1 && <>
                 <Row style={{marginBottom: '2rem '}}>
                     <Col style={{textAlign: 'right', alignSelf: 'center'}}>
                         {tradeItem && <b>{tradeItem === 'commodity' ? ('1 ' + t('board.commodity')) : tradeItem === 'tg' ? ('1 ' + t('board.trade_good')) : 
@@ -1539,7 +1540,7 @@ export const TradePanel = ({ onTrade }) => {
                         </button>
                     </Col>
                 </Row>
-            <RacePanel rid={srid} />
+            <RacePanel rid={G.races[pid].rid} />
             </>}
         </>
 }

@@ -577,9 +577,9 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                           const pilRace = G.races[p];
 
                           return <span key={p} className='rightBottomSub_complex'>
-                            <b>{t('races.' + p + '.name')}</b>
-                            <button onClick={() => onSubClick({playerID: p, param: 'tg'})} className='styledButton black'>{'1 / ' + pilRace.tg}<img alt='tg' src='/icons/trade_good_1.png'/></button>
-                            <button onClick={() => onSubClick({playerID: p, param: 'commodity'})} className='styledButton black'>{pilRace.commodity}<img alt='tg' src='/icons/commodity_1.png'/></button>
+                            <b>{t('races.' + pilRace.rid + '.name')}</b>
+                            <button disabled={pilRace.tg < 3} onClick={() => onSubClick({playerID: p, param: 'tg'})} className='styledButton black'>{'1 / ' + pilRace.tg}<img alt='tg' src='/icons/trade_good_1.png'/></button>
+                            <button disabled={pilRace.tg < 3} onClick={() => onSubClick({playerID: p, param: 'commodity'})} className='styledButton black'>{pilRace.commodity}<img alt='tg' src='/icons/commodity_1.png'/></button>
                           </span>
                       })}
                       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end'}}>
@@ -822,7 +822,6 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     else if(ctx.phase === 'strat' || ctx.phase === 'agenda'){
       dispatch({type: 'left_panel', payload: ''});
     }
-    dispatch({type: 'global_payment', payload: {wipe: true}})
   }, [dispatch, ctx.phase])
 
   useEffect(() => {
@@ -850,6 +849,12 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     dispatch({type: 'global_payment', payload: {tg: -hud.globalPayment.tg}});
   //eslint-disable-next-line
   }, [race.tg])
+
+  useEffect(() => {
+    if(!isMyTurn){
+      dispatch({type: 'global_payment', payload: {wipe: true}})
+    }
+  }, [isMyTurn, dispatch])
 
   useEffectListener('*', (effectName, effectProps, boardProps) => { //! may doubled!!
    
@@ -893,6 +898,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     }
   }, [G_stringify, playerID, neighbors]);
   
+
   
 
   //eslint-disable-next-line
@@ -943,7 +949,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                   </Card>}
                 </>}
                 {!race.isSpectator && hud.leftPanel === 'trade' && <Card className='subPanel' style={{ padding: '3rem 2rem 2rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                  <TradePanel onTrade={moves.trade}/>
+                  <TradePanel onTrade={({tradeItem, pid}) => sendChatMessage('/offer ' + pid + ' ' + tradeItem)}/>
                 </Card>}
 
                 

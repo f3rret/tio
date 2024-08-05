@@ -1084,7 +1084,7 @@ export const completeObjective = ({G, playerID, oid, payment}) => {
     objType = 'private';
     objective = G.races[playerID].secretObjectives.find(o => o.id === oid);
   }
-  if(objective && objective.players && objective.players.indexOf(playerID) === -1){
+  if(objective && (!objective.players || !objective.players.includes(playerID))){
 
     const req = objective.req;
     const race = G.races[playerID];
