@@ -6,6 +6,113 @@ import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveT
   adjustTechnologies,
   enemyHaveCombatAC} from './utils';
 
+/*const trade = ({G, playerID, ctx, ...plugins}, args) => {
+    const src = G.races[playerID];
+    const dst = G.races.find(r => r.rid === args.rid);
+   
+    if(args.tradeItem === 'tg' && src.tg > 0){
+      src.tg--;
+      dst.tg++;
+    }
+    else if(args.tradeItem === 'commodity' && src.commodity > 0){
+      src.commodity--;
+      dst.tg++;
+    }
+    else if(args.tradeItem.startsWith('fragment.')){
+      const frag = args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
+      if(src.fragments[frag] > 0){
+        src.fragments[frag]--;
+        dst.fragments[frag]++;
+      }
+    }
+    else if(args.tradeItem.startsWith('promissory.')){
+      const cid =  args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
+      const card = src.promissory.find(c => c.id === cid);
+      if(card){
+        if(card.owner){
+          if(card.owner === dst.rid){
+            dst.promissory.find(c => c.id === cid && c.sold === src.rid).sold = undefined;
+          }
+          else{
+            dst.promissory.push({...card});
+            G.races.find(r => r.rid === card.owner).promissory.find(c => c.id === cid && c.sold === src.rid).sold = dst.rid;
+          }
+          src.promissory.splice(src.promissory.findIndex(c => c.id === cid && c.owner === dst.rid), 1);
+        }
+        else if(!card.sold){
+          dst.promissory.push({...card, owner: src.rid});
+          card.sold = dst.rid;
+        }
+      }
+    }
+    else if(args.tradeItem.startsWith('relic.')){
+      const cid =  args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
+      const card = src.relics.find(c => c.id === cid);
+      if(card){
+        dst.relics.push({...card});
+        src.relics = src.relics.filter(c => c.id !== cid);
+      }
+    }
+    else if(args.tradeItem.startsWith('action.')){
+      const cid =  args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
+      const card = src.actionCards.find(c => c.id === cid);
+      if(card){
+        dst.actionCards.push({...card});
+        src.actionCards.splice(src.actionCards.findIndex(c => c.id === cid), 1);
+      }
+    }
+
+    plugins.effects.trade({src: src.rid, dst: dst.rid});
+}*/
+export const makeOffer = ({G, ctx, playerID, events}, pid) => {
+
+  if(!ctx.activePlayers){
+    const val = {};
+    
+    val[playerID] = {stage: 'trade'};
+    val[pid] = {stage: 'trade'};
+
+    events.setActivePlayers({value: val});
+  }
+
+} 
+export const addTradeItem = ({G, playerID}, pid, item, count) => {
+
+  try{
+    G.races[playerID].trade = produce(G.races[playerID].trade, draft => {
+      if(item){
+        if(!draft[pid]) draft[pid] = {};
+        if(!count) count = 1;
+
+        if(!draft[pid][item]){
+          draft[pid][item] = count;
+        }
+        else{
+          draft[pid][item]++;
+        }
+      }
+    });
+  }
+  catch(e){console.log(e)}
+
+}
+export const delTradeItem = ({G, playerID}, pid, item) => {
+
+  try{
+    G.races[playerID].trade = produce(G.races[playerID].trade, draft => {
+      if(item && draft[pid]){
+        if(draft[pid][item]){
+          draft[pid][item]--;
+        }
+        if(!draft[pid][item]){
+          delete draft[pid][item];
+        }
+      }
+    });
+  }
+  catch(e){console.log(e)}
+
+}
   
 export const secretObjectiveConfirm = ({G, playerID, events}, oid, y) => {
   
@@ -911,6 +1018,33 @@ const chooseAndDestroyMove = ({G, playerID},  destroyed) => {
 }
 
 export const ACTS_STAGES = {
+  trade: {
+    moves: {
+      accept: ({ctx, playerID, events}, pid) => {
+        if(ctx.activePlayers){
+          const val = {};
+          
+          val[playerID] = {stage: 'trade2'};
+          val[pid] = {stage: 'trade2'};
+      
+          events.setActivePlayers({value: val});
+        }
+      },
+      decline: ({events}) => {
+        events.setActivePlayers({});
+      },
+      addTradeItem,
+      delTradeItem
+    }
+  },
+  trade2: {
+    moves: {
+      accept: () => {},
+      decline: ({events}) => {
+        events.setActivePlayers({});
+      }
+    }
+  },
   tacticalActionCard: {
     moves: {
       playActionCard: ({G, playerID, events, ctx}, card) => {

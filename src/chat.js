@@ -5,7 +5,7 @@ import reactStringReplace from 'react-string-replace';
 
 export const ChatBoard = ({sendChatMessage, chatMessages})=>{
 
-    const { G, playerID } = useContext(StateContext);
+    const { G } = useContext(StateContext);
     const { t } = useContext(LocalizationContext); 
     const [msg, setMsg] = useState('');
     const [chatVisible, setChatVisible] = useState(false);
@@ -24,7 +24,7 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
         'chat-dice': /(\/dice\s\d{1,2})/,
         'chat-dice-green': /(\/dice-green\s\d{1,2})/,
         'chat-gain-tg': /(\/gain-tg\s\d{1,2})/,
-        'chat-offer': /(\/offer\s\d{1}\s\S+)/
+        //'chat-offer': /(\/offer\s\d{1}\s\S+)/
         /*'chat-gain-comm': /(\/gain-comm\s\d{1,2})/,
         'chat-ability': /(\/ability\s\S+\s\d\s\S+)/*/
       }
@@ -38,7 +38,7 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
                 <img alt='tg' src='/icons/trade_good_1.png'/>
               </span>
             }
-            else if(className === 'chat-offer'){
+            /*else if(className === 'chat-offer'){
               const pid = match.replace(/\/\S*\s(\d{1})\s\S+/, '$1');
               const item = match.replace(/\/\S*\s\d{1}\s(\S+)/, '$1');
   

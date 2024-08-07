@@ -2,12 +2,13 @@
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
 import cardData from './cardData.json';
 import { getHexGrid, neighbors } from './Grid';
-import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility } from './gameStages';
+import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer } from './gameStages';
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
  getInitRaces, getInitTiles, checkCommanderUnlock, doFlagshipAbility } from './utils';
 import { EffectsPlugin } from 'bgio-effects/plugin';
+import settings from '../package.json'
 
 const effectsConfig = EffectsPlugin({
   effects: {
@@ -191,7 +192,7 @@ export const TIO = {
           });
         },
         endIf: ({ G, ctx }) => {
-          const cardsCount = ctx.numPlayers > 4 ? 1 : 2; // more than 4!
+          const cardsCount = ctx.numPlayers > 4 ? 1 : settings.ip === 'localhost' ? 1 : 2; // testing
           return ctx.playOrder.every( r => G.races[r].strategy.length === cardsCount );
         }
       },
@@ -916,64 +917,8 @@ export const TIO = {
 
             if(!endLater){ events.endTurn();}
           },
-          trade: ({G, playerID, ctx, ...plugins}, args) => {
-            const src = G.races[playerID];
-            const dst = G.races.find(r => r.rid === args.rid);
-           
-            if(args.tradeItem === 'tg' && src.tg > 0){
-              src.tg--;
-              dst.tg++;
-            }
-            else if(args.tradeItem === 'commodity' && src.commodity > 0){
-              src.commodity--;
-              dst.tg++;
-            }
-            else if(args.tradeItem.startsWith('fragment.')){
-              const frag = args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
-              if(src.fragments[frag] > 0){
-                src.fragments[frag]--;
-                dst.fragments[frag]++;
-              }
-            }
-            else if(args.tradeItem.startsWith('promissory.')){
-              const cid =  args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
-              const card = src.promissory.find(c => c.id === cid);
-              if(card){
-                if(card.owner){
-                  if(card.owner === dst.rid){
-                    dst.promissory.find(c => c.id === cid && c.sold === src.rid).sold = undefined;
-                  }
-                  else{
-                    dst.promissory.push({...card});
-                    G.races.find(r => r.rid === card.owner).promissory.find(c => c.id === cid && c.sold === src.rid).sold = dst.rid;
-                  }
-                  src.promissory.splice(src.promissory.findIndex(c => c.id === cid && c.owner === dst.rid), 1);
-                }
-                else if(!card.sold){
-                  dst.promissory.push({...card, owner: src.rid});
-                  card.sold = dst.rid;
-                }
-              }
-            }
-            else if(args.tradeItem.startsWith('relic.')){
-              const cid =  args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
-              const card = src.relics.find(c => c.id === cid);
-              if(card){
-                dst.relics.push({...card});
-                src.relics = src.relics.filter(c => c.id !== cid);
-              }
-            }
-            else if(args.tradeItem.startsWith('action.')){
-              const cid =  args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
-              const card = src.actionCards.find(c => c.id === cid);
-              if(card){
-                dst.actionCards.push({...card});
-                src.actionCards.splice(src.actionCards.findIndex(c => c.id === cid), 1);
-              }
-            }
-
-            plugins.effects.trade({src: src.rid, dst: dst.rid});
-          },
+          addTradeItem, delTradeItem, makeOffer,
+          
           dropActionCard: dropACard,
           useRacialAbility: ({G, playerID, ...plugins}, args) => {
             const race = G.races[playerID];

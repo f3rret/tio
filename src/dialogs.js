@@ -1495,22 +1495,68 @@ const RaceList = ({races, selected, speaker, onClick}) => {
     });
   }
 
-export const TradePanel = ({ onTrade }) => {
+export const TradePanel = () => {
 
-    const { G, playerID } = useContext(StateContext);
+    const { G, ctx, playerID, moves } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
     //const races =  useMemo(() => G.races.filter(r => r.rid !== G.races[playerID].rid), [G.races, playerID]);
     const [pid, setPid] = useState(G.races.findIndex((r,i) => String(i) !== String(playerID)));
-    const [tradeItem, setTradeItem] = useState(undefined);
-    const tradeClick = useCallback(()=>{
+    //const [tradeItem, setTradeItem] = useState(undefined);
+    const offer = useMemo(() => {
+        if(G.races[playerID].trade && G.races[playerID].trade[pid]){
+            return G.races[playerID].trade[pid];
+        }
+    }, [G, playerID, pid]);
+    const isTradeStage = useMemo(() => ctx.activePlayers && ctx.activePlayers[playerID] === 'trade' && ctx.activePlayers[pid] === 'trade', [ctx, pid, playerID]);
+    const isTrade2Stage = useMemo(() => ctx.activePlayers && ctx.activePlayers[playerID] === 'trade2' && ctx.activePlayers[pid] === 'trade2', [ctx, pid, playerID]);
+    const partnerOffer = useMemo(() => {
+        if(G.races[pid].trade && G.races[pid].trade[playerID]){
+            return G.races[pid].trade[playerID];
+        }
+    }, [G, playerID, pid]);
+    /*const tradeClick = useCallback(()=>{
         //const item = tradeItem;
-        onTrade({tradeItem, pid});
+        onTrade({item: tradeItem, pid});
         if(tradeItem && (tradeItem.startsWith('relic') || tradeItem.startsWith('promissory') || tradeItem.startsWith('action'))){
             setTradeItem(undefined);
         }
-    }, [onTrade, pid, tradeItem]);
+    }, [onTrade, pid, tradeItem]);*/
 
-    return <>
+    const mapItems = (tradeItem, i, isMine) => {
+        const count = isMine ? offer[tradeItem]:partnerOffer[tradeItem];
+        return <Row key={i}>
+            {tradeItem && <>
+                <Col xs={10}>{tradeItem === 'commodity' ? (count + ' ' + t('board.commodity')) : tradeItem === 'tg' ? (count + ' ' + t('board.trade_good')) : 
+                tradeItem === 'fragment.c' ? (count + ' ' + t('board.cultural') + ' ' + t('board.fragment')) :
+                tradeItem === 'fragment.h' ? (count + ' ' + t('board.hazardous') + ' ' + t('board.fragment')) :
+                tradeItem === 'fragment.i' ? (count + ' ' + t('board.industrial') + ' ' + t('board.fragment')) :
+                tradeItem === 'fragment.u' ? (count + ' ' + t('board.unknown') + ' ' + t('board.fragment')) :
+                
+                tradeItem.indexOf('action') === 0 ? t('cards.actions.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
+                tradeItem.indexOf('promissory') === 0 ? t('cards.promissory.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
+                tradeItem.substr(tradeItem.indexOf('.') + 1) }</Col>
+                {isMine && <Col xs={1} onClick={()=>moves.delTradeItem(pid, tradeItem)} style={{cursor: 'pointer'}} className='bi bi-x-circle-fill'></Col>}
+            </>}
+        </Row>}
+
+    return <div style={{display: 'flex'}}>
+        <Card className='subPanel' style={{width: '20rem', padding: '2rem 1rem 2rem 2rem', position: 'absolute', right: '-19rem', height: 'calc(100% - 4rem)', top: '3rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+            <Row style={{marginBottom: '2rem', backgroundColor: G.races[playerID].color[1]}}><h6>{t('races.' + G.races[playerID].rid + '.name')}</h6></Row>
+            {offer && Object.keys(offer).length > 0 && Object.keys(offer).map((tradeItem, i) => mapItems(tradeItem, i, true))}
+            <Row style={{position: 'absolute', bottom: '1rem'}}>
+                {!isTradeStage && !isTrade2Stage && <button style={{width: '8rem'}} className='styledButton green' onClick={() => moves.makeOffer(pid)}>{t('board.offer')}</button>}
+                {isTradeStage && <>
+                    <button style={{width: '8rem'}} className='styledButton red' onClick={() => moves.decline(pid)}>{t('board.decline')}</button>
+                    <button style={{width: '8rem'}} className='styledButton green' onClick={() => moves.accept(pid)}>{t('board.accept')}</button>
+                </>}
+            </Row>
+            <Row style={{marginTop: '2rem', marginBottom: '2rem', backgroundColor: G.races[pid].color[1]}}><h6>{t('races.' + G.races[pid].rid + '.name')}</h6></Row>
+            {partnerOffer && Object.keys(partnerOffer).length > 0 && Object.keys(partnerOffer).map((tradeItem, i) => mapItems(tradeItem, i, false))}
+        </Card> 
+
+
+
+        <Card className='subPanel' style={{ padding: '3rem 2rem 2rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
             <CardTitle>
             <ButtonGroup>
                 {G.races.map((r, i) => String(i) !== String(playerID) && 
@@ -1520,30 +1566,42 @@ export const TradePanel = ({ onTrade }) => {
             </ButtonGroup>
             </CardTitle>
 
-            <RacePanel rid={G.races[playerID].rid} onSelect={setTradeItem}/>
+            <RacePanel rid={G.races[playerID].rid} onSelect={(item) => moves.addTradeItem(pid, item, 1)}/>
             {G.races.length > 1 && <>
-                <Row style={{marginBottom: '2rem '}}>
-                    <Col style={{textAlign: 'right', alignSelf: 'center'}}>
-                        {tradeItem && <b>{tradeItem === 'commodity' ? ('1 ' + t('board.commodity')) : tradeItem === 'tg' ? ('1 ' + t('board.trade_good')) : 
-                        tradeItem === 'fragment.c' ? ('1 ' + t('board.cultural') + t('board.fragment')) :
-                        tradeItem === 'fragment.h' ? ('1 ' + t('board.hazardous') + t('board.fragment')) :
-                        tradeItem === 'fragment.i' ? ('1 ' + t('board.industrial') + t('board.fragment')) :
-                        tradeItem === 'fragment.u' ? ('1 ' + t('board.unknown') + t('board.fragment')) :
-                        tradeItem.indexOf('relic') === 0 ? t('cards.relics.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
-                        tradeItem.indexOf('action') === 0 ? t('cards.actions.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
-                        tradeItem.indexOf('promissory') === 0 ? t('cards.promissory.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
-                        tradeItem.substr(tradeItem.indexOf('.') + 1) }</b>}
-                    </Col>
-                    <Col xs={4} style={{textAlign: 'right', padding: 0}}>
-                        <button onClick={()=>tradeClick()} className='bi-arrow-down-circle styledButton green' disabled={!tradeItem} style={{fontSize: '1rem'}}>
-                            {' ' + t('board.send')}
-                        </button>
-                    </Col>
-                </Row>
-            <RacePanel rid={G.races[pid].rid} />
+                <Row style={{margin: '2rem'}}/>
+                <RacePanel rid={G.races[pid].rid} />
             </>}
-        </>
+        </Card>
+        
+    </div>
 }
+
+/*export const TradeOffer = ({offer, sendChatMessage}) => {
+
+    const { G, ctx } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
+    const from = G.races[ctx.currentPlayer];
+
+    const decline = () => {
+        sendChatMessage('/trade-decline');
+    }
+
+    const accept = () => {
+        sendChatMessage('/trade-accept');
+    }
+
+    return <Card className='subPanel' style={{position: 'absolute', zIndex: 2, padding: '2rem', margin: '10rem 0 0 60rem', backgroundColor: 'rgba(33, 37, 41, 0.95)', width: '30rem'}}>
+                <CardTitle style={{borderBottom: '1px solid rgba(74, 111, 144, 0.42)'}}><h6>{t('board.nav.trade').toUpperCase() + ' ' + t('races.' + from.rid + '.name')}</h6></CardTitle>
+                <div style={{display: 'flex', flexDirection: 'column', margin: '1rem'}}>
+                    {offer && offer.length > 0 && offer.map((o,i) => <CardText key={i}>{o.item + ' x ' + (o.count ? o.count : 1)}</CardText>)}
+                </div>
+                <CardFooter style={{display: 'flex', justifyContent: 'space-between'}}>
+                    <button className='styledButton red' onClick={decline}>{t('board.decline')}</button>
+                    <button className='styledButton green' onClick={accept}>{t('board.accept')}</button>
+                </CardFooter>
+            </Card>
+
+}*/
 
 const RacePanel = ({rid, onSelect}) => {
     const { G, playerID } = useContext(StateContext);
@@ -1584,7 +1642,7 @@ const RacePanel = ({rid, onSelect}) => {
             </Row>
             {buttonSwitch === 'relics' && <Row>
                 <Col>{r.relics.map((k, i) => <span key={i}>
-                    <Badge onClick={()=>onSelect('relic.'+k.id)} color='dark' id={k.id.replaceAll(' ', '_')+'_trade'} className='hoverable' style={{fontSize: '.6rem'}}>{k.id.replaceAll('_', ' ')}</Badge>
+                    <Badge color='dark' id={k.id.replaceAll(' ', '_')+'_trade'} className='hoverable' style={{fontSize: '.6rem'}}>{k.id.replaceAll('_', ' ')}</Badge>
                     <UncontrolledTooltip target={'#'+k.id.replaceAll(' ', '_')+'_trade'}>{k.effect}</UncontrolledTooltip>
                     </span>)}
                 </Col>
@@ -1598,7 +1656,7 @@ const RacePanel = ({rid, onSelect}) => {
             </Row>}
             {buttonSwitch === 'actions' && <Row>
                 <Col>{r.actionCards.map((k, i) => <span key={i}>
-                    <Badge onClick={()=>onSelect('action.'+k.id)} color='dark' id={k.id.replaceAll(' ', '_')+'_trade'} className='hoverable' style={{fontSize: '.6rem'}}>{t('cards.actions.' + k.id + '.label')}</Badge>
+                    <Badge color='dark' id={k.id.replaceAll(' ', '_')+'_trade'} className='hoverable' style={{fontSize: '.6rem'}}>{t('cards.actions.' + k.id + '.label')}</Badge>
                     <UncontrolledTooltip target={'#'+k.id.replaceAll(' ', '_')+'_trade'}>{t('cards.actions.' + k.id + '.description')}</UncontrolledTooltip>
                     </span>)}
                 </Col>

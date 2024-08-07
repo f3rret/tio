@@ -296,7 +296,8 @@
             "commander_is_unlocked": "Commander unlocked",
             "hero_is_unlocked": "Hero unlocked",
             "hero_is_exhausted": "Hero exhausted",
-            "claim_promissory_card": "Claim a promise card"
+            "claim_promissory_card": "Claim a promise card",
+            "offer": "Offer"
         },
         "cards": {
             "strategy": {

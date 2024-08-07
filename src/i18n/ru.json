@@ -296,7 +296,8 @@
             "commander_is_unlocked": "Командир разблокирован",
             "hero_is_unlocked": "Герой разблокирован",
             "hero_is_exhausted": "Способность героя разыграна",
-            "claim_promissory_card": "Потребовать карту обещания"
+            "claim_promissory_card": "Потребовать карту обещания",
+            "offer": "Предложить"
         },
         "cards": {
             "strategy": {

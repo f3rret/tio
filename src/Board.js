@@ -307,6 +307,17 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     return ctx.activePlayers && ctx.activePlayers[playerID] && ctx.activePlayers[playerID].startsWith('invasion');
   }, [ctx.activePlayers, playerID]);
 
+  /*const tradeOffer = useMemo(() => {
+    if(!isMyTurn && G.trade[ctx.currentPlayer] && G.trade[ctx.currentPlayer].length){
+      const my = G.trade[ctx.currentPlayer][playerID];
+
+      if(my && my.length){
+        return my;
+      }
+    }
+  //eslint-disable-next-line
+  }, [ctx.currentPlayer, G_stringify])*/
+
  //eslint-disable-next-line
   const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G_tiles_stringify]);
 
@@ -948,9 +959,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                     <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} rid={G.races[playerID].rid}/>
                   </Card>}
                 </>}
-                {!race.isSpectator && hud.leftPanel === 'trade' && <Card className='subPanel' style={{ padding: '3rem 2rem 2rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                  <TradePanel onTrade={({tradeItem, pid}) => sendChatMessage('/offer ' + pid + ' ' + tradeItem)}/>
-                </Card>}
+                {!race.isSpectator && hud.leftPanel === 'trade' && <TradePanel onTrade={({item, pid, count}) => moves.tradeOffer(pid, item, count)}/>}
 
                 
               </CardColumns>
@@ -965,6 +974,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
               
 
               {race.explorationDialog && <ChoiceDialog args={race.explorationDialog} onSelect={(i)=>moves.choiceDialog(i)}/>}
+              
               {!race.isSpectator && ctx.phase === 'agenda' && <AgendaDialog onConfirm={moves.vote} mini={actionCardStage} payment={hud.globalPayment} GP={GP}/>}
               {race.secretObjectiveConfirm && (ctx.phase !== 'agenda' || isMyTurn) && <ChoiceDialog args={race.secretObjectiveConfirm} onSelect={(i)=>moves.secretObjectiveConfirm(race.secretObjectiveConfirm.oid, i)}/>}
               
@@ -1177,4 +1187,4 @@ export const BoardWithEffects = EffectsBoardWrapper(TIOBoard, {
 });
 
 
-
+//{tradeOffer && tradeOffer.length > 0 && <TradeOffer offer={tradeOffer} sendChatMessage={sendChatMessage}/>}
