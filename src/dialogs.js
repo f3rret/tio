@@ -1500,7 +1500,7 @@ export const TradePanel = () => {
     const { G, ctx, playerID, moves } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
     //const races =  useMemo(() => G.races.filter(r => r.rid !== G.races[playerID].rid), [G.races, playerID]);
-    const [pid, setPid] = useState(G.races.findIndex((r,i) => String(i) !== String(playerID)));
+    const [pid, setPid] = useState( String(ctx.currentPlayer) !== String(playerID) ? Number.parseInt(ctx.currentPlayer) : G.races.findIndex((r,i) =>String(i) !== String(playerID)));
     //const [tradeItem, setTradeItem] = useState(undefined);
     const offer = useMemo(() => {
         if(G.races[playerID].trade && G.races[playerID].trade[pid]){
@@ -1535,7 +1535,9 @@ export const TradePanel = () => {
                 tradeItem.indexOf('action') === 0 ? t('cards.actions.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
                 tradeItem.indexOf('promissory') === 0 ? t('cards.promissory.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
                 tradeItem.substr(tradeItem.indexOf('.') + 1) }</Col>
-                {isMine && <Col xs={1} onClick={()=>moves.delTradeItem(pid, tradeItem)} style={{cursor: 'pointer'}} className='bi bi-x-circle-fill'></Col>}
+                {isMine && !((isTradeStage || isTrade2Stage) && String(playerID) === String(ctx.currentPlayer)) 
+                && !(isTrade2Stage && String(playerID) !== String(ctx.currentPlayer)) && 
+                <Col xs={1} onClick={()=>moves.delTradeItem(pid, tradeItem)} style={{cursor: 'pointer'}} className='bi bi-x-circle-fill'></Col>}
             </>}
         </Row>}
 
@@ -1544,11 +1546,12 @@ export const TradePanel = () => {
             <Row style={{marginBottom: '2rem', backgroundColor: G.races[playerID].color[1]}}><h6>{t('races.' + G.races[playerID].rid + '.name')}</h6></Row>
             {offer && Object.keys(offer).length > 0 && Object.keys(offer).map((tradeItem, i) => mapItems(tradeItem, i, true))}
             <Row style={{position: 'absolute', bottom: '1rem'}}>
-                {!isTradeStage && !isTrade2Stage && <button style={{width: '8rem'}} className='styledButton green' onClick={() => moves.makeOffer(pid)}>{t('board.offer')}</button>}
-                {isTradeStage && <>
+                {!isTradeStage && !isTrade2Stage && String(playerID) === String(ctx.currentPlayer) && <button style={{width: '8rem'}} className='styledButton green' onClick={() => moves.makeOffer(pid)}>{t('board.offer')}</button>}
+                {((isTradeStage && String(playerID) !== String(ctx.currentPlayer)) || (isTrade2Stage && String(playerID) === String(ctx.currentPlayer))) && <>
                     <button style={{width: '8rem'}} className='styledButton red' onClick={() => moves.decline(pid)}>{t('board.decline')}</button>
-                    <button style={{width: '8rem'}} className='styledButton green' onClick={() => moves.accept(pid)}>{t('board.accept')}</button>
+                    <button style={{width: '8rem'}} className='styledButton green' onClick={() => moves.accept(pid)}>{isTradeStage ? t('board.offer') : t('board.accept')}</button>
                 </>}
+                {((isTradeStage && String(playerID) === String(ctx.currentPlayer)) || (isTrade2Stage && String(playerID) !== String(ctx.currentPlayer))) && <b>{t('board.awaiting_opponent') + '...'}</b>}
             </Row>
             <Row style={{marginTop: '2rem', marginBottom: '2rem', backgroundColor: G.races[pid].color[1]}}><h6>{t('races.' + G.races[pid].rid + '.name')}</h6></Row>
             {partnerOffer && Object.keys(partnerOffer).length > 0 && Object.keys(partnerOffer).map((tradeItem, i) => mapItems(tradeItem, i, false))}

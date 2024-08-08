@@ -85,7 +85,8 @@
                 "actions": "действия",
                 "context": "контекст",
                 "space_combat": "Космический бой",
-                "space_cannon": "Космическая пушка"
+                "space_cannon": "Космическая пушка",
+                "decline_trade": "Отмена торговли"
             },
             "phase_begin_strat": "Фаза стратегии",
             "phase_begin_acts": "Фаза действий",

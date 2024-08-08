@@ -6,64 +6,6 @@ import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveT
   adjustTechnologies,
   enemyHaveCombatAC} from './utils';
 
-/*const trade = ({G, playerID, ctx, ...plugins}, args) => {
-    const src = G.races[playerID];
-    const dst = G.races.find(r => r.rid === args.rid);
-   
-    if(args.tradeItem === 'tg' && src.tg > 0){
-      src.tg--;
-      dst.tg++;
-    }
-    else if(args.tradeItem === 'commodity' && src.commodity > 0){
-      src.commodity--;
-      dst.tg++;
-    }
-    else if(args.tradeItem.startsWith('fragment.')){
-      const frag = args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
-      if(src.fragments[frag] > 0){
-        src.fragments[frag]--;
-        dst.fragments[frag]++;
-      }
-    }
-    else if(args.tradeItem.startsWith('promissory.')){
-      const cid =  args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
-      const card = src.promissory.find(c => c.id === cid);
-      if(card){
-        if(card.owner){
-          if(card.owner === dst.rid){
-            dst.promissory.find(c => c.id === cid && c.sold === src.rid).sold = undefined;
-          }
-          else{
-            dst.promissory.push({...card});
-            G.races.find(r => r.rid === card.owner).promissory.find(c => c.id === cid && c.sold === src.rid).sold = dst.rid;
-          }
-          src.promissory.splice(src.promissory.findIndex(c => c.id === cid && c.owner === dst.rid), 1);
-        }
-        else if(!card.sold){
-          dst.promissory.push({...card, owner: src.rid});
-          card.sold = dst.rid;
-        }
-      }
-    }
-    else if(args.tradeItem.startsWith('relic.')){
-      const cid =  args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
-      const card = src.relics.find(c => c.id === cid);
-      if(card){
-        dst.relics.push({...card});
-        src.relics = src.relics.filter(c => c.id !== cid);
-      }
-    }
-    else if(args.tradeItem.startsWith('action.')){
-      const cid =  args.tradeItem.substr(args.tradeItem.indexOf('.') + 1);
-      const card = src.actionCards.find(c => c.id === cid);
-      if(card){
-        dst.actionCards.push({...card});
-        src.actionCards.splice(src.actionCards.findIndex(c => c.id === cid), 1);
-      }
-    }
-
-    plugins.effects.trade({src: src.rid, dst: dst.rid});
-}*/
 export const makeOffer = ({G, ctx, playerID, events}, pid) => {
 
   if(!ctx.activePlayers){
@@ -83,6 +25,27 @@ export const addTradeItem = ({G, playerID}, pid, item, count) => {
       if(item){
         if(!draft[pid]) draft[pid] = {};
         if(!count) count = 1;
+        const prevCount = draft[pid][item] || 0;
+
+        if(item.startsWith('promissory.')){
+          Object.keys(draft[pid]).forEach(it => {
+            if(it.startsWith('promissory.')) delete draft[pid][it];
+          })
+        }
+        else{
+          if(item === 'tg' && G.races[playerID].tg <= count + prevCount){
+            return;
+          }
+          else if(item === 'commodity' && G.races[playerID].commodity < count + prevCount){
+            return;
+          }
+          else if(item.startsWith('fragment.')){
+            const frag = item.substr(item.indexOf('.') + 1);
+            if(G.races[playerID].fragments[frag] < count + prevCount){
+              return;
+            }
+          }
+        }
 
         if(!draft[pid][item]){
           draft[pid][item] = count;
@@ -90,6 +53,7 @@ export const addTradeItem = ({G, playerID}, pid, item, count) => {
         else{
           draft[pid][item]++;
         }
+
       }
     });
   }
@@ -1039,7 +1003,88 @@ export const ACTS_STAGES = {
   },
   trade2: {
     moves: {
-      accept: () => {},
+      accept: ({G, playerID, events, ctx, ...plugins}) => {
+        try{
+          const from = G.races[playerID];
+          const toId = Object.keys(ctx.activePlayers).find(apk => String(apk) !== String(playerID));
+          const to = G.races[toId];
+
+          const makeTrade = (src, dst, tradeItem, count) => {
+            if(tradeItem === 'tg' && src.tg >= count){
+              src.tg -= count;
+              dst.tg += count;
+            }
+            else if(tradeItem === 'commodity' && src.commodity >= count){
+              src.commodity -= count;
+              dst.tg += count;
+            }
+            else if(tradeItem.startsWith('fragment.')){
+              const frag = tradeItem.substr(tradeItem.indexOf('.') + 1);
+              if(src.fragments[frag] >= count){
+                src.fragments[frag] -= count;
+                dst.fragments[frag] += count;
+              }
+            }
+            else if(tradeItem.startsWith('promissory.')){
+              const cid =  tradeItem.substr(tradeItem.indexOf('.') + 1);
+              const card = src.promissory.find(c => c.id === cid);
+
+              if(card){
+                if(card.owner){
+                  if(card.owner === dst.rid){
+                    dst.promissory.find(c => c.id === cid && c.sold === src.rid).sold = undefined;
+                  }
+                  else{
+                    dst.promissory.push({...card});
+                    G.races.find(r => r.rid === card.owner).promissory.find(c => c.id === cid && c.sold === src.rid).sold = dst.rid;
+                  }
+                  src.promissory.splice(src.promissory.findIndex(c => c.id === cid && c.owner === dst.rid), 1);
+                }
+                else if(!card.sold){
+                  dst.promissory.push({...card, owner: src.rid});
+                  card.sold = dst.rid;
+                }
+              }
+            }
+            else if(tradeItem.startsWith('action.')){
+              const cid =  tradeItem.substr(tradeItem.indexOf('.') + 1);
+              const card = src.actionCards.find(c => c.id === cid);
+
+              if(card){
+                dst.actionCards.push({...card});
+                src.actionCards.splice(src.actionCards.findIndex(c => c.id === cid), 1);
+              }
+            }
+          }
+
+          let tradeObj = from.trade[toId];
+          if(tradeObj && Object.keys(tradeObj)){
+            Object.keys(tradeObj).forEach(itemName => {
+              makeTrade(from, to, itemName, tradeObj[itemName]);
+            });
+
+            plugins.effects.trade({src: from.rid, dst: to.rid, obj: {...tradeObj}});
+          }
+
+          tradeObj = to.trade[playerID];
+          if(tradeObj && Object.keys(tradeObj)){
+            Object.keys(tradeObj).forEach(itemName => {
+              makeTrade(to, from, itemName, tradeObj[itemName])
+            });
+
+            plugins.effects.trade({src: to.rid, dst: from.rid, obj: {...tradeObj}});
+          }
+
+          delete from.trade[toId];
+          delete to.trade[playerID];
+        }
+        catch(e){
+          console.log(e)
+        }
+        finally{
+          events.setActivePlayers({});
+        }
+      },
       decline: ({events}) => {
         events.setActivePlayers({});
       }

@@ -85,7 +85,8 @@
                 "actions": "actions",
                 "context": "context",
                 "space_combat": "Space combat",
-                "space_cannon": "Space cannon"
+                "space_cannon": "Space cannon",
+                "decline_trade": "Cancel trade"
             },
             "phase_begin_strat": "Strategy phase",
             "phase_begin_acts": "Actions phase",

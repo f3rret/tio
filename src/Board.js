@@ -635,25 +635,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
             </>
   }
 
-  
 
-  /*const advancedChoiceDialogSelect = (result) => {
-    console.log(result);
-
-    if(result && result.ability === 'pillage' && result.opts !== 2){
-      let options;
-
-      if(result.opts === 0){
-        options = ' tg '
-      }
-      else if(result.opts === 1){
-        options = ' comm '
-      }
-
-      sendChatMessage('/ability pillage ' + result.sender + options);
-      dispatch({type: 'ability', tag: 'pillage', mid: result.mid});
-    }
-  }*/
 
   const stateContext = useMemo(() => ({G, ctx, playerID, /*matchID, credentials,*/ moves, selectedTech: hud.selectedTech, exhaustedCards: hud.exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}), 
   //eslint-disable-next-line
@@ -827,6 +809,13 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   }, [ctx.activePlayers, prevStages]);
 
   useEffect(() => {
+    if(ctx.activePlayers && ctx.activePlayers[playerID] === 'trade' && !isMyTurn){
+      dispatch({type: 'left_panel', payload: 'trade'});
+    }
+  //eslint-disable-next-line
+  }, [ctx.activePlayers, isMyTurn])
+
+  useEffect(() => {
     if(ctx.phase === 'stats'){
       dispatch({type: 'left_panel', payload: 'objectives'});
     }
@@ -869,44 +858,68 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
   useEffectListener('*', (effectName, effectProps, boardProps) => { //! may doubled!!
    
-    if(effectName === 'tg' || effectName === 'trade'){
-      if(boardProps.G && boardProps.G.races){
-        boardProps.G.races.forEach((nr, pid) => {
+    try{
+      if(effectName === 'tg'){
+        if(boardProps.G && boardProps.G.races){
+          boardProps.G.races.forEach((nr, pid) => {
 
-          if(String(pid) === String(playerID)){//mine
-            if(G.races[pid].tg < nr.tg){
-              sendChatMessage('/gain-tg ' + (nr.tg - G.races[pid].tg))
-            }
-          }
-          else{
-            if(race.rid === 2 && neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){ //mentak pillage
+            if(String(pid) === String(playerID)){//mine
               if(G.races[pid].tg < nr.tg){
-                dispatch({ type: 'ability', tag: 'pillage', add: true, playerID: pid })
+                sendChatMessage('/gain-tg ' + (nr.tg - G.races[pid].tg))
               }
             }
+            else{
+              if(race.rid === 2 && neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){ //mentak pillage
+                if(G.races[pid].tg < nr.tg){
+                  dispatch({ type: 'ability', tag: 'pillage', add: true, playerID: pid })
+                }
+              }
+            }
+
+          })
+        }
+
+      }
+      else if(effectName === 'trade'){
+        const {src, dst, obj} = effectProps;
+        let pid = G.races.findIndex((r) => r.rid === src);
+
+        if(String(pid) === String(playerID)){
+          let subj = '';
+          Object.keys(obj).forEach(tradeItem => {
+            const count = obj[tradeItem];
+            subj += tradeItem === 'commodity' ? (count + ' ' + t('board.commodity')) : tradeItem === 'tg' ? (count + ' ' + t('board.trade_good')) : 
+            tradeItem === 'fragment.c' ? (count + ' ' + t('board.cultural') + ' ' + t('board.fragment')) :
+            tradeItem === 'fragment.h' ? (count + ' ' + t('board.hazardous') + ' ' + t('board.fragment')) :
+            tradeItem === 'fragment.i' ? (count + ' ' + t('board.industrial') + ' ' + t('board.fragment')) :
+            tradeItem === 'fragment.u' ? (count + ' ' + t('board.unknown') + ' ' + t('board.fragment')) :
+            
+            tradeItem.indexOf('action') === 0 ? t('cards.actions.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
+            tradeItem.indexOf('promissory') === 0 ? t('cards.promissory.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
+            tradeItem.substr(tradeItem.indexOf('.') + 1) 
+          })
+          sendChatMessage('/trade ' + t('races.' + dst + '.name') + ': ' + subj)
+        }
+
+        if(race.rid === 2){ //mentak
+          if(pid > -1 && src !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(src))){
+            if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
+              dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
+            }
           }
-
-        })
-      }
-
-    }
-    if(effectName === 'trade' && race.rid === 2){
-      const {src, dst} = effectProps;
-
-      let pid = G.races.findIndex((r) => r.rid === src);
-      if(pid > -1 && src !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(src))){
-        if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
-          dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
+    
+          pid = G.races.findIndex((r) => r.rid === dst);
+          if(pid > -1 && dst !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(dst))){
+            if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
+              dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
+            }
+          }
         }
       }
 
-      pid = G.races.findIndex((r) => r.rid === dst);
-      if(pid > -1 && dst !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(dst))){
-        if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
-          dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
-        }
-      }
     }
+    catch(e){console.log(e)}
+    
   }, [G_stringify, playerID, neighbors]);
   
 

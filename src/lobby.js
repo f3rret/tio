@@ -533,11 +533,12 @@ export const Lobby = ({dispatch})=> {
                         <div>
                             
                             {prematchInfo.players && 
-                            <Container style={{fontSize: '90%'}}>{prematchInfo.players.map((p, i) =>
-                                <Row key={i} style={{ minHeight: '2.5rem'}}>
+                            <Container style={{fontSize: '90%'}}>{prematchInfo.players.map((p, i) =>{
+                                return <Row key={i} style={{ minHeight: '2.5rem'}}>
                                     <Col xs='1' style={{padding: 0}}><div style={{backgroundColor: trueColors[colors[i]][0], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
                                     {p.name && p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
                                     {p.name && !p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
+                                    {!p.name && playerName && prematchID === prematchInfo.matchID && String(playerID) === String(p.id) && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
                                     {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ ' + t('lobby.open') + ' ]'}</Col>}
                                     {p.name && <Col xs='7' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>
                                         {String(playerID) === String(p.id) && <Input style={{color: 'inherit', fontSize: 'inherit'}} disabled={p.data && p.data.ready} type='select' onChange={(e) => updatePlayerInfo({race: e.target.value})}>
@@ -549,7 +550,7 @@ export const Lobby = ({dispatch})=> {
                                         </span>}
                                     </Col>}
                                     {!p.name && <Col xs='7' style={{alignSelf: 'center', padding: '0.5rem 0rem 0.5rem 1.5rem'}}></Col>}
-                                </Row>)}
+                                </Row>})}
                             </Container>}
                         </div>
                         {playerCreds && <PrematchApp playerID={playerID} matchID={prematchID} credentials={playerCreds}/>}

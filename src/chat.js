@@ -24,7 +24,7 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
         'chat-dice': /(\/dice\s\d{1,2})/,
         'chat-dice-green': /(\/dice-green\s\d{1,2})/,
         'chat-gain-tg': /(\/gain-tg\s\d{1,2})/,
-        //'chat-offer': /(\/offer\s\d{1}\s\S+)/
+        'chat-trade': /(\/trade\s.*)/
         /*'chat-gain-comm': /(\/gain-comm\s\d{1,2})/,
         'chat-ability': /(\/ability\s\S+\s\d\s\S+)/*/
       }
@@ -38,19 +38,10 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
                 <img alt='tg' src='/icons/trade_good_1.png'/>
               </span>
             }
-            /*else if(className === 'chat-offer'){
-              const pid = match.replace(/\/\S*\s(\d{1})\s\S+/, '$1');
-              const item = match.replace(/\/\S*\s\d{1}\s(\S+)/, '$1');
-  
-              if(!isNaN(pid) && item){
-                const r = G.races[pid];
-  
-                return <span className={className}>
-                    <b className='bi bi-arrow-right-square-fill'>{'  ' + t('races.' + r.rid + '.name') + ' '}</b>
-                    <b>{item}</b>
-                    {String(pid) === String(playerID) && <button className='styledButton green'>{t('board.accept')}</button>}
+            else if(className === 'chat-trade'){
+                return <span className='bi bi-arrow-right-square-fill'>
+                    {match.replace(/(\/trade)/, '')}
                   </span>
-              }
             }
             /*else if(className === 'chat-gain-comm'){
               return <span key={className + i} className={className}>
