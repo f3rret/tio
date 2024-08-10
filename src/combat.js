@@ -431,6 +431,7 @@ const HitAssign = (args) => {
 
                             if(ambush && race.rid === 2 && G.dice[owner] && G.dice[owner][u] && G.dice[owner][u].dice[j] !== undefined){
                                 dice = G.dice[owner][u].dice[j];
+                                
                                 if(dice >= technologies[u].combat){
                                     diceColor = 'success';
                                 }
@@ -486,6 +487,9 @@ const HitAssign = (args) => {
                     }
                     else if(ca === 'HERO'){
                         label = t('board.hero').toUpperCase();
+                    }
+                    else if(ca === 'NEBULA'){
+                        label = t('board.nebula').toUpperCase();
                     }
                     else{
                         label = t('cards.actions.' + ca + '.label');
@@ -649,6 +653,10 @@ const CombatantForces = (args) => {
                                 adj++;
                             }
                         }
+
+                        if(!combatAbility && race.combatActionCards.includes('NEBULA')){
+                            adj++;
+                        }
                         
                         return <Col className='col-md-auto' key={i} style={style}>
                             <span className={className} style={{position: 'relative'}}>
@@ -720,6 +728,9 @@ const CombatantForces = (args) => {
                 }
                 else if(ca === 'HERO'){
                     label = t('board.hero').toUpperCase();
+                }
+                else if(ca === 'NEBULA'){
+                    label = t('board.nebula').toUpperCase();
                 }
                 else{
                     label = t('cards.actions.' + ca + '.label');
@@ -835,52 +846,56 @@ export const SpaceCombat = ({selectedTile}) => {
     }, [G.spaceCombat, ambush]);
 
     const hits = useMemo(() => {
-        let result = {};
+        try{
+            let result = {};
 
-        if(assaultCannon){
-            const enemy = Object.keys(ctx.activePlayers).find(k => String(k)!==String(playerID));
-            result[enemy] = 1;
+            if(assaultCannon){
+                const enemy = Object.keys(ctx.activePlayers).find(k => String(k)!==String(playerID));
+                result[enemy] = 1;
+                return result;
+            }
+
+            Object.keys(ctx.activePlayers).forEach(pid => {
+                let h = 0;
+                if(G.dice[pid]){
+                    Object.keys(G.dice[pid]).forEach(unit => {
+                        let adj = (unit === 'fighter' && G.races[pid].combatActionCards.indexOf('Fighter Prototype') > -1 &&
+                            prevStages[pid].filter(s => s === 'spaceCombat').length === 1) ? 2:0;
+                        if(G.races[pid].combatActionCards.indexOf('Morale Boost') > -1 && unit !== 'pds' && unit !== 'spacedock'){
+                            adj++;
+                        }
+                        if(G.races[pid].combatActionCards.includes('NEBULA') && !ambush) adj++;
+
+                        const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                        
+                        if(technology && technology.combat){
+                            h += G.dice[pid][unit].dice.filter(d => d+adj >= technology.combat).length;
+                        }
+
+                        if(G.races[pid].combatActionCards.indexOf('Reflective Shielding') > -1){
+                            let fleet = (String(pid) === String(ctx.currentPlayer)) ? activeTile.tdata.attacker : activeTile.tdata.fleet;
+                            let hitted = Object.keys(fleet).find(tag =>{
+                                if(fleet[tag] && fleet[tag].length){
+                                    return fleet[tag].find(c => c.hit && c.hit > 0)
+                                }
+                                return false;
+                            }); 
+                                
+                            if(hitted) h += 2;
+                        }
+                        if(enemyHaveCombatAC(G.races, ctx.activePlayers, pid, 'Shields Holding')){
+                            h -= 2;
+                            if(h < 0) h=0;
+                        }
+                    });
+                }
+                result[pid] = h;
+            });
+
             return result;
         }
-
-        Object.keys(ctx.activePlayers).forEach(pid => {
-            let h = 0;
-            if(G.dice[pid]){
-                Object.keys(G.dice[pid]).forEach(unit => {
-                    let adj = (unit === 'fighter' && G.races[pid].combatActionCards.indexOf('Fighter Prototype') > -1 &&
-                        prevStages[pid].filter(s => s === 'spaceCombat').length === 1) ? 2:0;
-                    if(G.races[pid].combatActionCards.indexOf('Morale Boost') > -1 && unit !== 'pds' && unit !== 'spacedock'){
-                        adj++;
-                    }
-
-                    const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
-                    
-                    if(technology && technology.combat){
-                        h += G.dice[pid][unit].dice.filter(d => d+adj >= technology.combat).length;
-                    }
-
-                    if(G.races[pid].combatActionCards.indexOf('Reflective Shielding') > -1){
-                        let fleet = (String(pid) === String(ctx.currentPlayer)) ? activeTile.tdata.attacker : activeTile.tdata.fleet;
-                        let hitted = Object.keys(fleet).find(tag =>{
-                            if(fleet[tag] && fleet[tag].length){
-                                return fleet[tag].find(c => c.hit && c.hit > 0)
-                            }
-                            return false;
-                        }); 
-                            
-                        if(hitted) h += 2;
-                    }
-                    if(enemyHaveCombatAC(G.races, ctx.activePlayers, pid, 'Shields Holding')){
-                        h -= 2;
-                        if(h < 0) h=0;
-                    }
-                });
-            }
-            result[pid] = h;
-        });
-
-        return result;
-    }, [G.dice, G.races, ctx, assaultCannon, playerID, prevStages, activeTile.tdata]);
+        catch(e){console.log(e)}
+    }, [G.dice, G.races, ctx, assaultCannon, playerID, prevStages, activeTile.tdata, ambush]);
 
     const assignedA = useMemo(() => {
         let result = 0;

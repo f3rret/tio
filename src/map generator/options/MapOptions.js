@@ -711,23 +711,24 @@ class MapOptions extends React.Component {
         const ensuredAnomalies = [];
 
         if(this.state.ensureRacialAnomalies && this.state.pickRaces) {
+
             currentRaces.forEach(race => {
                 let anomalies = []
                 let match = false;
                 // If The Clan of Saar are in the game, ensure we have an asteroid field
-                if(race === 'The Clan of Saar') {
+                if(race.toLowerCase() === 'the clan of saar') {
                     anomalies = useProphecyOfKings ? [...tileData.asteroidFields.concat(tileData.pokAsteroidFields)] : [...tileData.asteroidFields];
                     match = true;
                 // If The Embers of Muaat are in the game, ensure we have a supernova
-                } else if(race === 'The Embers of Muaat') {
+                } else if(race.toLowerCase() === 'the embers of muaat') {
                     anomalies = useProphecyOfKings ? [...tileData.supernovas.concat(tileData.pokSupernovas)] : [...tileData.supernovas];
                     match = true;
                 // If The Empyrean are in the game, ensure we have a nebulae
-                } else if(race === 'The Empyrean') {
+                } else if(race.toLowerCase() === 'the empyrean') {
                     anomalies = useProphecyOfKings ? [...tileData.nebulae.concat(tileData.pokNebulae)] : [...tileData.nebulae];
                     match = true;
                 // If The Vuil'Raith Cabal are in the game, ensure we have a gravity rift
-                } else if(race === "The Vuil'Raith Cabal") {
+                } else if(race.toLowerCase() === "the vuil'raith cabal") {
                     anomalies = useProphecyOfKings ? [...tileData.gravityRifts.concat(tileData.pokGravityRifts)] : [...tileData.gravityRifts];
                     match = true;
                 }

@@ -19,7 +19,9 @@ const effectsConfig = EffectsPlugin({
     tg: {
       create: () => {}
     },
-    
+    rift: {
+      create: (value) => value
+    }
   },
 });
 
@@ -644,6 +646,10 @@ export const TIO = {
                 G.races[activeTile.tdata.occupied].combatActionCards.push('FLAGSHIP'); //combat
               }
 
+              if(activeTile.tdata.anomaly === 'nebula'){
+                G.races[activeTile.tdata.occupied].combatActionCards.push('NEBULA');
+              }
+
             }
           },
           purgeFragments: ({G, playerID}, purgingFragments) => {
@@ -849,62 +855,90 @@ export const TIO = {
             }
 
           },
-          moveShip: ({ G, playerID }, args) => {
+          moveShip: ({ G, playerID, random, ...plugins }, args) => {
 
-            const dst = G.tiles.find( t => t.active === true );
-            if(dst.tdata.spaceCannons_done === true) dst.tdata.spaceCannons_done = false;
+            try{
+              const dst = G.tiles.find( t => t.active === true );
+              if(dst.tdata.spaceCannons_done === true) dst.tdata.spaceCannons_done = false;
 
-            const src = G.tiles[args.tile];
-            const unit = src.tdata.fleet[args.unit][args.shipIdx];
-            let isAttack = false;
+              const src = G.tiles[args.tile];
+              const unit = src.tdata.fleet[args.unit][args.shipIdx];
+              let isAttack = false;
 
-            if(dst && src && unit){
-              if( dst.tdata.occupied != playerID ){
-                if(dst.tdata.fleet && Object.keys(dst.tdata.fleet).length > 0){
-                  isAttack = true;
+              let fullpath = [];
+              if(args.path && args.path.length){ //ion storm
+                fullpath = args.path.map(p => G.tiles.find(t => String(t.tid) === String(p)));
+              }
+
+              if(dst && src && unit){
+                if(fullpath){ //gravity-rift
+                  const rifts = fullpath.filter((p,i) =>  (i < fullpath.length - 1) && p.tdata && p.tdata.anomaly === 'gravity-rift');
+
+                  if(rifts && rifts.length){
+                    let dices = random.D10(rifts.length);//rifts.length);
+                    plugins.effects.rift({unit: args.unit, dices: dices});
+                    
+                    if(dices.find(d => d < 4)){
+                      G.tiles[args.tile].tdata.fleet[args.unit].splice(args.shipIdx, 1);
+                      if(G.tiles[args.tile].tdata.fleet[args.unit].length === 0){
+                        delete G.tiles[args.tile].tdata.fleet[args.unit];
+                      }
+
+                      if(!G.tiles[args.tile].tdata.fleet || !Object.keys(G.tiles[args.tile].tdata.fleet).length){
+                        G.tiles[args.tile].tdata.occupied = undefined;
+                      }
+
+                      return;
+                    }
+                  }
+                }
+
+                if( dst.tdata.occupied != playerID ){
+                  if(dst.tdata.fleet && Object.keys(dst.tdata.fleet).length > 0){
+                    isAttack = true;
+                  }
+                  else{
+                    dst.tdata.occupied = playerID;
+                  }
+                }
+
+                if(!isAttack){
+                  if(!dst.tdata.fleet) dst.tdata.fleet = {};
+                  if(!dst.tdata.fleet[args.unit]) dst.tdata.fleet[args.unit] = [];
+                  dst.tdata.fleet[args.unit].push(unit);
                 }
                 else{
-                  dst.tdata.occupied = playerID;
+                  if(!dst.tdata.attacker) dst.tdata.attacker = {};
+                  if(!dst.tdata.attacker[args.unit]) dst.tdata.attacker[args.unit] = [];
+                  dst.tdata.attacker[args.unit].push(unit);
+                }
+
+                G.tiles[args.tile].tdata.fleet[args.unit].splice(args.shipIdx, 1);
+                if(G.tiles[args.tile].tdata.fleet[args.unit].length === 0){
+                  delete G.tiles[args.tile].tdata.fleet[args.unit];
+                }
+
+                if(!G.tiles[args.tile].tdata.fleet || !Object.keys(G.tiles[args.tile].tdata.fleet).length){
+                  G.tiles[args.tile].tdata.occupied = undefined;
                 }
               }
 
-              if(!isAttack){
-                if(!dst.tdata.fleet) dst.tdata.fleet = {};
-                if(!dst.tdata.fleet[args.unit]) dst.tdata.fleet[args.unit] = [];
-                dst.tdata.fleet[args.unit].push(unit);
-              }
-              else{
-                if(!dst.tdata.attacker) dst.tdata.attacker = {};
-                if(!dst.tdata.attacker[args.unit]) dst.tdata.attacker[args.unit] = [];
-                dst.tdata.attacker[args.unit].push(unit);
+              if(fullpath){ //ion storm
+                //const fullpath = args.path.map(p => G.tiles.find(t => String(t.tid) === String(p)));
+                checkIonStorm(G, args.path);
               }
 
-              G.tiles[args.tile].tdata.fleet[args.unit].splice(args.shipIdx, 1);
-              if(G.tiles[args.tile].tdata.fleet[args.unit].length === 0){
-                delete G.tiles[args.tile].tdata.fleet[args.unit];
+              if(dst.tdata.frontier && G.races[playerID].knownTechs.indexOf('DARK_ENERGY_TAP') > -1){
+                exploreFrontier(G, playerID, dst);
               }
 
-              if(!G.tiles[args.tile].tdata.fleet || !Object.keys(G.tiles[args.tile].tdata.fleet).length){
-                G.tiles[args.tile].tdata.occupied = undefined;
+              if(args.exhaustedCards){
+                if(args.exhaustedCards.indexOf('GRAVITY_DRIVE')>-1){
+                  G.races[playerID].exhaustedCards.push('GRAVITY_DRIVE');
+                }
               }
             }
-
-            if(args.path && args.path.length){ //ion storm
-              const fullpath = [...args.path.map(p => G.tiles[p]), dst];
-              checkIonStorm(G, fullpath);
-            }
-
-            if(dst.tdata.frontier && G.races[playerID].knownTechs.indexOf('DARK_ENERGY_TAP') > -1){
-              exploreFrontier(G, playerID, dst);
-            }
-
-            if(args.exhaustedCards){
-              if(args.exhaustedCards.indexOf('GRAVITY_DRIVE')>-1){
-                G.races[playerID].exhaustedCards.push('GRAVITY_DRIVE');
-              }
-            }
-
-            
+            catch(e){console.log(e)}
 
           },
           pass: ({ G, playerID, events, ctx }) => {

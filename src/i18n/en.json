@@ -299,7 +299,9 @@
             "hero_is_unlocked": "Hero unlocked",
             "hero_is_exhausted": "Hero exhausted",
             "claim_promissory_card": "Claim a promise card",
-            "offer": "Offer"
+            "offer": "Offer",
+            "nebula": "Nebula",
+            "gravity_rift": "Gravity rift"
         },
         "cards": {
             "strategy": {

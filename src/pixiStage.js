@@ -63,11 +63,19 @@ export const PixiStage = ({stagew, stageh, dispatch, hud, GP}) => {
     }, [getMovePath])
 
     const advUnitViewTechnology = useMemo(() => {
-        if(race && hud.advUnitView && hud.advUnitView.unit){
-          return race.technologies.find( t => t.id === hud.advUnitView?.unit.toUpperCase());
+      try{
+        if(hud.advUnitView && hud.advUnitView.unit && hud.advUnitView.tile !== undefined){
+          const tile = G.tiles[hud.advUnitView.tile];
+          const owner = tile.tdata.occupied;
+
+          return G.races[owner].technologies.find( t => t.id === hud.advUnitView?.unit.toUpperCase());
         }
-      },[hud.advUnitView, race]);
+      }
+      catch(e){console.log(e)}
+    //eslint-disable-next-line
+    },[hud.advUnitView]);
     const canMoveThatPath = useMemo(() => {
+      try{
         const getMySide = (prev, cur) => {
           let side;
           if(cur.q > prev.q){
@@ -109,11 +117,20 @@ export const PixiStage = ({stagew, stageh, dispatch, hud, GP}) => {
         let adj = 0;
         if(hud.exhaustedCards.includes('GRAVITY_DRIVE')) adj++;
         if(race.moveBoost) adj += race.moveBoost;
-    
-        if(advUnitViewTechnology && (advUnitViewTechnology.move+adj) >= getPureMovePath.length-1){
+
+
+        const rifts = getPureMovePath.filter((m, i) => i < (getPureMovePath.length - 1) && ['41', '67'].includes(String(m)));
+        if(rifts && rifts.length > 0){
+          adj += rifts.length;
+        }
+
+        if((['42','68'].includes(String(getPureMovePath[0])) ? (1 + adj) : (advUnitViewTechnology.move + adj)) >= getPureMovePath.length-1){
+
           if(isBrokenLine(getMovePath)) return false;
+
           if(getPureMovePath && getPureMovePath.length){
-            return !getPureMovePath.some(p => {
+            
+            return !getPureMovePath.some((p, pidx) => {
               const tile = G.tiles.find(t => String(t.tid) === String(p));
     
               if(tile.tdata.type === 'red'){
@@ -121,10 +138,10 @@ export const PixiStage = ({stagew, stageh, dispatch, hud, GP}) => {
                   return true;
                 }
                 else if(tile.tdata.anomaly === 'nebula'){
-                  return getPureMovePath.length > 2;
+                  return !(pidx === getPureMovePath.length - 1 || pidx === 0);//getPureMovePath.length > 2;
                 }
-                else if(tile.tdata.anomaly === 'supernova'){
-                  return true;
+                else if(tile.tdata.anomaly === 'supernova' || tile.tdata.anomaly === 'muaat-supernova'){
+                  return race.rid !== 4;
                 }
                 else if(tile.tdata.anomaly === 'gravity-rift'){
                   return false;
@@ -137,9 +154,12 @@ export const PixiStage = ({stagew, stageh, dispatch, hud, GP}) => {
             });
     
           }
+
         }
         return false;
-      },[G.tiles, G.races, hud.exhaustedCards, race, getMovePath, getPureMovePath, advUnitViewTechnology, playerID, activeTile]);
+      }
+      catch(e){console.log(e)}
+    },[G.tiles, G.races, hud.exhaustedCards, race, getMovePath, getPureMovePath, advUnitViewTechnology, playerID, activeTile]);
 
     const getColorByRid = useCallback((rid) => {
         const r = G.races.find(rc => rc.rid === rid);
@@ -456,39 +476,53 @@ const TilesMap3 = ({G, playerID, moves, ctx, t, stagew, stageh, isMyTurn, active
 
         if(hud.advUnitView && idx === hud.advUnitView.tile){
             if(canMoveThatPath){
-            let shipIdx = hud.payloadCursor.i;
-            if(shipIdx > G.tiles[idx].tdata.fleet[hud.advUnitView.unit].length){
-                shipIdx = 0;
-            }
-            
-            moves.moveShip({...hud.advUnitView, shipIdx, exhaustedCards: hud.exhaustedCards, path: [hud.advUnitView.tile, ...hud.moveSteps]})
-            dispatch({type: 'payload_cursor', payload: {i: 0, j: 0}});
-    
-            // change advUnitView after move!
-            if(G.tiles[idx].tdata.fleet[hud.advUnitView.unit].length <= 1){
-                dispatch({type: 'adv_unit_view'})
-            }
+              let shipIdx = hud.payloadCursor.i;
+              if(shipIdx > G.tiles[idx].tdata.fleet[hud.advUnitView.unit].length){
+                  shipIdx = 0;
+              }
+              
+              moves.moveShip({...hud.advUnitView, shipIdx, exhaustedCards: hud.exhaustedCards, path: getPureMovePath})
+              dispatch({type: 'payload_cursor', payload: {i: 0, j: 0}});
+      
+              // change advUnitView after move!
+              if(G.tiles[idx].tdata.fleet[hud.advUnitView.unit].length <= 1){
+                  dispatch({type: 'adv_unit_view'})
+              }
             }
         }
     
-    }, [G.tiles, hud.exhaustedCards, hud.advUnitView, hud.payloadCursor, moves, canMoveThatPath, hud.moveSteps, dispatch]);
+    }, [G.tiles, hud.exhaustedCards, hud.advUnitView, hud.payloadCursor, moves, canMoveThatPath, getPureMovePath, dispatch]);
 
 
     const distanceInfo = useCallback(()=>{
+      try{
         if(race && advUnitViewTechnology && advUnitViewTechnology.move && getPureMovePath.length){
-            let adj = 0;
-    
-            if(hud.exhaustedCards.includes('GRAVITY_DRIVE')) adj++;
-            if(race.moveBoost) adj += race.moveBoost;
-            return [t('board.move_path_distance') + ': ' + (getPureMovePath.length-1), 
-                    t('board.move_power_reserve') + ': ' + advUnitViewTechnology.move, 
-                    t('board.move_boost') + ': ' + adj];
+          let adj = 0;
+          const tile = G.tiles[hud.advUnitView.tile];
+          let mov = advUnitViewTechnology.move;
+
+          if(tile && tile.tdata && tile.tdata.anomaly === 'nebula'){
+            mov = 1;
+          }
+
+          const rifts = getPureMovePath.filter((m, i) => i < (getPureMovePath.length - 1) && ['41', '67'].includes(String(m)));
+          if(rifts && rifts.length > 0){
+            adj += rifts.length;
+          }
+
+          if(hud.exhaustedCards.includes('GRAVITY_DRIVE')) adj++;
+          if(race.moveBoost) adj += race.moveBoost;
+          return [t('board.move_path_distance') + ': ' + (getPureMovePath.length-1), 
+                  t('board.move_power_reserve') + ': ' + mov, 
+                  t('board.move_boost') + ': ' + adj];
         }
         else{
             return ['-', '-', '-'];
         }
-        //eslint-disable-next-line
-        }, [advUnitViewTechnology, getPureMovePath, race]);
+      }
+      catch(e){console.log(e)}
+    //eslint-disable-next-line
+    }, [advUnitViewTechnology, getPureMovePath, race]);
     
 
     return G.tiles.map((element, index) => {

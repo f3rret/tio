@@ -70,7 +70,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
             units[k] += t.tdata.fleet[k].length;
             
             t.tdata.fleet[k].forEach(ship => {
-              if(ship.payload && ship.payload.length){
+              if(ship && ship.payload && ship.payload.length){
                 ship.payload.forEach(pl => {
                   if(pl && pl.id){
                     if(!units[pl.id]) units[pl.id] = 0;
@@ -859,7 +859,22 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   useEffectListener('*', (effectName, effectProps, boardProps) => { //! may doubled!!
    
     try{
-      if(effectName === 'tg'){
+      if(effectName === 'rift'){
+        if(String(playerID) === String(ctx.currentPlayer)){
+          const {unit, dices} = effectProps;
+          let rolls = '';
+          dices.forEach(d => {
+            if(d > 3){
+              rolls += ' /dice-green ' + d;
+            }
+            else{
+              rolls += ' /dice ' + d;
+            }
+          });
+          sendChatMessage(t('board.gravity_rift').toUpperCase() + ' ' + t('cards.techno.' + unit.toUpperCase() + '.label').toLowerCase() + ' ' + rolls);
+        }
+      }
+      else if(effectName === 'tg'){
         if(boardProps.G && boardProps.G.races){
           boardProps.G.races.forEach((nr, pid) => {
 
@@ -921,8 +936,6 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     catch(e){console.log(e)}
     
   }, [G_stringify, playerID, neighbors]);
-  
-
   
 
   //eslint-disable-next-line
@@ -1201,4 +1214,4 @@ export const BoardWithEffects = EffectsBoardWrapper(TIOBoard, {
 });
 
 
-//{tradeOffer && tradeOffer.length > 0 && <TradeOffer offer={tradeOffer} sendChatMessage={sendChatMessage}/>}
+
