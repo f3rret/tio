@@ -486,7 +486,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit, GP
         return card.reaction && Object.keys(card.reaction).find(pid => card.reaction[pid] === 'sabotage') !== undefined;
     }, [card]);
 
-    let style = {backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute'};
+    let style = {backgroundColor: 'rgba(255, 255, 255, .85)', position: 'absolute', maxWidth: '60rem'};
     if(card.when === 'COMBAT'){
         style = {...style, right: '25%', bottom: '5%'}
     }
@@ -616,7 +616,7 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit, GP
                                     backgroundColor: 'rgba(33, 37, 41, 0.95)'}} />
                             </h5>}
                             {['Construction Rider', 'Diplomacy Rider', 'Imperial Rider', 'Leadership Rider', 
-                            'Politics Rider', 'Sanction', 'Trade Rider', 'Warfare Rider'].indexOf(card.id) > -1 && <h6 style={{margin: '1rem'}}> {selection.toUpperCase()} </h6>}
+                            'Politics Rider', 'Sanction', 'Trade Rider', 'Warfare Rider'].indexOf(card.id) > -1 && <h6 style={{margin: '1rem'}}> {card.target.selection.toUpperCase()} </h6>}
                             {card.id === 'Technology Rider' && <h6 style={{margin: '1rem'}}> {selection2.toUpperCase()} </h6>}
                             {card.id === 'Insider Information' && card.playerID === playerID && Object.keys(card.reaction).length === (Object.keys(ctx.activePlayers).length - 1) && card.nextAgenda && 
                             <div style={{padding: '1rem'}}>
@@ -652,8 +652,8 @@ export const ActionCardDialog = ({selectedTile, selectedPlanet, selectedUnit, GP
                     </>}
                     {((isMine && card.target) || !isMine) && <div>
                         {Object.keys(card.reaction).map((pid, i) => {
-                            return <p key={i} style={{color: 'black', margin: '.5rem'}}><b>{G.races[pid].name + ': '}</b>
-                                <b style={{color: card.reaction[pid] === 'pass' ? 'gray':'coral'}}>{card.reaction[pid]}</b></p>
+                            return <p key={i} style={{color: 'black', margin: '.5rem'}}><b>{t('races.' + G.races[pid].rid + '.name') + ': '}</b>
+                                <b style={{color: card.reaction[pid] === 'pass' ? 'gray':'coral'}}>{t('board.' + card.reaction[pid])}</b></p>
                         })}
                         {isMine && Object.keys(card.reaction).length === 0 && <p style={{color: 'black'}}><b>{t('board.awaiting_other_players')}...</b></p>}
                     </div>}
@@ -1125,7 +1125,7 @@ const TileInfo = ({tidx}) => {
 
     return <div style={{width: '80%', padding: '1rem', display: 'flex', alignItems: 'center'}}>
             {tidx === -1 && <p style={{margin: '1rem', color: 'rgba(0,0,0,.5)'}}>{t('board.click_tile')}</p>}
-            {tidx > -1 && <CardImg style={{width: '65%'}} src={'tiles/ST_'+G.tiles[tidx].tid+'.png'} />}
+            {tidx > -1 && <CardImg style={{width: '30%'}} src={'tiles/ST_'+G.tiles[tidx].tid+'.png'} />}
         </div>
 }
 
@@ -1137,7 +1137,7 @@ const UnitInfo = ({selectedUnit}) => {
     return <div style={{width: '80%', padding: '1rem', display: 'flex', position: 'relative', alignItems: 'center'}}>
             {!tile && <p style={{margin: '1rem', color: 'rgba(0,0,0,.5)'}}>{t('board.click_unit')}</p>}
             {tile && <>
-                <CardImg style={{width: '75%'}} src={'tiles/ST_' + tile.tid + '.png'} />
+                <CardImg style={{width: '30%'}} src={'tiles/ST_' + tile.tid + '.png'} />
                 {tile.tdata.occupied !== undefined && <CardImg style={{width: '3rem', top: '1rem', left: '1rem', position: 'absolute'}} src={'race/icons/' + G.races[tile.tdata.occupied].rid + '.png'}/>}
                 {selectedUnit.unit !== undefined && <CardImg style={{}} src={'units/' + selectedUnit.unit.toUpperCase() + '.png'}/>}
             </>}

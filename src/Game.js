@@ -134,8 +134,10 @@ export const TIO = {
             G.actionsDeck = random.Shuffle(deck);
           }
 
-         if(!G.explorationDecks['cultural'].length){ //need purge GammaWormhole on deck reuse case
-            
+          //G.races[ctx.currentPlayer].actionCards.push(G.actionsDeck.find(a => a.id === 'Warfare Rider')) //test only
+
+          if(!G.explorationDecks['cultural'].length){ //need purge GammaWormhole on deck reuse case
+              
             Object.keys(cardData.exploration).forEach(k => {
               const deck = [];
               cardData.exploration[k].forEach(exp => {
@@ -216,57 +218,65 @@ export const TIO = {
             },
 
             onMove: ({ G, ctx, playerID, ...plugins }) => {
-              if(!ctx.activePlayers || !ctx.activePlayers[playerID]){
-                G.races[playerID].combatActionCards = [];
 
-                if(G.races[playerID].preCombatActionCards && G.races[playerID].preCombatActionCards.length){
-                  G.races[playerID].combatActionCards.push(...G.races[playerID].preCombatActionCards);
-                  G.races[playerID].preCombatActionCards = [];
+              try{
+                if(!ctx.activePlayers || !ctx.activePlayers[playerID]){
+                  G.races[playerID].combatActionCards = [];
+
+                  if(G.races[playerID].preCombatActionCards && G.races[playerID].preCombatActionCards.length){
+                    G.races[playerID].combatActionCards.push(...G.races[playerID].preCombatActionCards);
+                    G.races[playerID].preCombatActionCards = [];
+                  }
                 }
-              }
 
-              //space cannon todo: make this check more selective, not after each move
-              if(!G.spaceCannons && !ctx.activePlayers){
-                const activeTile = G.tiles.find(t => t.active === true);
+                //space cannon todo: make this check more selective, not after each move
+                if(!G.spaceCannons && !ctx.activePlayers){
+                  const activeTile = G.tiles.find(t => t.active === true);
 
-                if(activeTile && (activeTile.tdata.attacker || (activeTile.tdata.fleet && String(activeTile.tdata.occupied) === String(ctx.currentPlayer)) )){
+                  if(activeTile && (activeTile.tdata.attacker || (activeTile.tdata.fleet && String(activeTile.tdata.occupied) === String(ctx.currentPlayer)) )){
 
-                  if(!activeTile.tdata.spaceCannons_done && !G.races[ctx.currentPlayer].spaceCannonsImmunity){
-                    let spaceCannons = {};
-                    //enemy's pds at same tile
-                    if(activeTile.tdata.planets){
-                      activeTile.tdata.planets.forEach(p =>{ 
-                        if(p.occupied !== undefined && p.occupied != ctx.currentPlayer && p.units && (p.units.pds || p.experimentalBattlestation)){
-                          spaceCannons[p.occupied] = 'spaceCannonAttack';
-                        }
-                      });
-                    }
-
-                    //cannon in adjacent systems
-                    const races = G.races.filter((r, i) => i != ctx.currentPlayer && r.technologies.find(t => t.id === 'PDS').spaceCannon.range > 1).map(r => r.rid);
-                    const neighs = neighbors(G.HexGrid, [activeTile.q, activeTile.r]);
-
-                    neighs.forEach(nei => {
-                      const n = G.tiles.find(t => t.tid === nei.tileId);
-                      if(n.tdata.planets){
-                        n.tdata.planets.forEach(p =>{ 
-                          if(p.experimentalBattlestation || (races.indexOf(p.occupied) > -1 && p.units && p.units.pds)){
+                    if(!activeTile.tdata.spaceCannons_done && !G.races[ctx.currentPlayer].spaceCannonsImmunity){
+                      let spaceCannons = {};
+                      //enemy's pds at same tile
+                      if(activeTile.tdata.planets){
+                        activeTile.tdata.planets.forEach(p =>{ 
+                          if(p.occupied !== undefined && p.occupied != ctx.currentPlayer && p.units && (p.units.pds || p.experimentalBattlestation)){
                             spaceCannons[p.occupied] = 'spaceCannonAttack';
                           }
                         });
                       }
-                    });
-                  
-                    if(spaceCannons && Object.keys(spaceCannons).length > 0){
-                      G.spaceCannons = spaceCannons;
+
+                      //cannon in adjacent systems
+                      const races = G.races.filter((r, i) => i != ctx.currentPlayer && r.technologies.find(t => t.id === 'PDS').spaceCannon.range > 1).map(r => String(r.rid));
+                      const neighs = neighbors(G.HexGrid, [activeTile.q, activeTile.r]);
+
+                      neighs.forEach(nei => {
+                        const n = G.tiles.find(t => t.tid === nei.tileId);
+
+                        if(n.tdata.planets){
+                          n.tdata.planets.forEach(p =>{ 
+                            if(p.experimentalBattlestation || (p.occupied !== undefined && G.races[p.occupied] && races.indexOf(String(G.races[p.occupied].rid)) > -1 && p.units && p.units.pds)){
+                              spaceCannons[p.occupied] = 'spaceCannonAttack';
+                            }
+                          });
+                        }
+                      });
+                    
+                      if(spaceCannons && Object.keys(spaceCannons).length > 0){
+                        G.spaceCannons = spaceCannons;
+                      }
                     }
                   }
+                  
                 }
-                
+                else if(G.spaceCannons && ctx.activePlayers && ctx.activePlayers[ctx.currentPlayer] === 'spaceCannonAttack_step2'){
+                  delete G['spaceCannons'];
+                }
               }
-              else if(G.spaceCannons && ctx.activePlayers && ctx.activePlayers[ctx.currentPlayer] === 'spaceCannonAttack_step2'){
-                delete G['spaceCannons'];
+              catch(e){
+                console.log(e)
               }
+
 
             },
 
@@ -1031,10 +1041,6 @@ export const TIO = {
         onBegin: ({ G, events }) => {
           G.passedPlayers = [];
           G.races.forEach(r => {
-            r.actionCards.push(G.actionsDeck.pop());
-            if(haveTechnology(r, 'NEURAL_MOTIVATOR')){
-              r.actionCards.push(G.actionsDeck.pop());
-            }
             r.exhaustedCards = [];
             r.combatActionCards = [];
           });
@@ -1046,7 +1052,12 @@ export const TIO = {
             G.pubObjDeck = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 2 ));
           }
           G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
-          G.races.forEach( r => { 
+          G.races.forEach( r => {
+            r.actionCards.push(G.actionsDeck.pop());
+            if(haveTechnology(r, 'NEURAL_MOTIVATOR')){
+              r.actionCards.push(G.actionsDeck.pop());
+            }
+
             if(r.exhaustedCards.indexOf('Political Stability') === -1) r.strategy = []; 
             r.initiative = undefined;
             r.lastScoredObjType = undefined;
@@ -1196,7 +1207,7 @@ export const TIO = {
                 G.laws.push(G['vote' + agendaNumber]);
               }
 
-              if(G.laws && G.laws.length > 0){
+              if(G.laws && G.laws.length > 2){
                 G.races.forEach((r, i) => {
                   checkSecretObjective(G, i, 'Dictate Policy');
                 });

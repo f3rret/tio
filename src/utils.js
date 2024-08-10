@@ -1619,8 +1619,8 @@ export const checkIonStorm = (G, fullpath) => {
   });
 }
 
-export const isNumeric = function() {
-  return !isNaN(parseFloat(this)) && isFinite(this);
+export const isNumeric = function(param) {
+  return !isNaN(parseFloat(param)) && isFinite(param);
 };
 
 export const getVP = function(G, playerID) {

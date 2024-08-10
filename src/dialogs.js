@@ -76,7 +76,6 @@ export const getStratColor = (strat, op) => {
 export const AgendaDialog = ({ onConfirm, mini, payment, GP }) => {
     const { G, playerID, exhaustedCards, moves, ctx } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
-    //const [ex, setEx] = useState({});
     const [voteRadio, setVoteRadio] = useState('for');
     const [agendaNumber, setAgendaNumber] = useState(1);
     const voteSelect = useRef(null);
@@ -84,20 +83,6 @@ export const AgendaDialog = ({ onConfirm, mini, payment, GP }) => {
     const imVoted = useMemo(()=>{
         return G.races[playerID].voteResults.length >= agendaNumber;
     }, [G.races, playerID, agendaNumber])
-
-    /*const planetRowClick = useCallback((pname) => {
-        if(imVoted) return;
-        if(!PLANETS.find(p => p.name === pname).exhausted){
-            setEx(produce(ex, draft => {
-                if(draft[pname]){
-                    delete draft[pname];
-                }
-                else{
-                    draft[pname] = true;
-                }
-            }));
-        }
-    }, [PLANETS, ex, imVoted]);*/
 
     const votes = useMemo(()=>{
         let result = GP.influence;//PLANETS.filter(p => ex[p.name]).reduce((a,b) => b.influence + a, 0);
@@ -332,7 +317,7 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
                     resources += planet.resources;
                 }
             });*/
-            let pay = isMine ? GP.resources : GP.influence;
+            let pay = GP.resources;
             let r = Math.floor((pay + (GP.tg* GP.tgMultiplier)) / (isMine ? 6:4));
             if(r > 1) r = 1;
             if(isMine) r++;
@@ -1690,6 +1675,14 @@ export const ProducingPanel = (args) => {
         }
     }, [customProducing, R_UNITS]);
 
+    const freelancers = useMemo(() => {
+        const planet = PLANETS.find(p => p.name === pname);
+        
+        if(planet){
+            if(planet.exploration === 'Freelancers') return true;
+        }
+    }, [PLANETS, pname]);
+
     const deployPrice = useMemo(() => {
 
         let sum = 0;
@@ -1712,13 +1705,13 @@ export const ProducingPanel = (args) => {
             sum -= 1;
         }
 
-        if(haveTechnology(G.races[playerID], 'SARWEEN_TOOLS') && !exhaustedCards.includes('SLING_RELAY')){
+        if(!freelancers && !customProducing && haveTechnology(G.races[playerID], 'SARWEEN_TOOLS') && !exhaustedCards.includes('SLING_RELAY')){
             sum -= 1;
         }
 
         return sum;
 
-    }, [deploy, unitsList, exhaustedCards, G.races, playerID]);
+    }, [customProducing, freelancers, deploy, unitsList, exhaustedCards, G.races, playerID]);
 
     const deployUnit = (inc, uname) => {
         const du = () => {
@@ -1748,14 +1741,6 @@ export const ProducingPanel = (args) => {
             }
         }
     }
-
-    const freelancers = useMemo(() => {
-        const planet = PLANETS.find(p => p.name === pname);
-        
-        if(planet){
-            if(planet.exploration === 'Freelancers') return true;
-        }
-    }, [PLANETS, pname]);
 
     const maxDeployUnits = useMemo(() => {
         if(customProducing) return customProducing.count;

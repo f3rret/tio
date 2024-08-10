@@ -1088,7 +1088,8 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                             <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.actions.' + pr.id + '.label').toUpperCase()}</b>
                           </button>
 
-                          {t('cards.actions.' + pr.id + '.description')}
+                          <b>{t('board.when_' + pr.when)}</b>
+                          {' ' + t('cards.actions.' + pr.id + '.description')}
                         </CardsPagerItem>}
                       )}
                     </CardsPager>}

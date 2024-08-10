@@ -114,6 +114,7 @@
             "when_STRATEGY": "Strategy",
             "target": "Target",
             "sabotage": "Sabotage",
+            "pass": "Pass",
             "awaiting_other_players": "Awaiting other players",
             "choose_one": "Choose one",
             "from_planet": "From planet",

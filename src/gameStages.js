@@ -669,7 +669,7 @@ export const ACTION_CARD_STAGE = {
                   G.races[card.target.playerID].voteResults.push({vote: null, count: 0});
                   if(G.vote2){
                     if(G.passedPlayers.indexOf(card.target.playerID) === -1){
-                      G.passedPlayers.push(card.target.playerID);
+                      G.passedPlayers.push(card.target.playerID, card.target.playerID);
                     }
                   }
                 }
@@ -689,7 +689,7 @@ export const ACTION_CARD_STAGE = {
 
                   if(G.vote2){
                     if(G.passedPlayers.indexOf(playerID) === -1){
-                      G.passedPlayers.push(playerID);
+                      G.passedPlayers.push(playerID, playerID);
                     }
                   }
                 }
@@ -2474,6 +2474,7 @@ export const ACTS_STAGES = {
               }
 
               activePlanet.occupied = playerID;
+              activePlanet.exhausted = true;
               checkCommanderUnlock(G, playerID);
 
               if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
