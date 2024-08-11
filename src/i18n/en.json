@@ -64,9 +64,11 @@
             "reverse_placement_help": "Reverses which tiles are placed first in placement order.\n***\nTiles are normally placed in priority (see randomize priority help). This reverses the order, so that the last picks are first, which generally has the effect of pushing the more valuable tiles towards the center of the galaxy.",
             "team": "Team",
             "about": "Mission",
-            "mission": "This project is an open public creation of fans of the strategic board game \"Twilight Imperium\" produced by Fantasy Flight Games. The project does not pursue commercial goals and is not a competitor to the original game. On the contrary, we fully advocate purchasing the original desktop version and joining the ranks of its fans.",
+            "mission": "This project is an open public creation of admirers of the strategic board game \"Twilight Imperium\" produced by Fantasy Flight Games. We advocate for the unification of all involved and a comprehensive exchange of experience, and we fully advocate purchasing the original board game and joining the ranks of its fans.",
             "mission_github": "The project source code is available in repository of",
-            "mission_vk": "The developer forum is available on the social network"
+            "mission_vk": "The developer forum is available on the social network",
+            "mission_thanks_1": "Special thanks to",
+            "mission_thanks_2": "and the creators of"
         },
         "board": {
             "nav": {

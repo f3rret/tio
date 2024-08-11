@@ -596,6 +596,7 @@ export const Lobby = ({dispatch})=> {
                                 <p>{t('lobby.mission')}</p>
                                 <p>{t('lobby.mission_github') + ' '}<a onClick={(e)=>e.stopPropagation()} href='https://github.com/f3rret/tio'>GitHub</a></p>
                                 <p>{t('lobby.mission_vk') + ' '}<a onClick={(e)=>e.stopPropagation()} href='https://vk.com/twionline'>Вконтакте</a></p>
+                                <p>{t('lobby.mission_thanks_1') + ' '}<a onClick={(e)=>e.stopPropagation()} href='https://github.com/KeeganW'>Keegan Williams</a>{' ' + t('lobby.mission_thanks_2') + ' '}<a onClick={(e)=>e.stopPropagation()} href='https://boardgame.io/'>boardgame.io</a></p>
                             </div>
                         </div>
                     </div>
