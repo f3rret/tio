@@ -1152,7 +1152,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                     </div>
                     <div className='borderedPanel-vertical' style={{display: 'flex', height: 'max-content', backgroundColor: 'rgba(33, 37, 41, 0.95)',
                             width: '100%', flexDirection: 'column', justifyContent: 'flex-end', margin: '0 0 2rem 0', zIndex: 1}}>
-                      {race && hud.subcardVisible === 'stuff' && <Stuff groundUnitSelected={hud.groundUnitSelected} R_UNITS={R_UNITS} tempCt={hud.tempCt} setTempCt={(pl) => dispatch({type: 'temp_ct', payload: pl})}/>}
+                      {race && hud.subcardVisible === 'stuff' && <Stuff groundUnitSelected={hud.groundUnitSelected} advUnitView={hud.advUnitView} payloadCursor={hud.payloadCursor} R_UNITS={R_UNITS} tempCt={hud.tempCt} dispatch={dispatch}/>}
                       {race && hud.subcardVisible === 'persons' && <Persons />}
                       {race && hud.subcardVisible === 'abilities' && <><Card style={{...CARD_STYLE, minHeight: '16.5rem', marginBottom: 0, backgroundColor: race.color[1], display: 'flex'}}>
                           {race.abilities.map((a, i) => 

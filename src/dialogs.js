@@ -446,6 +446,12 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
     const cantNext = useMemo(() => {
         let stopThere = false;
 
+        if(sid !== 'LEADERSHIP' && !isMine){
+            if(G.races[playerID].tokens.s < 1){
+                return true;
+            }
+        }
+
         if(sid === 'DIPLOMACY' && step === 1 && isMine){
             stopThere = true;
 

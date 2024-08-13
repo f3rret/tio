@@ -201,7 +201,7 @@
             "commodity": "commodity",
             "trade_goods": "trade goods",
             "trade_good": "trade good",
-            "remove_selected_from_board": "remove selected from board",
+            "remove_selected_from_board": "Remove from board",
             "purge": "purge",
             "ready": "ready",
             "not_ready": "not ready",

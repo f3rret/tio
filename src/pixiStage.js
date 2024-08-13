@@ -270,39 +270,40 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
           event.stopPropagation();
           event.preventDefault();
       }
-  
+
       const tile = G.tiles[args.tile];
-      if(String(tile.tdata.occupied) === String(playerID) || tile.tdata.occupied === undefined){
-  
-          if(hud.exhaustedCards.includes('TRANSIT_DIODES')){
-            if(!race.reinforcement.transit ||  race.reinforcement.transit.length < 4){
-                moves.moveToTransit(args);
-            }
-          }
-          else if(hud.advUnitView && advUnitViewTechnology && hud.advUnitView.tile !== undefined && hud.advUnitView.tile === args.tile){
-            if(['infantry', 'fighter', 'mech'].includes(args.unit)){
-              if(tile && tile.tdata.fleet){
-                const carrier = tile.tdata.fleet[hud.advUnitView.unit];
-                if(!(hud.payloadCursor && hud.payloadCursor.i <= carrier.length - 1 && hud.payloadCursor.j <= advUnitViewTechnology.capacity)){
-                    dispatch({type: 'payload_cursor', payload: {i:0, j:0}});
-                }
-    
-                moves.loadUnit({src: {...args, e: undefined}, dst: {...hud.advUnitView, ...hud.payloadCursor}});
-                movePayloadCursor();
-              }
-            }
-          }
-          else if(['infantry', 'fighter', 'mech'].includes(args.unit)){
-
-            if(hud.groundUnitSelected.tile === args.tile && hud.groundUnitSelected.unit === args.unit && hud.groundUnitSelected.planet === args.planet){
-                //dispatch({type: 'ground_unit_selected', payload: {}});
-            }
-            else{
-                dispatch({type: 'ground_unit_selected', payload: {tile: args.tile, unit: args.unit, planet: args.planet}});
-            }
-          }
-
+      const planet = tile.tdata?.planets[args.planet];
+      if(!planet || String(planet.occupied) !== String(playerID)) return;
+      
+      if(hud.exhaustedCards.includes('TRANSIT_DIODES') && ['infantry', 'fighter', 'mech'].includes(args.unit)){
+        if(!race.reinforcement.transit ||  race.reinforcement.transit.length < 4){
+            moves.moveToTransit(args);
+        }
       }
+      else if(hud.advUnitView && advUnitViewTechnology && hud.advUnitView.tile !== undefined && hud.advUnitView.tile === args.tile){
+        if(String(tile.tdata.occupied) === String(playerID) || tile.tdata.occupied === undefined){
+          if(['infantry', 'fighter', 'mech'].includes(args.unit)){
+            if(tile && tile.tdata.fleet){
+              const carrier = tile.tdata.fleet[hud.advUnitView.unit];
+              if(!(hud.payloadCursor && hud.payloadCursor.i <= carrier.length - 1 && hud.payloadCursor.j <= advUnitViewTechnology.capacity)){
+                  dispatch({type: 'payload_cursor', payload: {i:0, j:0}});
+              }
+
+              moves.loadUnit({src: {...args, e: undefined}, dst: {...hud.advUnitView, ...hud.payloadCursor}});
+              movePayloadCursor();
+            }
+          }
+        }
+      }
+      else{
+        if(hud.groundUnitSelected.tile === args.tile && hud.groundUnitSelected.unit === args.unit && hud.groundUnitSelected.planet === args.planet){
+            dispatch({type: 'ground_unit_selected', payload: {}});
+        }
+        else{
+            dispatch({type: 'ground_unit_selected', payload: {tile: args.tile, unit: args.unit, planet: args.planet}});
+        }
+      }
+
     
     },[G.tiles, hud.exhaustedCards, hud.advUnitView, advUnitViewTechnology, moves, hud.payloadCursor, hud.groundUnitSelected, movePayloadCursor, playerID, race, dispatch]);
     
@@ -352,9 +353,11 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
                                     }
                                 
                                 {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) => {
+                                  const isSelected = hud.groundUnitSelected && hud.groundUnitSelected.tile === index && hud.groundUnitSelected.planet === i && hud.groundUnitSelected.unit === u;
+
                                     return <Container x={-10 + ui*100} y={-10} zIndex={u === 'spacedock' ? 3:1} key={ui}  > 
-                                        <Sprite  tint={G.races[p.occupied].color[0]} scale={.5} anchor={0} image={'icons/unit_ground_bg.png'}/>
-                                        <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-10} scale={.4} alpha={1}/>
+                                        <Sprite  tint={isSelected ? 'gold':G.races[p.occupied].color[0]} scale={.5} anchor={0} image={'icons/unit_ground_bg.png'}/>
+                                        <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-10} scale={.4} alpha={1} pointerdown={(e)=>loadUnit({tile: index, planet: i, unit: u, e})} interactive={true}/>
                                         <Text style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
                                         x={65} y={5} text={p.units[u].length}/>
                                         {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
@@ -435,7 +438,7 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
                             for(let j=0; j<cap; j++){
                                 row.push(<Sprite tint={hud.payloadCursor && hud.payloadCursor.i === i && hud.payloadCursor.j === j ? 'gold':G.races[element.tdata.occupied].color[0]} 
                                     pointerdown={()=>dispatch({type: 'payload_cursor', payload: {i, j}})} interactive={true} key={j} x={20 + j*50} y={-30-i*50} scale={.3} anchor={0} image={'icons/unit_pl_bg.png'}>
-                                    {ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite image={'units/' + ship.payload[j].id.toUpperCase() + '.png'} 
+                                    {ship && ship.payload && ship.payload.length >= j && ship.payload[j] && <Sprite image={'units/' + ship.payload[j].id.toUpperCase() + '.png'} 
                                     x={10} y={10} scale={1} alpha={.85}/>}
                                 </Sprite>);
                             }

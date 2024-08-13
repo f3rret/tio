@@ -378,32 +378,58 @@ export const TIO = {
             }
           },
           moveToReinforcements: ({G, playerID, ...plugins}, args) => {
-            const { tile, planet, unit } = args;
-            if(tile === undefined || planet === undefined || unit === undefined) return;
+            const { groundUnitSelected, advUnitView, payloadCursor } = args;
+            const { tile, planet, unit } = groundUnitSelected && groundUnitSelected.unit ? groundUnitSelected : advUnitView;
+            if(tile === undefined || unit === undefined) return;
 
-            const p = G.tiles[tile].tdata.planets[planet];
-            if(!p.units || !p.units[unit] || !p.units[unit].length) return;
-            p.units[unit].pop();
-            
-            if(!p.units[unit].length){
-              delete p.units[unit];
-            }
-            if(!Object.keys(p.units).length){
-              delete p['units'];
-            }
+            if(groundUnitSelected && groundUnitSelected.unit){
+              if(planet === undefined) return;
+              const p = G.tiles[tile].tdata.planets[planet];
 
-            if(p.exploration === 'Core Mine' && unit === 'infantry'){
-              G.races[playerID].tg++;
-              plugins.effects.tg();
-              delete p['exploration'];
+              if(String(p.occupied) !== String(playerID)) return;
+              if(!p.units || !p.units[unit] || !p.units[unit].length) return;
+              p.units[unit].pop();
+              
+              if(!p.units[unit].length){
+                delete p.units[unit];
+              }
+              if(!Object.keys(p.units).length){
+                delete p['units'];
+              }
+
+              if(p.exploration === 'Core Mine' && unit === 'infantry'){
+                G.races[playerID].tg++;
+                plugins.effects.tg();
+                delete p['exploration'];
+              }
+              else if(p.exploration === 'Expedition' && unit === 'infantry'){
+                p.exhausted = false;
+                delete p['exploration'];
+              }
+              else if(p.exploration === 'Volatile Fuel Source' && unit === 'infantry'){
+                G.races[playerID].tokens.new++;
+                delete p['exploration'];
+              }
             }
-            else if(p.exploration === 'Expedition' && unit === 'infantry'){
-              p.exhausted = false;
-              delete p['exploration'];
-            }
-            else if(p.exploration === 'Volatile Fuel Source' && unit === 'infantry'){
-              G.races[playerID].tokens.new++;
-              delete p['exploration'];
+            else{
+              const tl = G.tiles[tile];
+              if(String(tl.tdata.occupied) !== String(playerID)) return;
+              let idx = 0;
+              if(payloadCursor && !isNaN(payloadCursor.i)) idx = payloadCursor.i;
+              const fleet = tl.tdata.fleet;
+
+              if(fleet && fleet[unit] && fleet[unit][idx]){
+                
+                fleet[unit].splice(idx, 1);
+
+                if(!fleet[unit].length){
+                  delete fleet[unit];
+                }
+                if(!Object.keys(fleet).length){
+                  delete tl.tdata['fleet'];
+                  delete tl.tdata['occupied'];
+                }
+              }
             }
 
           },
@@ -976,7 +1002,7 @@ export const TIO = {
                 if(tile && tile.tdata && tile.tdata.planets){
                   const planet = tile.tdata.planets[selectedPlanet];
         
-                  if(planet && String(planet.occupied) === String(playerID)){
+                  if(planet && String(planet.occupied) === String(playerID) && race.tokens.s > 0){
                     race.tokens.s--;
                     race.lastUsedPlanet = planet.name;
 

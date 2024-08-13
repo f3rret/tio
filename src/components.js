@@ -66,7 +66,7 @@ export const Persons = () => {
             </div>
         </Card>}
     </Card>
-    <ButtonGroup>
+    <ButtonGroup style={{fontFamily: 'Handel Gothic'}}>
         <button onClick={()=>setAgentVisible('agent')} className={'styledButton ' + (agentVisible === 'agent' ? 'white':'black')} style={{flexBasis: '33%', position: 'relative'}}>
             {t('board.agent').toUpperCase()}
             <Badge pill style={{position: 'absolute', right: '1rem', height: '1rem', top: '.75rem', border: 'solid 1px lightgray'}} color={agentAbilityIsActive ? 'success':'danger'}>{' '}</Badge>
@@ -83,7 +83,7 @@ export const Persons = () => {
     </>
 }
 
-export const Stuff = ({tempCt, setTempCt, R_UNITS, groundUnitSelected}) => {
+export const Stuff = ({tempCt, R_UNITS, groundUnitSelected, advUnitView, payloadCursor, dispatch}) => {
 
     const { G, playerID, moves, ctx, UNITS, exhaustedCards } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
@@ -91,6 +91,7 @@ export const Stuff = ({tempCt, setTempCt, R_UNITS, groundUnitSelected}) => {
     const race = useMemo(() => G.races[playerID], [G.races, playerID]);
     const [purgingFragments, setPurgingFragments] = useState({c: 0, h: 0, i: 0, u: 0});
 
+    const setTempCt = (pl) => dispatch({type: 'temp_ct', payload: pl})
     const IncrToken = ({tag}) => {
         let clickFn = ()=>{if(race.tokens.new){ moves.adjustToken(tag) }};
         if(exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1){
@@ -130,6 +131,14 @@ export const Stuff = ({tempCt, setTempCt, R_UNITS, groundUnitSelected}) => {
           
         }));
       }, [purgingFragments, race])
+
+    const moveToReinforcement = () => {
+      if(advUnitView && advUnitView.unit && payloadCursor){
+        dispatch({type: 'adv_unit_view'});
+      }
+
+      moves.moveToReinforcements({groundUnitSelected, advUnitView, payloadCursor})
+    }
 
     return <>
         <Card style={{...CARD_STYLE, minHeight: '14rem', marginBottom: 0}}>
@@ -220,19 +229,19 @@ export const Stuff = ({tempCt, setTempCt, R_UNITS, groundUnitSelected}) => {
                     </div>}
                 )}
                 </div>
-                <div style={{display: 'flex', flexDirection: 'row-reverse', height: '2rem', marginTop: '.5rem'}}>
-                <button className='styledButton yellow' style={{marginLeft: '1rem'}} disabled={!groundUnitSelected.unit} onClick={() => moves.moveToReinforcements(groundUnitSelected)}>{' ' + t('board.remove_selected_from_board')}</button>
-                {groundUnitSelected.unit && 
-                    <div style={{marginLeft: '1rem', display: 'flex'}}>
-                    <div style={{fontSize: '20px', fontFamily: 'Handel Gothic'}}>1 x </div>
-                    <img alt={groundUnitSelected.unit} src={'units/'+ groundUnitSelected.unit.toUpperCase() +'.png'} style={{width: '2rem'}}/>
-                    </div>
-                }
+                <div style={{display: 'flex', flexDirection: 'row', height: '2.25rem', marginTop: '.5rem', alignItems: 'center'}}>
+                  <button className='styledButton red' style={{margin: '0 1rem', fontWeight: 'bold'}} disabled={!(groundUnitSelected && groundUnitSelected.unit) && !(advUnitView && advUnitView.unit)} onClick={moveToReinforcement}>{' ' + t('board.remove_selected_from_board') + ' : '}</button>
+                  {groundUnitSelected && groundUnitSelected.unit && 
+                      <div style={{fontSize: '1.25rem', fontFamily: 'Handel Gothic'}}>{t('cards.techno.' + groundUnitSelected.unit.toUpperCase() + '.label')}</div>
+                  }
+                  {!(groundUnitSelected && groundUnitSelected.unit) && advUnitView && advUnitView.unit && 
+                      <div style={{fontSize: '1.25rem', fontFamily: 'Handel Gothic'}}>{t('cards.techno.' + advUnitView.unit.toUpperCase() + '.label')}</div>
+                  }
                 </div>
             </div>}
         </Card>
         
-        <ButtonGroup >
+        <ButtonGroup style={{fontFamily: 'Handel Gothic'}}>
             <button size='sm' onClick={()=>setMidPanelInfo('tokens')} className={ 'styledButton ' + (midPanelInfo === 'tokens' ? 'white':'black')} style={{flexBasis: '33%'}}>{t('board.tokens').toUpperCase()}</button>
             <button size='sm' onClick={()=>setMidPanelInfo('fragments')} className={ 'styledButton ' + (midPanelInfo === 'fragments' ? 'white':'black')} style={{flexBasis: '33%'}}>{t('board.fragments').toUpperCase()}</button>
             <button size='sm' onClick={()=>setMidPanelInfo('reinforce')} className={ 'styledButton ' + (midPanelInfo === 'reinforce' ? 'white':'black')} style={{flexBasis: '33%'}}>{t('board.reinforce').toUpperCase()}</button>
