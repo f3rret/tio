@@ -1,5 +1,5 @@
 import { useTick, Sprite, Container, Text } from '@pixi/react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 let dialog_pos = 1;
 
@@ -53,7 +53,7 @@ export const ActiveHex = ({x, y}) => {
 
 };
 
-const Landing = ({x, y, pointerdown, png, children}) => {
+const Landing = ({pointerdown, fill, children, x, y, width}) => {
 
     const [sc, setSc] = useState(0);
     const [sign, setSign] = useState(1);
@@ -65,15 +65,20 @@ const Landing = ({x, y, pointerdown, png, children}) => {
         return r + (0.1 * delta * sign);
     }));
 
-    return <Sprite zIndex={4} pointerdown={pointerdown} interactive={true} image={png} x={x} y={y + sc} scale={.5} alpha={.85}>{children}</Sprite>
+
+    return <Container zIndex={4} x={x} y={y + sc} width={width} alpha={.9} interactive={true} pointerdown={(e) => pointerdown(e)} cursor='pointer' mouseover={(e) => e.target.alpha = 1} mouseout={(e) => e.target.alpha = .9}>
+        {children}
+        <Text text={'⯆'} y={0} x={0}
+            style={{fontSize: 80, fontFamily:'Handel Gothic', fill: fill, dropShadow: true, dropShadowDistance: 5}}/>
+    </Container>
 }
 
 export const LandingGreen = (args) => {
-    return <Landing {...args} png='icons/landing-green.png'/>
+    return <Landing {...args} fill='green'/>
 }
 
 export const LandingRed = (args) => {
-    return <Landing {...args} png='icons/landing-red.png'/>
+    return <Landing {...args} fill='red'/>
 }
 
 
@@ -93,7 +98,7 @@ export const MoveDialog = ({x, y, pointerdown, canMoveThatPath, distanceInfo, bu
     
 }
 
-const PixiButton = (args) => {
+export const PixiButton = (args) => {
     const pointerdown = (e) => {
         e.stopImmediatePropagation();
         if(args.pointerdown) args.pointerdown(e);
@@ -103,6 +108,29 @@ const PixiButton = (args) => {
         <Sprite scale={.3} width={args.width} image={'pixi-button.png'}/>
         <Text text={args.label} y={10} x={args.width / 4}  
             style={{fontSize: 15, fontFamily:'Handel Gothic', fill: '#faebd7'}}/>
+    </Container>
+
+}
+
+export const SimplePixiButton = (args) => {
+    const pointerdown = useCallback((e) => {
+        e.stopImmediatePropagation();
+        if(args.pointerdown) args.pointerdown(e);
+    }, [args]);
+
+    const [sc, setSc] = useState(0);
+    const [sign, setSign] = useState(1);
+
+    useTick(delta => setSc(r => {
+        if(sc <= -0.5) setSign(1);
+        else if(sc >= 0.5) setSign(-1);
+
+        return r + (0.1 * delta * sign);
+    }));
+
+    return <Container alpha={.9} interactive={true} {...args} pointerdown={(e) => pointerdown(e)} cursor='pointer' mouseover={(e) => e.target.alpha = 1} mouseout={(e) => e.target.alpha = .9}>
+        <Text text={args.label} y={0 + sc} x={0}
+            style={{fontSize: 80, fontFamily:'Handel Gothic', fill: 'gold', dropShadow: true, dropShadowDistance: 5}}/>
     </Container>
 
 }

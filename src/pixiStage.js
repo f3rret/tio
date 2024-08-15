@@ -2,7 +2,7 @@ import { useApp, Stage, Text, Container, Sprite } from '@pixi/react';
 import { PixiViewport } from './viewport';
 import { memo, useContext, useCallback, useMemo } from 'react';
 import { LocalizationContext, StateContext, haveTechnology, wormholesAreAdjacent } from './utils';
-import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep, SectorUnderAttack, PlanetUnderAttack, SelectedPlanet } from './animated';
+import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep, SectorUnderAttack, PlanetUnderAttack, SelectedPlanet, SimplePixiButton } from './animated';
 import tileData from './tileData.json';
 import { lineTo, pathFromCoordinates } from './Grid';
 
@@ -243,27 +243,54 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
         dispatch({type: 'payload_cursor', payload: {i: nexti, j: nextj}});
         }, [advUnitViewTechnology, G.tiles, hud.advUnitView, dispatch, hud.payloadCursor]);
 
-    const unloadUnit = useCallback((pid) => {
+    const unloadUnit = useCallback(() => {
         const i = hud.payloadCursor.i;
         const j = hud.payloadCursor.j;
         const tile = G.tiles[hud.advUnitView?.tile];
-    
+
         if(tile && hud.advUnitView && String(tile.tdata.occupied) === String(playerID)){
             const unit = tile.tdata.fleet[hud.advUnitView.unit];
             if(unit[i] && unit[i].payload && unit[i].payload[j]){
-              if(tile.tid === 18 && pid === 0 && tile.tdata.planets[pid].occupied === undefined){
+              if(tile.tid === 18 && hud.selectedPlanet === 0 && tile.tdata.planets[hud.selectedPlanet].occupied === undefined){
                 if(G.races[playerID].rid !== 7){
                   if(GP.influence + (GP.tg* GP.tgMultiplier) < 6) return;
                 }
               }
-              moves.unloadUnit({src: {...hud.advUnitView, i, j}, dst: {tile: hud.advUnitView.tile, planet: pid}, payment: hud.globalPayment});
+              moves.unloadUnit({src: {...hud.advUnitView, i, j}, dst: {tile: hud.advUnitView.tile, planet: hud.selectedPlanet}, payment: hud.globalPayment});
             }
     
             //movePayloadCursor();
         }
-    }, [G, GP, hud.globalPayment, hud.advUnitView, moves, hud.payloadCursor, playerID]);
+    }, [G, GP, hud.globalPayment, hud.advUnitView, moves, hud.payloadCursor, hud.selectedPlanet, playerID]);
 
-    const loadUnit = useCallback((args)=>{
+    const loadUnit = useCallback(() => {
+      if(!hud.groundUnitSelected) return;
+
+      const tile = G.tiles[hud.groundUnitSelected.tile];
+      const planet = tile.tdata?.planets[hud.groundUnitSelected.planet];
+      if(!planet || String(planet.occupied) !== String(playerID)) return;
+
+      if(hud.advUnitView && advUnitViewTechnology && hud.advUnitView.tile !== undefined && hud.advUnitView.tile === hud.groundUnitSelected.tile){
+
+        if(String(tile.tdata.occupied) === String(playerID) || tile.tdata.occupied === undefined){
+
+          if(['infantry', 'fighter', 'mech'].includes(hud.groundUnitSelected.unit)){
+            if(tile && tile.tdata.fleet){
+              const carrier = tile.tdata.fleet[hud.advUnitView.unit];
+
+              if(!(hud.payloadCursor && hud.payloadCursor.i <= carrier.length - 1 && hud.payloadCursor.j <= advUnitViewTechnology.capacity)){
+                  dispatch({type: 'payload_cursor', payload: {i:0, j:0}});
+              }
+
+              moves.loadUnit({src: {...hud.groundUnitSelected}, dst: {...hud.advUnitView, ...hud.payloadCursor}});
+              movePayloadCursor();
+            }
+          }
+        }
+      }
+    },[G.tiles, hud.advUnitView, advUnitViewTechnology, hud.payloadCursor, hud.groundUnitSelected, moves, playerID, dispatch, movePayloadCursor])
+
+    const groundUnitClick = useCallback((args) => {
       
       const event = args.e;
       if(event){
@@ -275,42 +302,39 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
       const planet = tile.tdata?.planets[args.planet];
       if(!planet || String(planet.occupied) !== String(playerID)) return;
       
-      if(hud.exhaustedCards.includes('TRANSIT_DIODES') && ['infantry', 'fighter', 'mech'].includes(args.unit)){
+      /*if(hud.exhaustedCards.includes('TRANSIT_DIODES') && ['infantry', 'fighter', 'mech'].includes(args.unit)){ //todo: remake using Remove button 
         if(!race.reinforcement.transit ||  race.reinforcement.transit.length < 4){
             moves.moveToTransit(args);
         }
-      }
-      else if(hud.advUnitView && advUnitViewTechnology && hud.advUnitView.tile !== undefined && hud.advUnitView.tile === args.tile){
-        if(String(tile.tdata.occupied) === String(playerID) || tile.tdata.occupied === undefined){
-          if(['infantry', 'fighter', 'mech'].includes(args.unit)){
-            if(tile && tile.tdata.fleet){
-              const carrier = tile.tdata.fleet[hud.advUnitView.unit];
-              if(!(hud.payloadCursor && hud.payloadCursor.i <= carrier.length - 1 && hud.payloadCursor.j <= advUnitViewTechnology.capacity)){
-                  dispatch({type: 'payload_cursor', payload: {i:0, j:0}});
-              }
-
-              moves.loadUnit({src: {...args, e: undefined}, dst: {...hud.advUnitView, ...hud.payloadCursor}});
-              movePayloadCursor();
-            }
-          }
-        }
+      }*/
+      //else{
+      if(hud.groundUnitSelected.tile === args.tile && 
+          hud.groundUnitSelected.unit === args.unit && 
+          hud.groundUnitSelected.planet === args.planet){
+          dispatch({type: 'ground_unit_selected', payload: {}});
       }
       else{
-        if(hud.groundUnitSelected.tile === args.tile && hud.groundUnitSelected.unit === args.unit && hud.groundUnitSelected.planet === args.planet){
-            dispatch({type: 'ground_unit_selected', payload: {}});
-        }
-        else{
-            dispatch({type: 'ground_unit_selected', payload: {tile: args.tile, unit: args.unit, planet: args.planet}});
-        }
+          dispatch({type: 'ground_unit_selected', payload: {tile: args.tile, unit: args.unit, planet: args.planet}});
       }
+      //}
 
-    
-    },[G.tiles, hud.exhaustedCards, hud.advUnitView, advUnitViewTechnology, moves, hud.payloadCursor, hud.groundUnitSelected, movePayloadCursor, playerID, race, dispatch]);
+    },[G.tiles, hud.groundUnitSelected, playerID, dispatch]);
     
     const modifyMoveStep = useCallback((index) => {
         if(G.tiles[index].tid === activeTile.tid) return;
         dispatch({type: 'move_steps', payload: index})
     }, [G.tiles, activeTile, dispatch]);
+
+    const selectedPlanet = useMemo(() => {
+      if(hud.selectedTile > -1 && hud.selectedPlanet > -1) {
+        const tile = G.tiles[hud.selectedTile];
+        if(tile && tile.tdata && tile.tdata.planets){
+          const planet = tile.tdata.planets[hud.selectedPlanet];
+          return planet;
+        }
+      }
+      
+    }, [G.tiles, hud.selectedTile, hud.selectedPlanet]);
 
     return G.tiles.map((element, index) => {
         //eslint-disable-next-line
@@ -357,7 +381,7 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
 
                                     return <Container x={-10 + ui*100} y={-10} zIndex={u === 'spacedock' ? 3:1} key={ui}  > 
                                         <Sprite  tint={isSelected ? 'gold':G.races[p.occupied].color[0]} scale={.5} anchor={0} image={'icons/unit_ground_bg.png'}/>
-                                        <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-10} scale={.4} alpha={1} pointerdown={(e)=>loadUnit({tile: index, planet: i, unit: u, e})} interactive={true}/>
+                                        <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-10} scale={.4} alpha={1} pointerdown={(e)=>groundUnitClick({tile: index, planet: i, unit: u, e})} interactive={true}/>
                                         <Text style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
                                         x={65} y={5} text={p.units[u].length}/>
                                         {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
@@ -367,41 +391,36 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
                                     }
                                 )}
                     
-                                {hud.advUnitView && hud.advUnitView.tile === index && (p.occupied === undefined || String(element.tdata.occupied) === String(p.occupied)) &&
-                                    !isDMZ(p) && <LandingGreen pointerdown={()=>unloadUnit(i)} x={0} y={0}>
-                                      {p.occupied === undefined && p.name === 'Mecatol Rex' && <Sprite image={'icons/influence_bg.png'} x={18} y={25} scale={.75}>
-                                        <Text x={18} y={15} text={race.rid === 7 ? 0:6} style={{fontSize: 35, fontFamily:'Handel Gothic', fill: 'white'}}/>
-                                      </Sprite>}
-                                    </LandingGreen>
-                                    }
-                                {activeTile && String(element.tdata.occupied) === String(playerID) && !G.spaceCannons && element.tdata.fleet && 
-                                    p.occupied !== undefined && String(element.tdata.occupied) !== String(p.occupied) && !isDMZ(p) &&
-                                    <LandingRed pointerdown={()=>moves.invasion(p)} x={0} y={0}/>
-                                }
+                                
                     
                                 {p.invasion && <PlanetUnderAttack w={element.w} x={p.hitRadius * 1.5} y={-p.hitRadius * 1.5} text={t('board.planet_under_attack')} rid={G.races[ctx.currentPlayer].rid} 
                                             rname={t('races.' + G.races[ctx.currentPlayer].rid + '.name')} fleet={p.invasion.troops} color={G.races[ctx.currentPlayer].color[0]}/>}
                                 </Container>
                     
                                 <Container x={50} y={110}>
-                                {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>{
-                                const isSelected = hud.groundUnitSelected && hud.groundUnitSelected.tile === index && hud.groundUnitSelected.planet === i && hud.groundUnitSelected.unit === u;
-                    
-                                return <Container x={-30 + ui*55} y={-20} key={ui} interactive={true} pointerdown={(e)=>loadUnit({tile: index, planet: i, unit: u, e})} >
-                                            <Sprite tint={isSelected ? 'gold':G.races[p.occupied].color[0]} scale={.25}  image={'icons/unit_inf_bg.png'}/>
-                                            <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={0} scale={.25} alpha={1}/>
-                                            <Text style={{fontSize: 13, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={18} y={40} text={p.units[u].length}/>
-                                        </Container>}
-                                )}
-                                {element.tdata.producing_done === true && hud.exhaustedCards.includes('SELF_ASSEMBLY_ROUTINES') &&
-                                <Text interactive={true} pointerdown={()=>moves.fromReinforcement(p.name, {mech: 1}, hud.exhaustedCards)} y={40} x={-30} style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} 
-                                text={'► Place 1 mech'}/>
-                                }
-                                {hud.exhaustedCards.includes('TRANSIT_DIODES') && String(p.occupied) === String(playerID) && race.reinforcement.transit && race.reinforcement.transit.length > 0 &&
-                                <Text interactive={true} pointerdown={()=>moves.moveFromTransit(index, i, hud.exhaustedCards)} y={40} x={-30} 
-                                    style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} 
-                                    text={'► Place ' + race.reinforcement.transit.length + ' units'}/>
-                                }
+                                  {hud.groundUnitSelected && hud.groundUnitSelected.tile === index && 
+                                  hud.groundUnitSelected.planet === i && ['infantry', 'fighter', 'mech'].includes(hud.groundUnitSelected.unit) &&
+                                  hud.advUnitView && hud.advUnitView.tile === index &&
+                                  <SimplePixiButton pointerdown={loadUnit} label={'⯅'} x={-90} y={-45} />}
+
+                                  {p.units && Object.keys(p.units).filter(u => ['infantry', 'fighter', 'mech'].indexOf(u) > -1).map((u, ui) =>{
+                                  const isSelected = hud.groundUnitSelected && hud.groundUnitSelected.tile === index && hud.groundUnitSelected.planet === i && hud.groundUnitSelected.unit === u;
+                      
+                                  return <Container x={-30 + ui*55} y={-20} key={ui} interactive={true} pointerdown={(e)=>groundUnitClick({tile: index, planet: i, unit: u, e})} >
+                                              <Sprite tint={isSelected ? 'gold':G.races[p.occupied].color[0]} scale={.25}  image={'icons/unit_inf_bg.png'}/>
+                                              <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={0} scale={.25} alpha={1}/>
+                                              <Text style={{fontSize: 13, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} x={18} y={40} text={p.units[u].length}/>
+                                          </Container>}
+                                  )}
+                                  {element.tdata.producing_done === true && hud.exhaustedCards.includes('SELF_ASSEMBLY_ROUTINES') &&
+                                  <Text interactive={true} pointerdown={()=>moves.fromReinforcement(p.name, {mech: 1}, hud.exhaustedCards)} y={40} x={-30} style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} 
+                                  text={'► Place 1 mech'}/>
+                                  }
+                                  {hud.exhaustedCards.includes('TRANSIT_DIODES') && String(p.occupied) === String(playerID) && race.reinforcement.transit && race.reinforcement.transit.length > 0 &&
+                                  <Text interactive={true} pointerdown={()=>moves.moveFromTransit(index, i, hud.exhaustedCards)} y={40} x={-30} 
+                                      style={{fontSize: 15, fontFamily:'Handel Gothic', fill: 'yellow', dropShadow: true, dropShadowDistance: 1}} 
+                                      text={'► Place ' + race.reinforcement.transit.length + ' units'}/>
+                                  }
                                 </Container>
                     
                                 {p.occupied !== undefined && (!p.units || Object.keys(p.units).length === 0) && 
@@ -417,17 +436,27 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
                         
                     
                         {element.tdata.fleet && <Container x={10} y={-30}>
-                            
-                    
-                            {Object.keys(element.tdata.fleet).map((f, i) => {
-                            const isCurrentAdvUnit = hud.advUnitView && hud.advUnitView.tile === index && hud.advUnitView.unit === f;
-                            return <Container interactive={true} key={i} x={element.w/4 - 50 + i*100} y={0} pointerdown={()=>isCurrentAdvUnit ? dispatch({type: 'adv_unit_view'}):dispatch({type: 'adv_unit_view', payload: {tile: index, unit: f}})} >
-                                    <Sprite tint={isCurrentAdvUnit ? 'gold':G.races[element.tdata.occupied].color[0]} scale={.25} anchor={0} image={'icons/unit_bg.png'}/>
-                                    <Sprite image={'units/' + f.toUpperCase() + '.png'} x={30} y={5} scale={.3} alpha={1}/>
-                                    <Text style={{fontSize: 25, fontFamily:'Handel Gothic', fill: '#FFFFFF', dropShadow: true, dropShadowDistance: 1}} 
-                                        x={60} y={53} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
-                                </Container>
-                            })}
+                          {hud.advUnitView && hud.advUnitView.tile === index && hud.selectedTile === index && selectedPlanet && (selectedPlanet.occupied === undefined || String(element.tdata.occupied) === String(selectedPlanet.occupied)) &&
+                              !isDMZ(selectedPlanet) && <LandingGreen pointerdown={()=>unloadUnit()} x={-20} y={-20} >
+                                {selectedPlanet.occupied === undefined && selectedPlanet.name === 'Mecatol Rex' && <Sprite image={'icons/influence_bg.png'} x={8} y={-25} scale={.75}>
+                                  <Text x={18} y={15} text={race.rid === 7 ? 0:6} style={{fontSize: 35, fontFamily:'Handel Gothic', fill: 'white'}}/>
+                                </Sprite>}
+                              </LandingGreen>
+                              }
+                          {activeTile && String(element.tdata.occupied) === String(playerID) && !G.spaceCannons && element.tdata.fleet && selectedPlanet && 
+                              selectedPlanet.occupied !== undefined && String(element.tdata.occupied) !== String(selectedPlanet.occupied) && !isDMZ(selectedPlanet) &&
+                              <LandingRed pointerdown={()=>moves.invasion(selectedPlanet)} x={-20} y={-20} />
+                          }
+                  
+                          {Object.keys(element.tdata.fleet).map((f, i) => {
+                          const isCurrentAdvUnit = hud.advUnitView && hud.advUnitView.tile === index && hud.advUnitView.unit === f;
+                          return <Container interactive={true} key={i} x={element.w/4 - 50 + i*100} y={0} pointerdown={()=>isCurrentAdvUnit ? dispatch({type: 'adv_unit_view'}):dispatch({type: 'adv_unit_view', payload: {tile: index, unit: f}})} >
+                                  <Sprite tint={isCurrentAdvUnit ? 'gold':G.races[element.tdata.occupied].color[0]} scale={.25} anchor={0} image={'icons/unit_bg.png'}/>
+                                  <Sprite image={'units/' + f.toUpperCase() + '.png'} x={30} y={5} scale={.3} alpha={1}/>
+                                  <Text style={{fontSize: 25, fontFamily:'Handel Gothic', fill: '#FFFFFF', dropShadow: true, dropShadowDistance: 1}} 
+                                      x={60} y={53} text={element.tdata.fleet[f].length === 1 ? ' 1':element.tdata.fleet[f].length}/>
+                              </Container>
+                          })}
                         </Container>}
                     
                         {hud.advUnitView && hud.advUnitView.tile === index && <Container x={30} y={-55}>
