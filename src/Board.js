@@ -188,6 +188,21 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 //eslint-disable-next-line
   }, [hud.globalPayment, PLANETS_stringify]);
 
+  const MY_FLEET_EXCEED = useMemo(() => {
+    return G.tiles.find(tile => {
+      if(tile && tile.tdata && tile.tdata.fleet && String(tile.tdata.occupied) === String(playerID)){
+        let fleetSize = 0;
+        Object.keys(tile.tdata.fleet).forEach(tag => {
+          fleetSize += tile.tdata.fleet[tag].length;
+        });
+
+        return fleetSize > race.tokens.f;
+      }
+      return false;
+    })
+  //eslint-disable-next-line
+  }, [G_tiles_stringify, race]);
+
   const togglePaymentDialog = (payment) => {
     if(payment && Object.keys(payment).length > 0){
       moves.completeObjective(hud.payObj, {...payment, tgMultiplier: GP.tgMultiplier});
@@ -959,7 +974,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
             </div>}
             {imagesPreloaded && <StateContext.Provider value={stateContext}>
               <Overlay/>      
-              <MyNavbar leftPanel={hud.leftPanel} setLeftPanel={(payload) => dispatch({type: 'left_panel', payload})} undo={undo} isMyTurn={isMyTurn} activeTile={activeTile}/>
+              <MyNavbar leftPanel={hud.leftPanel} setLeftPanel={(payload) => dispatch({type: 'left_panel', payload})} undo={undo} isMyTurn={isMyTurn} activeTile={activeTile} noaction={MY_FLEET_EXCEED}/>
               <CardColumns style={{margin: '4rem 1rem 1rem 1rem', padding:'1rem', position: 'fixed', width: '42rem', zIndex: '1'}}>
                 {!race.isSpectator && <>
                   {hud.leftPanel === 'techno' && <TechnologyDialog selected={hud.selectedTech && hud.selectedTech.techno ? [hud.selectedTech.techno.id]:[]} onSelect={({techno, rid}) => dispatch({type: 'selected_tech', payload: {techno, rid}})}/>}

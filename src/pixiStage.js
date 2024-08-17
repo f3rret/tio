@@ -2,7 +2,7 @@ import { useApp, Stage, Text, Container, Sprite } from '@pixi/react';
 import { PixiViewport } from './viewport';
 import { memo, useContext, useCallback, useMemo } from 'react';
 import { LocalizationContext, StateContext, haveTechnology, wormholesAreAdjacent } from './utils';
-import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep, SectorUnderAttack, PlanetUnderAttack, SelectedPlanet, SimplePixiButton } from './animated';
+import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep, SectorUnderAttack, PlanetUnderAttack, SelectedPlanet, SimplePixiButton, AnimatedLabel } from './animated';
 import tileData from './tileData.json';
 import { lineTo, pathFromCoordinates } from './Grid';
 
@@ -302,12 +302,7 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
       const planet = tile.tdata?.planets[args.planet];
       if(!planet || String(planet.occupied) !== String(playerID)) return;
       
-      /*if(hud.exhaustedCards.includes('TRANSIT_DIODES') && ['infantry', 'fighter', 'mech'].includes(args.unit)){ //todo: remake using Remove button 
-        if(!race.reinforcement.transit ||  race.reinforcement.transit.length < 4){
-            moves.moveToTransit(args);
-        }
-      }*/
-      //else{
+
       if(hud.groundUnitSelected.tile === args.tile && 
           hud.groundUnitSelected.unit === args.unit && 
           hud.groundUnitSelected.planet === args.planet){
@@ -316,7 +311,7 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
       else{
           dispatch({type: 'ground_unit_selected', payload: {tile: args.tile, unit: args.unit, planet: args.planet}});
       }
-      //}
+
 
     },[G.tiles, hud.groundUnitSelected, playerID, dispatch]);
     
@@ -559,14 +554,29 @@ const TilesMap3 = ({G, playerID, moves, ctx, t, stagew, stageh, isMyTurn, active
 
     return G.tiles.map((element, index) => {
         const [firstCorner] = element.corners;
+        let fleetSize = 0;
+        let fleetExceed = false;
+        
+        if(element.tdata && element.tdata.fleet && element.tdata.occupied !== undefined){
+          Object.keys(element.tdata.fleet).forEach(tag => {
+            if(tag.toUpperCase() !== 'FIGHTER'){
+              fleetSize += element.tdata.fleet[tag].length;
+            }
+          });
+
+          fleetExceed = fleetSize > G.races[element.tdata.occupied].tokens.f;
+        }
+
+
 
         return <Container key={index} x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5}>
                     {element.tdata.attacker && <SectorUnderAttack w={element.w} rid={G.races[ctx.currentPlayer].rid} rname={t('races.' + G.races[ctx.currentPlayer].rid + '.name')} 
                                         text={t('board.sector_under_attack')} fleet={element.tdata.attacker} color={G.races[ctx.currentPlayer].color[0]}/>}
 
-                    {isMyTurn && activeTile && hud.advUnitView && hud.advUnitView.tile === index && String(element.tdata.occupied) === String(playerID) && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 && ctx.phase === 'acts' && 
+                    {!fleetExceed && isMyTurn && activeTile && hud.advUnitView && hud.advUnitView.tile === index && String(element.tdata.occupied) === String(playerID) && element.tdata.tokens.indexOf(race.rid) === -1 && Object.keys(element.tdata.fleet).length > 0 && ctx.phase === 'acts' && 
                                 <MoveDialog  x={-240} y={-50} canMoveThatPath={canMoveThatPath} pointerdown={() => moveToClick(index)} 
                                             distanceInfo={distanceInfo(element, activeTile)} buttonLabel={t('board.go')}/>}
+                    {fleetExceed && <AnimatedLabel text={t('board.fleet_pool_exceed')}/>}
                 </Container>
     })
 };

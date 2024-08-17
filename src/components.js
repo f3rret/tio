@@ -137,7 +137,14 @@ export const Stuff = ({tempCt, R_UNITS, groundUnitSelected, advUnitView, payload
         dispatch({type: 'adv_unit_view'});
       }
 
-      moves.moveToReinforcements({groundUnitSelected, advUnitView, payloadCursor})
+      if(groundUnitSelected && groundUnitSelected.unit && exhaustedCards.includes('TRANSIT_DIODES') && ['infantry', 'fighter', 'mech'].includes(groundUnitSelected.unit)){
+        if(!race.reinforcement.transit ||  race.reinforcement.transit.length < 4){
+            moves.moveToTransit(groundUnitSelected);
+        }
+      }
+      else{
+        moves.moveToReinforcements({groundUnitSelected, advUnitView, payloadCursor})
+      }
     }
 
     return <>
@@ -249,7 +256,7 @@ export const Stuff = ({tempCt, R_UNITS, groundUnitSelected, advUnitView, payload
     </>
 }
 
-export const MyNavbar = ({leftPanel, setLeftPanel, undo, activeTile, isMyTurn}) => {
+export const MyNavbar = ({leftPanel, setLeftPanel, undo, activeTile, isMyTurn, noaction}) => {
     const { G, ctx, moves, playerID } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
     const isInTrade = ctx.activePlayers && ['trade', 'trade2'].includes(ctx.activePlayers[playerID]);
@@ -312,14 +319,14 @@ export const MyNavbar = ({leftPanel, setLeftPanel, undo, activeTile, isMyTurn}) 
             {ctx.phase === 'acts' && !isInTrade && <>
               <button className='styledButton black' style={{}} disabled={ctx.numMoves === 0 || !isMyTurn} onClick={() => undo()}><h5 style={{margin: '.5rem'}}>{t("board.nav.undo")}</h5></button>
               {!G.spaceCannons && <>
-                {!(activeTile && activeTile.tdata.attacker) && <button className='styledButton yellow' style={{}} disabled={!isMyTurn} onClick={()=>moves.endTurn()}><h5 style={{margin: '.5rem'}}>{t("board.nav.end_turn")}</h5></button>}
+                {!(activeTile && activeTile.tdata.attacker) && <button className='styledButton yellow' style={{}} disabled={!isMyTurn || noaction} onClick={()=>moves.endTurn()}><h5 style={{margin: '.5rem'}}>{t("board.nav.end_turn")}</h5></button>}
                 {activeTile && activeTile.tdata.attacker && <button className='styledButton yellow' style={{}} disabled={!isMyTurn} onClick={()=>moves.antiFighterBarrage()}><h5 style={{margin: '.5rem'}}>{t("board.nav.space_combat")}</h5></button>}
                 </>
               }
               {isMyTurn && G.spaceCannons && <button className='styledButton yellow' style={{}} onClick={()=>moves.spaceCannonAttack()}><h5 style={{margin: '.5rem'}}>{t("board.nav.space_cannon")}</h5></button>}
             </>}
             {isMyTurn && isInTrade && <button className='styledButton black' style={{}} disabled={ctx.numMoves === 0 || !isMyTurn} onClick={() => moves.decline()}><h5 style={{margin: '.5rem'}}>{t("board.nav.decline_trade")}</h5></button>}
-            {!isInTrade && ctx.phase !== 'strat' && ctx.phase !== 'agenda' && <button className='styledButton red' style={{}} disabled={!isMyTurn} onClick={()=>moves.pass()}><h5 style={{margin: '.5rem'}}>{t("board.nav.pass")}</h5></button>}
+            {!isInTrade && ctx.phase !== 'strat' && ctx.phase !== 'agenda' && <button className='styledButton red' style={{}} disabled={!isMyTurn || noaction} onClick={()=>moves.pass()}><h5 style={{margin: '.5rem'}}>{t("board.nav.pass")}</h5></button>}
           </NavItem>
         </Nav>
       </div>

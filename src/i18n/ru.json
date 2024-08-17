@@ -303,7 +303,8 @@
             "claim_promissory_card": "Потребовать карту обещания",
             "offer": "Предложить",
             "nebula": "Туманность",
-            "gravity_rift": "Гравитационный разлом"
+            "gravity_rift": "Гравитационный разлом",
+            "fleet_pool_exceed": "Превышен лимит флота"
         },
         "cards": {
             "strategy": {

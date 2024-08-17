@@ -303,7 +303,8 @@
             "claim_promissory_card": "Claim a promise card",
             "offer": "Offer",
             "nebula": "Nebula",
-            "gravity_rift": "Gravity rift"
+            "gravity_rift": "Gravity rift",
+            "fleet_pool_exceed": "Fleet limit exceed"
         },
         "cards": {
             "strategy": {

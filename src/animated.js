@@ -259,3 +259,23 @@ const AttackerForce = ({fleet, color}) => {
 
       return [...f, p]
   };
+
+export const AnimatedLabel = ({text}) => {
+    const [sc, setSc] = useState(0);
+    const [sign, setSign] = useState(1);
+
+    useTick(delta => setSc(r => {
+        if(sc <= -0.5) setSign(1);
+        else if(sc >= 0.5) setSign(-1);
+
+        return r + (0.05 * delta * sign);
+    }));
+
+    return <Container y={50}>
+                <Sprite tint='red' image={'pixi_label_bg.png'} height='50' width='300'/>
+                <Sprite image={'panel-bg.png'} height='50' width='300' alpha={.5}/>
+                
+                <Text x={20} y={10} text={text} style={{fontFamily: 'Handel Gothic', fill: 'white', fontSize: 20, dropShadow: true, dropShadowDistance: 1}}/>
+                {<Text alpha={sc+0.5} text='▉' x={280} y={8} height={34} style={{fill: 'white', fontSize: 20}}/>}
+            </Container>
+}
