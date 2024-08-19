@@ -187,25 +187,25 @@ export const Stuff = ({tempCt, R_UNITS, groundUnitSelected, advUnitView, payload
             
             <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
             <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('c')} style={{...TOKENS_STYLE, width: '22%'}}>
-                <img alt='fragment' src='icons/cultural_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                <img alt='fragment' src='icons/cultural_fragment.png' style={{position: 'absolute', opacity: .7, width: '50%'}}/>
                 <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.c - purgingFragments.c}</h6>
                 <b style={{backgroundColor: race.color[1], width: '100%', wordWrap: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '.9rem'}}>
                 {t('board.cultural')}</b>
             </ListGroupItem>
             <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('h')} style={{...TOKENS_STYLE, width: '22%'}}>
-                <img alt='fragment' src='icons/hazardous_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                <img alt='fragment' src='icons/hazardous_fragment.png' style={{position: 'absolute', opacity: .7, width: '50%'}}/>
                 <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.h - purgingFragments.h}</h6>
                 <b style={{backgroundColor: race.color[1], width: '100%', wordWrap: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '.9rem'}}>
                 {t('board.hazardous')}</b>
             </ListGroupItem>
             <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('i')} style={{...TOKENS_STYLE, width: '22%'}}>
-                <img alt='fragment' src='icons/industrial_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                <img alt='fragment' src='icons/industrial_fragment.png' style={{position: 'absolute', opacity: .7, width: '50%'}}/>
                 <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.i - purgingFragments.i}</h6>
                 <b style={{backgroundColor: race.color[1], width: '100%', wordWrap: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '.9rem'}}>
                 {t('board.industrial')}</b>
             </ListGroupItem>
             <ListGroupItem tag='button' className='hoverable' onClick={()=>purgeFragment('u')} style={{...TOKENS_STYLE, width: '22%'}}>
-                <img alt='fragment' src='icons/unknown_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                <img alt='fragment' src='icons/unknown_fragment.png' style={{position: 'absolute', opacity: .7, width: '50%'}}/>
                 <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{race.fragments.u - purgingFragments.u}</h6>
                 <b style={{backgroundColor: race.color[1], width: '100%', wordWrap: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '.9rem'}}>
                 {t('board.unknown')}</b>
