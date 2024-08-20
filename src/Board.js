@@ -255,6 +255,9 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     }
   }
 
+  const relicClick = (rid) => {
+    dispatch({type: 'exhaust_card', cardId: rid.id})
+  }
 
   const mustAction = useMemo(() => {
     if(race && race.actionCards && isMyTurn) return race.actionCards.length > 7
@@ -1124,7 +1127,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
                     {hud.rightBottomVisible === 'relics' && race.relics.length > 0 && <CardsPager>
                       {race.relics.map((pr, i) => <CardsPagerItem key={i} tag='relic'>
-                        <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
+                        <button style={{width: '100%', marginBottom: '1rem'}} disabled={pr.exhausted} className = {'styledButton ' + (hud.exhaustedCards.includes(pr.id) ? 'white':'yellow')} onClick={() => relicClick(pr)}>
                           <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.relics.' + pr.id + '.label').toUpperCase()}</b>
                         </button>
 

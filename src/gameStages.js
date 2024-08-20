@@ -890,7 +890,9 @@ export const ACTION_CARD_STAGE = {
                   G.races[card.target.playerID].forbiddenStrategy = G.races[card.target.playerID].strategy.splice(-1);
                 }
                 else if(card.id === 'Summit'){
-                  G.races[playerID].tokens.new += 2;
+                  let possible = 16 - (G.races[playerID].tokens.new + G.races[playerID].tokens.s + G.races[playerID].tokens.t + G.races[playerID].tokens.f);
+                  if(possible < 0) possible = 0;
+                  G.races[playerID].tokens.new += Math.min(2, possible);
                 }
               }
             }
@@ -1138,7 +1140,9 @@ export const ACTS_STAGES = {
             exhaustPlanet();
 
             G.races[playerID].tg -= payment.tg;
-            G.races[playerID].tokens.new = result;
+            let possible = 16 - (G.races[playerID].tokens.new + G.races[playerID].tokens.s + G.races[playerID].tokens.t + G.races[playerID].tokens.f);
+            if(possible < 0) possible = 0;
+            G.races[playerID].tokens.new = Math.min(result, possible);
             break;
           case 'DIPLOMACY':
             if(result > 0 && ctx.currentPlayer === playerID){

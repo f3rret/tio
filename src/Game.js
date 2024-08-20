@@ -167,6 +167,7 @@ export const TIO = {
           if(!G.relicsDeck.length){
             G.relicsDeck = random.Shuffle(cardData.relics.filter(r => !r.mod));
           }
+          G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'Dominus Orb'))
 
           if(!G.secretObjDeck.length){
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
@@ -407,7 +408,9 @@ export const TIO = {
                 delete p['exploration'];
               }
               else if(p.exploration === 'Volatile Fuel Source' && unit === 'infantry'){
-                G.races[playerID].tokens.new++;
+                if(G.races[playerID].tokens.t + G.races[playerID].tokens.s + G.races[playerID].tokens.f + G.races[playerID].tokens.new < 16){
+                  G.races[playerID].tokens.new++;
+                }
                 delete p['exploration'];
               }
             }
@@ -962,6 +965,10 @@ export const TIO = {
                 if(args.exhaustedCards.indexOf('GRAVITY_DRIVE')>-1){
                   G.races[playerID].exhaustedCards.push('GRAVITY_DRIVE');
                 }
+                if(args.exhaustedCards.indexOf('Dominus Orb')>-1){
+                  const relic = G.races[playerID].relics.find(r => r.id === 'Dominus Orb');
+                  if(relic) relic.exhausted = true;
+                }
               }
             }
             catch(e){console.log(e)}
@@ -1103,36 +1110,44 @@ export const TIO = {
           G.races.forEach(r => {
             r.exhaustedCards = [];
             r.combatActionCards = [];
+            r.relics = r.relics.filter(r => r && !r.exhausted)
           });
           
          // events.setPhase('agenda'); //test only!
         },
         onEnd: ({ G, random }) => {
-          if(G.pubObjectives && G.pubObjectives.length === 5){
-            G.pubObjDeck = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 2 ));
-          }
-          G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
-          G.races.forEach( r => {
-            r.actionCards.push(G.actionsDeck.pop());
-            if(haveTechnology(r, 'NEURAL_MOTIVATOR')){
-              r.actionCards.push(G.actionsDeck.pop());
+          try{
+            if(G.pubObjectives && G.pubObjectives.length === 5){
+              G.pubObjDeck = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 2 ));
             }
+            G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
+            G.races.forEach( r => {
+              r.actionCards.push(G.actionsDeck.pop());
+              if(haveTechnology(r, 'NEURAL_MOTIVATOR')){
+                r.actionCards.push(G.actionsDeck.pop());
+              }
 
-            if(r.exhaustedCards.indexOf('Political Stability') === -1) r.strategy = []; 
-            r.initiative = undefined;
-            r.lastScoredObjType = undefined;
-            let c = haveTechnology(r, 'HYPER_METABOLISM') ? 3:2;
-            if(r.rid === 1) c++;
-            r.tokens.new += c;
-          });
+              if(r.exhaustedCards.indexOf('Political Stability') === -1) r.strategy = []; 
+              r.initiative = undefined;
+              r.lastScoredObjType = undefined;
+              let c = haveTechnology(r, 'HYPER_METABOLISM') ? 3:2;
+              if(r.rid === 1) c++;
+              
+              let possible = 16 - (r.tokens.t + r.tokens.s + r.tokens.f + r.tokens.new);
+              if(possible < 0) possible = 0;
 
-          G.passedPlayers = [];
-          let order = G.races.map((r,i)=>i);
-          /*const spkIdx = G.races.findIndex(r => String(r.rid) === String(G.speaker));
-          order = [...order.slice(spkIdx), ...order.slice(0, spkIdx)];
-          G.TURN_ORDER = [...order.slice(1), order[0]]; //speaker at the end*/
-          G.TURN_ORDER = order;
-          doFlagshipAbility({G, rid: 1});
+              r.tokens.new += Math.min(c, possible);
+            });
+
+            G.passedPlayers = [];
+            let order = G.races.map((r,i)=>i);
+            /*const spkIdx = G.races.findIndex(r => String(r.rid) === String(G.speaker));
+            order = [...order.slice(spkIdx), ...order.slice(0, spkIdx)];
+            G.TURN_ORDER = [...order.slice(1), order[0]]; //speaker at the end*/
+            G.TURN_ORDER = order;
+            doFlagshipAbility({G, rid: 1});
+          }
+          catch(e){console.log(e)}
         },
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       },

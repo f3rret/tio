@@ -902,7 +902,9 @@ export const computeVoteResolution = (G, agendaNumber) => {
           G.races[card.playerID].vp++;
         }
         else if(card.id === 'Leadership Rider'){
-          G.races[card.playerID].tokens.new += 3;
+          let possible = 16 - (G.races[card.playerID].tokens.new + G.races[card.playerID].tokens.s + G.races[card.playerID].tokens.t + G.races[card.playerID].tokens.f);
+          if(possible < 0) possible = 0;
+          G.races[card.playerID].tokens.new += Math.min(3, possible);
         }
         else if(card.id === 'Politics Rider'){
           G.races[card.playerID].actionCards.push(...G.actionsDeck.splice(-3));
@@ -1505,7 +1507,9 @@ export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
   else if(explore.id === 'Volatile Fuel Source'){
     if(planet.units){
       if(planet.units['mech'] && planet.units['mech'].length){
-        G.races[playerID].tokens.new++;
+        if(G.races[playerID].tokens.new + G.races[playerID].tokens.s + G.races[playerID].tokens.t + G.races[playerID].tokens.f < 16){
+          G.races[playerID].tokens.new++;
+        }
       }
       else if(planet.units['infantry'] && planet.units['infantry'].length){
         planet.exploration = 'Volatile Fuel Source';
