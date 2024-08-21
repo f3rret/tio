@@ -2,7 +2,7 @@
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
 import cardData from './cardData.json';
 import { getHexGrid, neighbors } from './Grid';
-import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer } from './gameStages';
+import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer, useRelic } from './gameStages';
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
@@ -20,6 +20,9 @@ const effectsConfig = EffectsPlugin({
       create: () => {}
     },
     rift: {
+      create: (value) => value
+    },
+    relic_ex: {
       create: (value) => value
     }
   },
@@ -167,7 +170,7 @@ export const TIO = {
           if(!G.relicsDeck.length){
             G.relicsDeck = random.Shuffle(cardData.relics.filter(r => !r.mod));
           }
-          G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'Dominus Orb'))
+          G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'Maw of Worlds'))
 
           if(!G.secretObjDeck.length){
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
@@ -317,6 +320,7 @@ export const TIO = {
         },
         moves: {
           secretObjectiveConfirm,
+          useRelic,
           dropSecretObjective: ({G, playerID}, oid) => { //todo: return obj to deck and shuffle
             if(G.races[playerID].secretObjectives){
               G.races[playerID].secretObjectives = G.races[playerID].secretObjectives.filter(o => o.id !== oid);
@@ -967,7 +971,10 @@ export const TIO = {
                 }
                 if(args.exhaustedCards.indexOf('Dominus Orb')>-1){
                   const relic = G.races[playerID].relics.find(r => r.id === 'Dominus Orb');
-                  if(relic) relic.exhausted = true;
+                  if(relic){
+                    relic.exhausted = true;
+                    plugins.effects.relic_ex({id: 'Dominus Orb'});
+                  }
                 }
               }
             }
@@ -1238,6 +1245,7 @@ export const TIO = {
         },
 
         moves: {
+          useRelic,
           secretObjectiveConfirm,
           vote: ({G, playerID, events, ...plugins}, result) => {
             let votes = 0;

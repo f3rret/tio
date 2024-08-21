@@ -4,7 +4,28 @@ import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveT
   completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits, 
   spliceCombatAC, checkIonStorm, checkSecretObjective, checkCommanderUnlock, useCommanderAbility, 
   adjustTechnologies,
-  enemyHaveCombatAC} from './utils';
+  enemyHaveCombatAC,
+  getPlayerPlanets} from './utils';
+
+export const useRelic = ({G, playerID, ...plugins}, args) => {
+
+  if(args.id === 'Maw of Worlds'){
+    const planets = getPlayerPlanets(G.tiles, playerID);
+
+    planets.forEach(p => {
+      const planet = getPlanetByName(G.tiles, p.name);
+      planet.exhausted = true;
+    });
+
+    if(args.techId) G.races[playerID].knownTechs.push(args.techId);
+  }
+
+  const idx = G.races[playerID].relics.findIndex(r => r.id === args.id);
+  G.races[playerID].relics.splice(idx, 1);
+
+  //plugins.effects.relic_ex({id: args.id});
+
+}
 
 export const makeOffer = ({G, ctx, playerID, events}, pid) => {
 

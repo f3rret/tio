@@ -255,8 +255,14 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     }
   }
 
-  const relicClick = (rid) => {
-    dispatch({type: 'exhaust_card', cardId: rid.id})
+  const relicClick = (relic) => {
+    if(relic.id === 'Maw of Worlds' && hud.selectedTech && hud.selectedTech.techno){
+      moves.useRelic({id: relic.id, techId: hud.selectedTech.techno.id});
+      sendChatMessage(t('cards.relics.' + relic.id + '.label'));
+    }
+    else{
+      dispatch({type: 'exhaust_card', cardId: relic.id})
+    }
   }
 
   const mustAction = useMemo(() => {
@@ -374,6 +380,14 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   //eslint-disable-next-line
   }, [race.exhaustedCards, G.tiles, hud.selectedTile, playerID, hud.justOccupied]);
 
+
+  const isRelicDisabled = (relic) => {
+    if(relic && relic.id === 'Maw of Worlds'){
+      return !(hud.selectedTech && hud.selectedTech.techno && ctx.phase === 'agenda' && (!race.voteResults || !race.voteResults.length));
+    }
+
+    return relic.exhausted;
+  }
 
   const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);
   
@@ -949,6 +963,12 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
           }
         }
       }
+      else if(effectName === 'relic_ex'){
+        const {id} = effectProps;
+        if(String(playerID) === String(ctx.currentPlayer)){
+          sendChatMessage(t('cards.relics.' + id + '.label'));
+        }
+      }
 
     }
     catch(e){console.log(e)}
@@ -1127,11 +1147,15 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
                     {hud.rightBottomVisible === 'relics' && race.relics.length > 0 && <CardsPager>
                       {race.relics.map((pr, i) => <CardsPagerItem key={i} tag='relic'>
-                        <button style={{width: '100%', marginBottom: '1rem'}} disabled={pr.exhausted} className = {'styledButton ' + (hud.exhaustedCards.includes(pr.id) ? 'white':'yellow')} onClick={() => relicClick(pr)}>
+                        <button style={{width: '100%', marginBottom: '1rem'}} disabled={isRelicDisabled(pr)} className = {'styledButton ' + (hud.exhaustedCards.includes(pr.id) ? 'white':'yellow')} onClick={() => relicClick(pr)}>
                           <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.relics.' + pr.id + '.label').toUpperCase()}</b>
                         </button>
 
-                          {t('cards.relics.' + pr.id + '.effect')}
+                        {t('cards.relics.' + pr.id + '.effect')}
+                        {pr.id === 'Maw of Worlds' && <p style={{marginTop: '1rem', color: 'blueviolet'}}>
+                          {hud.selectedTech && hud.selectedTech.techno && <b>{hud.selectedTech.techno.racial ? t('races.' + race.rid + '.' + hud.selectedTech.techno.id + '.label') : t('cards.techno.' + hud.selectedTech.techno.id + '.label')}</b>}
+                          {!(hud.selectedTech && hud.selectedTech.techno) && <b>{t('board.choose_technology')}</b>}
+                        </p>}
                       </CardsPagerItem>)}
                     </CardsPager>}
 
