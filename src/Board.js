@@ -130,6 +130,9 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
       });
 
       result += race.vp;
+      if(race.relics && race.relics.find(r => r.id === 'Shard of the Throne')){
+        result++;
+      }
     }
 
     return result;
@@ -386,7 +389,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
       return !(hud.selectedTech && hud.selectedTech.techno && ctx.phase === 'agenda' && (!race.voteResults || !race.voteResults.length));
     }
 
-    return relic.exhausted;
+    return relic.exhausted || relic.purged;
   }
 
   const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);
@@ -592,7 +595,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
     const onClick = ()=>{
       if(abilId === 'ORBITAL_DROP'){
-        moves.useRacialAbility({abilId, selectedTile: hud.selectedTile, selectedPlanet: hud.selectedPlanet})
+        moves.useRacialAbility({abilId, selectedTile: hud.selectedTile, selectedPlanet: hud.selectedPlanet, exhaustedCards: hud.exhaustedCards})
         sendChatMessage(t('races.' + race.rid + '.' + abilId + '.label'));
       }
       else if(abilId === 'PILLAGE'){
@@ -704,14 +707,15 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   }, [advUnitSwitch, activeTileSwitch, dispatch]);
 
   useEffect(()=>{
-    if(race.exhaustedCards.length){
+    //if(race.exhaustedCards.length){
       dispatch({
         type: 'flush_exhausted_cards'
-      })
-    }
+      });
+      MY_LAST_EFFECT.current = '';
+    //}
   //flushTempCt();
   //eslint-disable-next-line
-  },[race.exhaustedCards]);
+  },[ctx.phase]);
 
   useEffect(()=>{
     if(mustSecObj){
@@ -888,6 +892,8 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     }
   }, [isMyTurn, dispatch])
 
+  const MY_LAST_EFFECT = useRef('');
+
   useEffectListener('*', (effectName, effectProps, boardProps) => { //! may doubled!!
    
     try{
@@ -964,9 +970,13 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
         }
       }
       else if(effectName === 'relic_ex'){
-        const {id} = effectProps;
-        if(String(playerID) === String(ctx.currentPlayer)){
-          sendChatMessage(t('cards.relics.' + id + '.label'));
+        const {id, pid} = effectProps;
+    
+        if((pid !== undefined && String(playerID) === String(pid)) || (pid === undefined && String(playerID) === String(ctx.currentPlayer))){
+          if(MY_LAST_EFFECT.current !== id){
+            sendChatMessage(t('cards.relics.' + id + '.label'));
+            MY_LAST_EFFECT.current = id;
+          }
         }
       }
 

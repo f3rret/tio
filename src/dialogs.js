@@ -2103,6 +2103,9 @@ export const Gameover = (args) => {
           });
     
           result += winnerRace.vp;
+          if(winnerRace.relics && winnerRace.relics.find(r => r.id === 'Shard of the Throne')){
+            result++;
+          }
         }
     
         return result;

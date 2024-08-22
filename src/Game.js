@@ -23,7 +23,8 @@ const effectsConfig = EffectsPlugin({
       create: (value) => value
     },
     relic_ex: {
-      create: (value) => value
+      create: (value) => value,
+      //duration: 2
     }
   },
 });
@@ -169,8 +170,8 @@ export const TIO = {
 
           if(!G.relicsDeck.length){
             G.relicsDeck = random.Shuffle(cardData.relics.filter(r => !r.mod));
+            //G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'Shard of the Throne')) //test only!
           }
-          G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'Maw of Worlds'))
 
           if(!G.secretObjDeck.length){
             G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
@@ -825,6 +826,15 @@ export const TIO = {
               }
               else if(to.occupied != playerID && G.races[to.occupied]){
                 checkSecretObjective(G, to.occupied, 'Become a Martyr');
+                
+                const looserRace = G.races[to.occupied];
+                if(looserRace && (to.legendary === true || String(G.tiles[dst.tile].tid) === String(looserRace.rid))){
+                  const relicIdx = looserRace.relics.findIndex(r => r.id === 'Shard of the Throne');
+                  if(relicIdx > -1){
+                    G.races[playerID].relics.push(...looserRace.relics.splice(relicIdx, 1));
+                  }
+                }
+
                 to.occupied = playerID;
                 checkCommanderUnlock(G, playerID);
                 to.exhausted = true;
@@ -972,7 +982,7 @@ export const TIO = {
                 if(args.exhaustedCards.indexOf('Dominus Orb')>-1){
                   const relic = G.races[playerID].relics.find(r => r.id === 'Dominus Orb');
                   if(relic){
-                    relic.exhausted = true;
+                    relic.purged = true;
                     plugins.effects.relic_ex({id: 'Dominus Orb'});
                   }
                 }
@@ -1017,7 +1027,16 @@ export const TIO = {
                   const planet = tile.tdata.planets[selectedPlanet];
         
                   if(planet && String(planet.occupied) === String(playerID) && race.tokens.s > 0){
-                    race.tokens.s--;
+                    if(!(args.exhaustedCards && args.exhaustedCards.includes('Scepter of Emelpar'))){
+                      race.tokens.s--;
+                    }
+                    else{
+                      const relic = race.relics.find(r => r.id === 'Scepter of Emelpar');
+                      if(relic){
+                        relic.exhausted = true;
+                        plugins.effects.relic_ex({id: 'Scepter of Emelpar', pid: playerID})
+                      }
+                    }
                     race.lastUsedPlanet = planet.name;
 
                     if(!planet.units) planet.units={};
@@ -1114,11 +1133,6 @@ export const TIO = {
         },
         onBegin: ({ G, events }) => {
           G.passedPlayers = [];
-          G.races.forEach(r => {
-            r.exhaustedCards = [];
-            r.combatActionCards = [];
-            r.relics = r.relics.filter(r => r && !r.exhausted)
-          });
           
          // events.setPhase('agenda'); //test only!
         },
@@ -1144,6 +1158,11 @@ export const TIO = {
               if(possible < 0) possible = 0;
 
               r.tokens.new += Math.min(c, possible);
+
+              r.exhaustedCards = [];
+              r.combatActionCards = [];
+              r.relics = r.relics.filter(r => r && !r.purged);
+              r.relics.forEach(relic => relic.exhausted = false)
             });
 
             G.passedPlayers = [];
@@ -1420,6 +1439,9 @@ export const TIO = {
         });
   
         result += race.vp;
+        if(race.relics && race.relics.find(r => r.id === 'Shard of the Throne')){
+          result++;
+        }
       }
   
       if(result >= G.vp) {

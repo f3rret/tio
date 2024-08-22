@@ -1360,7 +1360,16 @@ export const ACTS_STAGES = {
         
         if(String(ctx.currentPlayer) !== String(playerID)){
           if(G.strategy !== 'LEADERSHIP'){
-            G.races[playerID].tokens.s--;
+            if(!(exhaustedCards && exhaustedCards.includes('Scepter of Emelpar'))){
+              G.races[playerID].tokens.s--;
+            }
+            else{
+              const relic = G.races[playerID].relics.find(r => r.id === 'Scepter of Emelpar');
+              if(relic){
+                relic.exhausted = true;
+                plugins.effects.relic_ex({id: 'Scepter of Emelpar', pid: playerID})
+              }
+            }
           }
         }
         
@@ -2458,75 +2467,88 @@ export const ACTS_STAGES = {
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
       secretObjectiveConfirm,
       endBattle: ({G, events, playerID, ctx}) => {
-        const activeTile = G.tiles.find(t => t.active === true);
-        const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
-        let defendersDied = false;
-        let endLater = false;
+        try{
+          const activeTile = G.tiles.find(t => t.active === true);
+          const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+          let defendersDied = false;
+          let endLater = false;
 
-        if(activePlanet){
-          const defenderForces = () => {
-            const result = {};
-            Object.keys(activePlanet.units).forEach(k => {
-                if(['infantry', 'mech'].indexOf(k) > -1){
-                    result[k] = activePlanet.units[k];
+          if(activePlanet){
+            const defenderForces = () => {
+              const result = {};
+              Object.keys(activePlanet.units).forEach(k => {
+                  if(['infantry', 'mech'].indexOf(k) > -1){
+                      result[k] = activePlanet.units[k];
+                  }
+              });
+              return result;
+            }
+
+            defendersDied = !Object.keys(defenderForces()).length && activePlanet.invasion.troops && Object.keys(activePlanet.invasion.troops).length;
+
+            if(defendersDied){
+              if(ctx.currentPlayer === playerID){
+                if(G.races[playerID].combatActionCards && G.races[playerID].combatActionCards.indexOf('Infiltrate')>-1){
+                  if(activePlanet.units && activePlanet.units.pds && activePlanet.units.pds.length){
+                    activePlanet.invasion.troops.pds = {...activePlanet.units.pds};
+                  }
+                  if(activePlanet.units && activePlanet.units.spacedock && activePlanet.units.spacedock.length){
+                    activePlanet.invasion.troops.spacedock = {...activePlanet.units.spacedock};
+                  }
                 }
-            });
-            return result;
-          }
 
-          defendersDied = !Object.keys(defenderForces()).length && activePlanet.invasion.troops && Object.keys(activePlanet.invasion.troops).length;
+                activePlanet.units = {...activePlanet.invasion.troops};
+                delete activePlanet.invasion;
 
-          if(defendersDied){
-            if(ctx.currentPlayer === playerID){
-              if(G.races[playerID].combatActionCards && G.races[playerID].combatActionCards.indexOf('Infiltrate')>-1){
-                if(activePlanet.units && activePlanet.units.pds && activePlanet.units.pds.length){
-                  activePlanet.invasion.troops.pds = {...activePlanet.units.pds};
+                if(activePlanet.occupied !== undefined && String(activePlanet.occupied) !== String(playerID)){
+                  checkTacticalActionCard({G, events, playerID: String(activePlanet.occupied), atype: 'PLANET_OCCUPIED'});
+                  if(checkSecretObjective(G, playerID, 'Betray a Friend', activePlanet.occupied)){ endLater = true; }
+                  else if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
+                  else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
+                  else if(checkSecretObjective(G, playerID, 'Spark a Rebellion', activePlanet.occupied)) { endLater = true; }
+
+                  const looserRace = G.races[activePlanet.occupied];
+                  if(looserRace && (activePlanet.legendary === true || String(activeTile.tid) === String(looserRace.rid))){
+                    const relicIdx = looserRace.relics.findIndex(r => r.id === 'Shard of the Throne');
+                    if(relicIdx > -1){
+                      G.races[playerID].relics.push(...looserRace.relics.splice(relicIdx, 1));
+                    }
+                  }
                 }
-                if(activePlanet.units && activePlanet.units.spacedock && activePlanet.units.spacedock.length){
-                  activePlanet.invasion.troops.spacedock = {...activePlanet.units.spacedock};
+
+                activePlanet.occupied = playerID;
+                activePlanet.exhausted = true;
+                checkCommanderUnlock(G, playerID);
+
+                if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
+                  if(!activePlanet.units['infantry']) activePlanet.units['infantry']=[];
+                  activePlanet.units['infantry'].push({id: 'infantry'});
                 }
               }
-
-              activePlanet.units = {...activePlanet.invasion.troops};
+            }
+            else if(String(activePlanet.occupied) === String(playerID)){
               delete activePlanet.invasion;
-
-              if(activePlanet.occupied !== undefined && String(activePlanet.occupied) !== String(playerID)){
-                checkTacticalActionCard({G, events, playerID: String(activePlanet.occupied), atype: 'PLANET_OCCUPIED'});
-                if(checkSecretObjective(G, playerID, 'Betray a Friend', activePlanet.occupied)){ endLater = true; }
-                else if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
-                else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
-                else if(checkSecretObjective(G, playerID, 'Spark a Rebellion', activePlanet.occupied)) { endLater = true; }
-              }
-
-              activePlanet.occupied = playerID;
-              activePlanet.exhausted = true;
-              checkCommanderUnlock(G, playerID);
-
               if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
                 if(!activePlanet.units['infantry']) activePlanet.units['infantry']=[];
                 activePlanet.units['infantry'].push({id: 'infantry'});
               }
+              if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
+              else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
+              else if(checkSecretObjective(G, playerID, 'Spark a Rebellion', ctx.currentPlayer)) { endLater = true; }
             }
           }
-          else if(String(activePlanet.occupied) === String(playerID)){
-            delete activePlanet.invasion;
-            if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
-              if(!activePlanet.units['infantry']) activePlanet.units['infantry']=[];
-              activePlanet.units['infantry'].push({id: 'infantry'});
+
+          if(String(ctx.currentPlayer) !== String(playerID)){
+            if(!activePlanet || (String(activePlanet.occupied) === String(ctx.currentPlayer) || defendersDied)){
+              if(checkSecretObjective(G, playerID, 'Become a Martyr')){ endLater = true; }
             }
-            if(checkSecretObjective(G, playerID, 'Brave the Void', activeTile.tid)){ endLater = true; }
-            else if(checkSecretObjective(G, playerID, 'Darken the Skies', activeTile.tid)){ endLater = true; }
-            else if(checkSecretObjective(G, playerID, 'Spark a Rebellion', ctx.currentPlayer)) { endLater = true; }
           }
-        }
 
-        if(String(ctx.currentPlayer) !== String(playerID)){
-          if(!activePlanet || (String(activePlanet.occupied) === String(ctx.currentPlayer) || defendersDied)){
-            if(checkSecretObjective(G, playerID, 'Become a Martyr')){ endLater = true; }
-          }
+          if(!endLater){events.endStage();}
         }
-
-        if(!endLater){events.endStage();}
+        catch(e){
+          console.log(e)
+        }
       },
 
       landTroops: ({G, ctx, events, playerID}, troops) => {
