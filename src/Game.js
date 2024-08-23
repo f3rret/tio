@@ -170,7 +170,7 @@ export const TIO = {
 
           if(!G.relicsDeck.length){
             G.relicsDeck = random.Shuffle(cardData.relics.filter(r => !r.mod));
-            //G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'Shard of the Throne')) //test only!
+            G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'Stellar Converter')) //test only!
           }
 
           if(!G.secretObjDeck.length){

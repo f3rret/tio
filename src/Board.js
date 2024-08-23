@@ -6,7 +6,7 @@ import { ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, C
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList,
 ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover} from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
-import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT, getMyNeighbors } from './utils';
+import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT, getMyNeighbors, checkIfMyNearbyUnit } from './utils';
 
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion, ChooseAndDestroy } from './combat';
@@ -263,6 +263,9 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
       moves.useRelic({id: relic.id, techId: hud.selectedTech.techno.id});
       sendChatMessage(t('cards.relics.' + relic.id + '.label'));
     }
+    else if(relic.id === 'Stellar Converter' && hud.selectedPlanet && hud.selectedPlanet > -1){
+      
+    }
     else{
       dispatch({type: 'exhaust_card', cardId: relic.id})
     }
@@ -385,11 +388,34 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
 
   const isRelicDisabled = (relic) => {
-    if(relic && relic.id === 'Maw of Worlds'){
-      return !(hud.selectedTech && hud.selectedTech.techno && ctx.phase === 'agenda' && (!race.voteResults || !race.voteResults.length));
-    }
+    try{
+      if(relic && relic.id === 'Maw of Worlds'){
+        return !(hud.selectedTech && hud.selectedTech.techno && ctx.phase === 'agenda' && (!race.voteResults || !race.voteResults.length));
+      }
+      else if(relic && relic.id === 'Stellar Converter'){
+        if(hud.selectedTile > 0){
+          const tile = G.tiles[hud.selectedTile];
 
-    return relic.exhausted || relic.purged;
+          if(tile && tile.tdata){
+            if(tile.tdata.type !== 'green' && tile.tid !== 18){
+
+              const planet = tile.tdata.planets[hud.selectedPlanet];
+              if(planet && !planet.legendary){
+                const techs = race.technologies.filter(t => t && t.bombardment);
+                const bombs = techs.map(t => t.id.toLowerCase());
+                const found = checkIfMyNearbyUnit(G, playerID, tile, bombs);
+                return !found;
+              }
+            }
+          }
+        }
+
+        return true;
+      }
+
+      return relic.exhausted || relic.purged;
+    }
+    catch(e){console.log(e)}
   }
 
   const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);

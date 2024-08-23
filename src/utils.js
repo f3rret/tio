@@ -1711,3 +1711,53 @@ export const doFlagshipAbility = ({G, rid}) => {
 export const normalizeName = (name) => {
   return name.replace(/[_\s']/igm, '');
 }
+
+export const checkIfMyNearbyUnit = (G, playerID, tile, units) => {
+
+  const neigh = neighbors(G.HexGrid, [tile.q, tile.r]).map(n => n.tileId);
+  const withPayload = units.includes('mech');
+
+  return neigh.find(n => {
+    const tile = G.tiles.find(t => t.tid === n);
+
+    if(tile && tile.tdata){
+      let result = false;
+
+      if(String(tile.tdata.occupied) === String(playerID)){
+        if(tile.tdata.fleet && Object.keys(tile.tdata.fleet)){
+          result = Object.keys(tile.tdata.fleet).find(tag => {
+            if(units.includes(tag)) return true;
+
+            if(withPayload){
+              return tile.tdata.fleet[tag].find(car => {
+                if(car.payload && car.payload.find(p => p && p.id === 'mech')){
+                  return true;
+                }
+                return false;
+              })
+            }
+
+            return false;
+          });
+        }
+      }
+
+      if(!result && withPayload && tile.tdata.planets){
+        result = tile.tdata.planets.find(p => {
+          if(String(p.occupied) === String(playerID)){
+            if(p.units && Object.keys(p.units) && Object.keys(p.units).includes('mech')){
+              return true;
+            }
+          }
+
+          return false
+        })
+      }
+
+      return result;
+    }
+
+    return false;
+  })
+
+}
