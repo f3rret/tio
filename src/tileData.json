@@ -1254,7 +1254,7 @@
                     "specialty": null,
                     "legendary": false,
                     "hitCenter": [155, 140],
-                    "hitRadius": [60]
+                    "hitRadius": [70]
                 }
             ]
         },

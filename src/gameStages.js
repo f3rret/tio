@@ -9,22 +9,38 @@ import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveT
 
 export const useRelic = ({G, playerID, ...plugins}, args) => {
 
-  if(args.id === 'Maw of Worlds'){
-    const planets = getPlayerPlanets(G.tiles, playerID);
+  try{
+    if(args.id === 'Maw of Worlds'){
+      const planets = getPlayerPlanets(G.tiles, playerID);
 
-    planets.forEach(p => {
-      const planet = getPlanetByName(G.tiles, p.name);
-      planet.exhausted = true;
-    });
+      planets.forEach(p => {
+        const planet = getPlanetByName(G.tiles, p.name);
+        planet.exhausted = true;
+      });
 
-    if(args.techId) G.races[playerID].knownTechs.push(args.techId);
+      if(args.techId) G.races[playerID].knownTechs.push(args.techId);
+    }
+    else if(args.id === 'Stellar Converter'){
+      const tile = G.tiles[args.tile];
+      if(!tile || !tile.tdata) return;
+
+      const planet = tile.tdata.planets[args.planet];
+      if(!planet) return;
+
+      delete planet['units'];
+      delete planet['occupied'];
+      delete planet['attach'];
+      planet.isDestroyed = true;
+
+      G.races[playerID].actions.push('RELIC');
+    }
+
+    const idx = G.races[playerID].relics.findIndex(r => r.id === args.id);
+    G.races[playerID].relics.splice(idx, 1);
+
+    //plugins.effects.relic_ex({id: args.id});
   }
-
-  const idx = G.races[playerID].relics.findIndex(r => r.id === args.id);
-  G.races[playerID].relics.splice(idx, 1);
-
-  //plugins.effects.relic_ex({id: args.id});
-
+  catch(e){console.log(e)}
 }
 
 export const makeOffer = ({G, ctx, playerID, events}, pid) => {
@@ -919,7 +935,9 @@ export const ACTION_CARD_STAGE = {
             }
           }
 
-          G.races[card.playerID].actionCards.splice(G.races[card.playerID].actionCards.findIndex(a => a.id === card.id), 1);
+          const idx = G.races[card.playerID].actionCards.findIndex(a => a.id === card.id);
+          G.discardedActions.push(...G.races[card.playerID].actionCards.splice(idx, 1));
+
           if(card.when === 'ACTION'){
             G.races[card.playerID].actions.push('ACTION_CARD');
             G.races[card.playerID].currentActionCard = undefined;
@@ -951,7 +969,8 @@ export const ACTION_CARD_STAGE = {
         const idx = G.races[playerID].actionCards.findIndex(c => c.id === 'Sabotage');
         if(idx > -1){
           card.reaction[playerID] = 'sabotage';
-          G.races[playerID].actionCards.splice(idx, 1);
+          G.discardedActions.push(...G.races[playerID].actionCards.splice(idx, 1));
+          //G.races[playerID].actionCards.splice(idx, 1);
         }
       }
     }

@@ -61,7 +61,8 @@ export const TIO = {
         races,
         dice: (new Array(ctx.numPlayers)).map(a => { return {}}),
         HexGrid: JSON.stringify(HexGrid),
-        vp: setupData.vp || 10
+        vp: setupData.vp || 10,
+        discardedActions: []
       }
     },
 
@@ -170,7 +171,8 @@ export const TIO = {
 
           if(!G.relicsDeck.length){
             G.relicsDeck = random.Shuffle(cardData.relics.filter(r => !r.mod));
-            G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'Stellar Converter')) //test only!
+            G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'The Codex')) //test only!
+            G.discardedActions = [...G.actionsDeck]; //test only!
           }
 
           if(!G.secretObjDeck.length){

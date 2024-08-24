@@ -1974,9 +1974,17 @@ export const ChoiceDialog = ({args, onSelect}) => {
 
 export const CardsPager = ({children}) => {
 
-    return <ListGroup horizontal style={{position: 'absolute', pointerEvents: 'none', bottom: '3rem', right: '3rem', fontSize: '65%', background: 'none', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', width: '60rem'}}>
-        {children}
-    </ListGroup>
+    const [start, setStart] = useState(0);
+
+    return <div style={{position: 'absolute', bottom: '3rem', right: '3rem', width: '60rem'}}>
+        <div style={{display: 'flex', padding: '0 0 0 2rem', justifyContent:'space-between', fontSize: '300%'}}>
+          <span>🞀</span>
+          <span>🞂</span>
+        </div>
+        <ListGroup horizontal style={{fontSize: '65%', pointerEvents: 'none', background: 'none', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end'}}>
+            {children.slice(start, start + 8)}
+        </ListGroup>
+    </div>
 
 }
 
@@ -2128,4 +2136,26 @@ export const Gameover = (args) => {
                 </ModalFooter>
             </Modal>
   
-  }
+}
+
+export const SelectDiscardedActions = (count) => {
+
+    const { G } = useContext(StateContext);
+    const { t } = useContext(LocalizationContext);
+
+    const selectCard = (i) => {
+
+    }
+
+    return <CardsPager>
+        {G.discardedActions.map((pr, i) => <CardsPagerItem key={i} tag='action'>
+            <button disabled={false} style={{width: '100%', marginBottom: '1rem'}} onClick={()=> selectCard(i)} className={'styledButton yellow'} >
+            <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.actions.' + pr.id + '.label').toUpperCase()}</b>
+            </button>
+
+            <b>{t('board.when_' + pr.when)}</b>
+            {' ' + t('cards.actions.' + pr.id + '.description')}
+        </CardsPagerItem>)}
+    </CardsPager>
+
+}

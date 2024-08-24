@@ -246,6 +246,14 @@ export const hudReducer = (hudDraft, action) => {
                 hudDraft.rightBottomSubVisible(hudDraft.exhaustedCards.includes(action.cardId) ? null:action.cardId);
             }
 
+            if(action.cardId === 'The Codex'){
+                if(hudDraft.exhaustedCards.includes(action.cardId)){
+                    hudDraft.rightBottomVisible = 'discardedActions'
+                }
+                else{
+                    hudDraft.rightBottomVisible = 'relics'
+                }
+            }
 
             break;
         }

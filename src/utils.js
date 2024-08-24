@@ -1010,12 +1010,16 @@ export const votingProcessDone = ({G, agendaNumber, playerID, events}) => {
 }
 
 export const dropACard = ({G, playerID}, cardId) => {
-  const idx = G.races[playerID].actionCards.findIndex(a => a.id === cardId);
+  try{
+    const idx = G.races[playerID].actionCards.findIndex(a => a.id === cardId);
 
-  if(idx > -1){
-    delete G.races[playerID].actionCards[idx];
-    G.races[playerID].actionCards = G.races[playerID].actionCards.filter(a => a);
+    if(idx > -1){
+      G.discardedActions.push(...G.races[playerID].actionCards.splice(idx, 1));
+      //delete G.races[playerID].actionCards[idx];
+      //G.races[playerID].actionCards = G.races[playerID].actionCards.filter(a => a);
+    }
   }
+  catch(e){console.log(e)}
 }
 
 export const playCombatAC = ({G, playerID}, card) => {
@@ -1714,7 +1718,7 @@ export const normalizeName = (name) => {
 
 export const checkIfMyNearbyUnit = (G, playerID, tile, units) => {
 
-  const neigh = neighbors(G.HexGrid, [tile.q, tile.r]).map(n => n.tileId);
+  const neigh = neighbors(G.HexGrid, [tile.q, tile.r]).map(n => n.tileId); //todo: wormholes
   const withPayload = units.includes('mech');
 
   return neigh.find(n => {

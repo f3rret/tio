@@ -362,34 +362,33 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
                         
                         {element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map((p,i) => { 
                             return p.hitCenter && <Container key={i} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}>
-                            {hud.selectedTile === index && hud.selectedPlanet === i && <SelectedPlanet radius={p.hitRadius}/>}
+                            {hud.selectedTile === index && hud.selectedPlanet === i && !p.isDestroyed && <SelectedPlanet radius={p.hitRadius}/>}
                             <Sprite image={'icons/empty.png'} scale={1} width={p.hitRadius * 2} height={p.hitRadius * 2} 
                             interactive={true} pointerdown={ (e)=>tileClick(e, index, i) }>
                                 
                                 <Container sortableChildren={true} x={0} y={50}>
-                                {isDMZ(p) &&
-                                    <Sprite image={'icons/dmz.png'} x={0} y={35} scale={1} alpha={.75}/>
-                                    }
-                                
-                                {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) => {
-                                  const isSelected = hud.groundUnitSelected && hud.groundUnitSelected.tile === index && hud.groundUnitSelected.planet === i && hud.groundUnitSelected.unit === u;
+                                  {isDMZ(p) && <Sprite image={'icons/dmz.png'} x={0} y={35} scale={1} alpha={.75}/>}
+                                  {p.isDestroyed && <Sprite image={'icons/destroyed_planet.png'} x={-p.hitRadius*.3} y={-p.hitRadius} scale={p.hitRadius/185} alpha={.9}/>}
+                                  
+                                  {p.units && Object.keys(p.units).filter(u => ['pds', 'spacedock'].indexOf(u) > -1).map((u, ui) => {
+                                    const isSelected = hud.groundUnitSelected && hud.groundUnitSelected.tile === index && hud.groundUnitSelected.planet === i && hud.groundUnitSelected.unit === u;
 
-                                    return <Container x={-10 + ui*100} y={-10} zIndex={u === 'spacedock' ? 3:1} key={ui}  > 
-                                        <Sprite  tint={isSelected ? 'gold':G.races[p.occupied].color[0]} scale={.5} anchor={0} image={'icons/unit_ground_bg.png'}/>
-                                        <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-10} scale={.4} alpha={1} pointerdown={(e)=>groundUnitClick({tile: index, planet: i, unit: u, e})} interactive={true}/>
-                                        <Text style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
-                                        x={65} y={5} text={p.units[u].length}/>
-                                        {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
-                                        <Sprite image={'icons/producing.png'} cursor='pointer' scale={.2} x={45} y={-20} interactive={true} pointerdown={()=>dispatch({type: 'producing', planet: p.name})} 
-                                            style={{}}/>}
-                                    </Container>
-                                    }
-                                )}
-                    
-                                
-                    
-                                {p.invasion && <PlanetUnderAttack w={element.w} x={p.hitRadius * 1.5} y={-p.hitRadius * 1.5} text={t('board.planet_under_attack')} rid={G.races[ctx.currentPlayer].rid} 
-                                            rname={t('races.' + G.races[ctx.currentPlayer].rid + '.name')} fleet={p.invasion.troops} color={G.races[ctx.currentPlayer].color[0]}/>}
+                                      return <Container x={-10 + ui*100} y={-10} zIndex={u === 'spacedock' ? 3:1} key={ui}  > 
+                                          <Sprite  tint={isSelected ? 'gold':G.races[p.occupied].color[0]} scale={.5} anchor={0} image={'icons/unit_ground_bg.png'}/>
+                                          <Sprite image={'units/' + u.toUpperCase() + '.png'} x={0} y={-10} scale={.4} alpha={1} pointerdown={(e)=>groundUnitClick({tile: index, planet: i, unit: u, e})} interactive={true}/>
+                                          <Text style={{fontSize: 20, fontFamily:'Handel Gothic', fill: 'white', dropShadow: true, dropShadowDistance: 1}} 
+                                          x={65} y={5} text={p.units[u].length}/>
+                                          {u === 'spacedock' && element.active && (!element.tdata.occupied || String(element.tdata.occupied) === String(playerID)) && String(p.occupied) === String(playerID) && 
+                                          <Sprite image={'icons/producing.png'} cursor='pointer' scale={.2} x={45} y={-20} interactive={true} pointerdown={()=>dispatch({type: 'producing', planet: p.name})} 
+                                              style={{}}/>}
+                                      </Container>
+                                      }
+                                  )}
+                      
+                                  
+                      
+                                  {p.invasion && <PlanetUnderAttack w={element.w} x={p.hitRadius * 1.5} y={-p.hitRadius * 1.5} text={t('board.planet_under_attack')} rid={G.races[ctx.currentPlayer].rid} 
+                                              rname={t('races.' + G.races[ctx.currentPlayer].rid + '.name')} fleet={p.invasion.troops} color={G.races[ctx.currentPlayer].color[0]}/>}
                                 </Container>
                     
                                 <Container x={50} y={110}>
@@ -432,14 +431,14 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
                     
                         {element.tdata.fleet && <Container x={10} y={-30}>
                           {hud.advUnitView && hud.advUnitView.tile === index && hud.selectedTile === index && selectedPlanet && (selectedPlanet.occupied === undefined || String(element.tdata.occupied) === String(selectedPlanet.occupied)) &&
-                              !isDMZ(selectedPlanet) && <LandingGreen pointerdown={()=>unloadUnit()} x={-20} y={-20} >
+                              !isDMZ(selectedPlanet) && !selectedPlanet.isDestroyed && <LandingGreen pointerdown={()=>unloadUnit()} x={-20} y={-20} >
                                 {selectedPlanet.occupied === undefined && selectedPlanet.name === 'Mecatol Rex' && <Sprite image={'icons/influence_bg.png'} x={8} y={-25} scale={.75}>
                                   <Text x={18} y={15} text={race.rid === 7 ? 0:6} style={{fontSize: 35, fontFamily:'Handel Gothic', fill: 'white'}}/>
                                 </Sprite>}
                               </LandingGreen>
                               }
                           {activeTile && String(element.tdata.occupied) === String(playerID) && !G.spaceCannons && element.tdata.fleet && selectedPlanet && 
-                              selectedPlanet.occupied !== undefined && String(element.tdata.occupied) !== String(selectedPlanet.occupied) && !isDMZ(selectedPlanet) &&
+                              selectedPlanet.occupied !== undefined && String(element.tdata.occupied) !== String(selectedPlanet.occupied) && !isDMZ(selectedPlanet) && !selectedPlanet.isDestroyed &&
                               <LandingRed pointerdown={()=>moves.invasion(selectedPlanet)} x={-20} y={-20} />
                           }
                   

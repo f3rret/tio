@@ -4,7 +4,8 @@ import { useMemo, useCallback, useEffect, useRef, useContext } from 'react';
 import { ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, CardBody, Tooltip, ListGroup, Container as Cont, CardColumns, Input, Label
    } from 'reactstrap';
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList,
-ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover} from './dialogs';
+ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover,
+SelectDiscardedActions} from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
 import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT, getMyNeighbors, checkIfMyNearbyUnit } from './utils';
 
@@ -259,12 +260,17 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   }
 
   const relicClick = (relic) => {
-    if(relic.id === 'Maw of Worlds' && hud.selectedTech && hud.selectedTech.techno){
-      moves.useRelic({id: relic.id, techId: hud.selectedTech.techno.id});
-      sendChatMessage(t('cards.relics.' + relic.id + '.label'));
+    if(relic.id === 'Maw of Worlds'){
+      if(hud.selectedTech && hud.selectedTech.techno){
+        moves.useRelic({id: relic.id, techId: hud.selectedTech.techno.id});
+        sendChatMessage(t('cards.relics.' + relic.id + '.label'));
+      }
     }
-    else if(relic.id === 'Stellar Converter' && hud.selectedPlanet && hud.selectedPlanet > -1){
-      
+    else if(relic.id === 'Stellar Converter'){
+      if(hud.selectedPlanet > -1){
+        moves.useRelic({id: relic.id, tile: hud.selectedTile, planet: hud.selectedPlanet});
+        sendChatMessage(t('cards.relics.' + relic.id + '.label'));
+      }
     }
     else{
       dispatch({type: 'exhaust_card', cardId: relic.id})
@@ -393,7 +399,8 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
         return !(hud.selectedTech && hud.selectedTech.techno && ctx.phase === 'agenda' && (!race.voteResults || !race.voteResults.length));
       }
       else if(relic && relic.id === 'Stellar Converter'){
-        if(hud.selectedTile > 0){
+        
+        if(race.actions.length < maxActs && hud.selectedTile > 0){
           const tile = G.tiles[hud.selectedTile];
 
           if(tile && tile.tdata){
@@ -411,6 +418,11 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
         }
 
         return true;
+      }
+      else if(relic && relic.id === 'The Codex'){
+        if(race.actions.length < maxActs){
+          
+        }
       }
 
       return relic.exhausted || relic.purged;
@@ -1204,6 +1216,8 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                         {t('cards.agenda.' + pr.id + '.for')}
                       </CardsPagerItem>)}
                     </CardsPager>}
+
+                    {hud.rightBottomVisible === 'discardedActions' && <SelectDiscardedActions />}
                   </div>
                   <ButtonGroup className='comboPanel-left-vertical' style={{alignSelf: 'flex-end', fontFamily:'Handel Gothic', position: 'fixed', bottom: '2rem', padding: '.5rem', right: '35%'}}>
                       <button className={'styledButton ' + (hud.rightBottomVisible === 'promissory' ? 'white':'black')} onClick={()=>rightBottomSwitch('promissory')} 
