@@ -1972,17 +1972,34 @@ export const ChoiceDialog = ({args, onSelect}) => {
 
 }*/
 
-export const CardsPager = ({children}) => {
+export const CardsPager = ({children, title, doneButtonClick, cancelButtonClick}) => {
 
+    const { t } = useContext(LocalizationContext);
     const [start, setStart] = useState(0);
+    const visible = useMemo(() => children.filter(c => c), [children])
+    const incStart = useCallback((inc) => {
+        if(inc > 0 && visible.length > start + inc){
+            setStart(start + inc);
+        }
+        else if(inc < 0 && start + inc >= 0){
+            setStart(start + inc);
+        }
+    }, [start, visible]);
 
-    return <div style={{position: 'absolute', bottom: '3rem', right: '3rem', width: '60rem'}}>
-        <div style={{display: 'flex', padding: '0 0 0 2rem', justifyContent:'space-between', fontSize: '300%'}}>
-          <span>🞀</span>
-          <span>🞂</span>
-        </div>
-        <ListGroup horizontal style={{fontSize: '65%', pointerEvents: 'none', background: 'none', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end'}}>
-            {children.slice(start, start + 8)}
+    const arrowStyle = {cursor: 'pointer', width: '5rem'}
+
+    return <div style={{position: 'absolute', bottom: '3rem', right: '3rem', width: '60rem', padding: '1rem'}}>
+        {(visible.length > 8 || title) && <div style={{display: 'flex', height: '3rem', justifyContent:'space-between', fontSize: '200%', fontFamily: 'Handel Gothic'}}>
+          <button style={arrowStyle} disabled={!start} className='styledButton yellow' onClick={() => incStart(-8)}>🞀</button>
+          {title && <div style={{flex: 'auto', display: 'flex', justifyContent: 'center'}}>
+            {cancelButtonClick && <button className='styledButton red' style={{fontSize: 'initial'}} onClick={() => cancelButtonClick()}>{t('board.cancel')}</button>}
+            <b style={{flex: 'auto', display: 'flex', justifyContent: 'center'}}>{title}</b>
+            {doneButtonClick && <button className='styledButton green' style={{fontSize: 'initial'}} onClick={() => doneButtonClick()}>{t('board.done')}</button>}
+          </div>}
+          <button style={arrowStyle} disabled={start + 8 >= visible.length} className='styledButton yellow' onClick={() => incStart(8)}>🞂</button>
+        </div>}
+        <ListGroup horizontal style={{fontSize: '65%', padding: '0', pointerEvents: 'none', background: 'none', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end'}}>
+            {visible.slice(start, start + 8)}
         </ListGroup>
     </div>
 
@@ -2138,18 +2155,27 @@ export const Gameover = (args) => {
   
 }
 
-export const SelectDiscardedActions = (count) => {
+export const SelectDiscardedActions = ({maxCount, onEnd}) => {
 
-    const { G } = useContext(StateContext);
+    const { G, moves } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
 
-    const selectCard = (i) => {
+    const [selected, setSelected] = useState([]);
+    const selectCard = useCallback((i) => {
+        setSelected(produce(selected, draft =>{
+            const index = draft.indexOf(i);
+            if(index > -1){
+                draft.splice(index, 1);
+            }
+            else if(draft.length < maxCount){
+                draft.push(i)
+            }
+        }));
+    }, [selected, maxCount]);
 
-    }
-
-    return <CardsPager>
+    return <CardsPager title={t('board.discarded')} cancelButtonClick={() => onEnd()} doneButtonClick={() => {moves.useRelic({id: 'The Codex', selected: selected}); onEnd()}}>
         {G.discardedActions.map((pr, i) => <CardsPagerItem key={i} tag='action'>
-            <button disabled={false} style={{width: '100%', marginBottom: '1rem'}} onClick={()=> selectCard(i)} className={'styledButton yellow'} >
+            <button disabled={false} style={{width: '100%', marginBottom: '1rem'}} onClick={(e)=> selectCard(i)} className={'styledButton ' + (selected.includes(i) ? 'white':'yellow')} >
             <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.actions.' + pr.id + '.label').toUpperCase()}</b>
             </button>
 

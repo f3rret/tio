@@ -171,8 +171,7 @@ export const TIO = {
 
           if(!G.relicsDeck.length){
             G.relicsDeck = random.Shuffle(cardData.relics.filter(r => !r.mod));
-            G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'The Codex')) //test only!
-            G.discardedActions = [...G.actionsDeck]; //test only!
+            G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'The Crown of Emphidia')) //test only!
           }
 
           if(!G.secretObjDeck.length){

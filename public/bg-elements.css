@@ -82,7 +82,7 @@ body{
     border-image: url('/comboPanel-left-vertical.png') fill 50 50 / 1rem  stretch !important;
 }
 .subPanel{
-    border-image: url('/subPanel.png') 20 25 / 1rem / .5rem round !important;
+    border-image: url('/subPanel.png') 20 30 / 1rem / .5rem round !important;
     background: 0% 0% / auto auto url('/panel-bg.png');
 }
 

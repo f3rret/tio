@@ -69,7 +69,7 @@ const Landing = ({pointerdown, fill, children, x, y, width}) => {
     return <Container zIndex={4} x={x} y={y + sc} width={width} alpha={.9} interactive={true} pointerdown={(e) => pointerdown(e)} cursor='pointer' mouseover={(e) => e.target.alpha = 1} mouseout={(e) => e.target.alpha = .9}>
         {children}
         <Text text={'⯆'} y={0} x={0}
-            style={{fontSize: 80, fontFamily:'Handel Gothic', fill: fill, dropShadow: true, dropShadowDistance: 5}}/>
+            style={{fontSize: 80, fill: fill, dropShadow: true, dropShadowDistance: 5}}/>
     </Container>
 }
 

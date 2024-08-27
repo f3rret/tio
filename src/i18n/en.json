@@ -304,7 +304,8 @@
             "offer": "Offer",
             "nebula": "Nebula",
             "gravity_rift": "Gravity rift",
-            "fleet_pool_exceed": "Fleet limit exceed"
+            "fleet_pool_exceed": "Fleet limit exceed",
+            "discarded": "Discarded"
         },
         "cards": {
             "strategy": {

@@ -433,7 +433,7 @@ export const Lobby = ({dispatch})=> {
                     height="80"
                     width="80"
                     color="#4fa94d"
-                    ariaLabel="blocks-loading"
+                    ariaLabel="..."
                     wrapperStyle={{}}
                     wrapperClass="blocks-wrapper"
                     visible={true}
@@ -543,7 +543,10 @@ export const Lobby = ({dispatch})=> {
                                     {p.name && <Col xs='7' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>
                                         {String(playerID) === String(p.id) && <Input style={{color: 'inherit', fontSize: 'inherit'}} disabled={p.data && p.data.ready} type='select' onChange={(e) => updatePlayerInfo({race: e.target.value})}>
                                             <option value='0'>{'--' + t('lobby.random_race') + '--'}</option>
-                                            {sortedRacesList.map(([idx, label]) => <option key={idx} value={idx}>{label}</option>)}
+                                            {sortedRacesList.map(([idx, label]) => {
+                                                const color = [1, 2].includes(idx) ? 'rgba(255,255,255,1)':'rgba(255,255,255,.5)'; 
+                                                return <option key={idx} style={{color: color}} value={idx}>{label}</option>
+                                            })}
                                         </Input>}
                                         {p.data && String(playerID) !== String(p.id) && <span style={{paddingLeft: '1.5rem'}}>
                                             {p.data.race === '0' ? t('lobby.random_race'): t('races.' + p.data.race + '.name')}

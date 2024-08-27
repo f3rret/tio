@@ -420,8 +420,8 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
         return true;
       }
       else if(relic && relic.id === 'The Codex'){
-        if(race.actions.length < maxActs){
-          
+        if(race.actions.length >= maxActs){
+          return true;
         }
       }
 
@@ -1035,7 +1035,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                   height="80"
                   width="80"
                   color="#4fa94d"
-                  ariaLabel="blocks-loading"
+                  ariaLabel="..."
                   wrapperStyle={{}}
                   wrapperClass="blocks-wrapper"
                   visible={true}
@@ -1217,7 +1217,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                       </CardsPagerItem>)}
                     </CardsPager>}
 
-                    {hud.rightBottomVisible === 'discardedActions' && <SelectDiscardedActions />}
+                    {hud.rightBottomVisible === 'discardedActions' && <SelectDiscardedActions maxCount={3} onEnd={() => dispatch({type: 'exhaust_card', cardId: 'The Codex'})}/>}
                   </div>
                   <ButtonGroup className='comboPanel-left-vertical' style={{alignSelf: 'flex-end', fontFamily:'Handel Gothic', position: 'fixed', bottom: '2rem', padding: '.5rem', right: '35%'}}>
                       <button className={'styledButton ' + (hud.rightBottomVisible === 'promissory' ? 'white':'black')} onClick={()=>rightBottomSwitch('promissory')} 

@@ -304,7 +304,8 @@
             "offer": "Предложить",
             "nebula": "Туманность",
             "gravity_rift": "Гравитационный разлом",
-            "fleet_pool_exceed": "Превышен лимит флота"
+            "fleet_pool_exceed": "Превышен лимит флота",
+            "discarded": "Сброс"
         },
         "cards": {
             "strategy": {

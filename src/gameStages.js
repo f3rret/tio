@@ -34,6 +34,17 @@ export const useRelic = ({G, playerID, ...plugins}, args) => {
 
       G.races[playerID].actions.push('RELIC');
     }
+    else if(args.id === 'The Codex'){
+      const selected = args.selected;
+
+      if(selected && selected.length){
+        selected.sort().forEach( (s, i) => {
+          G.races[playerID].actionCards.push(...G.discardedActions.splice(s - i, 1))
+        });
+      }
+
+      G.races[playerID].actions.push('RELIC');
+    }
 
     const idx = G.races[playerID].relics.findIndex(r => r.id === args.id);
     G.races[playerID].relics.splice(idx, 1);
