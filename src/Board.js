@@ -272,6 +272,13 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
         sendChatMessage(t('cards.relics.' + relic.id + '.label'));
       }
     }
+    else if(relic.id === 'The Crown of Emphidia'){
+      if(hud.selectedPlanet > -1){
+        moves.useRelic({id: relic.id, tile: hud.selectedTile, planet: hud.selectedPlanet});
+        sendChatMessage(t('cards.relics.' + relic.id + '.label'));
+        dispatch({type: 'exhaust_card', cardId: relic.id})
+      }
+    }
     else{
       dispatch({type: 'exhaust_card', cardId: relic.id})
     }
@@ -400,7 +407,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
       }
       else if(relic && relic.id === 'Stellar Converter'){
         
-        if(race.actions.length < maxActs && hud.selectedTile > 0){
+        if(ctx.phase === 'acts' && race.actions.length < maxActs && hud.selectedTile > 0){
           const tile = G.tiles[hud.selectedTile];
 
           if(tile && tile.tdata){
@@ -419,11 +426,32 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
         return true;
       }
-      else if(relic && relic.id === 'The Codex'){
+      else if(ctx.phase === 'acts' && relic && relic.id === 'The Codex'){
         if(race.actions.length >= maxActs){
           return true;
         }
       }
+      else if(relic && relic.id === 'The Crown of Emphidia'){
+
+        if(ctx.phase === 'acts' && race.actions.length && hud.selectedTile > -1 && hud.selectedPlanet > -1){
+          if(race.exhaustedCards && race.exhaustedCards.includes(relic.id)) return true;
+          const tile = G.tiles[hud.selectedTile];
+          if(tile && tile.tdata){
+            const planet = tile.tdata.planets[hud.selectedPlanet];
+            
+            if(planet && planet.trait && String(planet.occupied) === String(playerID)){
+              return false;
+            }
+          }
+        }
+        else if(ctx.phase === 'stats'){
+          const tomb = PLANETS.find(p => p.attach && p.attach.length && p.attach.includes('Tomb of Emphidia'));
+          if(tomb) return false;
+        }
+
+        return true;
+      }
+      
 
       return relic.exhausted || relic.purged;
     }

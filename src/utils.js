@@ -1432,170 +1432,176 @@ export const exploreFrontier = (G, playerID, tile) => {
 }
 
 export const explorePlanetByName = (G, playerID, pname, exhaustedCards) => {
-  const planet = getPlanetByName(G.tiles, pname);
-  const explore = G.explorationDecks[planet.trait].pop();
+  
+  try{
+    const planet = getPlanetByName(G.tiles, pname);
+    if(!planet.trait) return;
 
-  if(explore.id.indexOf('Relic Fragment') > -1){
-    G.races[playerID].fragments[planet.trait[0]]++;
-  }
-  else if(explore.type === 'ATTACH'){
-    if(!planet.attach || !planet.attach.length){
-      planet.attach = [];
-    }
-    planet.attach.push(explore.id);
-  }
+    const explore = G.explorationDecks[planet.trait].pop();
 
-  if(explore.id === 'Demilitarized Zone'){ //cultural
-    const ukeys = Object.keys(planet.units || {});
-    if(planet.units && ukeys.length){
-      loadUnitsBackToSpace(G, playerID, planet);
+    if(explore.id.indexOf('Relic Fragment') > -1){
+      G.races[playerID].fragments[planet.trait[0]]++;
     }
-    delete planet.units;
-  }
-  else if(explore.id === 'Dyson Sphere'){
-    planet.resources = planet.resources+2;
-    planet.influence = planet.influence+1;
-  }
-  else if(explore.id === 'Paradise World'){
-    planet.influence = planet.influence+2;
-  }
-  else if(explore.id === 'Tomb of Emphidia'){
-    planet.influence = planet.influence+1;
-  }
-  else if(explore.id === 'Lazax Survivors'){
-    planet.resources = planet.resources+1;
-    planet.influence = planet.influence+2;
-  }
-  else if(explore.id === 'Mining World'){
-    planet.resources = planet.resources+2;
-  }
-  else if(explore.id === 'Rich World'){
-    planet.resources = planet.resources+1;
-  }
-  else if(explore.id === 'Freelancers'){
-    planet.exploration = 'Freelancers'
-  }
-  else if(explore.id === 'Gamma Wormhole'){
-    const tile = getTileByPlanetName(G.tiles, pname);
-    if(tile) tile.tdata.wormhole = 'gamma';
-  }
-  else if(explore.id === 'Mercenary Outfit'){
-    const units = getPlayerUnits(G.tiles, playerID);
-    if(units['infantry'] < UNITS_LIMIT['infantry']){
-      if(!planet.units) planet.units={};
-      if(!planet.units.infantry) planet.units.infantry=[];
-      
-      planet.units.infantry.push({id: 'infantry'});
+    else if(explore.type === 'ATTACH'){
+      if(!planet.attach || !planet.attach.length){
+        planet.attach = [];
+      }
+      planet.attach.push(explore.id);
     }
-  }
-  else if(explore.id === 'Core Mine'){ //hazardous
-    if(planet.units){
-      if(planet.units['mech'] && planet.units['mech'].length){
-        G.races[playerID].tg++;
+
+    if(explore.id === 'Demilitarized Zone'){ //cultural
+      const ukeys = Object.keys(planet.units || {});
+      if(planet.units && ukeys.length){
+        loadUnitsBackToSpace(G, playerID, planet);
       }
-      else if(planet.units['infantry'] && planet.units['infantry'].length){
-        planet.exploration = 'Core Mine';
-      }
+      delete planet.units;
     }
-  }
-  else if(explore.id === 'Expedition'){
-    if(planet.exhausted && planet.units){
-      if(planet.units['mech'] && planet.units['mech'].length){
-        planet.exhausted = false;
-      }
-      else if(planet.units['infantry'] && planet.units['infantry'].length){
-        planet.exploration = 'Expedition';
+    else if(explore.id === 'Dyson Sphere'){
+      planet.resources = planet.resources+2;
+      planet.influence = planet.influence+1;
+    }
+    else if(explore.id === 'Paradise World'){
+      planet.influence = planet.influence+2;
+    }
+    else if(explore.id === 'Tomb of Emphidia'){
+      planet.influence = planet.influence+1;
+    }
+    else if(explore.id === 'Lazax Survivors'){
+      planet.resources = planet.resources+1;
+      planet.influence = planet.influence+2;
+    }
+    else if(explore.id === 'Mining World'){
+      planet.resources = planet.resources+2;
+    }
+    else if(explore.id === 'Rich World'){
+      planet.resources = planet.resources+1;
+    }
+    else if(explore.id === 'Freelancers'){
+      planet.exploration = 'Freelancers'
+    }
+    else if(explore.id === 'Gamma Wormhole'){
+      const tile = getTileByPlanetName(G.tiles, pname);
+      if(tile) tile.tdata.wormhole = 'gamma';
+    }
+    else if(explore.id === 'Mercenary Outfit'){
+      const units = getPlayerUnits(G.tiles, playerID);
+      if(units['infantry'] < UNITS_LIMIT['infantry']){
+        if(!planet.units) planet.units={};
+        if(!planet.units.infantry) planet.units.infantry=[];
+        
+        planet.units.infantry.push({id: 'infantry'});
       }
     }
-  }
-  else if(explore.id === 'Volatile Fuel Source'){
-    if(planet.units){
-      if(planet.units['mech'] && planet.units['mech'].length){
-        if(G.races[playerID].tokens.new + G.races[playerID].tokens.s + G.races[playerID].tokens.t + G.races[playerID].tokens.f < 16){
-          G.races[playerID].tokens.new++;
+    else if(explore.id === 'Core Mine'){ //hazardous
+      if(planet.units){
+        if(planet.units['mech'] && planet.units['mech'].length){
+          G.races[playerID].tg++;
+        }
+        else if(planet.units['infantry'] && planet.units['infantry'].length){
+          planet.exploration = 'Core Mine';
         }
       }
-      else if(planet.units['infantry'] && planet.units['infantry'].length){
-        planet.exploration = 'Volatile Fuel Source';
+    }
+    else if(explore.id === 'Expedition'){
+      if(planet.exhausted && planet.units){
+        if(planet.units['mech'] && planet.units['mech'].length){
+          planet.exhausted = false;
+        }
+        else if(planet.units['infantry'] && planet.units['infantry'].length){
+          planet.exploration = 'Expedition';
+        }
       }
     }
-  }
-  else if(explore.id === 'Warfare Research Facility'){
-    if(planet.specialty){
-      planet.resources = planet.resources+1;
-      planet.influence = planet.influence+1;
+    else if(explore.id === 'Volatile Fuel Source'){
+      if(planet.units){
+        if(planet.units['mech'] && planet.units['mech'].length){
+          if(G.races[playerID].tokens.new + G.races[playerID].tokens.s + G.races[playerID].tokens.t + G.races[playerID].tokens.f < 16){
+            G.races[playerID].tokens.new++;
+          }
+        }
+        else if(planet.units['infantry'] && planet.units['infantry'].length){
+          planet.exploration = 'Volatile Fuel Source';
+        }
+      }
     }
-    else{
-      planet.specialty = 'warfare';
+    else if(explore.id === 'Warfare Research Facility'){
+      if(planet.specialty){
+        planet.resources = planet.resources+1;
+        planet.influence = planet.influence+1;
+      }
+      else{
+        planet.specialty = 'warfare';
+      }
     }
-  }
-  else if(explore.id === 'Abandoned Warehouses'){ //industrial
-    G.races[playerID].explorationDialog = {
-      id: explore.id,
-      type: 'exploration',
-      options: [
-        {label: 'replenish'},
-        {label: 'convert'}
-      ]
-    };
-  }
-  else if(explore.id === 'Biotic Research Facility'){
-    if(planet.specialty){
-      planet.resources = planet.resources+1;
-      planet.influence = planet.influence+1;
+    else if(explore.id === 'Abandoned Warehouses'){ //industrial
+      G.races[playerID].explorationDialog = {
+        id: explore.id,
+        type: 'exploration',
+        options: [
+          {label: 'replenish'},
+          {label: 'convert'}
+        ]
+      };
     }
-    else{
-      planet.specialty = 'biotic';
+    else if(explore.id === 'Biotic Research Facility'){
+      if(planet.specialty){
+        planet.resources = planet.resources+1;
+        planet.influence = planet.influence+1;
+      }
+      else{
+        planet.specialty = 'biotic';
+      }
     }
-  }
-  else if(explore.id === 'Cybernetic Research Facility'){
-    if(planet.specialty){
-      planet.resources = planet.resources+1;
-      planet.influence = planet.influence+1;
+    else if(explore.id === 'Cybernetic Research Facility'){
+      if(planet.specialty){
+        planet.resources = planet.resources+1;
+        planet.influence = planet.influence+1;
+      }
+      else{
+        planet.specialty = 'cybernetic';
+      }
     }
-    else{
-      planet.specialty = 'cybernetic';
+    else if(explore.id === 'Functioning Base'){
+      G.races[playerID].explorationDialog = {
+        id: explore.id,
+        type: 'exploration',
+        options: [
+          {label: 'gain_1_commodity'},
+          {label: 'spend_1_commodity'},
+          {label: 'spend_1_tg'}
+        ]
+      };
     }
-  }
-  else if(explore.id === 'Functioning Base'){
-    G.races[playerID].explorationDialog = {
-      id: explore.id,
-      type: 'exploration',
-      options: [
-        {label: 'gain_1_commodity'},
-        {label: 'spend_1_commodity'},
-        {label: 'spend_1_tg'}
-      ]
-    };
-  }
-  else if(explore.id === 'Local Fabricators'){
-    G.races[playerID].explorationDialog = {
-      id: explore.id,
-      type: 'exploration',
-      pname,
-      options: [
-        {label: 'gain_1_commodity'},
-        {label: 'spend_1_commodity'},
-        {label: 'spend_1_tg'}
-      ]
-    };
-  }
-  else if(explore.id === 'Propulsion Research Facility'){
-    if(planet.specialty){
-      planet.resources = planet.resources+1;
-      planet.influence = planet.influence+1;
+    else if(explore.id === 'Local Fabricators'){
+      G.races[playerID].explorationDialog = {
+        id: explore.id,
+        type: 'exploration',
+        pname,
+        options: [
+          {label: 'gain_1_commodity'},
+          {label: 'spend_1_commodity'},
+          {label: 'spend_1_tg'}
+        ]
+      };
     }
-    else{
-      planet.specialty = 'propulsion';
+    else if(explore.id === 'Propulsion Research Facility'){
+      if(planet.specialty){
+        planet.resources = planet.resources+1;
+        planet.influence = planet.influence+1;
+      }
+      else{
+        planet.specialty = 'propulsion';
+      }
     }
-  }
-  
+    
 
-  G.races[playerID].exploration.push(explore);
+    G.races[playerID].exploration.push(explore);
 
-  if(exhaustedCards && exhaustedCards.indexOf('SCANLINK_DRONE_NETWORK') > -1){
-    G.races[playerID].exhaustedCards.push('SCANLINK_DRONE_NETWORK');
+    if(exhaustedCards && exhaustedCards.indexOf('SCANLINK_DRONE_NETWORK') > -1){
+      G.races[playerID].exhaustedCards.push('SCANLINK_DRONE_NETWORK');
+    }
   }
+  catch(e){console.log(e)}
 }
 
 export const checkIonStorm = (G, fullpath) => {

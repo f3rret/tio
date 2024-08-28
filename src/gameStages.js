@@ -3,11 +3,11 @@ import { INVALID_MOVE } from 'boardgame.io/core';
 import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveTechnology, getPlanetByName, 
   completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits, 
   spliceCombatAC, checkIonStorm, checkSecretObjective, checkCommanderUnlock, useCommanderAbility, 
-  adjustTechnologies,
+  adjustTechnologies, explorePlanetByName,
   enemyHaveCombatAC,
   getPlayerPlanets} from './utils';
 
-export const useRelic = ({G, playerID, ...plugins}, args) => {
+export const useRelic = ({G, ctx, playerID, ...plugins}, args) => {
 
   try{
     if(args.id === 'Maw of Worlds'){
@@ -44,6 +44,23 @@ export const useRelic = ({G, playerID, ...plugins}, args) => {
       }
 
       G.races[playerID].actions.push('RELIC');
+    }
+    else if(args.id === 'The Crown of Emphidia'){
+      if(ctx.phase === 'acts'){
+        const tile = G.tiles[args.tile];
+        if(!tile || !tile.tdata) return;
+
+        const planet = tile.tdata.planets[args.planet];
+        if(!planet) return;
+
+        explorePlanetByName(G, playerID, planet.name);
+        G.races[playerID].exhaustedCards.push(args.id);
+        plugins.effects.tg();
+        return;
+      }
+      else if(ctx.phase === 'stats'){
+        G.races[playerID].vp++;
+      }
     }
 
     const idx = G.races[playerID].relics.findIndex(r => r.id === args.id);
