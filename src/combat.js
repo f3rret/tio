@@ -491,6 +491,9 @@ const HitAssign = (args) => {
                     else if(ca === 'NEBULA'){
                         label = t('board.nebula').toUpperCase();
                     }
+                    else if(ca === 'The Crown of Thalnos'){
+                        label = t('cards.relics.' + ca + '.label');
+                    }
                     else{
                         label = t('cards.actions.' + ca + '.label');
                     }
@@ -581,14 +584,14 @@ const CombatantForces = (args) => {
     }, [race, combatAbility, isInvasion])
 
     const mayReroll = useCallback((owner, unit, didx) => {
-        if(String(playerID) === String(owner)){
-            if(G.races[playerID].combatActionCards.indexOf('Fire Team') > -1){
+        if(String(playerID) === String(owner) && !combatAbility){
+            if(G.races[playerID].combatActionCards.includes('Fire Team') || G.races[playerID].combatActionCards.includes('The Crown of Thalnos')){
                 if(!(G.dice[owner][unit].reroll && G.dice[owner][unit].reroll[didx] !== undefined)){
                     return true;
                 }
             }
         }
-    }, [playerID, G.races, G.dice]);
+    }, [playerID, G.races, G.dice, combatAbility]);
 
     return (<div style={{margin: '1rem 0'}}>
         <div style={{display: 'flex', padding: '1rem', position: 'relative', flexDirection: 'row', backgroundColor: 'rgba(33, 37, 41, 0.75)', 
@@ -693,14 +696,17 @@ const CombatantForces = (args) => {
                                         </UncontrolledDropdown>}
                                 {G.dice[owner][u] && <ButtonGroup style={{flexWrap: 'wrap', maxWidth: '6rem'}}>
                                     {G.dice[owner][u].dice.map((d, j) =>{
-                                        const val = G.dice[owner][u].reroll ? G.dice[owner][u].reroll[j] || d : d;
+                                        const rerolled = G.dice[owner][u].reroll && G.dice[owner][u].reroll[j];
+                                        const val = rerolled ? G.dice[owner][u].reroll[j] : d;
+                                        if(rerolled && race.combatActionCards.includes('The Crown of Thalnos')) adj++;
+                                        
                                         let color = 'light';
                                         if(val + adj >= ability.value) color = G.dice[owner][u].withTech && G.dice[owner][u].withTech.indexOf('GRAVITON_LASER_SYSTEM')>-1 ? 'danger':'success';
 
                                         const mr = mayReroll(owner, u, j);
                                         if(color === 'light' && mr) color = 'warning';
 
-                                        return <Button key={j} size='sm' color={color} onClick = { mr ? ()=>moves.rerollDice(u, j):()=>{} }
+                                        return <Button key={j} size='sm' color={color} onClick = { mr ? ()=>moves.rerollDice(u, j) : ()=>{} }
                                             style={{borderRadius: '5px', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', maxWidth:'1.25rem', height: '1.25rem'}}>
                                             {('' + val).substr(-1)}</Button>
                                     })}
@@ -731,6 +737,9 @@ const CombatantForces = (args) => {
                 }
                 else if(ca === 'NEBULA'){
                     label = t('board.nebula').toUpperCase();
+                }
+                else if(ca === 'The Crown of Thalnos'){
+                    label = t('cards.relics.' + ca + '.label');
                 }
                 else{
                     label = t('cards.actions.' + ca + '.label');

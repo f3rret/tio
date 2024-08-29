@@ -171,7 +171,7 @@ export const TIO = {
 
           if(!G.relicsDeck.length){
             G.relicsDeck = random.Shuffle(cardData.relics.filter(r => !r.mod));
-            G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'The Crown of Thalnos')) //test only!
+            //G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'The Crown of Thalnos')) //test only!
           }
 
           if(!G.secretObjDeck.length){
@@ -230,6 +230,10 @@ export const TIO = {
               try{
                 if(!ctx.activePlayers || !ctx.activePlayers[playerID]){
                   G.races[playerID].combatActionCards = [];
+
+                  if(G.races[playerID].relics && G.races[playerID].relics.find(r => r.id === 'The Crown of Thalnos')){
+                    G.races[playerID].combatActionCards.push('The Crown of Thalnos');
+                  }
 
                   if(G.races[playerID].preCombatActionCards && G.races[playerID].preCombatActionCards.length){
                     G.races[playerID].combatActionCards.push(...G.races[playerID].preCombatActionCards);

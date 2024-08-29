@@ -2324,9 +2324,12 @@ export const ACTS_STAGES = {
         }
       },
       rerollDice: ({G, playerID, random}, unit, didx) => {
-        const dice = random.D10(1);
-        if(!G.dice[playerID][unit].reroll) G.dice[playerID][unit].reroll = {};
-        G.dice[playerID][unit].reroll[didx] = dice[0];
+        try{
+          const dice = random.D10(1);
+          if(!G.dice[playerID][unit].reroll) G.dice[playerID][unit].reroll = {};
+          G.dice[playerID][unit].reroll[didx] = dice[0];
+        }
+        catch(e){console.log(e)}
       },
       nextStep: ({G, events, playerID, ctx}, hits, setNoPds) => {
 

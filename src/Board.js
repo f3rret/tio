@@ -491,15 +491,17 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
       if(ctx.phase !== 'acts' || !hud.justOccupied) disabled = true;
     }
     if(!disabled && args.techId === 'SCANLINK_DRONE_NETWORK'){
-      if(ctx.phase !== 'acts') disabled = true;
-      if(!activeTile){
+      if(ctx.phase !== 'acts'){
         disabled = true;
       }
-      else if(!activeTile.tdata.planets){
+      else if(!activeTile || hud.selectedPlanet === -1 || G.tiles[hud.selectedTile].tid !== activeTile.tid){
         disabled = true;
       }
-      else if(!activeTile.tdata.planets.find(p => !p.exhausted && p.trait && p.units && String(p.occupied) === String(playerID))){
-        disabled = true;
+      else{
+        const p = activeTile.tdata.planets[hud.selectedPlanet];
+        if(p.exhausted || !p.trait || !p.units || String(p.occupied) !== String(playerID)){
+          disabled = true;
+        }
       }
     }
     if(!disabled && args.techId === 'SELF_ASSEMBLY_ROUTINES'){
@@ -558,6 +560,11 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     }
 
     const onClick = ()=>{
+      if(args.techId === 'SCANLINK_DRONE_NETWORK' && activeTile.tdata && activeTile.tdata.planets){
+        const planet = activeTile.tdata.planets[hud.selectedPlanet];
+        moves.explorePlanet(planet.name, ['SCANLINK_DRONE_NETWORK']);
+      }
+    
       exhaustTechCard(args.techId);
     }
 
@@ -567,21 +574,6 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                 <img alt='tech type' src={'icons/'+icon+'.png'} style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}}/>
                 <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.techno.' + args.techId + '.label') + addText}</b>
               </button>
-
-              {args.techId === 'SCANLINK_DRONE_NETWORK' && hud.rightBottomSubVisible === args.techId && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
-                <b>{t('board.explore_one')+ ':'}</b>
-                {activeTile.tdata.planets.map((p, i) => {
-                  if(p.trait){
-                    return <button key={i} onClick={() => {moves.explorePlanet(p.name, hud.exhaustedCards); dispatch({type: 'right_bottom_sub_visible', payload: null})}} style={{width: '100%', margin: '.25rem'}} className='styledButton yellow'>
-                      {t('planets.' + p.name)}
-                    </button>
-                  }
-                  return <div key={i}></div>
-                })}
-                <button onClick={() => dispatch({type: 'right_bottom_sub_visible', payload: null})} style={{width: '100%', margin: '.25rem'}} className='styledButton black'>
-                          {t('board.cancel')}
-                        </button>
-              </ListGroup>}
 
               {args.techId === 'BIO_STIMS' && hud.rightBottomSubVisible === args.techId && <ListGroup className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', width: '15rem', padding: '1rem', fontSize: '1rem'}}>
                       <b>{t('board.ready_one') + ':'}</b>
@@ -779,9 +771,11 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
       });
       MY_LAST_EFFECT.current = '';
     //}
-  //flushTempCt();
+    if(race.exhaustedCards.length){
+      flushTempCt();
+    }
   //eslint-disable-next-line
-  },[ctx.phase]);
+  },[ctx.phase, race.exhaustedCards]);
 
   useEffect(()=>{
     if(mustSecObj){

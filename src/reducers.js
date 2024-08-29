@@ -242,8 +242,8 @@ export const hudReducer = (hudDraft, action) => {
                 }
             });
 
-            if(['BIO_STIMS', 'SCANLINK_DRONE_NETWORK', 'INFANTRY2'].includes(action.cardId)){
-                hudDraft.rightBottomSubVisible(hudDraft.exhaustedCards.includes(action.cardId) ? null:action.cardId);
+            if(['BIO_STIMS', 'INFANTRY2'].includes(action.cardId)){
+                hudDraft.rightBottomSubVisible = hudDraft.exhaustedCards.includes(action.cardId) ? null:action.cardId;
             }
 
             if(action.cardId === 'The Codex'){
