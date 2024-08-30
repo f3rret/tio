@@ -1005,6 +1005,21 @@ export const ACTION_CARD_STAGE = {
   }
 
 
+const rerollDice = ({G, playerID, random}, unit, didx, ability, adj) => {
+  try{
+    const dice = random.D10(1);
+    if(!G.dice[playerID][unit].reroll) G.dice[playerID][unit].reroll = {};
+    G.dice[playerID][unit].reroll[didx] = dice[0];
+
+    if(G.races[playerID].combatActionCards.includes('The Crown of Thalnos')){
+      if(dice[0]+adj < ability.value){
+        G.dice[playerID][unit].reroll[didx] = -dice[0];
+      }
+    }
+  }
+  catch(e){console.log(e)}
+}
+
 const chooseAndDestroyMove = ({G, playerID},  destroyed) => {
   const info = G.races[playerID].mustChooseAndDestroy;
   let fleet = {};
@@ -1766,34 +1781,131 @@ export const ACTS_STAGES = {
           draft[playerID][unit] = {dice};
         });
       },
+      rerollDice,
       nextStep: ({G, playerID, events, ctx}, hits) => {
-       
-        if(spliceCombatAC(G.races[playerID], 'Emergency Repairs')){
-          repairAllActiveTileUnits(G, playerID);
-        }
-      
-        if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
-          if(G.races[playerID].retreat !== true){
-            if(G.races[playerID].retreat === 'cancel'){
-              G.races[playerID].retreat = undefined;
-            }
+        try{
+          let fleet;
+          const activeTile = G.tiles.find(t => t.active === true);
+          
+          if(String(playerID) === String(ctx.currentPlayer)){
+            fleet = activeTile.tdata.attacker;
+          }
+          else{
+            fleet = activeTile.tdata.fleet;
+          }
+          
+          let technologies = getUnitsTechnologies([...Object.keys(fleet), 'fighter', 'mech'], G.races[playerID]);
+          let needFilterDeleted = false;
 
-            const enemyRetreat = Object.keys(ctx.activePlayers).find(k => G.races[k].retreat === true);
-            if(enemyRetreat !== undefined){
-              events.setStage('spaceCombat_await'); //await while enemy retreating
+          Object.keys(G.dice[playerID]).forEach(u => { //remove units after unluck reroll with relic
+            if(G.dice[playerID][u] && G.dice[playerID][u].reroll){
+              Object.keys(G.dice[playerID][u].reroll).forEach(k => {
+                
+                if(G.dice[playerID][u].reroll[k] && G.dice[playerID][u].reroll[k] < 0){
+                  let doCheck = true;
+                  let uidx = k;
+
+                  if(technologies[u] && technologies[u].shot > 1){//flagship or warsun
+                    doCheck = false;
+
+                    if(k % technologies[u].shot === 0){
+                      if(G.dice[playerID][u].reroll[k-1] && G.dice[playerID][u].reroll[k-1] < 0){
+                        if(technologies[u].shot > 2){
+                          if(G.dice[playerID][u].reroll[k-2] && G.dice[playerID][u].reroll[k-2] < 0){
+                            uidx = k / 3;
+                            doCheck = true;
+                          }
+                        }
+                        else{
+                          uidx = k / 2;
+                          doCheck = true;
+                        }
+                      }
+                    }
+                  }
+
+                  if(doCheck){
+                    if(fleet[u] && fleet[u][uidx]){
+                      delete fleet[u][uidx];
+                    }
+                    else{ //remove payload by index
+                      let index = 0;
+                      Object.keys(fleet).find(sheep => {
+
+                        return fleet[sheep].find((car, caridx) => {
+                          if(car && car.payload && car.payload.length){
+                            return car.payload.find((p, pidx) => {
+
+                              if(p && p.id === u){
+                                if(String(index) === String(uidx)){
+                                  delete fleet[sheep][caridx].payload[pidx];
+                                  return true;
+                                }
+                                else index++;
+                              }
+                              else if(!p){index++} //already deleted
+
+                              return false;
+                            })
+                          }
+
+                          return false;
+                        })
+                      });
+
+                    }
+
+                    needFilterDeleted = true;
+                    G.races[playerID].destroyedUnits.push(u); //remember destroyed units
+                  }
+                }
+
+              })
+            }
+          });
+        
+          if(needFilterDeleted){ //filter deleted units
+            Object.keys(fleet).forEach(sheep => {
+              fleet[sheep] = fleet[sheep].filter(s => s);
+
+              fleet[sheep].forEach((car) => {
+                if(car && car.payload){
+                  car.payload = car.payload.filter(p => p)
+                }
+              });
+            });
+          }
+
+
+          
+          if(spliceCombatAC(G.races[playerID], 'Emergency Repairs')){
+            repairAllActiveTileUnits(G, playerID);
+          }
+        
+          if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
+            if(G.races[playerID].retreat !== true){
+              if(G.races[playerID].retreat === 'cancel'){
+                G.races[playerID].retreat = undefined;
+              }
+
+              const enemyRetreat = Object.keys(ctx.activePlayers).find(k => G.races[k].retreat === true);
+              if(enemyRetreat !== undefined){
+                events.setStage('spaceCombat_await'); //await while enemy retreating
+              }
+              else{
+                Object.keys(hits).forEach(pid => G.dice[pid] = {});
+                events.setStage('spaceCombat');
+              }
             }
             else{
-              Object.keys(hits).forEach(pid => G.dice[pid] = {});
-              events.setStage('spaceCombat');
+              events.setStage('combatRetreat');
             }
           }
           else{
-            events.setStage('combatRetreat');
+            events.setStage('spaceCombat_step2');
           }
         }
-        else{
-          events.setStage('spaceCombat_step2');
-        }
+        catch(e){console.log(e)}
       },
       retreat: ({G, playerID}) => {
         if(G.races[playerID].retreat !== 'cancel'){
@@ -2323,14 +2435,7 @@ export const ACTS_STAGES = {
           G.races[playerID].exhaustedCards.push('AGENT');
         }
       },
-      rerollDice: ({G, playerID, random}, unit, didx) => {
-        try{
-          const dice = random.D10(1);
-          if(!G.dice[playerID][unit].reroll) G.dice[playerID][unit].reroll = {};
-          G.dice[playerID][unit].reroll[didx] = dice[0];
-        }
-        catch(e){console.log(e)}
-      },
+      rerollDice,
       nextStep: ({G, events, playerID, ctx}, hits, setNoPds) => {
 
         if(spliceCombatAC(G.races[playerID], 'Emergency Repairs')){

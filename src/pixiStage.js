@@ -300,6 +300,7 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
 
       const tile = G.tiles[args.tile];
       const planet = tile.tdata?.planets[args.planet];
+
       if(!planet || String(planet.occupied) !== String(playerID)) return;
       
 

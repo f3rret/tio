@@ -702,11 +702,12 @@ const CombatantForces = (args) => {
                                         
                                         let color = 'light';
                                         if(val + adj >= ability.value) color = G.dice[owner][u].withTech && G.dice[owner][u].withTech.indexOf('GRAVITON_LASER_SYSTEM')>-1 ? 'danger':'success';
+                                        if(val < 0) color = 'dark'; //must be destroyed after unluck reroll with relic
 
                                         const mr = mayReroll(owner, u, j);
                                         if(color === 'light' && mr) color = 'warning';
 
-                                        return <Button key={j} size='sm' color={color} onClick = { mr ? ()=>moves.rerollDice(u, j) : ()=>{} }
+                                        return <Button key={j} size='sm' color={color} onClick = { mr ? ()=>moves.rerollDice(u, j, ability, adj) : ()=>{} }
                                             style={{borderRadius: '5px', padding: 0, margin: '.25rem', fontSize: '12px', width: '1.25rem', maxWidth:'1.25rem', height: '1.25rem'}}>
                                             {('' + val).substr(-1)}</Button>
                                     })}
@@ -878,7 +879,11 @@ export const SpaceCombat = ({selectedTile}) => {
                         const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
                         
                         if(technology && technology.combat){
-                            h += G.dice[pid][unit].dice.filter(d => d+adj >= technology.combat).length;
+                            //h += G.dice[pid][unit].dice.filter(d => d+adj >= technology.combat).length;
+
+                            h += G.dice[pid][unit].dice.filter((die, idx) => {
+                                const val = G.dice[pid][unit].reroll ? G.dice[pid][unit].reroll[idx] || die : die;
+                                return val+adj >= technology.combat}).length;
                         }
 
                         if(G.races[pid].combatActionCards.indexOf('Reflective Shielding') > -1){

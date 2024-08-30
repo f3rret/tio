@@ -59,7 +59,7 @@ export const getInitTiles = (hexGrid, races) => {
   tiles.forEach( (t, i) => {
     if( t.tdata.type === 'green' ){
       tiles[i].tdata = produce(tiles[i].tdata, draft => {
-        const idx = races.findIndex(r => r.rid === t.tid);
+        const idx = races.findIndex(r => r.rid === t.tid); //todo: make possible to play two or more identical races
         if(idx > -1){
           draft.occupied = String(idx);
 
