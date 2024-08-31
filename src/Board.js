@@ -259,28 +259,28 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     }
   }
 
-  const relicClick = (relic) => {
-    if(relic.id === 'Maw of Worlds'){
+  const relicClick = (relicId) => {
+    if(relicId === 'Maw of Worlds'){
       if(hud.selectedTech && hud.selectedTech.techno){
-        moves.useRelic({id: relic.id, techId: hud.selectedTech.techno.id});
-        sendChatMessage(t('cards.relics.' + relic.id + '.label'));
+        moves.useRelic({id: relicId, techId: hud.selectedTech.techno.id});
+        sendChatMessage(t('cards.relics.' + relicId + '.label'));
       }
     }
-    else if(relic.id === 'Stellar Converter'){
+    else if(relicId === 'Stellar Converter'){
       if(hud.selectedPlanet > -1){
-        moves.useRelic({id: relic.id, tile: hud.selectedTile, planet: hud.selectedPlanet});
-        sendChatMessage(t('cards.relics.' + relic.id + '.label'));
+        moves.useRelic({id: relicId, tile: hud.selectedTile, planet: hud.selectedPlanet});
+        sendChatMessage(t('cards.relics.' + relicId + '.label'));
       }
     }
-    else if(relic.id === 'The Crown of Emphidia'){
+    else if(relicId === 'The Crown of Emphidia'){
       if(hud.selectedPlanet > -1){
-        moves.useRelic({id: relic.id, tile: hud.selectedTile, planet: hud.selectedPlanet});
-        sendChatMessage(t('cards.relics.' + relic.id + '.label'));
-        dispatch({type: 'exhaust_card', cardId: relic.id})
+        moves.useRelic({id: relicId, tile: hud.selectedTile, planet: hud.selectedPlanet});
+        sendChatMessage(t('cards.relics.' + relicId + '.label'));
+        dispatch({type: 'exhaust_card', cardId: relicId})
       }
     }
     else{
-      dispatch({type: 'exhaust_card', cardId: relic.id})
+      dispatch({type: 'exhaust_card', cardId: relicId})
     }
   }
 
@@ -289,7 +289,16 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   }, [race, isMyTurn]);
 
   const mustSecObj = useMemo(() => {
-    if(race && race.secretObjectives && isMyTurn) return race.mustDropSecObj || race.secretObjectives.length > 3
+    let max = 3;
+
+    if(race && race.secretObjectives && isMyTurn){
+      if(race.mustDropSecObj) return true;
+      if(race.relics && race.relics.length && race.relics.includes('race.mustDropSecObj')){
+        max++;
+      }
+      
+      return race.secretObjectives.length > max;
+    }
   }, [race, isMyTurn]);
 
   const rightBottomSwitch = useCallback((val) => {
@@ -450,6 +459,9 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
         }
 
         return true;
+      }
+      else if(relic && relic.id === "The Prophet's Tears"){
+        return !(strategyStage && G.strategy === 'TECHNOLOGY' && ctx.activePlayers[playerID])
       }
       
 
@@ -1217,7 +1229,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
                     {hud.rightBottomVisible === 'relics' && race.relics.length > 0 && <CardsPager>
                       {race.relics.map((pr, i) => <CardsPagerItem key={i} tag='relic'>
-                        <button style={{width: '100%', marginBottom: '1rem'}} disabled={isRelicDisabled(pr)} className = {'styledButton ' + (hud.exhaustedCards.includes(pr.id) ? 'white':'yellow')} onClick={() => relicClick(pr)}>
+                        <button style={{width: '100%', marginBottom: '1rem'}} disabled={isRelicDisabled(pr)} className = {'styledButton ' + (hud.exhaustedCards.includes(pr.id) || hud.exhaustedCards.includes(pr.id+'_1') ? 'white':'yellow')} onClick={() => relicClick(pr.id)}>
                           <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.relics.' + pr.id + '.label').toUpperCase()}</b>
                         </button>
 
@@ -1225,6 +1237,11 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                         {pr.id === 'Maw of Worlds' && <p style={{marginTop: '1rem', color: 'blueviolet'}}>
                           {hud.selectedTech && hud.selectedTech.techno && <b>{hud.selectedTech.techno.racial ? t('races.' + race.rid + '.' + hud.selectedTech.techno.id + '.label') : t('cards.techno.' + hud.selectedTech.techno.id + '.label')}</b>}
                           {!(hud.selectedTech && hud.selectedTech.techno) && <b>{t('board.choose_technology')}</b>}
+                        </p>}
+                        {pr.id === "The Prophet's Tears" && <p style={{marginTop: '1rem', color: 'blueviolet'}}>
+                          <Input type='radio' disabled={isRelicDisabled(pr)} onChange={() => relicClick(pr.id)} name='prophet_tears' id='prophet_tears_0' checked={hud.exhaustedCards.includes(pr.id)}/><Label for='prophet_tears_0' check style={{marginLeft: '.5rem'}}>{t('board.ignore_requirement')}</Label>
+                          <br/>
+                          <Input type='radio' disabled={isRelicDisabled(pr)} onChange={() => relicClick(pr.id+'_1')} name='prophet_tears' id='prophet_tears_1' checked={hud.exhaustedCards.includes(pr.id+ '_1')}/><Label for='prophet_tears_1' check style={{marginLeft: '.5rem'}}>{t('board.take_card')}</Label>
                         </p>}
                       </CardsPagerItem>)}
                     </CardsPager>}

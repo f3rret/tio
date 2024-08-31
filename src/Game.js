@@ -171,7 +171,7 @@ export const TIO = {
 
           if(!G.relicsDeck.length){
             G.relicsDeck = random.Shuffle(cardData.relics.filter(r => !r.mod));
-            G.races[ctx.currentPlayer].relics.push(G.relicsDeck.find(a => a.id === 'The Crown of Thalnos')) //test only!
+            //G.races[ctx.currentPlayer].relics.push(...G.relicsDeck) //test only!
           }
 
           if(!G.secretObjDeck.length){
@@ -180,7 +180,7 @@ export const TIO = {
               r.secretObjectives.push(...G.secretObjDeck.splice(-1)); //2!
               //r.mustDropSecObj = true;
 
-              //r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Drive the Debate'), players: []});
+              //r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Destroy Heretical Works'), players: []});
             });
           }
 
@@ -714,7 +714,12 @@ export const TIO = {
             Object.keys(purgingFragments).forEach(k => {
               G.races[playerID].fragments[k] -= purgingFragments[k];
             });
-            G.races[playerID].relics.push(G.relicsDeck.pop());
+            const relic = G.relicsDeck.pop();
+            G.races[playerID].relics.push(relic);
+            if(relic && relic.id === 'The Obsidian' && G.secretObjDeck.length){
+              G.races[playerID].secretObjectives.push(...G.secretObjDeck.splice(-1));
+            }
+
             G.races[playerID].actions.push('FRAGMENTS_PURGE');
           },
           adjustToken: ({ G, playerID}, tag, inc) => {

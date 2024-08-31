@@ -239,6 +239,18 @@ export const hudReducer = (hudDraft, action) => {
                 }
                 else{
                   draft.push(action.cardId);
+
+                  let exclude = -1;
+                  if(action.cardId === "The Prophet's Tears"){
+                    exclude = draft.indexOf("The Prophet's Tears_1")
+                  }
+                  else if(action.cardId === "The Prophet's Tears_1"){
+                    exclude = draft.indexOf("The Prophet's Tears")
+                  }
+
+                  if(exclude > -1){
+                    draft.splice(exclude, 1);
+                  }
                 }
             });
 

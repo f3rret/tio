@@ -541,12 +541,16 @@ export const StrategyDialog = ({ R_UNITS, R_UPGRADES, selectedTile, selectedPlan
         else if(sid === 'TECHNOLOGY'){
             if(step === 2){
                 const reqs = UnmeetReqs({separate: true, PLANETS, ex2, GP, G, playerID});
-                if(exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1){
-                    stopThere = reqs.upgrades.length > 1 || reqs.other.length > 0;
+                let ign_upg = 0;
+                let ign_othr = 0;
+
+                if(exhaustedCards.includes('AI_DEVELOPMENT_ALGORITHM')) ign_upg++;
+                if(exhaustedCards.includes("The Prophet's Tears")) {
+                    ign_upg++;
+                    ign_othr++;
                 }
-                else{
-                    stopThere = reqs.upgrades.length > 0 || reqs.other.length > 0;
-                }       
+
+                stopThere = reqs.upgrades.length > ign_upg || reqs.other.length > ign_othr;
             }
         }
         else if(sid === 'IMPERIAL'){
@@ -1269,22 +1273,22 @@ const PaymentCard = (args) => {
         {objKeys.includes('fragment') && <div style={{margin: '1rem', padding: '1rem', borderRadius: '5px', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
             <ListGroup horizontal style={{border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                 <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('c', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
-                    <img alt='fragment' src='icons/cultural_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                    <img alt='fragment' src='icons/cultural_fragment.png' style={{position: 'absolute', opacity: 0.8, width: '75%'}}/>
                     <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.c}</h6>
                     <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>{t('board.cultural')}</b>
                 </ListGroupItem>
                 <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('h', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
-                    <img alt='fragment' src='icons/hazardous_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                    <img alt='fragment' src='icons/hazardous_fragment.png' style={{position: 'absolute', opacity: 0.8, width: '75%'}}/>
                     <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.h}</h6>
                     <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>{t('board.hazardous')}</b>
                 </ListGroupItem>
                 <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('i', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
-                    <img alt='fragment' src='icons/industrial_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                    <img alt='fragment' src='icons/industrial_fragment.png' style={{position: 'absolute', opacity: 0.8, width: '75%'}}/>
                     <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.i}</h6>
                     <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>{t('board.industrial')}</b>
                 </ListGroupItem>
                 <ListGroupItem tag='button' className='hoverable' onClick={()=>redistFrag('u', 1)} style={{...TOKENS_STYLE, width: '22%'}}>
-                    <img alt='fragment' src='icons/unknown_fragment.png' style={{position: 'absolute', opacity: 0.8}}/>
+                    <img alt='fragment' src='icons/unknown_fragment.png' style={{position: 'absolute', opacity: 0.8, width: '75%'}}/>
                     <h6 style={{fontSize: 50, zIndex: 1, margin: '.5rem 0 0 0', alignSelf: 'flex-end'}}>{fragments.u}</h6>
                     <b style={{backgroundColor: 'rgba(74, 111, 144, 0.25)', width: '100%', fontSize: '.9rem'}}>{t('board.unknown')}</b>
                 </ListGroupItem>
@@ -1988,7 +1992,7 @@ export const CardsPager = ({children, title, doneButtonClick, cancelButtonClick}
 
     const arrowStyle = {cursor: 'pointer', width: '5rem'}
 
-    return <div style={{position: 'absolute', bottom: '3rem', right: '3rem', width: '60rem', padding: '1rem'}}>
+    return <div style={{position: 'absolute', bottom: '3rem', right: '3rem', width:'max-content', maxWidth: '60rem', padding: '1rem'}}>
         {(visible.length > 8 || title) && <div style={{display: 'flex', height: '3rem', justifyContent:'space-between', fontSize: '200%', fontFamily: 'Handel Gothic'}}>
           <button style={arrowStyle} disabled={!start} className='styledButton yellow' onClick={() => incStart(-8)}>🞀</button>
           {title && <div style={{flex: 'auto', display: 'flex', justifyContent: 'center'}}>

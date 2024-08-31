@@ -1395,8 +1395,19 @@ export const ACTS_STAGES = {
                 }
               });
 
-              if(exhaustedCards && exhaustedCards.indexOf('AI_DEVELOPMENT_ALGORITHM') > -1){
-                G.races[playerID].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
+              if(exhaustedCards){
+                if(exhaustedCards.includes('AI_DEVELOPMENT_ALGORITHM')){
+                  G.races[playerID].exhaustedCards.push('AI_DEVELOPMENT_ALGORITHM');
+                }
+                if(exhaustedCards.includes("The Prophet's Tears")){
+                  G.races[playerID].exhaustedCards.push("The Prophet's Tears");
+                }
+                if(exhaustedCards.includes("The Prophet's Tears_1")){
+                  if(G.actionsDeck.length){
+                    G.races[playerID].actionCards.push(G.actionsDeck.pop());
+                  }
+                  G.races[playerID].exhaustedCards.push("The Prophet's Tears");
+                }
               }
               
             }
@@ -1799,8 +1810,10 @@ export const ACTS_STAGES = {
 
           Object.keys(G.dice[playerID]).forEach(u => { //remove units after unluck reroll with relic
             if(G.dice[playerID][u] && G.dice[playerID][u].reroll){
-              Object.keys(G.dice[playerID][u].reroll).forEach(k => {
+              Object.keys(G.dice[playerID][u].reroll).forEach(kstr => {
                 
+                const k = parseInt(kstr);
+
                 if(G.dice[playerID][u].reroll[k] && G.dice[playerID][u].reroll[k] < 0){
                   let doCheck = true;
                   let uidx = k;
@@ -1837,7 +1850,7 @@ export const ACTS_STAGES = {
                             return car.payload.find((p, pidx) => {
 
                               if(p && p.id === u){
-                                if(String(index) === String(uidx)){
+                                if(index === uidx){
                                   delete fleet[sheep][caridx].payload[pidx];
                                   return true;
                                 }
@@ -2437,46 +2450,99 @@ export const ACTS_STAGES = {
       },
       rerollDice,
       nextStep: ({G, events, playerID, ctx}, hits, setNoPds) => {
+        try{
+          let fleet;
+          const activeTile = G.tiles.find(t => t.active === true);
+          const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+          
+          if(String(playerID) === String(ctx.currentPlayer)){
+            fleet = activePlanet.invasion.troops;
+          }
+          else{
+            fleet = activePlanet.units;
+          }
+          
+          let technologies = getUnitsTechnologies(Object.keys(fleet), G.races[playerID]);
+          let needFilterDeleted = false;
 
-        if(spliceCombatAC(G.races[playerID], 'Emergency Repairs')){
-          repairAllActiveTileUnits(G, playerID);
-        }
-        spliceCombatAC(G.races[playerID], 'Fire Team');
+          Object.keys(G.dice[playerID]).forEach(u => { //remove units after unluck reroll with relic
+            if(G.dice[playerID][u] && G.dice[playerID][u].reroll){
+              Object.keys(G.dice[playerID][u].reroll).forEach(kstr => {
+                
+                const k = parseInt(kstr);
 
-        const activeTile = G.tiles.find(t => t.active === true);
-        const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
+                if(G.dice[playerID][u].reroll[k] && G.dice[playerID][u].reroll[k] < 0){
+                  let doCheck = true;
+                  let uidx = k;
 
-        if(!activePlanet.invasion.troops){
-          events.setStage('invasion_await');
-          return;
-        }
+                  if(technologies[u] && technologies[u].shot > 1){//maybe mech
+                    doCheck = false;
 
-        if(setNoPds && String(playerID) === String(activePlanet.occupied)) activePlanet.invasion.nopds = true;
-        const uk = Object.keys(activePlanet.units);
+                    if(k % technologies[u].shot === 0){
+                      if(G.dice[playerID][u].reroll[k-1] && G.dice[playerID][u].reroll[k-1] < 0){
+                        uidx = k / 2;
+                        doCheck = true;
+                      }
+                    }
+                  }
 
-        if(uk.indexOf('infantry') === -1 && uk.indexOf('mech') === -1){
-          if(ctx.currentPlayer === playerID){
-            if(hits && hits[activePlanet.occupied]){
-              events.setStage('invasion_step2');
+                  if(doCheck){
+                    if(fleet[u] && fleet[u][uidx]){
+                      delete fleet[u][uidx];
+                    }
+
+                    needFilterDeleted = true;
+                    G.races[playerID].destroyedUnits.push(u); //remember destroyed units
+                  }
+                }
+
+              })
+            }
+          });
+        
+          if(needFilterDeleted){ //filter deleted units
+            Object.keys(fleet).forEach(sheep => {
+              fleet[sheep] = fleet[sheep].filter(s => s);
+            });
+          }
+
+          if(spliceCombatAC(G.races[playerID], 'Emergency Repairs')){
+            repairAllActiveTileUnits(G, playerID);
+          }
+          spliceCombatAC(G.races[playerID], 'Fire Team');
+
+          if(!activePlanet.invasion.troops){
+            events.setStage('invasion_await');
+            return;
+          }
+
+          if(setNoPds && String(playerID) === String(activePlanet.occupied)) activePlanet.invasion.nopds = true;
+          const uk = Object.keys(activePlanet.units);
+
+          if(uk.indexOf('infantry') === -1 && uk.indexOf('mech') === -1){
+            if(ctx.currentPlayer === playerID){
+              if(hits && hits[activePlanet.occupied]){
+                events.setStage('invasion_step2');
+              }
+              else{
+                events.setStage('invasion_await');
+              }
             }
             else{
               events.setStage('invasion_await');
             }
           }
           else{
-            events.setStage('invasion_await');
+            if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
+              Object.keys(hits).forEach(pid => G.dice[pid] = {});
+              events.setStage('invasion');
+            }
+            else{
+              events.setStage('invasion_step2');
+            }
           }
         }
-        else{
-          if(hits && Object.keys(hits).reduce((a,b) => a + hits[b], 0) === 0){
-            Object.keys(hits).forEach(pid => G.dice[pid] = {});
-            events.setStage('invasion');
-          }
-          else{
-            events.setStage('invasion_step2');
-          }
-        }
-    
+        catch(e){console.log(e)}
       },
       useCommander: ({G, playerID}) => {
         useCommanderAbility(G, playerID)

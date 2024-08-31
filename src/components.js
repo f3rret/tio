@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState, useCallback } from 'react'
+import { useContext, useMemo, useState, useCallback, useEffect } from 'react'
 import { LocalizationContext, StateContext, UNITS_LIMIT } from './utils';
 import { Badge, Card, CardText, CardImg, ButtonGroup, ListGroup, ListGroupItem, UncontrolledAccordion, AccordionItem, AccordionHeader, AccordionBody, Nav, NavItem, Row, Col } from 'reactstrap';
 import { produce } from 'immer';
@@ -147,6 +147,10 @@ export const Stuff = ({tempCt, R_UNITS, groundUnitSelected, advUnitView, payload
       }
     }
 
+    useEffect(() => {
+      setPurgingFragments({c: 0, h: 0, i: 0, u: 0})
+    }, [race.fragments])
+
     return <>
         <Card style={{...CARD_STYLE, minHeight: '14rem', marginBottom: 0}}>
             {midPanelInfo === 'tokens' && <>
@@ -222,8 +226,8 @@ export const Stuff = ({tempCt, R_UNITS, groundUnitSelected, advUnitView, payload
                 return result;
                 })}
             </span>
-            <button className='styledButton yellow' disabled={purgingFragments.c + purgingFragments.i + purgingFragments.h + purgingFragments.u < 3} style={{maxWidth: 'fit-content'}}
-                onClick={()=>{moves.purgeFragments(purgingFragments); setPurgingFragments({c:0,i:0,h:0,u:0})}}>{t('board.purge')}</button>
+            <button className='styledButton green' disabled={purgingFragments.c + purgingFragments.i + purgingFragments.h + purgingFragments.u < 3} style={{maxWidth: 'fit-content', fontWeight: 'bold'}}
+                onClick={()=>{moves.purgeFragments(purgingFragments)}}>{t('board.purge')}</button>
             </div>
             </>}
             {midPanelInfo === 'reinforce' && <div style={{padding: '0.5rem 0'}}>

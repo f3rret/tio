@@ -202,7 +202,7 @@
             "trade_goods": "trade goods",
             "trade_good": "trade good",
             "remove_selected_from_board": "Remove from board",
-            "purge": "purge",
+            "purge": "Purge",
             "ready": "ready",
             "not_ready": "not ready",
             "unlock": "unlock",
@@ -305,7 +305,9 @@
             "nebula": "Nebula",
             "gravity_rift": "Gravity rift",
             "fleet_pool_exceed": "Fleet limit exceed",
-            "discarded": "Discarded"
+            "discarded": "Discarded",
+            "ignore_requirement": "Ignore a requirement",
+            "take_card": "Take a card"
         },
         "cards": {
             "strategy": {
