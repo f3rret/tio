@@ -2,6 +2,7 @@ import { LobbyClient } from 'boardgame.io/client';
 import { useCallback, useState, useMemo, useEffect, useContext } from 'react';
 import { Card, CardBody, CardTitle, CardFooter, CardText, Container, Row, Col, 
     Input, ButtonGroup, FormFeedback, FormGroup, Label } from 'reactstrap';
+import { Markup } from 'react-render-markup';
 import { produce } from 'immer';
 import { useCookies } from 'react-cookie';
 import MapOptions from './map generator/options/MapOptions';
@@ -39,6 +40,7 @@ export const Lobby = ({dispatch})=> {
     const [playerName, setPlayerName] = useState(null);
     const [matchID, setMatchID] = useState(null);
     const [aboutVisible, setAboutVisible] = useState(false);
+    const [lorPage, setLorPage] = useState(0);
     const [autoJoinPrematch, setAutoJoinPrematch] = useState(false);
     const [cookie, setCookie] = useCookies(['matchID', 'playerID', 'playerCreds']);
     //const [playerName, setPlayerName] = useState(playerNames[0]);
@@ -474,6 +476,12 @@ export const Lobby = ({dispatch})=> {
                         </Container>
                     </CardBody>
                 </Card>}
+                {(!playerCreds || !prematchID) && !prematchInfo && <Card style={{border: 'none', display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end', flex: 'auto', overflowY: 'hidden', maxWidth: '50%', paddingTop: '2rem'}}>
+                    <div id='lorPager' onClick={() => {if(lorPage < 9) {setLorPage(lorPage + 1)} else { setLorPage(0) }}}>
+                        <div className={'lorPage' + lorPage}><Markup markup={t('lobby.greeting_lor')}/></div>
+                    </div>
+                    <img src='/greeting.png' alt='greeting' style={{width: '45%', height: 'auto', opacity: .9}}/>
+                </Card>}
                 {prematchInfo && <Card className='borderedPanel' style={{flex: 'auto', margin: '4rem 4rem 5%', overflowY: 'hidden', maxWidth: '42%', padding: '2rem'}}>
                     <CardTitle>
                         {!playerCreds && !prematchInfo.players && <>
@@ -592,6 +600,7 @@ export const Lobby = ({dispatch})=> {
                                 <h6>Ксюша Нисютина</h6>
                                 <h6>Владислав Коровин</h6>
                                 <h6>Николай Андриянов</h6>
+                                <h6>Николай Сухов</h6>
                                 <h6>shadow azray</h6>
                             </div>
                             <div style={{flexBasis: '67%'}}>

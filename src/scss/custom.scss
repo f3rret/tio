@@ -92,7 +92,7 @@ body{
     padding: 3rem 3rem 0;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
     position: absolute;
     bottom: 2.5rem
 }
@@ -117,6 +117,70 @@ body{
     height: 0vh;
     transition: height .25s ease-in;
 }
+
+#lorPager{
+    align-self: flex-start;
+    font-family: 'system-ui';
+    font-size: 125%;
+    height: 41rem;
+    overflow-y: hidden;
+    cursor: pointer;
+}
+.logPager_p{
+    height: 45rem;
+    overflow: hidden;
+}
+.lorPage0{
+    position: relative;
+    top: 0;
+    transition: top 1s ease-in-out;
+}
+.lorPage1{
+    position: relative;
+    top: -45rem;
+    transition: top 1s ease-in-out;
+}
+.lorPage2{
+    position: relative;
+    top: -90rem;
+    transition: top .5s ease-in-out;
+}
+.lorPage3{
+    position: relative;
+    top: -135rem;
+    transition: top .5s ease-in-out;
+}
+.lorPage4{
+    position: relative;
+    top: -180rem;
+    transition: top .5s ease-in-out;
+}
+.lorPage5{
+    position: relative;
+    top: -225rem;
+    transition: top .5s ease-in-out;
+}
+.lorPage6{
+    position: relative;
+    top: -270rem;
+    transition: top .5s ease-in-out;
+}
+.lorPage7{
+    position: relative;
+    top: -315rem;
+    transition: top .5s ease-in-out;
+}
+.lorPage8{
+    position: relative;
+    top: -360rem;
+    transition: top .5s ease-in-out;
+}
+.lorPage9{
+    position: relative;
+    top: -405rem;
+    transition: top .5s ease-in-out;
+}
+
 h3, h4, h5, h6 {
     font-family: 'Handel Gothic', arial, sans-serif;
 }

@@ -12,8 +12,8 @@
         "button-bg-black.png",
         "button-bg-yellow.png",
         "button-bg-blue.png",
-        "button-bg-white.png"
-
+        "button-bg-white.png",
+        "greeting.png"
     ],
     "boardImages": [
         "window-borders-vertical.png",
