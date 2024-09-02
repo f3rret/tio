@@ -5,7 +5,8 @@ import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveT
   spliceCombatAC, checkIonStorm, checkSecretObjective, checkCommanderUnlock, useCommanderAbility, 
   adjustTechnologies, explorePlanetByName,
   enemyHaveCombatAC,
-  getPlayerPlanets} from './utils';
+  getPlayerPlanets,
+  replenishCommodity} from './utils';
 
 export const useRelic = ({G, ctx, playerID, ...plugins}, args) => {
 
@@ -667,7 +668,8 @@ export const ACTION_CARD_STAGE = {
                 else if(card.id === 'Harness Energy'){
                   const activeTile = G.tiles.find(t => t.active === true);
                   if(activeTile && activeTile.tdata.type === 'red'){
-                    G.races[playerID].commodity = G.races[playerID].commCap;
+                    //G.races[playerID].commodity = G.races[playerID].commCap;
+                    replenishCommodity(G, playerID, G.races[playerID].commCap);
                   }
                 }
                 else if(card.id === 'In The Silence Of Space'){
@@ -1299,14 +1301,16 @@ export const ACTS_STAGES = {
           case 'TRADE':
             if(ctx.currentPlayer === playerID){
               G.races[playerID].tg += 3;
-              G.races[playerID].commodity = G.races[playerID].commCap;
+              //G.races[playerID].commodity = G.races[playerID].commCap;
+              replenishCommodity(G, playerID, G.races[playerID].commCap);
 
               if(result.length){
                 G.races[playerID].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES = result;
               }
             }
             else{
-              G.races[playerID].commodity = G.races[playerID].commCap;
+              //G.races[playerID].commodity = G.races[playerID].commCap;
+              replenishCommodity(G, playerID, G.races[playerID].commCap);
 
               const noToken = G.races[ctx.currentPlayer].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES;
               if(noToken && noToken.length && noToken.indexOf(G.races[playerID].rid) > -1){
@@ -2202,9 +2206,11 @@ export const ACTS_STAGES = {
 
         if(looser !== undefined && String(looser) !== String(playerID)){
           if(spliceCombatAC(G.races[playerID], 'Salvage')){
-            G.races[playerID].commodity += G.races[looser].commodity;
+            /*G.races[playerID].commodity += G.races[looser].commodity;
             if(G.races[playerID].commodity > G.races[playerID].commCap) G.races[playerID].commodity = G.races[playerID].commCap;
-            G.races[looser].commodity = 0;
+            G.races[looser].commodity = 0;*/
+            G.races[playerID].tg += G.races[looser].tg;
+            G.races[looser].tg = 0;
           }
         }
 

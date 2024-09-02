@@ -6,7 +6,7 @@ import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useH
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
- getInitRaces, getInitTiles, checkCommanderUnlock, doFlagshipAbility } from './utils';
+ getInitRaces, getInitTiles, checkCommanderUnlock, doFlagshipAbility, replenishCommodity } from './utils';
 import { EffectsPlugin } from 'bgio-effects/plugin';
 import settings from '../package.json'
 
@@ -450,7 +450,8 @@ export const TIO = {
             if(G.races[playerID].explorationDialog){
               if(G.races[playerID].explorationDialog.id === 'Abandoned Warehouses'){
                 if(cidx === 0){
-                  G.races[playerID].commodity = Math.min(G.races[playerID].commodity + 2, G.races[playerID].commCap);
+                  //G.races[playerID].commodity = Math.min(G.races[playerID].commodity + 2, G.races[playerID].commCap);
+                  replenishCommodity(G, playerID, Math.min(G.races[playerID].commodity + 2, G.races[playerID].commCap));
                 }
                 else if(cidx === 1){
                   const c = Math.min(G.races[playerID].commodity, 2);
@@ -469,7 +470,8 @@ export const TIO = {
               }
               else if(G.races[playerID].explorationDialog.id === 'Local Fabricators'){
                 if(cidx === 0){
-                  G.races[playerID].commodity = Math.min(G.races[playerID].commodity + 1, G.races[playerID].commCap);
+                  //G.races[playerID].commodity = Math.min(G.races[playerID].commodity + 1, G.races[playerID].commCap);
+                  replenishCommodity(G, playerID, Math.min(G.races[playerID].commodity + 1, G.races[playerID].commCap));
                 }
                 else if((cidx === 1 && G.races[playerID].commodity > 0) || (cidx === 2 && G.races[playerID].tg > 0)){
                   G.races[playerID][cidx === 1 ? 'commodity':'tg']--;
@@ -492,7 +494,8 @@ export const TIO = {
               }
               else if(G.races[playerID].explorationDialog.id === 'Merchant Station'){
                 if(cidx === 0){
-                  G.races[playerID].commodity = G.races[playerID].commCap;
+                  //G.races[playerID].commodity = G.races[playerID].commCap;
+                  replenishCommodity(G, playerID, G.races[playerID].commCap);
                 }
                 else if(cidx === 1){
                   G.races[playerID].tg += G.races[playerID].commodity;

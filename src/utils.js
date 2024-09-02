@@ -1156,6 +1156,7 @@ export const completeObjective = ({G, playerID, oid, payment}) => {
           }
       }           
 
+      if(!objective.players) objective.players = [];
       objective.players.push(playerID)
       G.races[playerID].lastScoredObjType = objType; 
 
@@ -1163,6 +1164,7 @@ export const completeObjective = ({G, playerID, oid, payment}) => {
     }
     else if(objective.type === 'HAVE'){
       if(checkObjective(G, playerID, oid) === true){
+        if(!objective.players) objective.players = [];
         objective.players.push(playerID);
         G.races[playerID].lastScoredObjType = objType; 
         
@@ -1769,5 +1771,46 @@ export const checkIfMyNearbyUnit = (G, playerID, tile, units) => {
 
     return false;
   })
+
+}
+
+export const checkSoldPromissory = (race, PROMISSORY) => {
+  return race.promissory.find(p => p.id === PROMISSORY && p.sold !== undefined);
+}
+
+export const returnPromissory = (G, playerID, promissory) => {
+  const acceptor = G.races.find(r => r.rid === promissory.sold);
+    
+  if(acceptor){
+    const idx = acceptor.promissory.findIndex(p => p.id === promissory.id && p.owner === G.races[playerID].rid);
+    if(idx > -1){
+      acceptor.promissory.splice(idx, 1);
+    }
+    
+    promissory.sold = undefined;
+    return acceptor;
+  }
+}
+
+export const replenishCommodity = (G, playerID, count, plugins) => {
+  
+  try{
+    const promissory = checkSoldPromissory(G.races[playerID], 'TRADE_AGREEMENT');
+    
+    if(promissory){
+      const acceptor = returnPromissory(G, playerID, promissory);
+      
+      if(acceptor){
+        acceptor.tg += count;
+        if(plugins) plugins.effects.tg();
+      }
+    }
+    else{
+      G.races[playerID].commodity += count;
+    }
+  }
+  catch(e){
+    console.log(e)
+  }
 
 }

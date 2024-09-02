@@ -1366,7 +1366,13 @@ class MapOptions extends React.Component {
             }
         },1000);
 
-        this.setState({ startCounter: 5, startInterval: int})
+        this.setState({ startCounter: 3, startInterval: int})
+    }
+
+    selectedRacesAreUnique = () => {
+        const races = this.props.currentRaces;
+        const unique = races.filter((r, i) => races.indexOf(r) === i);
+        return races.length === unique.length;
     }
 
     render() {
@@ -1485,7 +1491,7 @@ class MapOptions extends React.Component {
                     
                 </CardBody>
                 {this.props.playerID === '0' && <CardFooter style={{display: 'flex', justifyContent: 'right'}}>
-                    <button className='styledButton green' style={{minWidth: '8rem', display: 'flex', alignItems: 'center'}} 
+                    <button disabled={!this.selectedRacesAreUnique()} className='styledButton green' style={{minWidth: '8rem', display: 'flex', alignItems: 'center'}} 
                         onClick={(e) => this.state.startInterval === null ? this.startClick(e) : ''}>
                         <span style={{flexBasis: '70%'}}>{t('lobby.start_game')}</span> 
                         <span style={{flexBasis: '30%'}}>{this.state.startInterval !== null ? '(' + this.state.startCounter + ') ' : <b className='bi-caret-right-square-fill' />}</span>
