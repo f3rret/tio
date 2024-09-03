@@ -308,7 +308,8 @@
             "fleet_pool_exceed": "Превышен лимит флота",
             "discarded": "Сброс",
             "ignore_requirement": "Игнорировать требование",
-            "take_card": "Взять карту"
+            "take_card": "Взять карту",
+            "complete": "выполнено"
         },
         "cards": {
             "strategy": {

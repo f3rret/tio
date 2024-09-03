@@ -308,7 +308,8 @@
             "fleet_pool_exceed": "Fleet limit exceed",
             "discarded": "Discarded",
             "ignore_requirement": "Ignore a requirement",
-            "take_card": "Take a card"
+            "take_card": "Take a card",
+            "complete": "complete"
         },
         "cards": {
             "strategy": {

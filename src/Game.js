@@ -2,7 +2,7 @@
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
 import cardData from './cardData.json';
 import { getHexGrid, neighbors } from './Grid';
-import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer, useRelic } from './gameStages';
+import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer, useRelic, usePromissory } from './gameStages';
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
@@ -12,6 +12,9 @@ import settings from '../package.json'
 
 const effectsConfig = EffectsPlugin({
   effects: {
+    promissory:{
+      create: (value) => value,
+    },
     trade: {
       create: (value) => value,
       //duration: 1
@@ -451,7 +454,7 @@ export const TIO = {
               if(G.races[playerID].explorationDialog.id === 'Abandoned Warehouses'){
                 if(cidx === 0){
                   //G.races[playerID].commodity = Math.min(G.races[playerID].commodity + 2, G.races[playerID].commCap);
-                  replenishCommodity(G, playerID, Math.min(G.races[playerID].commodity + 2, G.races[playerID].commCap));
+                  replenishCommodity(G, playerID, Math.min(G.races[playerID].commodity + 2, G.races[playerID].commCap), plugins);
                 }
                 else if(cidx === 1){
                   const c = Math.min(G.races[playerID].commodity, 2);
@@ -471,7 +474,7 @@ export const TIO = {
               else if(G.races[playerID].explorationDialog.id === 'Local Fabricators'){
                 if(cidx === 0){
                   //G.races[playerID].commodity = Math.min(G.races[playerID].commodity + 1, G.races[playerID].commCap);
-                  replenishCommodity(G, playerID, Math.min(G.races[playerID].commodity + 1, G.races[playerID].commCap));
+                  replenishCommodity(G, playerID, Math.min(G.races[playerID].commodity + 1, G.races[playerID].commCap), plugins);
                 }
                 else if((cidx === 1 && G.races[playerID].commodity > 0) || (cidx === 2 && G.races[playerID].tg > 0)){
                   G.races[playerID][cidx === 1 ? 'commodity':'tg']--;
@@ -495,7 +498,7 @@ export const TIO = {
               else if(G.races[playerID].explorationDialog.id === 'Merchant Station'){
                 if(cidx === 0){
                   //G.races[playerID].commodity = G.races[playerID].commCap;
-                  replenishCommodity(G, playerID, G.races[playerID].commCap);
+                  replenishCommodity(G, playerID, G.races[playerID].commCap, plugins);
                 }
                 else if(cidx === 1){
                   G.races[playerID].tg += G.races[playerID].commodity;
@@ -1279,6 +1282,7 @@ export const TIO = {
 
         moves: {
           useRelic,
+          usePromissory,
           secretObjectiveConfirm,
           vote: ({G, playerID, events, ...plugins}, result) => {
             let votes = 0;

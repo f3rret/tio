@@ -39,7 +39,7 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
               </span>
             }
             else if(className === 'chat-trade'){
-                return <span className='bi bi-arrow-right-square-fill'>
+                return <span key={className + i} className='bi bi-arrow-right-square-fill'>
                     {match.replace(/(\/trade)/, '')}
                   </span>
             }

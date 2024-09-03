@@ -6,7 +6,7 @@ import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveT
   adjustTechnologies, explorePlanetByName,
   enemyHaveCombatAC,
   getPlayerPlanets,
-  replenishCommodity} from './utils';
+  replenishCommodity, returnPromissoryToOwner} from './utils';
 
 export const useRelic = ({G, ctx, playerID, ...plugins}, args) => {
 
@@ -70,6 +70,28 @@ export const useRelic = ({G, ctx, playerID, ...plugins}, args) => {
     //plugins.effects.relic_ex({id: args.id});
   }
   catch(e){console.log(e)}
+}
+
+export const usePromissory = ({G, ctx, playerID, ...plugins}, promissory) => {
+  if(promissory && promissory.id === 'POLITICAL_SECRET'){
+   
+    const owner = returnPromissoryToOwner(G, playerID, promissory, plugins);
+    const ownerID = G.races.findIndex(r => r.rid === owner.rid);
+
+    owner.voteResults.push({vote: null, count: 0});
+    owner.actions.push('DISABLED');
+
+    if(G.vote2){
+      if(G.passedPlayers.indexOf(ownerID) === -1){
+        G.passedPlayers.push(ownerID, ownerID);
+      }
+      else{
+        G.passedPlayers.push(ownerID);
+      }
+    }
+
+  }
+
 }
 
 export const makeOffer = ({G, ctx, playerID, events}, pid) => {
@@ -669,7 +691,7 @@ export const ACTION_CARD_STAGE = {
                   const activeTile = G.tiles.find(t => t.active === true);
                   if(activeTile && activeTile.tdata.type === 'red'){
                     //G.races[playerID].commodity = G.races[playerID].commCap;
-                    replenishCommodity(G, playerID, G.races[playerID].commCap);
+                    replenishCommodity(G, playerID, G.races[playerID].commCap, plugins);
                   }
                 }
                 else if(card.id === 'In The Silence Of Space'){
@@ -1302,7 +1324,7 @@ export const ACTS_STAGES = {
             if(ctx.currentPlayer === playerID){
               G.races[playerID].tg += 3;
               //G.races[playerID].commodity = G.races[playerID].commCap;
-              replenishCommodity(G, playerID, G.races[playerID].commCap);
+              replenishCommodity(G, playerID, G.races[playerID].commCap, plugins);
 
               if(result.length){
                 G.races[playerID].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES = result;
@@ -1310,7 +1332,7 @@ export const ACTS_STAGES = {
             }
             else{
               //G.races[playerID].commodity = G.races[playerID].commCap;
-              replenishCommodity(G, playerID, G.races[playerID].commCap);
+              replenishCommodity(G, playerID, G.races[playerID].commCap, plugins);
 
               const noToken = G.races[ctx.currentPlayer].strategy.find(s => s.id === 'TRADE').NO_TOKEN_RACES;
               if(noToken && noToken.length && noToken.indexOf(G.races[playerID].rid) > -1){

@@ -1778,8 +1778,9 @@ export const checkSoldPromissory = (race, PROMISSORY) => {
   return race.promissory.find(p => p.id === PROMISSORY && p.sold !== undefined);
 }
 
-export const returnPromissory = (G, playerID, promissory) => {
-  const acceptor = G.races.find(r => r.rid === promissory.sold);
+export const returnPromissory = (G, playerID, promissory, plugins) => {
+  const acceptorId = G.races.findIndex(r => r.rid === promissory.sold);
+  const acceptor = G.races[acceptorId];
     
   if(acceptor){
     const idx = acceptor.promissory.findIndex(p => p.id === promissory.id && p.owner === G.races[playerID].rid);
@@ -1788,7 +1789,32 @@ export const returnPromissory = (G, playerID, promissory) => {
     }
     
     promissory.sold = undefined;
+
+    if(plugins){
+      plugins.effects.promissory({src: acceptorId, dst: playerID, id: promissory.id});
+    }
+
     return acceptor;
+  }
+}
+
+export const returnPromissoryToOwner = (G, playerID, promissory, plugins) => {
+  const ownerID = G.races.findIndex(r => r.rid === promissory.owner);
+  const owner = G.races[ownerID];
+    
+  if(owner){
+    const p = owner.promissory.find(p => p.id === promissory.id && p.sold === G.races[playerID].rid);
+    if(p){
+      p.sold = undefined;
+    }
+    
+    const idx = G.races[playerID].promissory.findIndex(p => p.id === promissory.id && p.owner === promissory.owner);
+    if(idx > -1){
+      G.races[playerID].promissory.splice(idx, 1);
+    }
+
+    if(plugins) plugins.effects.promissory({src: playerID, dst: ownerID, id: promissory.id});
+    return owner;
   }
 }
 
@@ -1798,11 +1824,11 @@ export const replenishCommodity = (G, playerID, count, plugins) => {
     const promissory = checkSoldPromissory(G.races[playerID], 'TRADE_AGREEMENT');
     
     if(promissory){
-      const acceptor = returnPromissory(G, playerID, promissory);
+      const acceptor = returnPromissory(G, playerID, promissory, plugins);
       
       if(acceptor){
         acceptor.tg += count;
-        if(plugins) plugins.effects.tg();
+        //if(plugins) plugins.effects.tg();
       }
     }
     else{

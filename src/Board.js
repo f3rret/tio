@@ -380,10 +380,18 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   }, [ctx, race, playerID]);
 
   const promissoryClick = useCallback((pr) => {
-    if(reparations === 'promissory'){
-      moves.transferPromissoryCard(pr.id)
+    try{
+      if(reparations === 'promissory'){
+        moves.transferPromissoryCard(pr.id)
+      }
+      else{
+        if(pr.id === 'POLITICAL_SECRET' && pr.owner && ctx.phase === 'agenda'){
+          moves.usePromissory(pr);
+        }
+      }
     }
-  }, [moves, reparations]);
+    catch(e){console.log(e)}
+  }, [moves, ctx, reparations]);
 
   const flushTempCt = useCallback(() =>{
     dispatch({type: 'temp_ct', payload: {s: 0, t: 0, f: 0, new: 0}})
@@ -967,7 +975,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   const MY_LAST_EFFECT = useRef('');
 
   useEffectListener('*', (effectName, effectProps, boardProps) => { //! may doubled!!
-   
+
     try{
       if(effectName === 'rift'){
         if(String(playerID) === String(ctx.currentPlayer)){
@@ -1049,6 +1057,13 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
             sendChatMessage(t('cards.relics.' + id + '.label'));
             MY_LAST_EFFECT.current = id;
           }
+        }
+      }
+      else if(effectName === 'promissory'){
+        const {src, dst, id} = effectProps;
+
+        if(String(src) === String(playerID)){
+          sendChatMessage(t('cards.promissory.' + id + '.label') + ' ' + t('races.' + G.races[dst].rid + '.name') + ' ' + t('board.complete'));
         }
       }
 
