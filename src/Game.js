@@ -6,7 +6,10 @@ import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useH
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
- getInitRaces, getInitTiles, checkCommanderUnlock, doFlagshipAbility, replenishCommodity } from './utils';
+ getInitRaces, getInitTiles, checkCommanderUnlock, doFlagshipAbility, replenishCommodity, 
+ returnPromissory,
+ getRaceVP,
+ returnPromissoryToOwner} from './utils';
 import { EffectsPlugin } from 'bgio-effects/plugin';
 import settings from '../package.json'
 
@@ -216,7 +219,10 @@ export const TIO = {
             stages: ACTS_STAGES,
 
             onBegin: ({ G, ctx }) => {
-              G.tiles.filter(t => t.active === true).forEach( t => { t.active = false });
+              G.tiles.filter(t => t.active === true).forEach( t => { 
+                t.active = undefined;
+                if(t.tdata && t.tdata.ceasefire) t.tdata.ceasefire = undefined; 
+              });
               G.races[ctx.currentPlayer].actions = [];
               G.races[ctx.currentPlayer].destroyedUnits = [];
               G.tiles.forEach(t => {
@@ -858,61 +864,123 @@ export const TIO = {
             }
 
           },
-          activateTile: ({ G, playerID, events }, tIndex) => {
+          activateTile: ({ G, playerID, events, ...plugins }, tIndex) => {
 
-            const race = G.races[playerID];
-            if(race.tokens.t <= 0){
-              console.log('not enough tokens');
-              return INVALID_MOVE;
-            }
-
-            const maxActs = race.knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
-            if(race.actions.length > maxActs){
-              console.log('too many actions');
-              return INVALID_MOVE;
-            }
-            
-            const tile = G.tiles[tIndex];
-
-            if(tile){
-              if(tile.tdata.tokens && tile.tdata.tokens.indexOf(race.rid) > -1){
-                console.log('already blocked');
+            try{
+              const race = G.races[playerID];
+              if(race.tokens.t <= 0){
+                console.log('not enough tokens');
                 return INVALID_MOVE;
               }
-              tile.tdata.tokens.push(race.rid);
 
-              const prevActive = G.tiles.find(t => t.active === true);
-              if(prevActive) prevActive.active = undefined;
-            
-              tile.active = true;
-              if(race.moveBoost) delete race['moveBoost'];
-              if(race.spaceCannonsImmunity) delete race['spaceCannonsImmunity'];
-              checkTacticalActionCard({G, playerID, events, atype: 'TILE_ACTIVATED'});
-            }
-            else{
-              console.log('no tile selected');
-              return INVALID_MOVE;
-            }
+              const maxActs = race.knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
+              if(race.actions.length > maxActs){
+                console.log('too many actions');
+                return INVALID_MOVE;
+              }
+              
+              const tile = G.tiles[tIndex];
 
-            if(tile.active){
-              race.tokens.t--;
-              race.actions.push('TILE_ACTIVATE');
-            }
+              if(tile){
+                if(tile.tdata.tokens && tile.tdata.tokens.indexOf(race.rid) > -1){
+                  console.log('already blocked');
+                  return INVALID_MOVE;
+                }
+                tile.tdata.tokens.push(race.rid);
 
-            if(tile.tdata.frontier && tile.tdata.occupied == playerID && G.races[playerID].knownTechs.indexOf('DARK_ENERGY_TAP') > -1){
-              exploreFrontier(G, playerID, tile);
-            }
+                const prevActive = G.tiles.find(t => t.active === true);
+                if(prevActive){
+                  prevActive.active = undefined;
+                  if(prevActive.tdata && prevActive.tdata.ceasefire) prevActive.tdata.ceasefire = undefined;
+                }
+              
+                tile.active = true;
+                if(race.moveBoost) delete race['moveBoost'];
+                if(race.spaceCannonsImmunity) delete race['spaceCannonsImmunity'];
+                checkTacticalActionCard({G, playerID, events, atype: 'TILE_ACTIVATED'});
+              }
+              else{
+                console.log('no tile selected');
+                return INVALID_MOVE;
+              }
 
-            let idx = race.exhaustedCards.indexOf('GRAVITY_DRIVE');
-            if(idx > -1){
-              race.exhaustedCards.splice(idx, 1);
-            }
+              if(tile.active){
+                race.tokens.t--;
+                race.actions.push('TILE_ACTIVATE');
+              }
 
-            idx = race.exhaustedCards.indexOf('SCANLINK_DRONE_NETWORK');
-            if(idx > -1){
-              race.exhaustedCards.splice(idx, 1);
-            }
+              if(tile.tdata.frontier && tile.tdata.occupied == playerID && G.races[playerID].knownTechs.indexOf('DARK_ENERGY_TAP') > -1){
+                exploreFrontier(G, playerID, tile);
+              }
 
+              let idx = race.exhaustedCards.indexOf('GRAVITY_DRIVE');
+              if(idx > -1){
+                race.exhaustedCards.splice(idx, 1);
+              }
+
+              idx = race.exhaustedCards.indexOf('SCANLINK_DRONE_NETWORK');
+              if(idx > -1){
+                race.exhaustedCards.splice(idx, 1);
+              }
+
+              const ceasefire = race.promissory.find(p => p.id === 'CEASEFIRE' && p.sold !== undefined);
+
+              if(ceasefire){
+                const acceptor = returnPromissory(G, playerID, ceasefire, plugins);
+
+                if(acceptor){
+                  const acceptorId = G.races.findIndex(r => r.rid === acceptor.rid);
+                  let doCeasefire = false;
+
+                  if(tile.tdata && String(tile.tdata.occupied) === String(acceptorId)){
+                    doCeasefire = true;
+                  }
+                  else if(tile.tdata){
+                    const planets = tile.tdata.planets;
+
+                    if(planets && planets.length){
+                      if(planets.find(p => String(p.occupied) === String(acceptorId) && p.units && Object.keys(p.units).length)){
+                        doCeasefire = true;
+                      }
+                    }
+                  }
+
+                  if(doCeasefire){
+                    tile.tdata.ceasefire = true;
+                  }
+                }
+              }
+
+              const supports = race.promissory.filter(p => p.id === 'SUPPORT_FOR_THE_THRONE' && p.owner !== undefined)
+
+              if(supports && supports.length){
+                
+                supports.forEach(s => {
+                  let returnSupport = false;
+                  let ownerId = G.races.findIndex(r => r.rid === s.owner);
+
+                  if(tile.tdata && String(tile.tdata.occupied) === String(ownerId)){
+                    returnSupport = true;
+                  }
+                  else if(tile.tdata){
+                    const planets = tile.tdata.planets;
+
+                    if(planets && planets.length){
+                      if(planets.find(p => String(p.occupied) === String(ownerId) && p.units && Object.keys(p.units).length)){
+                        returnSupport = true;
+                      }
+                    }
+                  }
+
+                  if(returnSupport){
+                    returnPromissoryToOwner(G, playerID, s, plugins); 
+                  }
+                })
+
+              }
+
+            }
+            catch(e){console.log(e)}
           },
           moveShip: ({ G, playerID, random, ...plugins }, args) => {
 
@@ -1389,7 +1457,10 @@ export const TIO = {
           G.races.forEach( r => {r.votesMax = 0; r.voteResults = []; r.actions = []});
           
           G.tiles.forEach( t => {
-            if(t.active) t.active = false;
+            if(t.active){
+              t.active = undefined;
+              if(t.tdata && t.tdata.ceasefire) t.tdata.ceasefire = undefined;
+            }
             if(t.tdata.planets && t.tdata.planets.length){
               t.tdata.planets.forEach(p => {
                 p.exhausted = false;
@@ -1446,22 +1517,9 @@ export const TIO = {
     },
     
     endIf: ({ G, ctx }) => {
-      let result = 0;
-      let race = G.races[ctx.currentPlayer];
+      
+      let result = getRaceVP(G, ctx.currentPlayer);
 
-      if(race){
-        race.secretObjectives.concat(G.pubObjectives).forEach(o => {
-          if(o && o.players && o.players.length > 0){
-            if(o.players.indexOf(ctx.currentPlayer) > -1) result += (o.vp ? o.vp : 1);
-          }
-        });
-  
-        result += race.vp;
-        if(race.relics && race.relics.find(r => r.id === 'Shard of the Throne')){
-          result++;
-        }
-      }
-  
       if(result >= G.vp) {
         return { winner: ctx.currentPlayer };
       }

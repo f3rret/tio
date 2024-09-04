@@ -6,7 +6,7 @@ import { useCookies } from 'react-cookie';
 import { produce } from 'immer';
 import cardData from './cardData.json';
 import techData from './techData.json';
-import { checkObjective, StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT, getPlanetByName, normalizeName } from './utils';
+import { checkObjective, StateContext, LocalizationContext, haveTechnology, UNITS_LIMIT, getPlanetByName, normalizeName, getRaceVP } from './utils';
 //import { LobbyClient } from 'boardgame.io/client';
 import settings from '../package.json';
 
@@ -2122,23 +2122,8 @@ export const Gameover = (args) => {
     const winnerRace = useMemo(() => G.races[winner], [G.races, winner])
 
     const VP = useMemo(() => {
-        let result = 0;
-    
-        if(winnerRace){
-            winnerRace.secretObjectives.concat(G.pubObjectives).forEach(o => {
-            if(o && o.players && o.players.length > 0){
-              if(o.players.indexOf(winner) > -1) result += (o.vp ? o.vp : 1);
-            }
-          });
-    
-          result += winnerRace.vp;
-          if(winnerRace.relics && winnerRace.relics.find(r => r.id === 'Shard of the Throne')){
-            result++;
-          }
-        }
-    
-        return result;
-      }, [winner, winnerRace, G.pubObjectives]);
+        return getRaceVP(G, winner);
+      }, [winner, G]);
 
     return  <Modal className='borderedPanel' style={{margin: '10rem auto', width: 'fit-content', maxWidth: 'unset', backgroundColor: 'rgba(33, 37, 41, 0.95)'}} isOpen={args.isOpen}>
                 <ModalHeader style={{justifyContent: 'center'}}><span style={{fontSize: '150%'}}>{t('board.game_is_over')}</span></ModalHeader>

@@ -44,7 +44,7 @@ export const PixiStage = ({stagew, stageh, dispatch, hud, GP}) => {
             result.push(line[line.length-1]);
             return result;
           }
-          else if(activeTile.tdata.wormhole && wormholesAreAdjacent(G, activeTile.tdata.wormhole, G.tiles[hud.advUnitView.tile].tdata.wormhole)){
+          else if(activeTile.tdata.wormhole && G.tiles[hud.advUnitView.tile].tdata.wormhole && wormholesAreAdjacent(G, activeTile.tdata.wormhole, G.tiles[hud.advUnitView.tile].tdata.wormhole)){
             return [activeTile.tid, G.tiles[hud.advUnitView.tile].tid];
           }
           else{
@@ -113,6 +113,7 @@ export const PixiStage = ({stagew, stageh, dispatch, hud, GP}) => {
         }
     
         if(!advUnitViewTechnology) return false;
+        if(activeTile && activeTile.tdata && activeTile.tdata.ceasefire) return false;
         
         let adj = 0;
         if(hud.exhaustedCards.includes('GRAVITY_DRIVE')) adj++;

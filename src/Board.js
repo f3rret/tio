@@ -7,7 +7,7 @@ import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows
 ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover,
 SelectDiscardedActions} from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
-import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT, getMyNeighbors, checkIfMyNearbyUnit } from './utils';
+import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT, getMyNeighbors, checkIfMyNearbyUnit, getRaceVP } from './utils';
 
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion, ChooseAndDestroy } from './combat';
@@ -121,23 +121,9 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   }, [race]);
 
   const VP = useMemo(() => {
-    let result = 0;
-
-    if(race){
-      race.secretObjectives.concat(G.pubObjectives).forEach(o => {
-        if(o && o.players && o.players.length > 0){
-          if(o.players.indexOf(playerID) > -1) result += (o.vp ? o.vp : 1);
-        }
-      });
-
-      result += race.vp;
-      if(race.relics && race.relics.find(r => r.id === 'Shard of the Throne')){
-        result++;
-      }
-    }
-
-    return result;
-  }, [race, G.pubObjectives, playerID]);
+    return getRaceVP(G, playerID);
+  //eslint-disable-next-line
+  }, [G_races_stringify, playerID]);
 
   const GP = useMemo(() => {
 
@@ -1063,7 +1049,10 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
         const {src, dst, id} = effectProps;
 
         if(String(src) === String(playerID)){
-          sendChatMessage(t('cards.promissory.' + id + '.label') + ' ' + t('races.' + G.races[dst].rid + '.name') + ' ' + t('board.complete'));
+          if(MY_LAST_EFFECT.current !== id){
+            sendChatMessage(t('cards.promissory.' + id + '.label') + ' ' + t('races.' + G.races[dst].rid + '.name') + ' ' + t('board.complete'));
+            MY_LAST_EFFECT.current = id;
+          }
         }
       }
 

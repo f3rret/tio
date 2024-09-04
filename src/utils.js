@@ -1840,3 +1840,26 @@ export const replenishCommodity = (G, playerID, count, plugins) => {
   }
 
 }
+
+export const getRaceVP = (G, pid) => {
+  let result = 0;
+  let race = G.races[pid];
+
+  if(race){
+    race.secretObjectives.concat(G.pubObjectives).forEach(o => {
+      if(o && o.players && o.players.length > 0){
+        if(o.players.indexOf(pid) > -1) result += (o.vp ? o.vp : 1);
+      }
+    });
+
+    result += race.vp;
+    if(race.relics && race.relics.find(r => r.id === 'Shard of the Throne')){
+      result++;
+    }
+
+    const supports = race.promissory.filter(p => p.id === 'SUPPORT_FOR_THE_THRONE' && p.owner !== undefined); //todo: except elliminated players
+    if(supports && supports.length) result += supports.length;
+  }
+
+  return result;
+}
