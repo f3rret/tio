@@ -1,7 +1,7 @@
 import { Card, CardBody, CardTitle, CardFooter, CardText, CardImg, Button, ButtonGroup, Container, Row, Col,
 UncontrolledDropdown, DropdownMenu, DropdownItem, DropdownToggle, Badge } from 'reactstrap'; 
 import { useContext, useMemo, useCallback, useState, useEffect } from 'react';
-import { LocalizationContext, StateContext, getUnitsTechnologies, haveTechnology, wormholesAreAdjacent, enemyHaveCombatAC, adjustTechnologies } from './utils';
+import { LocalizationContext, StateContext, getUnitsTechnologies, haveTechnology, wormholesAreAdjacent, enemyHaveCombatAC, adjustTechnologies, haveRaceCommanderAbility } from './utils';
 import { neighbors } from './Grid';
 import { produce } from 'immer';
 import { ActionCardDialog } from './actionCardDialog';
@@ -716,7 +716,7 @@ const CombatantForces = (args) => {
                             </span>
                         </Col>
                     })}
-                    {race.rid === 1 && race.commanderIsUnlocked && race.exhaustedCards.indexOf('COMMANDER') === -1 && G.races[ctx.currentPlayer].rid !== 1 && isInvasion && prevStages && prevStages[race.pid] && prevStages[race.pid].indexOf('invasion') === prevStages[race.pid].length - 1 && 
+                    {haveRaceCommanderAbility(G, race, 1) && race.exhaustedCards.indexOf('COMMANDER') === -1 && G.races[ctx.currentPlayer].rid !== race.rid && isInvasion && prevStages && prevStages[race.pid] && prevStages[race.pid].indexOf('invasion') === prevStages[race.pid].length - 1 && 
                     <Col className='col-md-auto' style={{marginLeft: '1rem', minHeight: '7rem', padding: '.5rem', background: 'rgba(255,255,255,.15)', fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'}}>
                         <span style={{position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
                             <CardImg style={{width: '3rem', marginLeft: '2rem'}} src={'units/INFANTRY.png'} />
@@ -1102,7 +1102,7 @@ export const SpaceCombat = ({selectedTile}) => {
                     {winner !== undefined && <>
                         {String(winner) === String(playerID) && <div style={{margin: '5rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                             <h5 style={{textAlign: 'center', color: 'yellowgreen'}}>{t('board.enemys_fleet_defeated')}</h5>
-                            {G.races[playerID].rid === 2 && G.races[playerID].commanderIsUnlocked && ctx.activePlayers[looser] !== 'reparations' &&
+                            {haveRaceCommanderAbility(G, G.races[playerID], 2) && ctx.activePlayers[looser] !== 'reparations' &&
                             <button className='styledButton black' style={{width: 'max-content', marginTop: '2rem', padding: '1rem 2rem'}} onClick={() => moves.claimPromissoryCard(looser)}>{t('board.claim_promissory_card')}</button>}
                             
                         </div>}

@@ -680,7 +680,7 @@ export const useCommanderAbility = (G, playerID) => {
 
   const race = G.races[playerID];
   if(race && race.exhaustedCards.indexOf('COMMANDER') === -1){
-    if(race.rid === 1){
+    if(haveRaceCommanderAbility(G, race, 1)){
       const planets = getPlayerPlanets(G.tiles, playerID);
 
       if(planets && planets.length){
@@ -1862,4 +1862,17 @@ export const getRaceVP = (G, pid) => {
   }
 
   return result;
+}
+
+export const haveRaceCommanderAbility = (G, race, rid) => {
+  if(race.rid === rid){
+    return race.commanderIsUnlocked;
+  }
+  else{
+    const alliance = race.promissory.find(p => p.id === 'ALLIANCE' && p.owner === rid);
+    if(alliance){
+      const ally = G.races.find(r => r.rid === rid);
+      return ally && ally.commanderIsUnlocked;
+    }
+  }
 }

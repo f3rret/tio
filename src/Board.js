@@ -402,6 +402,18 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   //eslint-disable-next-line
   }, [race.exhaustedCards, G.tiles, hud.selectedTile, playerID, hud.justOccupied]);
 
+  const getAllianceTootlip = useCallback((rid) => {
+    const ally = G.races.find(r => r.rid === rid);
+    if(ally){
+      return <>
+        {!ally.commanderIsUnlocked && <CardText><b>{t('board.unlock') + ': '}</b> {t('races.' + ally.rid + '.commanderUnlock')}</CardText>}
+        <CardText>{t('races.' + ally.rid + '.commanderAbility')}</CardText>
+      </>
+    }
+
+    return <></>
+  //eslint-disable-next-line
+  }, [G_races_stringify]);
 
   const isRelicDisabled = (relic) => {
     try{
@@ -1178,15 +1190,18 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                     </>}
                     {((hud.rightBottomVisible === 'promissory' && race.promissory.length > 0) || reparations === 'promissory') && <CardsPager>
                       {race.promissory.map((pr, i) => <CardsPagerItem key={i} tag='promissory'>
-                        <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow' onClick={() => promissoryClick(pr)}>
+                        <button id={pr.id + '_' + pr.owner} style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow' onClick={() => promissoryClick(pr)}>
                           {reparations === 'promissory' && <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', left: '0', top: '0', position: 'absolute'}}>{t('board.drop')}</b>}
                           {pr.sold ? <img alt='to other player' style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}} src={'race/icons/' + pr.sold + '.png'} />:''}
                           <b style={{textDecoration: pr.sold ? 'line-through':''}}>{t('cards.promissory.' + pr.id + '.label').toUpperCase()}</b>
                           {pr.racial && !pr.owner ? <img alt='racial' style={{width: '2rem', position: 'absolute', bottom: '1rem'}} src={'race/icons/' + race.rid + '.png'} />:''}
                           {pr.owner ? <img alt='from other player' style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}} src={'race/icons/' + pr.owner + '.png'} />:''}
                         </button>
+                        {pr.id === 'ALLIANCE' && pr.owner !== undefined && <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='bottom' target={'#' + pr.id + '_' + pr.owner}>
+                          {getAllianceTootlip(pr.owner)}
+                        </UncontrolledTooltip>}
               
-                          <p>{t('cards.promissory.' + pr.id + '.effect').replaceAll('[color of card]', t('board.colors.' + pr.color))}</p>
+                        <p>{t('cards.promissory.' + pr.id + '.effect').replaceAll('[color of card]', t('board.colors.' + pr.color))}</p>
 
                       </CardsPagerItem>)}
                     </CardsPager>}
