@@ -716,7 +716,7 @@ const CombatantForces = (args) => {
                             </span>
                         </Col>
                     })}
-                    {haveRaceCommanderAbility(G, race, 1) && race.exhaustedCards.indexOf('COMMANDER') === -1 && G.races[ctx.currentPlayer].rid !== race.rid && isInvasion && prevStages && prevStages[race.pid] && prevStages[race.pid].indexOf('invasion') === prevStages[race.pid].length - 1 && 
+                    {haveRaceCommanderAbility(G, race, 1) && race.exhaustedCards.indexOf('COMMANDER') === -1 && G.races[ctx.currentPlayer].rid !== race.rid && isInvasion && 
                     <Col className='col-md-auto' style={{marginLeft: '1rem', minHeight: '7rem', padding: '.5rem', background: 'rgba(255,255,255,.15)', fontFamily: 'Handel Gothic', position: 'relative', flexGrow: 0, display: 'flex'}}>
                         <span style={{position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
                             <CardImg style={{width: '3rem', marginLeft: '2rem'}} src={'units/INFANTRY.png'} />
@@ -753,7 +753,7 @@ const CombatantForces = (args) => {
     );
 
 }
-
+//prevStages && prevStages[race.pid] && prevStages[race.pid].indexOf('invasion') === prevStages[race.pid].length - 1 && 
 export const AntiFighterBarrage = (args) => {
 
     const { G, ctx, moves, playerID } = useContext(StateContext);
@@ -846,6 +846,7 @@ export const SpaceCombat = ({selectedTile}) => {
     const activeTile = G.tiles.find(t => t.active === true);
     const [ahitsA, setAhitsA] = useState({});
     const [ahitsD, setAhitsD] = useState({});
+    const [reparationsDone, setReparationsDone] = useState(false);
 
     const ambush = useMemo(() => {
         return G.spaceCombat && G.spaceCombat.ambush;
@@ -1102,8 +1103,9 @@ export const SpaceCombat = ({selectedTile}) => {
                     {winner !== undefined && <>
                         {String(winner) === String(playerID) && <div style={{margin: '5rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                             <h5 style={{textAlign: 'center', color: 'yellowgreen'}}>{t('board.enemys_fleet_defeated')}</h5>
-                            {haveRaceCommanderAbility(G, G.races[playerID], 2) && ctx.activePlayers[looser] !== 'reparations' &&
-                            <button className='styledButton black' style={{width: 'max-content', marginTop: '2rem', padding: '1rem 2rem'}} onClick={() => moves.claimPromissoryCard(looser)}>{t('board.claim_promissory_card')}</button>}
+                            {haveRaceCommanderAbility(G, G.races[playerID], 2) && ctx.activePlayers[looser] !== 'reparations' && !reparationsDone &&
+                            <button className='styledButton black' style={{width: 'max-content', marginTop: '2rem', padding: '1rem 2rem'}} onClick={() => {
+                                setReparationsDone(true); moves.claimPromissoryCard(looser)}}>{t('board.claim_promissory_card')}</button>}
                             
                         </div>}
                         {String(winner) !== String(playerID) && <h5 style={{margin: '5rem', textAlign: 'center', color: 'red'}}>{t('board.your_fleet_defeated')}</h5>}

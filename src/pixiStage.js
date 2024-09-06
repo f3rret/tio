@@ -180,14 +180,14 @@ export const PixiStage = ({stagew, stageh, dispatch, hud, GP}) => {
     return <Stage width={stagew} height={stageh} options={{antialias: true, backgroundAlpha: 0, resizeTo: window, autoDensity: true }}>
                 <TickerSettings fps={30}/>
                 <PixiViewport home={G.tiles.find(t => t.tid === G.races[playerID].rid)}>
-                    <TilesMap1 tiles={G.tiles} stagew={stagew} stageh={stageh} tileClick={tileClick}/>
-                    <TilesMap2 G={G} GP={GP} playerID={playerID} moves={moves} ctx={ctx} t={t} stagew={stagew} stageh={stageh} hud={hud} tileClick={tileClick} canMoveThatPath={canMoveThatPath} getColorByRid={getColorByRid} dispatch={dispatch} activeTile={activeTile} advUnitViewTechnology={advUnitViewTechnology} maxActs={maxActs} getMovePath={getMovePath} getPureMovePath={getPureMovePath} isMyTurn={isMyTurn}/>
+                    <TilesMap1 tiles={G.tiles} stagew={stagew} stageh={stageh} tileClick={tileClick} getColorByRid={getColorByRid} />
+                    <TilesMap2 G={G} GP={GP} playerID={playerID} moves={moves} ctx={ctx} t={t} stagew={stagew} stageh={stageh} hud={hud} tileClick={tileClick} canMoveThatPath={canMoveThatPath} dispatch={dispatch} activeTile={activeTile} advUnitViewTechnology={advUnitViewTechnology} maxActs={maxActs} getMovePath={getMovePath} getPureMovePath={getPureMovePath} isMyTurn={isMyTurn}/>
                     <TilesMap3 G={G} playerID={playerID} moves={moves} ctx={ctx} t={t} stagew={stagew} stageh={stageh} isMyTurn={isMyTurn} activeTile={activeTile} hud={hud} canMoveThatPath={canMoveThatPath} dispatch={dispatch} advUnitViewTechnology={advUnitViewTechnology} getPureMovePath={getPureMovePath}/>
                 </PixiViewport> 
             </Stage>
 }
 
-const TilesMap1 = ({tiles, stagew, stageh, tileClick}) => {
+const TilesMap1 = ({tiles, stagew, stageh, tileClick, getColorByRid}) => {
 
     return tiles.map((element, index) => {
         const [firstCorner] = element.corners;
@@ -198,6 +198,13 @@ const TilesMap1 = ({tiles, stagew, stageh, tileClick}) => {
                 <Sprite cacheAsBitmap={true} interactive={true} pointerdown={ (e)=>tileClick(e, index) } 
                             image={'tiles/ST_'+element.tid+'.png'} anchor={0} scale={{ x: 1, y: 1 }}
                             x={firstCorner.x + stagew/2 + 7.5 - element.w/2 - element.w/4} y={firstCorner.y + stageh/2 + 7.5} alpha={.9}>
+                              {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
+                            
+                                return <Sprite tint={getColorByRid(t)[0]} alpha={.9} key={i} x={element.w/2 + element.w/4 - i*15} y={element.w/4 - i*20} scale={.4} image={'icons/ct.png'}>
+                                        <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={47} y={65} alpha={.85}></Sprite>
+                                        </Sprite>}
+                                )}
+                        
                             </Sprite>
                 {false && <>
                     <Text style={{fontSize: 20, fill:'white'}} text={'(' + element.q + ',' + element.r + ')'} x={firstCorner.x + stagew/2 - element.w/2} y={firstCorner.y + stageh/2}/>
@@ -212,13 +219,13 @@ const TilesMap1 = ({tiles, stagew, stageh, tileClick}) => {
                         style={{ fontSize: 20, fill: 'white' }} 
                         x={firstCorner.x + stagew/2 - element.w/1.5} y={firstCorner.y + stageh/2 + element.w/6 + element.w/8 * (i+1)} />
                         )}
-            </>}
+                  </>}
             
             </Container>
     })
 };
 
-const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hud, activeTile, dispatch, canMoveThatPath, getColorByRid, tileClick, advUnitViewTechnology, maxActs, getMovePath, getPureMovePath}) => {
+const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hud, activeTile, dispatch, canMoveThatPath, tileClick, advUnitViewTechnology, maxActs, getMovePath, getPureMovePath}) => {
 
     const race = G.races[playerID];
 
@@ -354,13 +361,7 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
                         {element.tdata.ionstorm && element.tdata.wormhole === 'alpha' && <Sprite x={-15} y={element.w/4 + 30} scale={1} alpha={.85} image={'icons/alpha.png'}/>}
                         {element.tdata.ionstorm && element.tdata.wormhole === 'beta' && <Sprite x={-15} y={element.w/4 + 30} scale={1} alpha={.85} image={'icons/beta.png'}/>}
                         {element.tdata.frontier && <Sprite x={30} y={element.w/4 + 30} image={'icons/frontier.png'}/>}
-                        {element.tdata.tokens && element.tdata.tokens.length > 0 && element.tdata.tokens.map( (t, i) =>{
-                            
-                            return <Sprite tint={getColorByRid(t)[0]} alpha={.9} key={i} x={element.w/2 + element.w/4 - i*15} y={element.w/4 - i*20} scale={.4} image={'icons/ct.png'}>
-                                    <Sprite image={'race/icons/'+ t +'.png'} scale={1.25} x={47} y={65} alpha={.85}></Sprite>
-                                    </Sprite>}
-                        )}
-                        
+
                         
                         {element.tdata.planets && element.tdata.planets.length > 0 && element.tdata.planets.map((p,i) => { 
                             return p.hitCenter && <Container key={i} x={p.hitCenter[0]-p.hitRadius} y={p.hitCenter[1]-p.hitRadius}>
@@ -432,17 +433,19 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
                         
                     
                         {element.tdata.fleet && <Container x={10} y={-30}>
-                          {hud.advUnitView && hud.advUnitView.tile === index && hud.selectedTile === index && selectedPlanet && (selectedPlanet.occupied === undefined || String(element.tdata.occupied) === String(selectedPlanet.occupied)) &&
+                          {hud.advUnitView && hud.advUnitView.tile === index && hud.selectedTile === index && selectedPlanet && <>
+                            {(selectedPlanet.occupied === undefined || String(element.tdata.occupied) === String(selectedPlanet.occupied)) &&
                               !isDMZ(selectedPlanet) && !selectedPlanet.isDestroyed && <LandingGreen pointerdown={()=>unloadUnit()} x={-20} y={-20} >
                                 {selectedPlanet.occupied === undefined && selectedPlanet.name === 'Mecatol Rex' && <Sprite image={'icons/influence_bg.png'} x={8} y={-25} scale={.75}>
                                   <Text x={18} y={15} text={race.rid === 7 ? 0:6} style={{fontSize: 35, fontFamily:'Handel Gothic', fill: 'white'}}/>
                                 </Sprite>}
                               </LandingGreen>
-                              }
-                          {activeTile && String(element.tdata.occupied) === String(playerID) && !G.spaceCannons && element.tdata.fleet && selectedPlanet && 
-                              selectedPlanet.occupied !== undefined && String(element.tdata.occupied) !== String(selectedPlanet.occupied) && !isDMZ(selectedPlanet) && !selectedPlanet.isDestroyed &&
-                              <LandingRed pointerdown={()=>moves.invasion(selectedPlanet)} x={-20} y={-20} />
-                          }
+                            }
+                            {activeTile && String(element.tdata.occupied) === String(playerID) && !G.spaceCannons && element.tdata.fleet && 
+                                selectedPlanet.occupied !== undefined && String(element.tdata.occupied) !== String(selectedPlanet.occupied) && !isDMZ(selectedPlanet) && !selectedPlanet.isDestroyed &&
+                                <LandingRed pointerdown={()=>moves.invasion(selectedPlanet)} x={-20} y={-20} />
+                            }
+                          </>}
                   
                           {Object.keys(element.tdata.fleet).map((f, i) => {
                           const isCurrentAdvUnit = hud.advUnitView && hud.advUnitView.tile === index && hud.advUnitView.unit === f;

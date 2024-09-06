@@ -679,12 +679,14 @@ export const checkCommanderUnlock = (G, playerID) => {
 export const useCommanderAbility = (G, playerID) => {
 
   const race = G.races[playerID];
+
   if(race && race.exhaustedCards.indexOf('COMMANDER') === -1){
     if(haveRaceCommanderAbility(G, race, 1)){
       const planets = getPlayerPlanets(G.tiles, playerID);
 
       if(planets && planets.length){
-        const planet = planets.find(p => p.invasion)
+        const planet = planets.find(p => p.invasion);
+        
         if(planet && String(planet.occupied) === String(playerID)){
           if(!planet.units) planet.units={};
           if(!planet.units.infantry) planet.units.infantry=[];

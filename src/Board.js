@@ -314,8 +314,8 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   }
 
   const strategyStage = useMemo(()=> {
-    return G.strategy !== undefined && ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && Object.values(ctx.activePlayers)[0] === 'strategyCard'
-  }, [G, ctx]);
+    return !G.passedPlayers.includes(String(playerID)) && G.strategy !== undefined && ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && Object.values(ctx.activePlayers)[0] === 'strategyCard'
+  }, [G, ctx, playerID]);
 
   const actionCardStage = useMemo(() => {
     return ctx.activePlayers && Object.keys(ctx.activePlayers).length > 0 && Object.values(ctx.activePlayers)[0]==='actionCard';

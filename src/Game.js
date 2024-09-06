@@ -215,7 +215,28 @@ export const TIO = {
       acts: {
         next: 'stats',
         turn: {
-            order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
+            //order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
+            
+            order: {
+              first: () => 0,
+              next: ({ G, ctx }) => {
+                try{
+                  if(G.passedPlayers.length >= ctx.numPlayers) return;
+
+                  let pos = ctx.playOrderPos;
+                  
+                  do{
+                    pos = (pos + 1) % ctx.numPlayers;
+                  }
+                  while(G.passedPlayers.includes(String(G.TURN_ORDER[pos])));
+
+                  return pos;
+                }
+                catch(e){console.log(e)}
+              },
+              playOrder: ({ G, ctx }) => G.TURN_ORDER
+            },
+
             stages: ACTS_STAGES,
 
             onBegin: ({ G, ctx }) => {
@@ -342,9 +363,9 @@ export const TIO = {
               delete G.races[playerID].mustDropSecObj;
             }
           },
-          endTurn: ({G, events}) => {
+          endTurn: ({G, ctx, events}) => {
             if(!G.currentTacticalActionCard){
-              events.setActivePlayers({}); //to end tacticalActionCard stage
+              if(ctx.activePlayers && Object.keys(ctx.activePlayers)) events.setActivePlayers({}); //to end tacticalActionCard stage
               events.endTurn();
             }
           },
@@ -767,7 +788,14 @@ export const TIO = {
             G.strategy = strategy.id;
             G.races[playerID].actions.push('STRATEGY_CARD');
 
-            events.setActivePlayers({ all: 'strategyCard', minMoves: 1 });
+            const val = {};
+            G.races.forEach((r, i) => {
+              if(!G.passedPlayers.includes(String(i))){
+                val[i] = {stage: 'strategyCard'}
+              }
+            })
+
+            events.setActivePlayers({ value: val, minMoves: 1 });
           },
           loadUnit: ({G, playerID}, {src, dst}) => {
             
@@ -951,7 +979,7 @@ export const TIO = {
                 }
               }
 
-              const supports = race.promissory.filter(p => p.id === 'SUPPORT_FOR_THE_THRONE' && p.owner !== undefined)
+              const supports = race.promissory.filter(p =>  ['SUPPORT_FOR_THE_THRONE', 'ALLIANCE'].includes(p.id) && p.owner !== undefined)
 
               if(supports && supports.length){
                 
@@ -1078,8 +1106,7 @@ export const TIO = {
           pass: ({ G, playerID, events, ctx }) => {
             let endLater = false;
 
-            if(G.passedPlayers.indexOf(playerID) === -1){
-              
+            if(!G.passedPlayers.includes(String(playerID))){
               if(G.passedPlayers.length === ctx.numPlayers - 1){
                 if(checkSecretObjective(G, playerID, 'Prove Endurance')){ 
                   endLater = true; 
