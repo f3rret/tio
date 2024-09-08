@@ -1224,6 +1224,9 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                         if(pr.isActive){
                           className += 'green';
                         }
+                        else if(pr.sold){
+                          className += 'white';
+                        }
                         else{
                           className += 'yellow';
                         }

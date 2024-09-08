@@ -952,60 +952,66 @@ export const TIO = {
                 race.exhaustedCards.splice(idx, 1);
               }
 
-              const ceasefire = race.promissory.find(p => p.id === 'CEASEFIRE' && p.sold !== undefined);
+              const rids = tile.tdata.tokens.filter(t => t !== race.rid);
 
-              if(ceasefire){
-                const acceptor = returnPromissory(G, playerID, ceasefire, plugins);
+              if(rids && rids.length){
+                const ceasefires = race.promissory.filter(p => p.id === 'CEASEFIRE' && rids.includes(p.sold));
 
-                if(acceptor){
-                  const acceptorId = G.races.findIndex(r => r.rid === acceptor.rid);
-                  let doCeasefire = false;
+                if(ceasefires && ceasefires.length){
+                  ceasefires.forEach(ceasefire => {
+                    const acceptor = returnPromissory(G, playerID, ceasefire, plugins);
 
-                  if(tile.tdata && String(tile.tdata.occupied) === String(acceptorId)){
-                    doCeasefire = true;
-                  }
-                  else if(tile.tdata){
-                    const planets = tile.tdata.planets;
+                    if(acceptor){
+                      const acceptorId = G.races.findIndex(r => r.rid === acceptor.rid);
+                      let doCeasefire = false;
 
-                    if(planets && planets.length){
-                      if(planets.find(p => String(p.occupied) === String(acceptorId) && p.units && Object.keys(p.units).length)){
+                      if(tile.tdata && String(tile.tdata.occupied) === String(acceptorId)){
                         doCeasefire = true;
                       }
-                    }
-                  }
+                      else if(tile.tdata){
+                        const planets = tile.tdata.planets;
 
-                  if(doCeasefire){
-                    tile.tdata.ceasefire = true;
-                  }
-                }
-              }
+                        if(planets && planets.length){
+                          if(planets.find(p => String(p.occupied) === String(acceptorId) && p.units && Object.keys(p.units).length)){
+                            doCeasefire = true;
+                          }
+                        }
+                      }
 
-              const supports = race.promissory.filter(p =>  ['SUPPORT_FOR_THE_THRONE', 'ALLIANCE', 'PROMISE_OF_PROTECTION'].includes(p.id) && p.owner !== undefined)
-
-              if(supports && supports.length){
-                
-                supports.forEach(s => {
-                  let returnSupport = false;
-                  let ownerId = G.races.findIndex(r => r.rid === s.owner);
-
-                  if(tile.tdata && String(tile.tdata.occupied) === String(ownerId)){
-                    returnSupport = true;
-                  }
-                  else if(tile.tdata){
-                    const planets = tile.tdata.planets;
-
-                    if(planets && planets.length){
-                      if(planets.find(p => String(p.occupied) === String(ownerId) && p.units && Object.keys(p.units).length)){
-                        returnSupport = true;
+                      if(doCeasefire){
+                        tile.tdata.ceasefire = true;
                       }
                     }
-                  }
+                  })
+                }
 
-                  if(returnSupport){
-                    returnPromissoryToOwner(G, playerID, s, plugins); 
-                  }
-                })
+                const supports = race.promissory.filter(p =>  ['SUPPORT_FOR_THE_THRONE', 'ALLIANCE', 'PROMISE_OF_PROTECTION'].includes(p.id) && rids.includes(p.owner))
 
+                if(supports && supports.length){
+                  
+                  supports.forEach(s => {
+                    let returnSupport = false;
+                    let ownerId = G.races.findIndex(r => r.rid === s.owner);
+
+                    if(tile.tdata && String(tile.tdata.occupied) === String(ownerId)){
+                      returnSupport = true;
+                    }
+                    else if(tile.tdata){
+                      const planets = tile.tdata.planets;
+
+                      if(planets && planets.length){
+                        if(planets.find(p => String(p.occupied) === String(ownerId) && p.units && Object.keys(p.units).length)){
+                          returnSupport = true;
+                        }
+                      }
+                    }
+
+                    if(returnSupport){
+                      returnPromissoryToOwner(G, playerID, s, plugins); 
+                    }
+                  })
+
+                }
               }
 
             }
