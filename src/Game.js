@@ -357,6 +357,7 @@ export const TIO = {
         moves: {
           secretObjectiveConfirm,
           useRelic,
+          usePromissory,
           dropSecretObjective: ({G, playerID}, oid) => { //todo: return obj to deck and shuffle
             if(G.races[playerID].secretObjectives){
               G.races[playerID].secretObjectives = G.races[playerID].secretObjectives.filter(o => o.id !== oid);
@@ -979,7 +980,7 @@ export const TIO = {
                 }
               }
 
-              const supports = race.promissory.filter(p =>  ['SUPPORT_FOR_THE_THRONE', 'ALLIANCE'].includes(p.id) && p.owner !== undefined)
+              const supports = race.promissory.filter(p =>  ['SUPPORT_FOR_THE_THRONE', 'ALLIANCE', 'PROMISE_OF_PROTECTION'].includes(p.id) && p.owner !== undefined)
 
               if(supports && supports.length){
                 

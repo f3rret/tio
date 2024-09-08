@@ -365,19 +365,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     }
   }, [ctx, race, playerID]);
 
-  const promissoryClick = useCallback((pr) => {
-    try{
-      if(reparations === 'promissory'){
-        moves.transferPromissoryCard(pr.id)
-      }
-      else{
-        if(pr.id === 'POLITICAL_SECRET' && pr.owner && ctx.phase === 'agenda'){
-          moves.usePromissory(pr);
-        }
-      }
-    }
-    catch(e){console.log(e)}
-  }, [moves, ctx, reparations]);
+  
 
   const flushTempCt = useCallback(() =>{
     dispatch({type: 'temp_ct', payload: {s: 0, t: 0, f: 0, new: 0}})
@@ -478,6 +466,38 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
   const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);
   
+  const isPromissoryDisabled = (pr) => {
+
+    if(!pr) return;
+    if(!isMyTurn) return true;
+    if(!pr.owner) return true;
+    if(pr.id === 'POLITICAL_SECRET' && ctx.phase !== 'agenda') return true;
+    if(pr.isActive) return true;
+
+  }
+
+  const promissoryClick = useCallback((pr) => {
+    try{
+
+      if(reparations === 'promissory'){
+        moves.transferPromissoryCard(pr.id)
+      }
+      else{
+        if(pr.id === 'POLITICAL_SECRET' && pr.owner && ctx.phase === 'agenda'){
+          moves.usePromissory(pr);
+        }
+        else if(pr.id === 'MILITARY_SUPPORT' && pr.owner && ctx.phase === 'acts' && hud.selectedPlanet > -1){
+          moves.usePromissory(pr, {selectedTile: hud.selectedTile, selectedPlanet: hud.selectedPlanet});
+        }
+        else if(pr.id === 'PROMISE_OF_PROTECTION' && pr.owner && ctx.phase === 'acts'){
+          if(race.actions.length < maxActs) moves.usePromissory(pr);
+        }
+      }
+
+    }
+    catch(e){console.log(e)}
+  }, [moves, ctx, reparations, hud.selectedPlanet, hud.selectedTile, maxActs, race]);
+
   //eslint-disable-next-line
   const neighbors = useMemo(() => getMyNeighbors(G, playerID), [G_tiles_stringify]);
 
@@ -697,11 +717,21 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
               {abilId === 'PILLAGE' && hud.abilityData.pillage && hud.rightBottomSubVisible === 'pillage' && <div className='subPanel' style={{backgroundColor: 'rgba(33, 37, 41, 0.95)', top: '0', position: 'absolute', right: '0', minWidth: '15rem', padding: '1rem', fontSize: '1rem'}}>
                       {hud.abilityData.pillage.map((p, i) => {
                           const pilRace = G.races[p];
+                          let abilDisabled = pilRace.tg < 3;
+
+                          if(!abilDisabled){
+                            const promissory = race.promissory.find(p => p.id === 'PROMISE_OF_PROTECTION' && p.sold !== undefined);
+                            if(promissory && promissory.isActive){
+                              if(String(promissory.sold) === String(pilRace.rid)){
+                                abilDisabled = true;
+                              }
+                            }
+                          }
 
                           return <span key={p} className='rightBottomSub_complex'>
                             <b>{t('races.' + pilRace.rid + '.name')}</b>
-                            <button disabled={pilRace.tg < 3} onClick={() => onSubClick({playerID: p, param: 'tg'})} className='styledButton black'>{'1 / ' + pilRace.tg}<img alt='tg' src='/icons/trade_good_1.png'/></button>
-                            <button disabled={pilRace.tg < 3} onClick={() => onSubClick({playerID: p, param: 'commodity'})} className='styledButton black'>{pilRace.commodity}<img alt='tg' src='/icons/commodity_1.png'/></button>
+                            <button disabled={abilDisabled} onClick={() => onSubClick({playerID: p, param: 'tg'})} className='styledButton black'>{'1 / ' + pilRace.tg}<img alt='tg' src='/icons/trade_good_1.png'/></button>
+                            <button disabled={abilDisabled} onClick={() => onSubClick({playerID: p, param: 'commodity'})} className='styledButton black'>{pilRace.commodity}<img alt='tg' src='/icons/commodity_1.png'/></button>
                           </span>
                       })}
                       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end'}}>
@@ -1189,21 +1219,30 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                       
                     </>}
                     {((hud.rightBottomVisible === 'promissory' && race.promissory.length > 0) || reparations === 'promissory') && <CardsPager>
-                      {race.promissory.map((pr, i) => <CardsPagerItem key={i} tag='promissory'>
-                        <button id={pr.id + '_' + pr.owner} style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow' onClick={() => promissoryClick(pr)}>
-                          {reparations === 'promissory' && <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', left: '0', top: '0', position: 'absolute'}}>{t('board.drop')}</b>}
-                          {pr.sold ? <img alt='to other player' style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}} src={'race/icons/' + pr.sold + '.png'} />:''}
-                          <b style={{textDecoration: pr.sold ? 'line-through':''}}>{t('cards.promissory.' + pr.id + '.label').toUpperCase()}</b>
-                          {pr.racial && !pr.owner ? <img alt='racial' style={{width: '2rem', position: 'absolute', bottom: '1rem'}} src={'race/icons/' + race.rid + '.png'} />:''}
-                          {pr.owner ? <img alt='from other player' style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}} src={'race/icons/' + pr.owner + '.png'} />:''}
-                        </button>
-                        {pr.id === 'ALLIANCE' && pr.owner !== undefined && <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='bottom' target={'#' + pr.id + '_' + pr.owner}>
-                          {getAllianceTootlip(pr.owner)}
-                        </UncontrolledTooltip>}
-              
-                        <p>{t('cards.promissory.' + pr.id + '.effect').replaceAll('[color of card]', t('board.colors.' + pr.color))}</p>
+                      {race.promissory.map((pr, i) => {
+                        let className = 'styledButton ';
+                        if(pr.isActive){
+                          className += 'green';
+                        }
+                        else{
+                          className += 'yellow';
+                        }
 
-                      </CardsPagerItem>)}
+                        return <CardsPagerItem key={i} tag='promissory'>
+                          <button disabled={isPromissoryDisabled(pr)} id={pr.id + '_' + pr.owner} style={{width: '100%', marginBottom: '1rem'}} className={className} onClick={() => promissoryClick(pr)}>
+                            {reparations === 'promissory' && <b style={{backgroundColor: 'red', color: 'white', padding: '.25rem', left: '0', top: '0', position: 'absolute'}}>{t('board.drop')}</b>}
+                            {pr.sold ? <img alt='to other player' style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}} src={'race/icons/' + pr.sold + '.png'} />:''}
+                            <b style={{textDecoration: pr.sold ? 'line-through':''}}>{t('cards.promissory.' + pr.id + '.label').toUpperCase()}</b>
+                            {pr.racial && !pr.owner ? <img alt='racial' style={{width: '2rem', position: 'absolute', bottom: '1rem'}} src={'race/icons/' + race.rid + '.png'} />:''}
+                            {pr.owner ? <img alt='from other player' style={{width: '2rem', position: 'absolute', left: '1rem', bottom: '1rem'}} src={'race/icons/' + pr.owner + '.png'} />:''}
+                          </button>
+                          {pr.id === 'ALLIANCE' && pr.owner !== undefined && <UncontrolledTooltip style={{padding: '1rem', textAlign: 'left'}} placement='bottom' target={'#' + pr.id + '_' + pr.owner}>
+                            {getAllianceTootlip(pr.owner)}
+                          </UncontrolledTooltip>}
+                
+                          <p>{t('cards.promissory.' + pr.id + '.effect').replaceAll('[color of card]', t('board.colors.' + pr.color))}</p>
+
+                        </CardsPagerItem>})}
                     </CardsPager>}
 
                     {((hud.rightBottomVisible === 'actions' && race.actionCards.length > 0) || race.actionCards.length > 7) && <CardsPager>

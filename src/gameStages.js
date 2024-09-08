@@ -72,25 +72,64 @@ export const useRelic = ({G, ctx, playerID, ...plugins}, args) => {
   catch(e){console.log(e)}
 }
 
-export const usePromissory = ({G, ctx, playerID, ...plugins}, promissory) => {
-  if(promissory && promissory.id === 'POLITICAL_SECRET'){
-   
-    const owner = returnPromissoryToOwner(G, playerID, promissory, plugins);
-    const ownerID = G.races.findIndex(r => r.rid === owner.rid);
+export const usePromissory = ({G, ctx, playerID, ...plugins}, promissory, args) => {
 
-    owner.voteResults.push({vote: null, count: 0});
-    owner.actions.push('DISABLED');
+  try{
 
-    if(G.vote2){
-      if(G.passedPlayers.indexOf(ownerID) === -1){
-        G.passedPlayers.push(ownerID, ownerID);
+    if(promissory && promissory.id === 'POLITICAL_SECRET'){
+    
+      const owner = returnPromissoryToOwner(G, playerID, promissory, plugins);
+      const ownerID = G.races.findIndex(r => r.rid === owner.rid);
+
+      owner.voteResults.push({vote: null, count: 0});
+      owner.actions.push('DISABLED');
+
+      if(G.vote2){
+        if(G.passedPlayers.indexOf(ownerID) === -1){
+          G.passedPlayers.push(ownerID, ownerID);
+        }
+        else{
+          G.passedPlayers.push(ownerID);
+        }
       }
-      else{
-        G.passedPlayers.push(ownerID);
+
+    }
+    else if(promissory && promissory.id === 'MILITARY_SUPPORT'){
+
+      const owner = returnPromissoryToOwner(G, playerID, promissory, plugins);
+      if(owner.tokens.s < 1) return;
+      owner.tokens.s--;
+
+      const {selectedTile, selectedPlanet} = args;
+
+      if(promissory.owner !== undefined && G.races[playerID].rid !== promissory.owner && selectedTile > -1 && selectedPlanet > -1){
+        const tile = G.tiles[selectedTile];
+        const planet = tile.tdata.planets[selectedPlanet];
+
+        if(String(planet.occupied) === String(playerID)){
+          if(!planet.units) planet.units = {};
+          if(!planet.units.infantry) planet.units.infantry = [];
+          planet.units.infantry.push({}, {});
+        }
+
+      }
+
+    }
+    else if(promissory && promissory.id === 'PROMISE_OF_PROTECTION'){
+      if(!promissory.isActive){
+        const prom = G.races[playerID].promissory.find(p => p.id === promissory.id && p.owner === promissory.owner);
+        prom.isActive = true;
+
+        const owner = G.races.find(r => String(r.rid) === String(promissory.owner));
+        const ownProm = owner.promissory.find(p => p.id === promissory.id && p.sold === G.races[playerID].rid);
+        ownProm.isActive = true;
+
+        G.races[playerID].actions.push('PROMISSORY');
       }
     }
 
   }
+  catch(e){console.log(e)}
 
 }
 
@@ -1150,7 +1189,7 @@ export const ACTS_STAGES = {
                   src.promissory.splice(src.promissory.findIndex(c => c.id === cid && c.owner === dst.rid), 1);
                 }
                 else if(!card.sold){
-                  dst.promissory.push({...card, owner: src.rid});
+                  dst.promissory.push({...card, owner: src.rid, isActive: ['TRADE_AGREEMENT', 'ALLIANCE', 'CEASEFIRE', 'SUPPORT_FOR_THE_THRONE'].includes(card.id) ? true : undefined});
                   card.sold = dst.rid;
                 }
               }
