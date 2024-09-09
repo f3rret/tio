@@ -2,7 +2,7 @@
   "name": "tio",
   "version": "0.1.0",
   "private": true,
-  "ip": "twilight-imperium.online",
+  "ip": "localhost",
   "dependencies": {
     "@pixi/react": "^7.0.3",
     "@testing-library/jest-dom": "^5.16.5",
@@ -12,6 +12,7 @@
     "boardgame.io": "^0.50.2",
     "bootstrap": "^5.2.3",
     "bootstrap-icons": "^1.10.5",
+    "caniuse-lite": "^1.0.30001658",
     "esm": "^3.2.25",
     "honeycomb-grid": "^4.0.0-beta.8",
     "i18n-js": "^4.4.3",

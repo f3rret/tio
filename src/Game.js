@@ -171,7 +171,7 @@ export const TIO = {
           }
 
           if(!G.agendaDeck.length){
-            G.agendaDeck = random.Shuffle(cardData.agenda);
+            G.agendaDeck = random.Shuffle(cardData.agenda.filter(a => !a.mod));
             //G.agendaDeck.push({...cardData.agenda.find(a => a.elect === 'Planet')});
           }
 
