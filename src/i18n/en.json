@@ -133,7 +133,7 @@
             "predict_vote_outcome": "Predict vote outcome",
             "agenda_vote": "Agenda vote",
             "votes": "vote(s)",
-            "use_card_or_pass": "You can now use one of your action card or pass this step",
+            "use_card_or_pass": "Use one of your action card or skip this step",
             "decision": "Decision",
             "end": "End",
             "elect": "Elect",
@@ -309,7 +309,8 @@
             "discarded": "Discarded",
             "ignore_requirement": "Ignore a requirement",
             "take_card": "Take a card",
-            "complete": "complete"
+            "complete": "complete",
+            "skip": "Skip"
         },
         "cards": {
             "strategy": {

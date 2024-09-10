@@ -165,7 +165,13 @@ G.races[playerID].actions.length === agendaNumber &&
                     <p><button className='styledButton green' disabled={!myTurn} onClick={confirmClick}>{t('board.confirm') + ' ' + votes + ' ' + t('board.votes')}</button></p>
                 </>}
             
-                <div style={{display: 'flex', flexDirection: 'column', marginTop: '2rem'}}>
+                {a && a.decision && <h6 style={{color: 'white', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.5)'}}>
+                    {t('board.decision') + ': ' + (['for', 'against'].includes(a.decision) ? t('board.' + a.decision) : a.decision)}</h6>}
+
+                
+            </div>
+            <div style={{color: 'black', width: '50%', padding: '1rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column'}}>
+                <div style={{display: 'flex', flexDirection: 'column', marginBottom: '2rem'}}>
                     {G.races.map((r, i) => {
                         let adj = 0;
                         
@@ -178,43 +184,40 @@ G.races[playerID].actions.length === agendaNumber &&
                             }
                         }
 
-                        return <div key={i} style={{display: 'flex', lineHeight: '2rem'}}>
-                            <div style={{width: '2rem', height: '2rem', color: 'white', textAlign: 'center', background: 'url("icons/influence_bg.png") center no-repeat', backgroundSize: 'contain'}}>
-                                <b>{r.votesMax + adj - (agendaNumber > 1 ? r.voteResults[agendaNumber-2].count: 0)}</b>
-                            </div>
-                            <b>{r.name + ( r.voteResults.length >= agendaNumber ? 
-                                        ' : ' + ( r.voteResults[agendaNumber-1].vote !== null ? r.voteResults[agendaNumber-1].count + ' ' + r.voteResults[agendaNumber-1].vote.toUpperCase() : ' - ')
-                                        : '') }
-                            </b>
+                        return <div key={i} style={{display: 'flex'}}>
+                            <b>{t('races.' + r.rid + '.name')}</b>
+                            <div style={{width: '2rem', height: '2rem', fontWeight: 'bold', lineHeight: '1.75rem', color: 'white', textAlign: 'center', background: 'url("icons/influence_bg.png") center no-repeat', backgroundSize: 'contain'}}>{r.votesMax + adj - (agendaNumber > 1 ? r.voteResults[agendaNumber-2].count: 0)}</div>
+                            
+                            {r.voteResults.length >= agendaNumber && <> 
+                                <Badge pill color='success' style={{fontSize: '1rem', margin: '0 .5rem'}}>{( r.voteResults[agendaNumber-1].vote !== null ? r.voteResults[agendaNumber-1].count + ' ' + r.voteResults[agendaNumber-1].vote.toUpperCase() : ' - ')}</Badge>
+                            </>}
                         </div>
                     })}
                 </div>
-                
-                {!mini && G.races[playerID].actions.length < agendaNumber && <>
-                    <br/><p><i>{t('board.use_card_or_pass')}</i></p>
-                    <button disabled={!myTurn} className='styledButton black' onClick={()=>moves.pass()}>{t('board.nav.pass')}</button>
-                </>}
-
-                {a && a.decision && <h6 style={{color: 'white', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.5)'}}>
-                    {t('board.decision') + ': ' + (['for', 'against'].includes(a.decision) ? t('board.' + a.decision) : a.decision)}</h6>}
-
                 {afterVoteStage && <>
-                    {afterVoteActions && <>
-                        <br/><p><i>{t('board.use_card_or_pass')}</i></p>
-                        <button className='styledButton black' onClick={()=>moves.pass()}>{t('board.nav.pass')}</button>
-                    </>}
                     {!afterVoteActions && <>
                         <b>{t('board.awaiting_other_players')}...</b>
                     </>}
                 </>}
 
-                {!afterVoteStage && !actionCardStage && G.vote2 && !G.vote2.decision && agendaNumber < 2 && 
-                    <button className='styledButton green' onClick={()=>setAgendaNumber(agendaNumber + 1)} style={{marginTop: '2rem'}}>{t('board.next')}</button>}
-                {myTurn && !afterVoteStage && !actionCardStage && G.vote2 && G.vote2.decision && agendaNumber === 2 && !iAmFinished &&
-                    <button className='styledButton black' onClick={()=>moves.endVote()} style={{marginTop: '2rem'}}>{t('board.end')}</button>}
+                
+
+                {!mini && G.races[playerID].actions.length < agendaNumber && <div>
+                        <br/><h6>{t('board.use_card_or_pass')}</h6>
+                        <button disabled={!myTurn} className='styledButton yellow' style={{width: '10rem'}} onClick={()=>moves.pass()}>{t('board.skip')}</button>
+                    </div>}
+                {afterVoteStage && afterVoteActions && <div>
+                    <br/><h6>{t('board.use_card_or_pass')}</h6>
+                    <button className='styledButton yellow' style={{width: '10rem'}} onClick={()=>moves.pass()}>{t('board.skip')}</button>
+                </div>}
             </div>
-            
         </CardBody>
+        <CardFooter style={{border: 'none', display: 'flex', justifyContent: 'flex-end'}}>
+                {!afterVoteStage && !actionCardStage && G.vote2 && !G.vote2.decision && agendaNumber < 2 && 
+                    <button className='styledButton green' onClick={()=>setAgendaNumber(agendaNumber + 1)} style={{width: '10rem'}}>{t('board.next')}</button>}
+                {myTurn && !afterVoteStage && !actionCardStage && G.vote2 && G.vote2.decision && agendaNumber === 2 && !iAmFinished &&
+                    <button className='styledButton green' onClick={()=>moves.endVote()} style={{width: '10rem'}}>{t('board.end')}</button>}
+        </CardFooter>
     </Card>
 
 }
