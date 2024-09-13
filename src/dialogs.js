@@ -73,7 +73,7 @@ export const getStratColor = (strat, op) => {
     return color;
 }
 
-export const AgendaDialog = ({ onConfirm, mini, payment, GP }) => {
+export const AgendaDialog = ({ onConfirm, mini, payment, GP, selectedTile, selectedPlanet }) => {
     const { G, playerID, exhaustedCards, moves, ctx } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
     const [voteRadio, setVoteRadio] = useState('for');
@@ -132,45 +132,57 @@ G.races[playerID].actions.length === agendaNumber &&
             </div>}
  */
 
+    const getTitle = () => {
+        if(!mini && G.races[playerID].actions.length < agendaNumber) return <h3>{t('board.agenda_revealed')}</h3>;
+        if(afterVoteStage && afterVoteActions) return <h3>{t('board.agenda_voted')}</h3>;
+        return <h3>{t('board.agenda_vote')}</h3>;
+    } 
 
-    return <Card className='borderedPanel bigDialog' style={{width: mini ? '25%':'50%'}}>
-        <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}><h3>{t('board.agenda_vote')}</h3></CardTitle>
-        <CardBody style={{display: 'flex'}}>
-            <div style={{width: mini ? '100%':'50%', border: 'solid 1px', color: 'black', position: 'relative', padding: '1rem', marginBottom: '1rem', borderRadius: '5px'}}>
-                <img alt='agenda card' style={{width: '3rem', float: 'right', margin: '.5rem'}} src='icons/agenda_black.png'/>
-                <h6 style={{marginBottom: '2rem'}}>{t('cards.agenda.' + a.id + '.label') + ' ' + t('board.agenda_' + a.type).toUpperCase()}</h6>
-                
-                {a.elect && <b>{t('board.elect') + ': ' + t('board.elect_type.' + a.elect)}</b>}
-                <p style={{margin: 0}}>{a.for && <>{a.against ? <b>{t('board.for') + ': '}</b> :''} {t('cards.agenda.' + a.id + '.for')}</>}</p>
-                <p>{a.against && <><b>{t('board.against') + ': '}</b>{t('cards.agenda.' + a.id + '.against')}</>}</p>
+    const getI18n = (elect, eng) => {
+        if(!elect){
+            if(['for', 'against', 'pass'].includes(eng)) return t('board.' + eng);
+        }
+        else if(elect === 'Player'){
+            const r = G.races.find(rc => rc.name === eng);
+            if(r) return t('races.' + r.rid + '.name');
+        }
+        else if(elect === 'Planet'){
+            return t('planets.' + eng)
+        }
+        return eng;
+    }
 
-                {!imVoted && !mini && G.races[playerID].actions.length === agendaNumber && <>
-                    {!a.elect && a.for && <h6 style={{marginTop: '2rem'}}>
-                        <span onClick={()=>setVoteRadio('for')}><Input type='radio' name='vote' checked={voteRadio === 'for' ? 'checked':''} value='for' onChange={()=>setVoteRadio('for')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>{t('board.for')}</Label></span>
-                        <span onClick={()=>setVoteRadio('against')}><Input type='radio' name='vote' checked={voteRadio === 'against' ? 'checked':''} value='against' onChange={()=>setVoteRadio('against')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>{t('board.against')}</Label></span>
-                        <span onClick={()=>setVoteRadio('pass')}><Input type='radio' name='vote' checked={voteRadio === 'pass' ? 'checked':''} value='pass' onChange={()=>setVoteRadio('pass')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>{t('board.nav.pass')}</Label></span>
-                    </h6>}
-                    {a.elect && <>
-                        <Input type='select' innerRef={voteSelect} onChange={()=>{}} style={{margin: '1rem 0', color: 'black', fontWeight: 'bold'}}>
-                            {a.elect === 'Player' && G.races.map((r,i) => <option key={i} value={r.name}>{r.name}</option>)}
-                            {a.elect === 'Law' && G.laws.map((l,i) => <option key={i} value={l.id}>{l.id}</option>)}
-                            {a.elect === 'Scored Secret Objective' && G.races.map((r,i) => r.secretObjectives.map(s => s.players && s.players.length > 0 && <option key={s} value={s.id}>{s.id}</option>))}
-                            {a.elect === 'Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
-                            {a.elect === 'Industrial Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'industrial' && <option key={p.name} value={p.name}>{p.name}</option>))}
-                            {a.elect === 'Hazardous Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'hazardous' && <option key={p.name} value={p.name}>{p.name}</option>))}
-                            {a.elect === 'Cultural Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'cultural' && <option key={p.name} value={p.name}>{p.name}</option>))}
-                            {a.elect === 'NonHome nonMecatol system' && G.tiles.map((t) => t.tid > 0 && t.tdata.type !== 'green' && t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
-                        </Input>
-                    </>}
-                    <p><button className='styledButton green' disabled={!myTurn} onClick={confirmClick}>{t('board.confirm') + ' ' + votes + ' ' + t('board.votes')}</button></p>
-                </>}
+    const getSelectedPlanet = () => {
+        if(selectedTile > -1 && selectedPlanet > -1){
+            const tile = G.tiles[selectedTile];
+            if(tile && tile.tdata && tile.tdata.planets){
+                const planet = tile.tdata.planets[selectedPlanet];
+                if(planet){
+                    voteSelect.current = {value: planet.name}
+                    return <b>{t('planets.' + planet.name)}</b>
+                }
+            }
+        }
+
+        voteSelect.current = null;
+        return <b>{t('board.click_planet')}</b>
+        //G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))
+    }
+
+    return <Card className='borderedPanel bigDialog' style={{width: mini ? '25%':'45%'}}>
+        <CardTitle style={{borderBottom: '1px solid rgba(0, 0, 0, 0.42)', color: 'black'}}>{getTitle()}</CardTitle>
+        <CardBody style={{display: 'flex', paddingTop: '2rem'}}>
             
-                {a && a.decision && <h6 style={{color: 'white', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(33, 37, 41, 0.5)'}}>
-                    {t('board.decision') + ': ' + (['for', 'against'].includes(a.decision) ? t('board.' + a.decision) : a.decision)}</h6>}
-
-                
+            <div style={{width: mini ? '100%':'40%', position: 'relative', marginBottom: '1rem'}}>
+                <div style={{background: 'url(card4.png) no-repeat 0% 0%/100% 100%', padding: '1.5rem', width: '14rem', height: '20rem', margin: '4rem 0 2rem 4rem', boxShadow: '0px 0px 10px #4dad60', fontSize: '75%', transform: 'scale(1.5)'}}>
+                    <h6 style={{fontSize: '90%'}}>{t('cards.agenda.' + a.id + '.label').toUpperCase()}</h6>
+                   
+                    <p style={{margin: 0}}>{a.for && <>{a.against ? <b>{t('board.for') + ': '}</b> :''} {t('cards.agenda.' + a.id + '.for')}</>}</p>
+                    <p>{a.against && <><b>{t('board.against') + ': '}</b>{t('cards.agenda.' + a.id + '.against')}</>}</p>
+                </div>
             </div>
-            <div style={{color: 'black', width: '50%', padding: '1rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column'}}>
+
+            <div style={{color: 'black', width: '60%', padding: '1rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
                 <div style={{display: 'flex', flexDirection: 'column', marginBottom: '2rem'}}>
                     {G.races.map((r, i) => {
                         let adj = 0;
@@ -185,11 +197,16 @@ G.races[playerID].actions.length === agendaNumber &&
                         }
 
                         return <div key={i} style={{display: 'flex'}}>
-                            <b>{t('races.' + r.rid + '.name')}</b>
-                            <div style={{width: '2rem', height: '2rem', fontWeight: 'bold', lineHeight: '1.75rem', color: 'white', textAlign: 'center', background: 'url("icons/influence_bg.png") center no-repeat', backgroundSize: 'contain'}}>{r.votesMax + adj - (agendaNumber > 1 ? r.voteResults[agendaNumber-2].count: 0)}</div>
                             
+                            <div style={{width: '2rem', height: '2rem', fontWeight: 'bold', lineHeight: '1.75rem', color: 'white', textAlign: 'center', background: 'url("icons/influence_bg.png") center no-repeat', backgroundSize: 'contain', marginTop: '-.25rem'}}>{r.votesMax + adj - (agendaNumber > 1 ? r.voteResults[agendaNumber-2].count: 0)}</div>
+                            
+                            <b>{t('races.' + r.rid + '.name')}</b>
+
                             {r.voteResults.length >= agendaNumber && <> 
-                                <Badge pill color='success' style={{fontSize: '1rem', margin: '0 .5rem'}}>{( r.voteResults[agendaNumber-1].vote !== null ? r.voteResults[agendaNumber-1].count + ' ' + r.voteResults[agendaNumber-1].vote.toUpperCase() : ' - ')}</Badge>
+                                <Badge pill color='success' style={{fontSize: '1rem', margin: '0 .5rem'}}>{( r.voteResults[agendaNumber-1].vote !== null ? r.voteResults[agendaNumber-1].count : ' - ')}</Badge>
+                                {r.voteResults[agendaNumber-1].vote !== null ? 
+                                    getI18n(a.elect, r.voteResults[agendaNumber-1].vote)
+                                    : ' - '}
                             </>}
                         </div>
                     })}
@@ -200,23 +217,49 @@ G.races[playerID].actions.length === agendaNumber &&
                     </>}
                 </>}
 
-                
-
-                {!mini && G.races[playerID].actions.length < agendaNumber && <div>
-                        <br/><h6>{t('board.use_card_or_pass')}</h6>
-                        <button disabled={!myTurn} className='styledButton yellow' style={{width: '10rem'}} onClick={()=>moves.pass()}>{t('board.skip')}</button>
-                    </div>}
-                {afterVoteStage && afterVoteActions && <div>
-                    <br/><h6>{t('board.use_card_or_pass')}</h6>
-                    <button className='styledButton yellow' style={{width: '10rem'}} onClick={()=>moves.pass()}>{t('board.skip')}</button>
+                {!imVoted && !mini && G.races[playerID].actions.length === agendaNumber && <div style={{backgroundColor: 'rgba(0,0,0,.85)', color: 'antiquewhite', padding: '1rem'}}>
+                    <h4>{t('board.your_decision') + ':'}</h4>
+                    {!a.elect && a.for && <h6 style={{marginTop: '2rem'}}>
+                        <span onClick={()=>setVoteRadio('for')}><Input type='radio' name='vote' checked={voteRadio === 'for' ? 'checked':''} value='for' onChange={()=>setVoteRadio('for')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>{t('board.for')}</Label></span>
+                        <span onClick={()=>setVoteRadio('against')}><Input type='radio' name='vote' checked={voteRadio === 'against' ? 'checked':''} value='against' onChange={()=>setVoteRadio('against')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>{t('board.against')}</Label></span>
+                        <span onClick={()=>setVoteRadio('pass')}><Input type='radio' name='vote' checked={voteRadio === 'pass' ? 'checked':''} value='pass' onChange={()=>setVoteRadio('pass')} style={{margin: '0 .5rem'}}/><Label for='vote' style={{margin: '0 .5rem'}}>{t('board.nav.pass')}</Label></span>
+                    </h6>}
+                    {a.elect && <>
+                        {a.elect === 'Planet' && getSelectedPlanet()}
+                        {a.elect !== 'Planet' && <Input type='select' innerRef={voteSelect} onChange={()=>{}} style={{margin: '1rem 0', fontWeight: 'bold', backgroundColor: 'unset'}}>
+                            {a.elect === 'Player' && G.races.map((r,i) => <option key={i} value={r.name}>{t('races.' + r.rid + '.name')}</option>)}
+                            {a.elect === 'Law' && G.laws.map((l,i) => <option key={i} value={l.id}>{l.id}</option>)}
+                            {a.elect === 'Scored Secret Objective' && G.races.map((r,i) => r.secretObjectives.map(s => s.players && s.players.length > 0 && <option key={s} value={s.id}>{s.id}</option>))}
+                            
+                            {a.elect === 'Industrial Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'industrial' && <option key={p.name} value={p.name}>{p.name}</option>))}
+                            {a.elect === 'Hazardous Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'hazardous' && <option key={p.name} value={p.name}>{p.name}</option>))}
+                            {a.elect === 'Cultural Planet' && G.tiles.map((t,i) => t.tdata.planets && t.tdata.planets.map(p => p.trait === 'cultural' && <option key={p.name} value={p.name}>{p.name}</option>))}
+                            {a.elect === 'NonHome nonMecatol system' && G.tiles.map((t) => t.tid > 0 && t.tdata.type !== 'green' && t.tdata.planets && t.tdata.planets.map(p => <option key={p.name} value={p.name}>{p.name}</option>))}
+                        </Input>}
+                    </>}
+                    
                 </div>}
+            
+                {a && a.decision && <h6 style={{color: 'white', margin: '1rem 0', padding: '1rem', backgroundColor: 'rgba(0,0,0,.85)'}}>
+                    {t('board.decision') + ': ' + (['for', 'against'].includes(a.decision) ? t('board.' + a.decision) : getI18n(a.elect, a.decision))}</h6>}
+                
+                {((!mini && G.races[playerID].actions.length < agendaNumber) || (afterVoteStage && afterVoteActions)) && <p>{t('board.use_card_or_pass')}</p>}
+                
             </div>
+
         </CardBody>
-        <CardFooter style={{border: 'none', display: 'flex', justifyContent: 'flex-end'}}>
+        <CardFooter style={{border: 'none', display: 'flex', justifyContent: 'flex-end', paddingTop: '2rem'}}>
                 {!afterVoteStage && !actionCardStage && G.vote2 && !G.vote2.decision && agendaNumber < 2 && 
                     <button className='styledButton green' onClick={()=>setAgendaNumber(agendaNumber + 1)} style={{width: '10rem'}}>{t('board.next')}</button>}
                 {myTurn && !afterVoteStage && !actionCardStage && G.vote2 && G.vote2.decision && agendaNumber === 2 && !iAmFinished &&
                     <button className='styledButton green' onClick={()=>moves.endVote()} style={{width: '10rem'}}>{t('board.end')}</button>}
+                {!mini && G.races[playerID].actions.length < agendaNumber && <div>
+                        <button disabled={!myTurn} className='styledButton yellow' style={{width: '10rem'}} onClick={()=>moves.pass()}>{t('board.skip')}</button>
+                    </div>}
+                {afterVoteStage && afterVoteActions && <div>
+                    <button className='styledButton yellow' style={{width: '10rem'}} onClick={()=>moves.pass()}>{t('board.skip')}</button>
+                </div>}
+                {!imVoted && !mini && G.races[playerID].actions.length === agendaNumber && <button className='styledButton green' disabled={!myTurn || (a.elect && !voteSelect.current)} onClick={confirmClick}>{t('board.confirm') + ' ' + votes + ' ' + t('board.votes')}</button>}
         </CardFooter>
     </Card>
 

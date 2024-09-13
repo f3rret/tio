@@ -396,9 +396,20 @@ li.list-group-item{
     padding: 0 .5rem;
     margin-left: .5rem;
 }
+.element-glow{
+    animation: element-glow .5s linear infinite alternate;
+}
 
 @import "../../node_modules/bootstrap/scss/bootstrap";
 
+@keyframes element-glow{
+    from{
+        box-shadow: 1px 1px 15px 1px rgba(250,235,215,1);
+    }
+    to{
+        box-shadow: 1px 1px 10px 1px rgba(250,235,215,0);
+    }
+}
 
 //new animation
 

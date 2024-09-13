@@ -310,7 +310,10 @@
             "ignore_requirement": "Ignore a requirement",
             "take_card": "Take a card",
             "complete": "complete",
-            "skip": "Skip"
+            "skip": "Skip",
+            "agenda_revealed": "Agenda card revealed",
+            "agenda_voted": "Outcome resolved",
+            "your_decision": "Your decision"
         },
         "cards": {
             "strategy": {

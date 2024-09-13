@@ -229,6 +229,13 @@ export const secretObjectiveConfirm = ({G, playerID, events}, oid, y) => {
 
 }
 
+export const dropSecretObjective = ({G, playerID}, oid) => { //todo: return obj to deck and shuffle
+  if(G.races[playerID].secretObjectives){
+    G.races[playerID].secretObjectives = G.races[playerID].secretObjectives.filter(o => o.id !== oid);
+    delete G.races[playerID].mustDropSecObj;
+  }
+}
+
 export const producing = ({G, playerID, ctx, events}, pname, deploy, payment, exhaustedCards) => {
 
   if(deploy){

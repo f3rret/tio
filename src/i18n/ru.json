@@ -310,7 +310,10 @@
             "ignore_requirement": "Игнорировать требование",
             "take_card": "Взять карту",
             "complete": "выполнено",
-            "skip": "Пропустить"
+            "skip": "Пропустить",
+            "agenda_revealed": "Раскрыта карта политики",
+            "agenda_voted": "Голосование завершено",
+            "your_decision": "Ваше решение"
         },
         "cards": {
             "strategy": {

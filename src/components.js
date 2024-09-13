@@ -276,11 +276,15 @@ export const MyNavbar = ({leftPanel, setLeftPanel, undo, activeTile, isMyTurn, n
         }
       //eslint-disable-next-line
       }, [leftPanel]);
+    
+    const glow = useMemo(() => ctx.phase === 'agenda' && leftPanel !== 'planets' && ctx.activePlayers === null && G.races[playerID].actions && G.races[playerID].actions.length === 1 ? ' element-glow':'', 
+    //eslint-disable-next-line
+    [ctx, G, leftPanel]);
 
     return <div style={{ position: 'fixed', height: 0, width: '100%', zIndex: '2', display: 'flex', justifyContent: 'space-between', padding: '0'}}>
       <ButtonGroup className='borderedPanel' style={{minHeight: '3rem', margin: '2.5rem 0 0 2.5rem', fontFamily:'Handel Gothic'}}>
         <button className={'styledButton ' + (leftPanel === 'objectives' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('objectives')}>{t("board.nav.objectives")}</button>
-        <button className={'styledButton ' + (leftPanel === 'planets' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('planets')}>{t("board.nav.planets")}</button>
+        <button className={'styledButton ' + (leftPanel === 'planets' ? 'white':'black') + glow} style={{width: '8rem'}} onClick={()=>leftPanelClick('planets')}>{t("board.nav.planets")}</button>
         <button className={'styledButton ' + (leftPanel === 'units' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('units')}>{t("board.nav.units")}</button>
         <button className={'styledButton ' + (leftPanel === 'techno' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('techno')}>{t("board.nav.technologies")}</button>
         <button className={'styledButton ' + (leftPanel === 'trade' ? 'white':'black')} style={{width: '8rem'}} onClick={()=>leftPanelClick('trade')}>{t("board.nav.trade")}</button>

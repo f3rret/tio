@@ -208,7 +208,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [220, 220],
+                    "hitCenter": [240, 220],
                     "hitRadius": [70]
                 }
             ]
@@ -289,7 +289,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [210, 220],
+                    "hitCenter": [240, 220],
                     "hitRadius": [70]
                 }
             ]

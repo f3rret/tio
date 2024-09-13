@@ -2,7 +2,7 @@
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
 import cardData from './cardData.json';
 import { getHexGrid, neighbors } from './Grid';
-import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer, useRelic, usePromissory } from './gameStages';
+import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer, useRelic, usePromissory, dropSecretObjective } from './gameStages';
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
@@ -171,7 +171,7 @@ export const TIO = {
           }
 
           if(!G.agendaDeck.length){
-            G.agendaDeck = random.Shuffle(cardData.agenda.filter(a => !a.mod));
+            G.agendaDeck = [...cardData.agenda.filter(a => a.ready)]; //random.Shuffle(cardData.agenda.filter(a => a.ready));
             //G.agendaDeck.push({...cardData.agenda.find(a => a.elect === 'Planet')});
           }
 
@@ -358,12 +358,7 @@ export const TIO = {
           secretObjectiveConfirm,
           useRelic,
           usePromissory,
-          dropSecretObjective: ({G, playerID}, oid) => { //todo: return obj to deck and shuffle
-            if(G.races[playerID].secretObjectives){
-              G.races[playerID].secretObjectives = G.races[playerID].secretObjectives.filter(o => o.id !== oid);
-              delete G.races[playerID].mustDropSecObj;
-            }
-          },
+          dropSecretObjective,
           endTurn: ({G, ctx, events}) => {
             if(!G.currentTacticalActionCard){
               if(ctx.activePlayers && Object.keys(ctx.activePlayers)) events.setActivePlayers({}); //to end tacticalActionCard stage
@@ -1258,7 +1253,7 @@ export const TIO = {
         onEnd: ({ G, random }) => {
           try{
             if(G.pubObjectives && G.pubObjectives.length === 5){
-              G.pubObjDeck = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 2 ));
+              G.pubObjDeck.push(...random.Shuffle(cardData.objectives.public.filter( o => o.vp === 2 && !G.pubObjDeck.find(p => p.id === o.id) ))); //vp2 may be added by different way
             }
             G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
             G.races.forEach( r => {
@@ -1376,7 +1371,8 @@ export const TIO = {
                   events.endStage();
                   if(ctx.activePlayers && Object.keys(ctx.activePlayers).length === 1) events.endTurn();
                 },
-                dropActionCard: dropACard
+                dropActionCard: dropACard,
+                dropSecretObjective
               }
             }
           }
@@ -1386,79 +1382,139 @@ export const TIO = {
           useRelic,
           usePromissory,
           secretObjectiveConfirm,
-          vote: ({G, playerID, events, ...plugins}, result) => {
-            let votes = 0;
-            const exhaustPlanet = (exhausted, revert) => {
-              if(exhausted && exhausted.length){
-                G.tiles.forEach(tile => {
-                  const planets = tile.tdata.planets;
+          dropSecretObjective,
+          vote: ({G, playerID, random, events, ...plugins}, result) => {
+            try{
+              let votes = 0;
+              const exhaustPlanet = (exhausted, revert) => {
+                if(exhausted && exhausted.length){
+                  G.tiles.forEach(tile => {
+                    const planets = tile.tdata.planets;
 
-                  if(planets && planets.length){
-                    planets.forEach( p => {
-                      if(p.occupied == playerID){
-                        if(exhausted.indexOf(p.name) > -1){
-                          p.exhausted = !revert;
-                          votes += p.influence;
+                    if(planets && planets.length){
+                      planets.forEach( p => {
+                        if(p.occupied == playerID){
+                          if(exhausted.indexOf(p.name) > -1){
+                            p.exhausted = !revert;
+                            votes += p.influence;
+                          }
                         }
-                      }
-                    });
-                  }
-                });
+                      });
+                    }
+                  });
+                }
+              };
+
+              if(result.exhaustedCards && result.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE')>-1){
+                votes += 3;
+                G.races[playerID].exhaustedCards.push('PREDICTIVE_INTELLIGENCE');
               }
-            };
 
-            if(result.exhaustedCards && result.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE')>-1){
-              votes += 3;
-              G.races[playerID].exhaustedCards.push('PREDICTIVE_INTELLIGENCE');
-            }
-
-            exhaustPlanet(result.payment.influence);
-            
-            let vr = {vote: result.vote, count: votes};
-            if(result.exhaustedCards && result.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE')>-1){
-              vr.withTech = 'PREDICTIVE_INTELLIGENCE';
-            }
-            G.races[playerID].voteResults.push(vr);
-
-            const agendaNumber = G.vote2 ? 2:1;
-
-            if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
-              votingProcessDone({G, agendaNumber, playerID, events});
+              exhaustPlanet(result.payment.influence);
               
-              if(G['vote' + agendaNumber].type === 'LAW' && G['vote' + agendaNumber].decision && G['vote' + agendaNumber].decision.toUpperCase() !== 'AGAINST'){
-                G.laws.push(G['vote' + agendaNumber]);
+              let vr = {vote: result.vote, count: votes};
+              if(result.exhaustedCards && result.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE')>-1){
+                vr.withTech = 'PREDICTIVE_INTELLIGENCE';
               }
+              G.races[playerID].voteResults.push(vr);
 
-              if(G.laws && G.laws.length > 2){
-                G.races.forEach((r, i) => {
-                  checkSecretObjective(G, i, 'Dictate Policy');
-                });
-              }
+              const agendaNumber = G.vote2 ? 2:1;
 
-              if(G['vote' + agendaNumber].elect === 'Player'){
-                const electedRace = G.races.findIndex(r => r.name === G['vote' + agendaNumber].decision);
-                if(electedRace > -1) checkSecretObjective(G, electedRace, 'Drive the Debate');
-              }
+              if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
+                votingProcessDone({G, agendaNumber, playerID, events});
+                
+                if(G['vote' + agendaNumber].type === 'LAW' && G['vote' + agendaNumber].decision && G['vote' + agendaNumber].decision.toUpperCase() !== 'AGAINST'){
+                  G.laws.push(G['vote' + agendaNumber]);
+                }
+                
+                if(G['vote' + agendaNumber].id === 'Archived Secret'){
+                  const elected = G.races.find(r => r.name === G['vote' + agendaNumber].decision);
+                  if(elected){
+                    elected.secretObjectives.push(...G.secretObjDeck.splice(-1));
+                  }
+                }
+                else if(G['vote' + agendaNumber].id === 'Compensated Disarmament'){
+                  const elected = getPlanetByName(G.tiles, G['vote' + agendaNumber].decision);
+                  if(elected && elected.occupied !== undefined){
+                    let count = 0;
+                    if(elected.units){
+                      Object.keys(elected.units).forEach(k => {
+                        if(elected.units[k]) count += elected.units[k].length;
+                      });
+                    }
 
-              if(G['vote' + agendaNumber].elect && G['vote' + agendaNumber].elect.indexOf('Planet') > -1){
-                const planet = getPlanetByName(G.tiles, G['vote' + agendaNumber].decision);
-                if(planet && planet.occupied !== undefined){
-                  checkSecretObjective(G, planet.occupied, 'Drive the Debate');
+                    if(count){
+                      const r = G.races[elected.occupied];
+                      if(r){
+                        r.tg += count;
+                      }
+                    }
+
+                    elected.units = undefined;
+                  }
+                }
+                else if(G['vote' + agendaNumber].id === 'Economic Equality'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+                    G.races.forEach(r => {
+                      r.tg = 5;
+                    })
+                  }
+                  else{
+                    G.races.forEach(r => {
+                      r.tg = 0;
+                    })
+                  }
+                }
+                else if(G['vote' + agendaNumber].id === 'Incentive Program'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+                    const oi = G.pubObjDeck.findIndex(o => o.vp === 1);
+                    const obj = G.pubObjDeck.splice(oi, 1)[0];
+                    obj.players = [];
+                    G.pubObjectives.push(obj);
+                  }
+                  else{
+                    const oi = G.pubObjDeck.findIndex(o => o.vp === 2);
+                    if(oi === -1){
+                      const vp2 = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 2));
+                      G.pubObjectives.push({...vp2.pop(), players: []});
+                    }
+                  }
+                }
+                
+
+                if(G.laws && G.laws.length > 2){
+                  G.races.forEach((r, i) => {
+                    checkSecretObjective(G, i, 'Dictate Policy');
+                  });
+                }
+
+                if(G['vote' + agendaNumber].elect === 'Player'){
+                  const electedRace = G.races.findIndex(r => r.name === G['vote' + agendaNumber].decision);
+                  if(electedRace > -1) checkSecretObjective(G, electedRace, 'Drive the Debate');
+                }
+
+                if(G['vote' + agendaNumber].elect && G['vote' + agendaNumber].elect.indexOf('Planet') > -1){
+                  const planet = getPlanetByName(G.tiles, G['vote' + agendaNumber].decision);
+                  if(planet && planet.occupied !== undefined){
+                    checkSecretObjective(G, planet.occupied, 'Drive the Debate');
+                  }
                 }
               }
-            }
-            else if(G.vote2){
-              if(G.passedPlayers.indexOf(playerID) === -1){
-                G.passedPlayers.push(playerID);
-              }
+              else if(G.vote2){
+                if(G.passedPlayers.indexOf(playerID) === -1){
+                  G.passedPlayers.push(playerID);
+                }
 
-              events.endTurn();
+                events.endTurn();
+              }
+              else{
+                events.endTurn();
+              }
+              
+              plugins.effects.tg();
+
             }
-            else{
-              events.endTurn();
-            }
-            
-            plugins.effects.tg();
+            catch(e){console.log(e)}
           },
           endVote: ({G, playerID, events}) => {
             G.passedPlayers.push(playerID);
