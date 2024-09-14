@@ -1,7 +1,7 @@
 import { useApp, Stage, Text, Container, Sprite } from '@pixi/react';
 import { PixiViewport } from './viewport';
 import { memo, useContext, useCallback, useMemo } from 'react';
-import { LocalizationContext, StateContext, haveTechnology, wormholesAreAdjacent } from './utils';
+import { LocalizationContext, StateContext, haveTechnology, wormholesAreAdjacent, getMaxActs } from './utils';
 import { SelectedHex, ActiveHex, LandingGreen, LandingRed, MoveDialog, MoveStep, SectorUnderAttack, PlanetUnderAttack, SelectedPlanet, SimplePixiButton, AnimatedLabel } from './animated';
 import tileData from './tileData.json';
 import { lineTo, pathFromCoordinates } from './Grid';
@@ -12,7 +12,8 @@ export const PixiStage = ({stagew, stageh, dispatch, hud, GP}) => {
     const { t } = useContext(LocalizationContext);
     const race = G.races[playerID];
     const isMyTurn = (ctx.currentPlayer === playerID);
-    const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);
+    //eslint-disable-next-line
+    const maxActs =  useMemo(() => getMaxActs(G, playerID), [race]);
     const activeTile = useMemo(()=> G.tiles.find(t => t.active === true), [G.tiles]);
 
     const getMovePath = useMemo(() => {
@@ -476,7 +477,7 @@ const TilesMap2 = ({G, GP, playerID, moves, ctx, t, isMyTurn, stagew, stageh, hu
                     
                     
                     
-                        {ctx.phase === 'acts' && isMyTurn && hud.selectedTile === index && race.actions.length < maxActs && !activeTile && 
+                        {ctx.phase === 'acts' && isMyTurn && hud.selectedTile === index && race.actions.length < maxActs && 
                         element.tdata.type !== 'hyperlane' && !(element.tdata.tokens && element.tdata.tokens.indexOf(race.rid) > -1) && 
                             <Container x={30} y={element.w/2 + 60} alpha={.8} anchor={0.5} cursor='pointer' interactive={true} pointerdown={()=>moves.activateTile(index)} 
                                 mouseover={(e) => e.target.alpha = 1} mouseout={(e) => e.target.alpha = .8} >

@@ -360,7 +360,7 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [230, 65],
+                    "hitCenter": [230, 80],
                     "hitRadius": [70]
                 },
                 {
@@ -370,8 +370,8 @@
                     "trait": null,
                     "specialty": null,
                     "legendary": false,
-                    "hitCenter": [95, 150],
-                    "hitRadius": [70]
+                    "hitCenter": [85, 150],
+                    "hitRadius": [65]
                 },
                 {
                     "name": "Kamdorn",

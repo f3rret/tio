@@ -7,7 +7,7 @@ import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows
 ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover,
 SelectDiscardedActions} from './dialogs';
 import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
-import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT, getMyNeighbors, checkIfMyNearbyUnit, getRaceVP } from './utils';
+import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT, getMyNeighbors, checkIfMyNearbyUnit, getRaceVP, getMaxActs } from './utils';
 
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion, ChooseAndDestroy } from './combat';
@@ -105,11 +105,23 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   const UNITS_stringify = useMemo(() => JSON.stringify(UNITS), [UNITS])
 
   const R_UNITS = useMemo(() => {
-    if(race){
-      const all_units = race.technologies.filter(t => t.type === 'unit' && (!t.upgrade || (t.id === 'WARSUN' && race.knownTechs.indexOf('WARSUN')>-1)));
-      all_units.forEach(u => all_units[u.id] = u);
-      return all_units;
+    try{
+      if(race){
+        const all_units = [...race.technologies.filter(t => t.type === 'unit' && (!t.upgrade || (t.id === 'WARSUN' && race.knownTechs.indexOf('WARSUN')>-1)))];
+        
+        let reg_cons = false;
+        if(G.laws.find(l => l.id === 'Regulated Conscription')) reg_cons = true;
+
+        all_units.forEach(u => {
+          if(reg_cons && (u.id === 'INFANTRY' || u.id === 'FIGHTER')) u = {...u, cost: 1}; 
+          all_units[u.id] = u
+        });
+
+        return all_units;
+      }
     }
+    catch(e){console.log(e)}
+  //eslint-disable-next-line
   }, [race]);
 
   const R_UPGRADES = useMemo(() => {
@@ -270,6 +282,12 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     }
   }
 
+  const agendaClick = (agendaId) => {
+    if(agendaId === 'Minister of War'){
+      moves.useAgenda({id: agendaId, selectedTile: hud.selectedTile})
+    }
+  }
+
   const mustAction = useMemo(() => {
     if(race && race.actionCards && isMyTurn) return race.actionCards.length > 7
   }, [race, isMyTurn]);
@@ -403,6 +421,25 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
   //eslint-disable-next-line
   }, [G_races_stringify]);
 
+  const isAgendaDisabled = (agenda) => {
+
+    if(agenda && ctx.phase === 'acts' && !ctx.activePlayers){
+      if(agenda.id === 'Minister of War' && agenda.decision === race.name && !race.exhaustedCards.includes('Minister of War')){
+        if(race.actions.length > 0 && hud.selectedTile > -1){
+          const tile = G.tiles[hud.selectedTile];
+          if(tile && tile.tdata && tile.tdata.tokens){
+            if(tile.tdata.tokens.includes(race.rid)){
+              return false;
+            }
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
+
   const isRelicDisabled = (relic) => {
     try{
       if(relic && relic.id === 'Maw of Worlds'){
@@ -464,7 +501,8 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     catch(e){console.log(e)}
   }
 
-  const maxActs =  useMemo(() => {if(race){return haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1}}, [race]);
+  //eslint-disable-next-line
+  const maxActs =  useMemo(() => getMaxActs(G, playerID), [race]);
   
   const isPromissoryDisabled = (pr) => {
 
@@ -776,6 +814,20 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
             </>
   }
 
+  const getI18n = (elect, eng) => {
+    if(!elect){
+        if(['for', 'against', 'pass'].includes(eng)) return t('board.' + eng);
+    }
+    else if(elect === 'Player'){
+        const r = G.races.find(rc => rc.name === eng);
+        if(r) return t('races.' + r.rid + '.name');
+    }
+    else if(elect === 'Planet'){
+        return t('planets.' + eng)
+    }
+    return eng;
+  }
+
 
 
   const stateContext = useMemo(() => ({G, ctx, playerID, /*matchID, credentials,*/ moves, selectedTech: hud.selectedTech, exhaustedCards: hud.exhaustedCards, exhaustTechCard, prevStages: prevStages.current, PLANETS, UNITS}), 
@@ -963,7 +1015,10 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     if(ctx.phase === 'stats'){
       dispatch({type: 'left_panel', payload: 'objectives'});
     }
-    else if(ctx.phase === 'strat' || ctx.phase === 'agenda'){
+    else if(ctx.phase === 'agenda'){
+      dispatch({type: 'left_panel', payload: 'planets'});
+    }
+    else if(ctx.phase === 'strat'){
       dispatch({type: 'left_panel', payload: ''});
     }
   }, [dispatch, ctx.phase])
@@ -1309,9 +1364,10 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
                     {hud.rightBottomVisible === 'agenda' && G.laws.length > 0 && <CardsPager>
                       {G.laws.map((pr, i) => <CardsPagerItem key={i} tag='agenda'>
-                        <button style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
+                        <button disabled={isAgendaDisabled(pr)} onClick={() => agendaClick(pr.id)} style={{width: '100%', marginBottom: '1rem'}} className='styledButton yellow'>
                           <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('cards.agenda.' + pr.id + '.label').toUpperCase()}</b>
                         </button>
+                        {pr.elect === 'Player' && <p><b>{getI18n(pr.elect, pr.decision)}</b></p>}
 
                         {t('cards.agenda.' + pr.id + '.for')}
                       </CardsPagerItem>)}

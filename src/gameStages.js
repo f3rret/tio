@@ -3,10 +3,34 @@ import { INVALID_MOVE } from 'boardgame.io/core';
 import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveTechnology, getPlanetByName, 
   completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits, 
   spliceCombatAC, checkIonStorm, checkSecretObjective, checkCommanderUnlock, useCommanderAbility, 
-  adjustTechnologies, explorePlanetByName,
+  adjustTechnologies, explorePlanetByName, occupyPlanet, getMaxActs, 
   enemyHaveCombatAC,
   getPlayerPlanets,
   replenishCommodity, returnPromissoryToOwner} from './utils';
+
+export const useAgenda = ({G, ctx, playerID}, args) => {
+  try{
+    const {id, selectedTile} = args;
+
+    if(id === 'Minister of War'){
+      if(selectedTile > -1){
+        const tile = G.tiles[selectedTile];
+
+        if(tile && tile.tdata && tile.tdata.tokens){
+          const idx = tile.tdata.tokens.indexOf(G.races[playerID].rid);
+          if(idx > -1) tile.tdata.tokens.splice(idx, 1);
+
+          if(tile.active){ tile.active = undefined }
+        }
+
+        G.races[playerID].exhaustedCards.push(id);
+      }
+    }
+  }
+  catch(e){
+    console.log(e)
+  }
+}
 
 export const useRelic = ({G, ctx, playerID, ...plugins}, args) => {
 
@@ -249,8 +273,8 @@ export const producing = ({G, playerID, ctx, events}, pname, deploy, payment, ex
     }
 
     if(exhaustedCards && exhaustedCards.indexOf('SLING_RELAY') > -1){
-      const maxActs = G.races[playerID].knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
-      if(G.races[playerID].actions.length > maxActs){
+
+      if(G.races[playerID].actions.length > getMaxActs(G, playerID) - 1){
         console.log('too many actions');
         return INVALID_MOVE;
       }
@@ -2762,7 +2786,7 @@ export const ACTS_STAGES = {
       actionCardDone: ACTION_CARD_STAGE.moves.done,
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
       secretObjectiveConfirm,
-      endBattle: ({G, events, playerID, ctx}) => {
+      endBattle: ({G, events, playerID, ctx, ...plugins}) => {
         try{
           const activeTile = G.tiles.find(t => t.active === true);
           const activePlanet = activeTile.tdata.planets.find(p => p.invasion);
@@ -2812,9 +2836,7 @@ export const ACTS_STAGES = {
                   }
                 }
 
-                activePlanet.occupied = playerID;
-                activePlanet.exhausted = true;
-                checkCommanderUnlock(G, playerID);
+                occupyPlanet(G, playerID, activePlanet, false, plugins);
 
                 if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
                   if(!activePlanet.units['infantry']) activePlanet.units['infantry']=[];

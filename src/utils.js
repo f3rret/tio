@@ -15,7 +15,7 @@ const getTrueColors = (simpleColors) => {
 }
 
 export const getInitRaces = (hexGrid, numPlayers, simpleColors) => {
-  const all_units = techData.filter((t) => t.type === 'unit');
+  const all_units = JSON.parse(JSON.stringify(techData.filter((t) => t.type === 'unit')));
   let races = hexGrid.map( h => ({ rid: h.tileId }))
     .filter( i => tileData.green.indexOf(i.rid) > -1 );
   
@@ -1836,6 +1836,12 @@ export const replenishCommodity = (G, playerID, count, plugins) => {
     }
     else{
       G.races[playerID].commodity += count;
+
+      const law = G.laws.find(l => l.id === 'Minister of Commerce');
+      if(law && law.decision === G.races[playerID].name){
+        const neigh = getMyNeighbors(G, playerID);
+        G.races[playerID].tg += neigh.length;
+      }
     }
   }
   catch(e){
@@ -1877,5 +1883,46 @@ export const haveRaceCommanderAbility = (G, race, rid) => {
       const ally = G.races.find(r => r.rid === rid);
       return ally && ally.commanderIsUnlocked;
     }
+  }
+}
+
+export const occupyPlanet = (G, playerID, planet, explore, plugins) => {
+  
+  try{
+    planet.exhausted = true;
+    planet.occupied = playerID;
+    checkCommanderUnlock(G, playerID);
+
+    if(explore && planet.trait){
+      explorePlanetByName(G, playerID, planet.name)
+    }
+
+    const law = G.laws.find(l => l.id === 'Minister of Exploration');
+    if(law && law.decision === G.races[playerID].name){
+      G.races[playerID].tg++;
+    }
+
+    if(plugins) plugins.effects.tg();
+  }
+  catch(e){
+    console.log(e)
+  }
+
+}
+
+export const getMaxActs = (G, playerID) => {
+  try{
+    let result = 0;
+    const race = G.races[playerID];
+
+    if(race){
+      result = haveTechnology(race, 'FLEET_LOGISTICS') ? 2:1;
+      if(race.exhaustedCards.includes('Minister of War')) result++;
+    }
+
+    return result;
+  }
+  catch(e){
+    console.log(e)
   }
 }

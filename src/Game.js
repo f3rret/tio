@@ -2,14 +2,15 @@
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
 import cardData from './cardData.json';
 import { getHexGrid, neighbors } from './Grid';
-import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer, useRelic, usePromissory, dropSecretObjective } from './gameStages';
+import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer, useRelic, usePromissory, useAgenda, dropSecretObjective } from './gameStages';
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
- getInitRaces, getInitTiles, checkCommanderUnlock, doFlagshipAbility, replenishCommodity, 
- returnPromissory,
+ getInitRaces, getInitTiles, doFlagshipAbility, replenishCommodity, 
+ returnPromissory, getMaxActs, 
  getRaceVP,
- returnPromissoryToOwner} from './utils';
+ returnPromissoryToOwner,
+ occupyPlanet} from './utils';
 import { EffectsPlugin } from 'bgio-effects/plugin';
 import settings from '../package.json'
 
@@ -123,86 +124,92 @@ export const TIO = {
           }
         },
         onBegin: ({ G, ctx, random, events }) => {
-         
-          if(!G.pubObjDeck || !G.pubObjDeck.length){
-            G.pubObjDeck = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
-            G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
-            G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
-            //G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Adapt New Strategies'), players: []});
-          }
+         try{
+            if(!G.pubObjDeck || !G.pubObjDeck.length){
+              G.pubObjDeck = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 1 ));
+              G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
+              G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
+              //G.pubObjectives.push({...cardData.objectives.public.find(o => o.id === 'Adapt New Strategies'), players: []});
+            }
 
-          if(!G.actionsDeck.length){
-            const deck = [];
-            cardData.actions.filter(a => !a.mod).forEach(a => {
-              if(a.count){
-                for(var i=0; i<a.count; i++){
-                  deck.push(a);
-                }
-              }
-              else{
-                deck.push(a);
-              }
-            });
-
-            G.actionsDeck = random.Shuffle(deck);
-          }
-
-          //G.races[ctx.currentPlayer].actionCards.push(G.actionsDeck.find(a => a.id === 'Warfare Rider')) //test only
-
-          if(!G.explorationDecks['cultural'].length){ //need purge GammaWormhole on deck reuse case
-              
-            Object.keys(cardData.exploration).forEach(k => {
+            if(!G.actionsDeck.length){
               const deck = [];
-              cardData.exploration[k].forEach(exp => {
-                if(exp.count){
-                  for(var i=0; i<exp.count; i++){
-                    deck.push(exp);
+              cardData.actions.filter(a => !a.mod).forEach(a => {
+                if(a.count){
+                  for(var i=0; i<a.count; i++){
+                    deck.push(a);
                   }
                 }
                 else{
-                  deck.push(exp);
+                  deck.push(a);
                 }
               });
-              //no shuffle for testing only!!
-              //G.explorationDecks[k] = deck;
-              G.explorationDecks[k] = random.Shuffle(deck); 
-            });
 
-          }
+              G.actionsDeck = random.Shuffle(deck);
+            }
 
-          if(!G.agendaDeck.length){
-            G.agendaDeck = [...cardData.agenda.filter(a => a.ready)]; //random.Shuffle(cardData.agenda.filter(a => a.ready));
-            //G.agendaDeck.push({...cardData.agenda.find(a => a.elect === 'Planet')});
-          }
+            //G.races[ctx.currentPlayer].actionCards.push(G.actionsDeck.find(a => a.id === 'Warfare Rider')) //test only
 
-          if(!G.relicsDeck.length){
-            G.relicsDeck = random.Shuffle(cardData.relics.filter(r => !r.mod));
-            //G.races[ctx.currentPlayer].relics.push(...G.relicsDeck) //test only!
-          }
+            if(!G.explorationDecks['cultural'].length){ //need purge GammaWormhole on deck reuse case
+                
+              Object.keys(cardData.exploration).forEach(k => {
+                const deck = [];
+                cardData.exploration[k].forEach(exp => {
+                  if(exp.count){
+                    for(var i=0; i<exp.count; i++){
+                      deck.push(exp);
+                    }
+                  }
+                  else{
+                    deck.push(exp);
+                  }
+                });
+                //no shuffle for testing only!!
+                //G.explorationDecks[k] = deck;
+                G.explorationDecks[k] = random.Shuffle(deck); 
+              });
 
-          if(!G.secretObjDeck.length){
-            G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
-            G.races.forEach(r => {
-              r.secretObjectives.push(...G.secretObjDeck.splice(-1)); //2!
-              //r.mustDropSecObj = true;
+            }
 
-              //r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Destroy Heretical Works'), players: []});
-            });
-          }
+            if(!G.agendaDeck.length){
+              G.agendaDeck = [...cardData.agenda.filter(a => a.ready)]; //random.Shuffle(cardData.agenda.filter(a => a.ready));
+              //G.agendaDeck.push({...cardData.agenda.find(a => a.elect === 'Planet')});
+            }
 
-          //events.endPhase(); //test only!
-        },
-        onEnd: ({ G }) => {
-          G.TURN_ORDER = G.races.map((r, i) => ({initiative: r.initiative, i})).sort((a, b) => a.initiative > b.initiative ? 1 : (a.initiative < b.initiative ? -1 : 0)).map(r => r.i);
-          G.tiles.forEach( t => {
-            if(t.tdata.planets && t.tdata.planets.length){
-              t.tdata.planets.forEach(p => {
-                if(p.exhausted){
-                  p.exhausted = false;
+            if(!G.relicsDeck.length){
+              G.relicsDeck = random.Shuffle(cardData.relics.filter(r => !r.mod));
+              //G.races[ctx.currentPlayer].relics.push(...G.relicsDeck) //test only!
+            }
+
+            if(!G.secretObjDeck.length){
+              G.secretObjDeck = random.Shuffle(cardData.objectives.secret);
+              G.races.forEach(r => {
+                r.secretObjectives.push(...G.secretObjDeck.splice(-1)); //2!
+                //r.mustDropSecObj = true;
+
+                //r.secretObjectives.push({...G.secretObjDeck.find(o => o.id === 'Destroy Heretical Works'), players: []});
+              });
+            }
+
+            if(G.NEW_CONSTITUTION){
+              delete G['NEW_CONSTITUTION'];
+              
+              G.races.forEach(r => {
+                const home = G.tiles.find(t => t.tid === r.rid);
+                if(home && home.tdata && home.tdata.planets){
+                  home.tdata.planets.forEach(p => p.exhausted = true)
                 }
               })
             }
-          });
+            //events.endPhase(); //test only!
+          }
+          catch(e){
+            console.log(e)
+          }
+        },
+        onEnd: ({ G }) => {
+          G.TURN_ORDER = G.races.map((r, i) => ({initiative: r.initiative, i})).sort((a, b) => a.initiative > b.initiative ? 1 : (a.initiative < b.initiative ? -1 : 0)).map(r => r.i);
+          
           G.races.forEach(r => {
             if(r.forbiddenStrategy) delete r.forbiddenStrategy;
           });
@@ -358,6 +365,7 @@ export const TIO = {
           secretObjectiveConfirm,
           useRelic,
           usePromissory,
+          useAgenda, 
           dropSecretObjective,
           endTurn: ({G, ctx, events}) => {
             if(!G.currentTacticalActionCard){
@@ -367,8 +375,8 @@ export const TIO = {
           },
           playActionCard: ({G, playerID, events}, card) => {
             if(card.when === 'ACTION'){
-              const maxActs = G.races[playerID].knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
-              if(G.races[playerID].actions.length > maxActs){
+              
+              if(G.races[playerID].actions.length > getMaxActs(G, playerID) - 1){
                 console.log('too many actions');
                 return INVALID_MOVE;
               }
@@ -721,8 +729,8 @@ export const TIO = {
             }
           },
           purgeFragments: ({G, playerID}, purgingFragments) => {
-            const maxActs = G.races[playerID].knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
-            if(G.races[playerID].actions.length > maxActs){
+
+            if(G.races[playerID].actions.length > getMaxActs(G, playerID) - 1){
               console.log('too many actions');
               return INVALID_MOVE;
             }
@@ -769,8 +777,7 @@ export const TIO = {
             if(idx === undefined) idx=0;
             const strategy = G.races[playerID].strategy[idx];
 
-            const maxActs = G.races[playerID].knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
-            if(G.races[playerID].actions.length > maxActs){
+            if(G.races[playerID].actions.length > getMaxActs(G, playerID) - 1){
               console.log('too many actions');
               return INVALID_MOVE;
             }
@@ -857,18 +864,7 @@ export const TIO = {
                 G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload.filter(p => p);
 
               if(to.occupied === undefined){
-                /*const explore = G.explorationDecks[to.trait].pop();
-                if(explore.id.indexOf('Relic Fragment') > -1){
-                  G.races[playerID].fragments[to.trait[0]]++;
-                }
-                G.races[playerID].exploration.push(explore);*/
-                to.exhausted = true;
-                to.occupied = playerID;
-                checkCommanderUnlock(G, playerID);
-                if(to.trait){
-                  explorePlanetByName(G, playerID, to.name)
-                  plugins.effects.tg();
-                }
+                occupyPlanet(G, playerID, to, to.trait, plugins);
               }
               else if(to.occupied != playerID && G.races[to.occupied]){
                 checkSecretObjective(G, to.occupied, 'Become a Martyr');
@@ -881,9 +877,7 @@ export const TIO = {
                   }
                 }
 
-                to.occupied = playerID;
-                checkCommanderUnlock(G, playerID);
-                to.exhausted = true;
+                occupyPlanet(G, playerID, to, false, plugins);
               }
             }
 
@@ -897,8 +891,7 @@ export const TIO = {
                 return INVALID_MOVE;
               }
 
-              const maxActs = race.knownTechs.indexOf('FLEET_LOGISTICS')>-1 ? 1:0;
-              if(race.actions.length > maxActs){
+              if(race.actions.length > getMaxActs(G, playerID) - 1){
                 console.log('too many actions');
                 return INVALID_MOVE;
               }
@@ -1258,6 +1251,12 @@ export const TIO = {
             G.pubObjectives.push({...G.pubObjDeck.pop(), players: []});
             G.races.forEach( r => {
               r.actionCards.push(G.actionsDeck.pop());
+              
+              const law = G.laws.find(l => l.id === 'Minister of Policy');
+              if(law && law.decision === r.name){
+                r.actionCards.push(G.actionsDeck.pop());
+              }
+
               if(haveTechnology(r, 'NEURAL_MOTIVATOR')){
                 r.actionCards.push(G.actionsDeck.pop());
               }
@@ -1286,6 +1285,16 @@ export const TIO = {
             G.TURN_ORDER = [...order.slice(1), order[0]]; //speaker at the end*/
             G.TURN_ORDER = order;
             doFlagshipAbility({G, rid: 1});
+
+            G.tiles.forEach( t => {
+              if(t.tdata.planets && t.tdata.planets.length){
+                t.tdata.planets.forEach(p => {
+                  if(p.exhausted){
+                    p.exhausted = false;
+                  }
+                })
+              }
+            });
           }
           catch(e){console.log(e)}
         },
@@ -1423,9 +1432,7 @@ export const TIO = {
               if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
                 votingProcessDone({G, agendaNumber, playerID, events});
                 
-                if(G['vote' + agendaNumber].type === 'LAW' && G['vote' + agendaNumber].decision && G['vote' + agendaNumber].decision.toUpperCase() !== 'AGAINST'){
-                  G.laws.push(G['vote' + agendaNumber]);
-                }
+                
                 
                 if(G['vote' + agendaNumber].id === 'Archived Secret'){
                   const elected = G.races.find(r => r.name === G['vote' + agendaNumber].decision);
@@ -1479,6 +1486,59 @@ export const TIO = {
                       G.pubObjectives.push({...vp2.pop(), players: []});
                     }
                   }
+                }
+                else if(G['vote' + agendaNumber].id === 'Mutiny'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+                    G.races.forEach(r => {
+                      const v = r.voteResults[agendaNumber - 1];
+                      if(v && v.vote && v.vote.toUpperCase() === 'FOR'){
+                        r.vp++;
+                      }
+                    });
+                  }
+                  else{
+                    G.races.forEach(r => {
+                      const v = r.voteResults[agendaNumber - 1];
+                      if(v && v.vote && v.vote.toUpperCase() === 'FOR'){
+                        if(r.vp > 0) r.vp--;
+                      }
+                    });
+                  }
+                }
+                else if(G['vote' + agendaNumber].id === 'New Constitution'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+                    G.laws = [];
+                    G.NEW_CONSTITUTION = true;
+                  }
+                }
+                /*else if(G['vote' + agendaNumber].id === 'Minister of Industry'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+                    
+                  }
+                }
+                else if(G['vote' + agendaNumber].id === 'Minister of Peace'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+                    
+                  }
+                }
+                else if(G['vote' + agendaNumber].id === 'Minister of Policy'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+                    
+                  }
+                }
+                else if(G['vote' + agendaNumber].id === 'Minister of Sciences'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+                    
+                  }
+                }
+                else if(G['vote' + agendaNumber].id === 'Minister of War'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+                    
+                  }
+                }*/
+                
+                if(G['vote' + agendaNumber].type === 'LAW' && G['vote' + agendaNumber].decision && G['vote' + agendaNumber].decision.toUpperCase() !== 'AGAINST'){
+                  G.laws.push(G['vote' + agendaNumber]);
                 }
                 
 
@@ -1553,7 +1613,7 @@ export const TIO = {
             }
             if(t.tdata.planets && t.tdata.planets.length){
               t.tdata.planets.forEach(p => {
-                p.exhausted = false;
+                //p.exhausted = false;
 
                 if(p.occupied !== undefined){
                   G.races[p.occupied].votesMax += p.influence;
