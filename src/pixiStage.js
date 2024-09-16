@@ -134,25 +134,28 @@ export const PixiStage = ({stagew, stageh, dispatch, hud, GP}) => {
             
             return !getPureMovePath.some((p, pidx) => {
               const tile = G.tiles.find(t => String(t.tid) === String(p));
-    
-              if(tile.tdata.type === 'red'){
+              let result = false;
+              
+              if(tile.tdata && tile.tdata.occupied && String(tile.tdata.occupied) !== String(playerID) && String(activeTile.tid) !== String(p)){
+                result = !(haveTechnology(race, 'LIGHTWAVE_DEFLECTOR') || String(race.moveThroughEnemysFleet) === String(tile.tid));
+              }
+
+              if(!result && tile.tdata.type === 'red'){
                 if(tile.tdata.anomaly === 'asteroid-field' && !haveTechnology(G.races[playerID], 'ANTIMASS_DEFLECTORS')){
-                  return true;
+                  result = true;
                 }
-                else if(tile.tdata.anomaly === 'nebula'){
-                  return !(pidx === getPureMovePath.length - 1 || pidx === 0);//getPureMovePath.length > 2;
+                else if(tile.tdata.anomaly === 'nebula' && !G.laws.find(l => l.id === 'Shared Research')){
+                  result = !(pidx === getPureMovePath.length - 1 || pidx === 0);//getPureMovePath.length > 2;
                 }
                 else if(tile.tdata.anomaly === 'supernova' || tile.tdata.anomaly === 'muaat-supernova'){
-                  return race.rid !== 4;
+                  result = race.rid !== 4;
                 }
                 else if(tile.tdata.anomaly === 'gravity-rift'){
-                  return false;
+                  result = false;
                 }
               }
-              else if(tile.tdata.occupied && String(tile.tdata.occupied) !== String(playerID) && String(activeTile.tid) !== String(p)){
-                return !(haveTechnology(race, 'LIGHTWAVE_DEFLECTOR') || String(race.moveThroughEnemysFleet) === String(tile.tid));
-              }
-              return false;
+              
+              return result;
             });
     
           }
@@ -161,7 +164,7 @@ export const PixiStage = ({stagew, stageh, dispatch, hud, GP}) => {
         return false;
       }
       catch(e){console.log(e)}
-    },[G.tiles, G.races, hud.exhaustedCards, race, getMovePath, getPureMovePath, advUnitViewTechnology, playerID, activeTile]);
+    },[G, hud.exhaustedCards, race, getMovePath, getPureMovePath, advUnitViewTechnology, playerID, activeTile]);
 
     const getColorByRid = useCallback((rid) => {
         const r = G.races.find(rc => rc.rid === rid);
@@ -533,7 +536,8 @@ const TilesMap3 = ({G, playerID, moves, ctx, t, stagew, stageh, isMyTurn, active
           const tile = G.tiles[hud.advUnitView.tile];
           let mov = advUnitViewTechnology.move;
 
-          if(tile && tile.tdata && tile.tdata.anomaly === 'nebula'){
+          const law = G.laws.find(l => l.id === 'Shared Research');
+          if(tile && tile.tdata && tile.tdata.anomaly === 'nebula' && !law){
             mov = 1;
           }
 

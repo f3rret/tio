@@ -1511,17 +1511,87 @@ export const TIO = {
                     G.NEW_CONSTITUTION = true;
                   }
                 }
-                /*else if(G['vote' + agendaNumber].id === 'Minister of Industry'){
-                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
-                    
+                else if(G['vote' + agendaNumber].id === 'Shared Research'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'AGAINST'){
+                    G.races.forEach(r => {
+                      if(r.tokens.t + r.tokens.s + r.tokens.f + r.tokens.new < 16){
+                        const home = G.tiles.find(t => t.tid === r.rid);
+
+                        if(home && home.tdata){
+                          if(!home.tdata.tokens) home.tdata.tokens = [];
+                          home.tdata.tokens.push(r.rid);
+                        }
+                      }
+                    })
                   }
                 }
-                else if(G['vote' + agendaNumber].id === 'Minister of Peace'){
+                else if(G['vote' + agendaNumber].id === 'Swords to Plowshares'){
                   if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+
+                    G.races.forEach((r, pid) => {
+                      let tg = 0;
+
+                      G.tiles.forEach( t => {
+                        if(t.tdata.planets && t.tdata.planets.length){
+                    
+                            t.tdata.planets.forEach(p => {
+                              if(String(p.occupied) === String(pid)){
+                                if(p.units && p.units.infantry && p.units.infantry.length){
+                                  const count = Math.ceil(p.units.infantry.length / 2);
+                                  tg += count;
+                                  
+                                  p.units.infantry.splice(-count);
+                                  if(!p.units.infantry.length) delete p.units['infantry'];
+                                  if(!Object.keys(p.units).length) delete p['units'];
+                                }
+                              }
+                            })
+                          
+                        }
+                      });
+                      
+                      r.tg += tg;
+                    })
                     
                   }
+                  else if(G['vote' + agendaNumber].decision.toUpperCase() === 'AGAINST'){
+                    G.tiles.forEach( t => {
+                      if(t.tdata.planets && t.tdata.planets.length){
+                  
+                          t.tdata.planets.forEach(p => {
+                            if(p.occupied !== undefined){
+                              if(!(p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1)){
+                                if(!p.units) p.units = {};
+                                if(!p.units.infantry) p.units.infantry = [];
+                                p.units.infantry.push({});
+                              }
+                            }
+                          })
+                        
+                      }
+                    });
+                  }
                 }
-                else if(G['vote' + agendaNumber].id === 'Minister of Policy'){
+                else if(G['vote' + agendaNumber].id === 'Unconventional Measures'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+                    G.races.forEach(r => {
+                      const v = r.voteResults[agendaNumber - 1];
+                      if(v && v.vote && v.vote.toUpperCase() === 'FOR'){
+                        G.races[playerID].actionCards.push(...G.actionsDeck.splice(-2));
+                      }
+                    });
+                  }
+                  else{
+                    G.races.forEach(r => {
+                      const v = r.voteResults[agendaNumber - 1];
+                      if(v && v.vote && v.vote.toUpperCase() === 'FOR'){
+                        G.discardedActions.push(...G.races[playerID].actionCards);
+                        G.races[playerID].actionCards = [];
+                      }
+                    });
+                  }
+                }
+                /*else if(G['vote' + agendaNumber].id === 'Minister of Policy'){
                   if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
                     
                   }
