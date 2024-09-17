@@ -1591,17 +1591,26 @@ export const TIO = {
                     });
                   }
                 }
-                /*else if(G['vote' + agendaNumber].id === 'Minister of Policy'){
-                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
-                    
+                else if(G['vote' + agendaNumber].id === 'Wormhole Reconstruction'){
+                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'AGAINST'){
+                    G.tiles.forEach(t => {
+                      if(t && t.tdata && (t.tdata.wormhole === 'alpha' || t.tdata.wormhole === 'beta')){
+                        if(t.tdata.occupied !== undefined){
+                          if(!t.tdata.tokens) t.tdata.tokens = [];
+                          const rid = G.races[t.tdata.occupied].rid;
+                          if(!t.tdata.tokens.includes(rid)) t.tdata.tokens.push(rid);
+                        }
+                      }
+                    })
                   }
                 }
-                else if(G['vote' + agendaNumber].id === 'Minister of Sciences'){
-                  if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
-                    
+                else if(G['vote' + agendaNumber].id === 'Armed Forces Standardization'){
+                  const elected = G.races.find(r => r.name === G['vote' + agendaNumber].decision);
+                  if(elected){
+                    elected.tokens = {t: 3, f: 3, s: 2, new: 0}
                   }
                 }
-                else if(G['vote' + agendaNumber].id === 'Minister of War'){
+                /*else if(G['vote' + agendaNumber].id === 'Minister of War'){
                   if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
                     
                   }

@@ -439,6 +439,9 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     return true;
   }
 
+  const isActionCardsDisabled = useMemo(() => {
+    if(G.laws.find(l => l.id === 'Political Censure' && l.decision === race.name)) return true;
+  }, [G, race.name]);
 
   const isRelicDisabled = (relic) => {
     try{
@@ -1329,6 +1332,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                         if(disabled && pr.when === 'STRATEGY'){
                           if(ctx.phase === 'strat') disabled = false;
                         }
+                        if(!disabled) disabled = isActionCardsDisabled;
 
                         return <CardsPagerItem key={i} tag='action'>
                           <button disabled={disabled} style={{width: '100%', marginBottom: '1rem'}} onClick={()=> { if(mustAction){moves.dropActionCard(pr.id)} else if(!disabled){ moves.playActionCard(pr);}}} className={'styledButton ' + (mustAction ? 'red':'yellow')} >

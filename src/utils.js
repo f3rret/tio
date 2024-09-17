@@ -849,6 +849,10 @@ export const wormholesAreAdjacent = (G, wormhole1, wormhole2) => {
       return true;
     }
   }
+  if(((wormhole1 === 'alpha' && wormhole2 === 'beta') || (wormhole2 === 'alpha' && wormhole1 === 'beta')) &&
+   G.laws.find(l => l.id === 'Wormhole Reconstruction')){
+    return true;
+   }
 
   return false;
 }
@@ -1868,6 +1872,8 @@ export const getRaceVP = (G, pid) => {
 
     const supports = race.promissory.filter(p => p.id === 'SUPPORT_FOR_THE_THRONE' && p.owner !== undefined); //todo: except elliminated players
     if(supports && supports.length) result += supports.length;
+
+    if(G.laws.find(l => l.id === 'Political Censure' && l.decision === race.name)) result++;
   }
 
   return result;
