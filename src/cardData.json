@@ -167,10 +167,10 @@
         {"id": "Political Censure", "ready": true, "type": "LAW", "elect": "Player", "for": true},
         {"id": "Search Warrant", "type": "LAW", "elect": "Player", "for": true},
         {"id": "Armed Forces Standardization", "ready": true, "type": "DIRECTIVE", "elect": "Player", "for": true},
-        {"id": "Clandestine Operations", "type": "DIRECTIVE", "for": true, "against": true},
+        {"id": "Clandestine Operations", "ready": true, "type": "DIRECTIVE", "for": true, "against": true},
         {"id": "Covert Legislation", "type": "DIRECTIVE", "for": true},
         {"id": "Galactic Crisis Pact", "type": "DIRECTIVE", "elect": "Strategy Card", "for": true},
-        {"id": "Minister of Antiques", "type": "DIRECTIVE", "elect": "Player", "for": true},
+        {"id": "Minister of Antiques", "ready": true, "type": "DIRECTIVE", "elect": "Player", "for": true},
         {"id": "Rearmament Agreement", "type": "DIRECTIVE", "for": true, "against": true},
         {"id": "Research Grant Reallocation", "type": "DIRECTIVE", "elect": "Player", "for": true}
     ],

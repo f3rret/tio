@@ -172,7 +172,7 @@ export const TIO = {
             }
 
             if(!G.agendaDeck.length){
-              G.agendaDeck = [...cardData.agenda.filter(a => a.ready)]; //random.Shuffle(cardData.agenda.filter(a => a.ready));
+              G.agendaDeck = random.Shuffle(cardData.agenda.filter(a => a.ready));
               //G.agendaDeck.push({...cardData.agenda.find(a => a.elect === 'Planet')});
             }
 
@@ -1212,7 +1212,7 @@ export const TIO = {
         endIf: ({ G, ctx }) => G.passedPlayers.length === ctx.numPlayers
       },
       stats: {
-        next: 'agenda',//({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
+        next: ({G}) => G.tiles[0].tdata.planets[0].occupied === undefined ? 'strat':'agenda',
         turn: {
           order: TurnOrder.CUSTOM_FROM('TURN_ORDER'),
           stages: {
@@ -1345,7 +1345,7 @@ export const TIO = {
               }
             }
           },
-          onBegin: ({ G, ctx, events }) => {
+          onBegin: ({ G, ctx, events, random }) => {
             if(!ctx.activePlayers){ //pass turn if some action cards was effect
               const agendaNumber = G.vote2 ? 2:1;
               const voteResults = G.races[ctx.currentPlayer].voteResults;
@@ -1353,6 +1353,7 @@ export const TIO = {
               if(voteResults && voteResults.length === agendaNumber){
                 if(voteResults[agendaNumber-1].vote === null){
                   if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
+                    if(!G.agendaDeck.length) G.agendaDeck = random.Shuffle(cardData.agenda.filter(a => a.ready));
                     votingProcessDone({G, agendaNumber, playerID: ctx.currentPlayer, events});
                   }
                   else{
@@ -1430,6 +1431,7 @@ export const TIO = {
               const agendaNumber = G.vote2 ? 2:1;
 
               if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
+                if(!G.agendaDeck.length) G.agendaDeck = random.Shuffle(cardData.agenda.filter(a => a.ready));
                 votingProcessDone({G, agendaNumber, playerID, events});
                 
                 
@@ -1610,11 +1612,20 @@ export const TIO = {
                     elected.tokens = {t: 3, f: 3, s: 2, new: 0}
                   }
                 }
-                /*else if(G['vote' + agendaNumber].id === 'Minister of War'){
+                else if(G['vote' + agendaNumber].id === 'Clandestine Operations'){
                   if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
-                    
+                    G.races.forEach(r => r.tokens.new -= 2)
                   }
-                }*/
+                  else{
+                    G.races.forEach(r => { if(r.tokens.f > 0) r.tokens.f-- });
+                  }
+                }
+                else if(G['vote' + agendaNumber].id === 'Minister of Antiques'){
+                  const elected = G.races.find(r => r.name === G['vote' + agendaNumber].decision);
+                  if(elected && G.relicsDeck.length){
+                    elected.relics.push(G.relicsDeck.pop());
+                  }
+                }
                 
                 if(G['vote' + agendaNumber].type === 'LAW' && G['vote' + agendaNumber].decision && G['vote' + agendaNumber].decision.toUpperCase() !== 'AGAINST'){
                   G.laws.push(G['vote' + agendaNumber]);

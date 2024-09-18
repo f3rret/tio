@@ -1002,7 +1002,6 @@ export const votingProcessDone = ({G, agendaNumber, playerID, events}) => {
   }
 
   if(!G.vote2){
-    if(!G.agendaDeck.length) G.agendaDeck = [...cardData.agenda.filter(a => a.ready)]
     G.vote2 = G.agendaDeck.pop();
   }
   else{
