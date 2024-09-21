@@ -1,6 +1,6 @@
 /* eslint eqeqeq: 0 */
 
-import { useMemo, useCallback, useEffect, useRef, useContext } from 'react';
+import { useMemo, useCallback, useEffect, useRef, useContext, useState } from 'react';
 import { ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, CardBody, Tooltip, ListGroup, Container as Cont, CardColumns, Input, Label
    } from 'reactstrap';
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList,
@@ -195,7 +195,9 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
       if(tile && tile.tdata && tile.tdata.fleet && String(tile.tdata.occupied) === String(playerID)){
         let fleetSize = 0;
         Object.keys(tile.tdata.fleet).forEach(tag => {
-          fleetSize += tile.tdata.fleet[tag].length;
+          if(tag.toUpperCase() !== 'FIGHTER'){
+            fleetSize += tile.tdata.fleet[tag].length;
+          }
         });
 
         return fleetSize > race.tokens.f;
@@ -790,6 +792,72 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
             </CardsPagerItem>
   }
 
+  const havePlanet = useCallback((planet) => {
+    return PLANETS.find(p => p.name === planet);
+  //eslint-disable-next-line
+  }, [PLANETS_stringify])
+
+  const Legendary = ({planetId}) => {
+
+    const [choice, setChoice] = useState(0);
+    let disabled = true;
+
+    const planet = PLANETS.find(p => p.name === planetId);
+    if(!planet) return;
+
+    if(isMyTurn && race.actions.length && ctx.phase === 'acts' && !ctx.activePlayers && !planet.exhausted){
+      if(planetId === 'Primor' || (planetId === "Hope's End" && choice === 0)){
+        if(hud.selectedTile > -1 && hud.selectedPlanet > -1){
+          const tile = G.tiles[hud.selectedTile];
+
+          if(tile && tile.tdata && tile.tdata.planets){
+            const p = tile.tdata.planets[hud.selectedPlanet];
+
+            if(p && String(p.occupied) === String(playerID)){
+              disabled = false;
+            }
+          }
+        }
+      }
+      else if(planetId === "Hope's End" && choice === 1){
+        disabled = false;
+      }
+      else if(planetId === 'Mallice'){
+        disabled = false;
+      }
+      else if(planetId === 'Mirage'){
+        if(hud.selectedTile > -1){
+          const tile = G.tiles[hud.selectedTile];
+
+          if(tile && tile.tdata && String(tile.tdata.occupied) === String(playerID) && tile.tdata.fleet){
+            disabled = false;
+          }
+        }
+      }
+      
+    }
+
+    
+    const onClick = () => {
+      sendChatMessage(t('planets.' + planetId) + ' ' + t('cards.legendary.' + planetId + '.choice_' + choice));
+      moves.useLegendary({planetId, choice, selectedTile: hud.selectedTile, selectedPlanet: hud.selectedPlanet})
+    }
+
+    return <CardsPagerItem tag='context'>
+              <button style={{width: '100%', marginBottom: '1rem'}} disabled={disabled} className = {'styledButton ' + (planet.exhausted ? 'white':'yellow')} onClick={() => onClick()}>
+                <b style={{lineHeight: '1rem', display: 'inline-block', padding: '.5rem 0'}}>{t('planets.' + planetId).toUpperCase()}</b>
+              </button>
+
+              {t('cards.legendary.' + planetId + '.effect')}
+
+              {<p style={{marginTop: '1rem', color: 'whey'}}>
+                <Input type='radio' onChange={() => setChoice(0)} name={planetId + '_legendary_0'} id={planetId + '_legendary_0'} checked={choice === 0}/><Label for={planetId + '_legendary_0'} check style={{marginLeft: '.5rem'}}>{t('cards.legendary.' + planetId + '.choice_0')}</Label>
+                <br/>
+                <Input type='radio' onChange={() => setChoice(1)} name={planetId + '_legendary_1'} id={planetId + '_legendary_1'} checked={choice === 1}/><Label for={planetId + '_legendary_1'} check style={{marginLeft: '.5rem'}}>{t('cards.legendary.' + planetId + '.choice_1')}</Label>
+              </p>}
+            </CardsPagerItem>
+  }
+
   const MechDeploy = () => {
     let disabled = true;
 
@@ -1272,6 +1340,10 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                         {haveTechnology(race, 'INFANTRY2') && <TechAction techId='INFANTRY2'/>}
                         {haveAbility(race, 'ORBITAL_DROP') && <AbilAction abilId='ORBITAL_DROP'/>}
                         {haveAbility(race, 'PILLAGE') && <AbilAction abilId='PILLAGE'/>}
+                        {havePlanet('Primor') && <Legendary planetId='Primor'/>}
+                        {havePlanet("Hope's End") && <Legendary planetId="Hope's End"/>}
+                        {havePlanet('Mallice') && <Legendary planetId='Mallice'/>}
+                        {havePlanet('Mirage') && <Legendary planetId='Mirage'/>}
                         {race.rid === 1 && <MechDeploy />}
                       </CardsPager>
                       

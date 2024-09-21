@@ -22,8 +22,15 @@ export const getHexGrid = (arr) => {
     //let mapArr = removeTrailing([...arr]);
     let mapArr = [...arr.reverse()].map(a => typeof a === 'string' ? a.replace(new RegExp(/-\d/), '') : a);
     
-    let HexGrid = new Grid(Hex, spiral({ start: [0, 0], radius: 4 }));
-    HexGrid.forEach(hex => hex.tileId = mapArr.pop());
+    let HexGrid = new Grid(Hex, spiral({ start: [0, 0], radius: 6 }));
+    HexGrid.forEach(hex => {
+        if(hex.q === 3 && hex.r === -6){
+            hex.tileId = 82 //Mallice
+        }
+        else{
+            hex.tileId = mapArr.pop() || -1
+        }
+    });
     return HexGrid;
 }
 

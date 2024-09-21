@@ -365,7 +365,78 @@ export const TIO = {
           secretObjectiveConfirm,
           useRelic,
           usePromissory,
-          useAgenda, 
+          useAgenda,
+          useLegendary: ({G, playerID, ctx, ...plugins}, args) => {
+            try{
+              const {planetId, choice, selectedTile, selectedPlanet} = args;
+
+              if(planetId === 'Primor'){
+                const count = choice === 0 ? 2:1;
+                const units = getPlayerUnits(G.tiles, playerID);
+                if(units['infantry'] + count <= UNITS_LIMIT['infantry']){
+                  const tile = G.tiles[selectedTile];
+                  if(tile && tile.tdata && tile.tdata.planets){
+                    const planet = tile.tdata.planets[selectedPlanet];
+                    if(planet && String(planet.occupied) === String(playerID)){
+                      if(!planet.units) planet.units = {};
+                      if(!planet.units.infantry) planet.units.infantry = [];
+                      planet.units.infantry.push(...Array(count).fill({}));
+                    }
+                  }
+                }
+              }
+              else if(planetId === "Hope's End"){
+                if(choice === 0){
+                  const units = getPlayerUnits(G.tiles, playerID);
+
+                  if(units['mech'] <= UNITS_LIMIT['mech']){
+                    const tile = G.tiles[selectedTile];
+                    if(tile && tile.tdata && tile.tdata.planets){
+                      const planet = tile.tdata.planets[selectedPlanet];
+                      if(planet && String(planet.occupied) === String(playerID)){
+                        if(!planet.units) planet.units = {};
+                        if(!planet.units.mech) planet.units.mech = [];
+                        planet.units.mech.push({});
+                      }
+                    }
+                  }
+                }
+                else{
+                  G.races[playerID].actionCards.push(G.actionsDeck.pop());
+                }
+              }
+              else if(planetId === 'Mallice'){
+                if(choice === 0){
+                  G.races[playerID].tg += 2;
+                }
+                else{
+                  G.races[playerID].tg += G.races[playerID].commodity;
+                  G.races[playerID].commodity = 0;
+                }
+
+                plugins.effects.tg();
+              }
+              else if(planetId === 'Mirage'){
+                const count = choice === 0 ? 2:1;
+                const units = getPlayerUnits(G.tiles, playerID);
+
+                if(units['fighter'] + count <= UNITS_LIMIT['fighter']){
+                  const tile = G.tiles[selectedTile];
+
+                  if(tile && tile.tdata && String(tile.tdata.occupied) === String(playerID)){
+                    if(!tile.tdata.fleet.fighter) tile.tdata.fleet.fighter = [];
+                    tile.tdata.fleet.fighter.push(...Array(count).fill({}));
+                  }
+                }
+              }
+
+              const legendary = getPlanetByName(G.tiles, planetId);
+              legendary.exhausted = true;
+            }
+            catch(e){
+              console.log(e)
+            }
+          }, 
           dropSecretObjective,
           endTurn: ({G, ctx, events}) => {
             if(!G.currentTacticalActionCard){
@@ -801,86 +872,114 @@ export const TIO = {
             events.setActivePlayers({ value: val, minMoves: 1 });
           },
           loadUnit: ({G, playerID}, {src, dst}) => {
-            
-            let from = G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
-            const to = G.tiles[src.tile].tdata.fleet[dst.unit];
-            const technology = G.races[playerID].technologies.find( t => t.id === dst.unit.toUpperCase());
+            try{
+              let from = G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
 
-            if(['infantry', 'fighter', 'mech'].indexOf(src.unit) > -1){
-              if(from && to && technology){
-                if(dst.i <= to.length){
-                  if(technology.capacity && dst.j <= technology.capacity){
-                    if(to[dst.i]){
-                      if(!to[dst.i].payload){
-                        to[dst.i].payload = new Array(technology.capacity);
-                      }
-                      if(!to[dst.i].payload[dst.j]){
-                        const unit = {...G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].pop(), id: src.unit};
-                        if(G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].length === 0) delete G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
-                        G.tiles[src.tile].tdata.fleet[dst.unit][dst.i].payload[dst.j] = unit;
+              if(dst){
+                const to = G.tiles[src.tile].tdata.fleet[dst.unit];
+                const technology = G.races[playerID].technologies.find( t => t.id === dst.unit.toUpperCase());
+
+                if(['infantry', 'fighter', 'mech'].indexOf(src.unit) > -1){
+                  if(from && to && technology){
+                    if(dst.i <= to.length){
+                      if(technology.capacity && dst.j <= technology.capacity){
+                        if(to[dst.i]){
+                          if(!to[dst.i].payload){
+                            to[dst.i].payload = new Array(technology.capacity);
+                          }
+                          if(!to[dst.i].payload[dst.j]){
+                            const unit = {...G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].pop(), id: src.unit};
+                            if(G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].length === 0) delete G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
+                            G.tiles[src.tile].tdata.fleet[dst.unit][dst.i].payload[dst.j] = unit;
+                          }
+                        }
                       }
                     }
                   }
                 }
               }
-            }
+              else if(src.unit === 'fighter'){
+                if(!G.tiles[src.tile].tdata.fleet){
+                  G.tiles[src.tile].tdata.occupied = playerID;
+                  G.tiles[src.tile].tdata.fleet = {};
+                }
+                if(!G.tiles[src.tile].tdata.fleet.fighter) G.tiles[src.tile].tdata.fleet.fighter = [];
 
+                const unit = {...G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].pop(), id: src.unit};
+                if(G.tiles[src.tile].tdata.planets[src.planet].units[src.unit].length === 0) delete G.tiles[src.tile].tdata.planets[src.planet].units[src.unit];
+                G.tiles[src.tile].tdata.fleet.fighter.push(unit);
+              }
+            }
+            catch(e){console.log(e)}
           },
           unloadUnit: ({G, playerID, ...plugins}, {src, dst, payment}) => {
+            try{
+
+              let to = G.tiles[dst.tile].tdata.planets[dst.planet];
+              if(to.attach && to.attach.length && to.attach.indexOf('Demilitarized Zone')>-1) return;
+
+              const from = G.tiles[src.tile].tdata.fleet[src.unit];
             
-            let to = G.tiles[dst.tile].tdata.planets[dst.planet];
-            if(to.attach && to.attach.length && to.attach.indexOf('Demilitarized Zone')>-1) return;
-
-            const from = G.tiles[src.tile].tdata.fleet[src.unit];
-           
-            if(from && to){
-              if(to.name === 'Mecatol Rex' && to.occupied === undefined){
-                if(G.races[playerID].rid !== 7){
-                  if(payment){
-                    if(payment.influence){
-                      payment.influence.forEach(pname => {
-                        const planet = getPlanetByName(G.tiles, pname);
-                        if(planet) planet.exhausted = true
-                      });
-                    }
-                    if(payment.tg){
-                      G.races[playerID].tg -= payment.tg;
-                    }
+              if(src.unit.toUpperCase() === 'FIGHTER' && to){
+                if(to.occupied === playerID){
+                  if(!to.units) to.units = {};
+                  if(!to.units.fighter) to.units.fighter = [];
+                  to.units.fighter.push(G.tiles[src.tile].tdata.fleet[src.unit].pop());
+                  if(!G.tiles[src.tile].tdata.fleet[src.unit].length){
+                    delete G.tiles[src.tile].tdata.fleet[src.unit];
                   }
                 }
               }
-
-              if(!to.units){
-                to.units = {}
-              }
-              if(!to.units[from[src.i].payload[src.j].id]){
-                to.units[from[src.i].payload[src.j].id] = [];
-              }
-
-              const unit = G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload[src.j];
-              to.units[from[src.i].payload[src.j].id].push(unit);
-              delete G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload[src.j];
-              G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload = 
-                G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload.filter(p => p);
-
-              if(to.occupied === undefined){
-                occupyPlanet(G, playerID, to, to.trait, plugins);
-              }
-              else if(to.occupied != playerID && G.races[to.occupied]){
-                checkSecretObjective(G, to.occupied, 'Become a Martyr');
-                
-                const looserRace = G.races[to.occupied];
-                if(looserRace && (to.legendary === true || String(G.tiles[dst.tile].tid) === String(looserRace.rid))){
-                  const relicIdx = looserRace.relics.findIndex(r => r.id === 'Shard of the Throne');
-                  if(relicIdx > -1){
-                    G.races[playerID].relics.push(...looserRace.relics.splice(relicIdx, 1));
+              else if(from && to){
+                if(to.name === 'Mecatol Rex' && to.occupied === undefined){
+                  if(G.races[playerID].rid !== 7){
+                    if(payment){
+                      if(payment.influence){
+                        payment.influence.forEach(pname => {
+                          const planet = getPlanetByName(G.tiles, pname);
+                          if(planet) planet.exhausted = true
+                        });
+                      }
+                      if(payment.tg){
+                        G.races[playerID].tg -= payment.tg;
+                      }
+                    }
                   }
                 }
 
-                occupyPlanet(G, playerID, to, false, plugins);
+                if(!to.units){
+                  to.units = {}
+                }
+                if(!to.units[from[src.i].payload[src.j].id]){
+                  to.units[from[src.i].payload[src.j].id] = [];
+                }
+
+                const unit = G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload[src.j];
+                to.units[from[src.i].payload[src.j].id].push(unit);
+                delete G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload[src.j];
+                G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload = 
+                  G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload.filter(p => p);
+
+                if(to.occupied === undefined){
+                  occupyPlanet(G, playerID, to, to.trait, plugins);
+                }
+                else if(to.occupied != playerID && G.races[to.occupied]){
+                  checkSecretObjective(G, to.occupied, 'Become a Martyr');
+                  
+                  const looserRace = G.races[to.occupied];
+                  if(looserRace && (to.legendary === true || String(G.tiles[dst.tile].tid) === String(looserRace.rid))){
+                    const relicIdx = looserRace.relics.findIndex(r => r.id === 'Shard of the Throne');
+                    if(relicIdx > -1){
+                      G.races[playerID].relics.push(...looserRace.relics.splice(relicIdx, 1));
+                    }
+                  }
+
+                  occupyPlanet(G, playerID, to, false, plugins);
+                }
               }
+
             }
-
+            catch(e){console.log(e)}
           },
           activateTile: ({ G, playerID, events, ...plugins }, tIndex) => {
 
@@ -1093,6 +1192,11 @@ export const TIO = {
                     plugins.effects.relic_ex({id: 'Dominus Orb'});
                   }
                 }
+              }
+
+              if(dst.tid === 82 && !dst.side){
+                dst.side = 'A';
+                dst.tdata.wormhole = 'all';
               }
             }
             catch(e){console.log(e)}

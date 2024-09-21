@@ -841,7 +841,7 @@ export const getMyNeighbors = (G, playerID) => {
 
 export const wormholesAreAdjacent = (G, wormhole1, wormhole2) => {
 
-  if(wormhole1 === wormhole2 || wormhole1 === 'gamma' || wormhole2 === 'gamma' || wormhole1 === 'all' || wormhole2 === 'all'){
+  if(wormhole1 === wormhole2 || wormhole1 === 'all' || wormhole2 === 'all'){
     return true;
   }
   if(G.wormholesAdjacent){

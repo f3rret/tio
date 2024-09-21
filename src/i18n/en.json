@@ -732,6 +732,12 @@
                 "PDS2": {"label": "PDS II", "description": "Deep space canon", "effect": "You may use this unit’s Space Canon against ships that are adjacent to this system."},
                 "SPACEDOCK": {"label": "SPACEDOCK"},
                 "SPACEDOCK2": {"label": "SPACEDOCK II", "description": "Enviro compensator", "effect": "This unit’s Production value is equal to 4 more than the resource value of this planet; Up to 3 ghters in this system do not count toward your ships’ capacity."}
+            },
+            "legendary": {
+                "Primor": {"effect": "You may exhaust this card at the end of your turn to place up to 2 infantry from your reinforcements on any planet you control.", "choice_0": "2 infantry", "choice_1": "1 infantry"},
+                "Hope's End": {"effect": "You may exhaust this card at the end of your turn to place 1 mech from your reinforcements on any planet you control, or draw 1 action card.", "choice_0": "place mech", "choice_1": "draw a card"},
+                "Mallice": {"effect": "You may exhaust this card at the end of your turn to gain 2 trade goods or convert all of your commodities into trade goods.", "choice_0": "gain 2 tg", "choice_1": "convert"},
+                "Mirage": {"effect": "You may exhaust this card at the end of your turn to place up to 2 fighters from your reinforcements in any system that contains 1 or more of your ships.", "choice_0": "2 fighters", "choice_1": "1 fighter"}
             }
         },
         "races": {
