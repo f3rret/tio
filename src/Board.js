@@ -1,12 +1,12 @@
 /* eslint eqeqeq: 0 */
 
 import { useMemo, useCallback, useEffect, useRef, useContext, useState } from 'react';
-import { ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, CardBody, Tooltip, ListGroup, Container as Cont, CardColumns, Input, Label
+import { ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, CardBody, Tooltip, ListGroup, CardColumns, Input, Label
    } from 'reactstrap';
-import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, PlanetsRows, UnitsList,
+import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, UnitsList,
 ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover,
 SelectDiscardedActions} from './dialogs';
-import { ActionCardDialog, TechnologyDialog } from './actionCardDialog'; 
+import { ActionCardDialog, PlanetsDialog, TechnologyDialog } from './actionCardDialog'; 
 import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT, getMyNeighbors, checkIfMyNearbyUnit, getRaceVP, getMaxActs } from './utils';
 
 import { ChatBoard } from './chat';
@@ -1260,18 +1260,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                       <ObjectivesList playerID={playerID} mustSecObj={mustSecObj} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective: mustSecObj ? dropSecretObjective: ()=>{}}/>
                     </Card>}
                   
-                  {hud.leftPanel === 'planets' && <Card className='subPanel' style={{ padding: '3rem 1rem 2rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                    <CardTitle></CardTitle>
-                      <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
-                        <Cont style={{border: 'none'}}>
-                          {<PlanetsRows PLANETS={PLANETS} exhausted={globalPaymentExhaustedPlanets}
-                                                          specClick={(e, p) => p && p.specialty && globalPayPlanet(e, p, p.specialty)}
-                                                          resClick={(e, p) => globalPayPlanet(e, p, 'resources')} 
-                                                          infClick={(e, p) => globalPayPlanet(e, p, 'influence')}
-                                                          onClick={(pname) => globalPayCancelPlanet(pname)}/>}
-                        </Cont>
-                      </div>
-                  </Card>}
+                  {hud.leftPanel === 'planets' && <PlanetsDialog globalPaymentExhaustedPlanets={globalPaymentExhaustedPlanets} globalPayPlanet={globalPayPlanet} globalPayCancelPlanet={globalPayCancelPlanet}/>}
                   {hud.leftPanel === 'units' && <Card className='subPanel' style={{ padding: '3rem 1rem 2rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
                     <CardTitle></CardTitle>
                     <UnitsList UNITS={UNITS} R_UNITS={R_UNITS} R_UPGRADES={R_UPGRADES} rid={G.races[playerID].rid}/>

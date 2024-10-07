@@ -1,6 +1,6 @@
 import { useContext, useMemo, useState, useCallback, useEffect } from 'react'
-import { LocalizationContext, StateContext, UNITS_LIMIT } from './utils';
-import { Badge, Card, CardText, CardImg, ButtonGroup, ListGroup, ListGroupItem, UncontrolledAccordion, AccordionItem, AccordionHeader, AccordionBody, Nav, NavItem, Row, Col } from 'reactstrap';
+import { getRaceVP, LocalizationContext, StateContext, UNITS_LIMIT } from './utils';
+import { Badge, Card, CardText, CardImg, ButtonGroup, ListGroup, ListGroupItem, UncontrolledAccordion, AccordionItem, AccordionHeader, AccordionBody, Nav, NavItem, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import { produce } from 'immer';
 
 export const CARD_STYLE = { background: 'none', border: 'solid 1px rgba(255, 255, 255, 0.2)', padding: '1rem', marginBottom: '1rem' }
@@ -159,7 +159,7 @@ export const Stuff = ({tempCt, R_UNITS, groundUnitSelected, advUnitView, payload
             <ListGroup horizontal style={{border: 'none', display: 'flex', alignItems: 'center'}}>
                 <ListGroupItem className={race.tokens.new ? 'hoverable':''} style={TOKENS_STYLE} >
                 <h6 style={{fontSize: 50}}>{race.tokens.t + tempCt.t}</h6>
-                {ctx.phase === 'acts' && <>
+                {(ctx.phase === 'acts' || ctx.phase === 'stats') && <>
                     {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'t'}/>}
                     {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'t'}/>}
                 </>}
@@ -167,7 +167,7 @@ export const Stuff = ({tempCt, R_UNITS, groundUnitSelected, advUnitView, payload
                 </ListGroupItem>
                 <ListGroupItem className={race.tokens.new ? 'hoverable':''} style={TOKENS_STYLE}>
                 <h6 style={{fontSize: 50}}>{race.tokens.f + tempCt.f}</h6>
-                {ctx.phase === 'acts' && <>
+                {(ctx.phase === 'acts' || ctx.phase === 'stats') && <>
                     {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'f'}/>}
                     {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'f'}/>}
                 </>}
@@ -175,7 +175,7 @@ export const Stuff = ({tempCt, R_UNITS, groundUnitSelected, advUnitView, payload
                 </ListGroupItem>
                 <ListGroupItem className={race.tokens.new ? 'hoverable':''} style={TOKENS_STYLE}>
                 <h6 style={{fontSize: 50}}>{race.tokens.s + tempCt.s}</h6>
-                {ctx.phase === 'acts' && <>
+                {(ctx.phase === 'acts' || ctx.phase === 'stats') && <>
                     {(race.tokens.new > 0 || exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1) && <IncrToken tag={'s'}/>}
                     {exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE') > -1 && <DecrToken tag={'s'}/>}
                 </>}
@@ -264,6 +264,7 @@ export const MyNavbar = ({leftPanel, setLeftPanel, undo, activeTile, isMyTurn, n
     const { G, ctx, moves, playerID } = useContext(StateContext);
     const { t } = useContext(LocalizationContext);
     const isInTrade = ctx.activePlayers && ['trade', 'trade2'].includes(ctx.activePlayers[playerID]);
+    const [accordionVisible, setAccordionVisible] = useState(false);
 
     const leftPanelClick = useCallback((label) => {
         if(leftPanel === label){
@@ -291,35 +292,94 @@ export const MyNavbar = ({leftPanel, setLeftPanel, undo, activeTile, isMyTurn, n
       </ButtonGroup>
 
       <div style={{marginTop: '2rem', marginRight: 0, display: 'flex'}}>
-        <Nav className='comboPanel-left' style={{height: '5.5rem', marginTop: '-1rem', padding: '1.5rem 3rem 1rem 2rem'}}>
-          <UncontrolledAccordion open='0' defaultOpen='0' id='turnLine' style={{width: '30rem', opacity: '.9', marginTop: '.5rem', background: 'transparent'}}>
-            <AccordionItem style={{border: 'none', background: 'transparent'}}>
-              <AccordionHeader targetId='1' style={{border: 'none', background: 'transparent'}}>
+        <Nav className='comboPanel-left' style={{height: '5.5rem', marginTop: '-1rem', padding: '2rem 4rem 1rem 2rem', width: '40rem', display: 'flex', flexDirection: 'column', flexWrap: 'nowrap', position: 'relative'}}>
+          <div style={{border: 'none', background: 'transparent', cursor: 'pointer'}} onClick={() => setAccordionVisible(!accordionVisible)}>
                 <span style={{display: 'flex', width: '100%', background: 'transparent'}}>
                   <CardImg style={{width: '2rem', maxHeight: '2rem', marginRight: '1rem'}} src={'race/icons/'+G.races[ctx.currentPlayer].rid+'.png'} />
                   <h5 style={{margin: 0, alignSelf: 'center', flex: 'auto'}}>{t('races.' + G.races[ctx.currentPlayer].rid + '.name')}
                   {G.speaker === G.races[ctx.currentPlayer].rid ? ' (' + t('board.speaker') + ')': ''}
                   </h5>
                 </span>
-              </AccordionHeader>
-              <AccordionBody style={{padding: '1rem', overflow: 'hidden', background: '0% 0% / 100% auto url(/bg1.png)', backgroundColor: 'rgba(33, 37, 41, 1)', marginTop: '1rem', marginRight: '-1rem', border: 'solid 5px #424242'}} accordionId='1'>
-                {[...ctx.playOrder.slice(ctx.playOrderPos+1), ...ctx.playOrder.slice(0, ctx.playOrderPos)].map((pid, idx) => 
-                  <Row key={idx} style={{background: 'transparent'}}>
+          </div>
+          {accordionVisible && <UncontrolledAccordion id='turnLine' style={{width: '40rem', opacity: '.9', position: 'absolute', top: '5.5rem', left: '-3rem', backgroundColor: 'rgba(9, 9, 9, 1)', border: 'solid 5px #424242', padding: '1rem'}}>
+            {[...ctx.playOrder.slice(ctx.playOrderPos+1), ...ctx.playOrder.slice(0, ctx.playOrderPos+1)].map((pid, idx) => {
+              const r = G.races[pid];
+            
+              return <AccordionItem key={idx} style={{border: 'none', padding: 0}}>
+                <AccordionHeader targetId={String(idx)} style={{padding: '1rem', border: 'none'}}>
+                  <Row style={{width: '100%'}}>
                     <Col xs='1' style={{}}>
-                      <CardImg style={{width: '2rem', maxHeight: '2rem', margin: '.5rem'}} src={'race/icons/'+G.races[pid].rid+'.png'} />
+                      <CardImg style={{width: '2rem', maxHeight: '2rem', margin: '.5rem'}} src={'race/icons/' + r.rid + '.png'} />
                     </Col>
                     <Col xs='8' style={{padding: '1rem 1rem 0 2rem', fontFamily: 'Handel Gothic', textDecoration: G.passedPlayers.includes(''+pid) ? 'line-through':''}}>
-                      {t('races.' + G.races[pid].rid + '.name')} {G.speaker === G.races[pid].rid ? ' (' + t('board.speaker') + ')': ''}</Col>
+                      {t('races.' + r.rid + '.name')} {G.speaker === r.rid ? ' (' + t('board.speaker') + ')': ''}</Col>
                     <Col xs='3' style={{padding: '.5rem 0'}}>
-                      {G.races[pid].strategy.map((s, i) => 
+                      {r.strategy.map((s, i) => 
                         <p key={i} style={{fontSize: '75%', margin: 0, textDecoration: s.exhausted ? 'line-through':''}}>
                           {t('cards.strategy.' + s.id + '.label') + ' [' + (s.init+1) + ']'}</p>)}
                     </Col>
                   </Row>
-                )}
-              </AccordionBody>
-            </AccordionItem>
-          </UncontrolledAccordion>
+                </AccordionHeader>
+                <AccordionBody style={{padding: '0 0 1rem 1rem'}} accordionId={String(idx)}>
+                  <Row>
+                    <Col xs='5'></Col>
+                    <Col xs=''><b style={{display: 'flex', alignItems: 'center'}}>
+                      <span id={'agent_tl_'+pid}>
+                        <Badge pill style={{height: '1rem', margin: '0 1rem 0 0'}} color={!r.exhaustedCards.includes('AGENT') ? 'success':'danger'}>{' '}</Badge>
+                        {t('board.agent')}
+                      </span>
+                      <UncontrolledTooltip target={'#agent_tl_'+pid}>{t('races.' + r.rid + '.agentAbility')}</UncontrolledTooltip>
+                      
+                      <span id={'commander_tl_'+pid}>
+                        <Badge pill style={{height: '1rem', margin: '0 1rem'}} color={!r.commanderIsUnlocked ? 'light': !r.exhaustedCards.includes('COMMANDER') ? 'success':'danger'}>{' '}</Badge>
+                        {t('board.commander')}
+                      </span>
+                      <UncontrolledTooltip target={'#commander_tl_'+pid}>{t('races.' + r.rid + '.commanderAbility')}</UncontrolledTooltip>
+                      
+                      <span id={'hero_tl_'+pid}>
+                        <Badge pill style={{height: '1rem', margin: '0 1rem'}} color={!r.heroIsUnlocked ? 'light': r.heroIsExhausted ? 'danger':'success'}>{' '}</Badge>
+                        {t('board.hero')}
+                      </span>
+                      <UncontrolledTooltip target={'#hero_tl_'+pid}>{t('races.' + r.rid + '.heroAbility')}</UncontrolledTooltip>
+                    </b></Col>
+                  </Row>
+                  <Row>
+                    <Col xs='2'><b>{t('board.vp') + ':'}</b></Col>
+                    <Col xs='1'>{getRaceVP(G, pid)}</Col>
+                  </Row>
+                  <Row>
+                    <Col xs='2'><b>{t('board.tokens') + ':'}</b></Col>
+                    <Col xs='1'>{r.tokens.t}</Col>
+                    <Col xs='1'>{r.tokens.f}</Col>
+                    <Col xs='1'>{r.tokens.s}</Col>
+                    <Col xs='1'>{'+' + r.tokens.new}</Col>
+                  </Row>
+                  <Row>
+                    <Col xs='2'><b>{t('board.fragments') + ':'}</b></Col>
+                    <Col xs='1'>{r.fragments.c}</Col>
+                    <Col xs='1'>{r.fragments.h}</Col>
+                    <Col xs='1'>{r.fragments.i}</Col>
+                    <Col xs='1'>{r.fragments.u}</Col>
+                  </Row>
+                  <Row>
+                    <Col xs='2'><b>{t('board.commodity') + ':'}</b></Col>
+                    <Col xs='1'>{(r.commodity || 0) + '/' + r.commCap}</Col>
+                    <Col xs='2'><b>{t('board.trade_goods') + ':'}</b></Col>
+                    <Col xs='1'>{r.tg}</Col>
+                  </Row>
+                  <Row>
+                    <Col xs='2'><b>{t('board.nav.relics') + ':'}</b></Col>
+                    <Col>{r.relics.map((k, i) => <span key={i}>
+                      <Badge color={(k.exhausted || k.purged) ? 'dark':'secondary'} id={k.id.replaceAll(' ', '_')+'_tl_'+pid} className='hoverable' style={{fontSize: '.6rem'}}>{k.id.replaceAll('_', ' ')}</Badge>
+                      <UncontrolledTooltip target={'#'+k.id.replaceAll(' ', '_')+'_tl_'+pid}>{k.effect}</UncontrolledTooltip>
+                      </span>)}
+                  </Col>
+                  </Row>
+                </AccordionBody>
+              </AccordionItem>
+              }
+            )}
+          </UncontrolledAccordion> }
         </Nav>
 
         <Nav className='comboPanel-right' style={{height: '3.5rem', zIndex: 1, padding: '.5rem 2.75em 0 .5rem', minWidth: '30rem', display: 'flex', justifyContent: 'flex-end'}}>

@@ -1,4 +1,4 @@
-import { Card, CardImg,  CardTitle, CardBody, CardFooter, ButtonGroup, Button, Row, Col, Input, Label } from 'reactstrap';
+import { Card, CardImg,  CardTitle, CardBody, CardFooter, ButtonGroup, Button, Row, Col, Container as Cont, Input, Label } from 'reactstrap';
 import { useState, useMemo, useContext, useCallback, useEffect, useRef } from 'react';
 import { produce } from 'immer';
 //import techData from './techData.json';
@@ -1044,6 +1044,52 @@ export const TechnologyDialog = ({tooltipMode, onSelect, selected, races}) => {
       {GetTechType('unit', race, tooltipMode, onSelectFn, selected)}
     </div>
   </Card>
+}
+
+export const PlanetsDialog = ({globalPaymentExhaustedPlanets, globalPayPlanet, globalPayCancelPlanet}) => {
+    const { G, playerID } = useContext(StateContext);
+    const [race, setRace] = useState(G.races[playerID]);
+
+    const PLANETS = useMemo(()=> {
+        const arr = [];
+    
+        G.tiles.forEach( t => {
+          if(t.tdata.planets && t.tdata.planets.length){
+            t.tdata.planets.forEach((p, pidx) => {
+              if(p.occupied !== undefined && G.races[p.occupied] && G.races[p.occupied].rid === race.rid){
+                arr.push({...p, tid: t.tid, pidx});
+              }
+            })
+          }
+        });
+    
+        return arr;
+    }, [G, race]);
+
+    const clicks = useMemo(() => {
+        if(race.rid === G.races[playerID].rid)
+            return {exhausted: globalPaymentExhaustedPlanets,
+                specClick: (e, p) => p && p.specialty && globalPayPlanet(e, p, p.specialty),
+                resClick: (e, p) => globalPayPlanet(e, p, 'resources'),
+                infClick: (e, p) => globalPayPlanet(e, p, 'influence'),
+                onClick: (pname) => globalPayCancelPlanet(pname)}
+        else return {}
+    }, [race, playerID, G, globalPaymentExhaustedPlanets, globalPayPlanet, globalPayCancelPlanet])
+
+    return <Card className='subPanel' style={{ padding: '3rem 1rem 2rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
+        <CardTitle>
+            <ButtonGroup style={{}}>
+                {G.races.map((r, i) => <button onClick={()=>setRace(r)} className={'styledButton ' + (r.rid === race.rid ? 'white':'black')} 
+                    style={{padding: '.5rem', width: '4rem'}} 
+                    key={i}><img alt={r.rid} style={{height: '1.5rem'}} src={'/race/icons/' + r.rid + '.png'}/></button>)}
+            </ButtonGroup>
+        </CardTitle>
+        <div style={{maxHeight: '30rem', overflowY: 'auto', paddingRight: '1rem'}}>
+            <Cont style={{border: 'none'}}>
+                <PlanetsRows PLANETS={PLANETS} {...clicks}/>
+            </Cont>
+        </div>
+    </Card>
 }
 
 const PlayerSelect = ({selected, onSelect, noTokensInfo}) => {

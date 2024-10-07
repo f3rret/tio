@@ -2,7 +2,7 @@
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
 import cardData from './cardData.json';
 import { getHexGrid, neighbors } from './Grid';
-import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer, useRelic, usePromissory, useAgenda, dropSecretObjective } from './gameStages';
+import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer, useRelic, usePromissory, useAgenda,  adjustToken, dropSecretObjective } from './gameStages';
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
@@ -830,12 +830,7 @@ export const TIO = {
 
             G.races[playerID].actions.push('FRAGMENTS_PURGE');
           },
-          adjustToken: ({ G, playerID}, tag, inc) => {
-            let i = inc || 1;
-      
-            G.races[playerID].tokens.new -= i;
-            G.races[playerID].tokens[tag] += i;
-          },
+          adjustToken,
           redistTokens: ({ G, playerID}, inc, exhaustedCards) => {
             Object.keys(inc).forEach(tag => {
               G.races[playerID].tokens[tag] += inc[tag];
@@ -1324,6 +1319,7 @@ export const TIO = {
           }
         },
         moves: {
+          adjustToken,
           useRelic,
           playActionCard: ({G, playerID, events}, card) => {
             if(card.when === 'STATUS'){
@@ -1344,6 +1340,16 @@ export const TIO = {
         },
         onBegin: ({ G, events }) => {
           G.passedPlayers = [];
+
+          G.races.forEach(r => {
+            let c = haveTechnology(r, 'HYPER_METABOLISM') ? 3:2;
+            if(r.rid === 1) c++;
+            
+            let possible = 16 - (r.tokens.t + r.tokens.s + r.tokens.f + r.tokens.new);
+            if(possible < 0) possible = 0;
+
+            r.tokens.new += Math.min(c, possible);
+          });
           
          // events.setPhase('agenda'); //test only!
         },
@@ -1368,14 +1374,6 @@ export const TIO = {
               if(r.exhaustedCards.indexOf('Political Stability') === -1) r.strategy = []; 
               r.initiative = undefined;
               r.lastScoredObjType = undefined;
-              let c = haveTechnology(r, 'HYPER_METABOLISM') ? 3:2;
-              if(r.rid === 1) c++;
-              
-              let possible = 16 - (r.tokens.t + r.tokens.s + r.tokens.f + r.tokens.new);
-              if(possible < 0) possible = 0;
-
-              r.tokens.new += Math.min(c, possible);
-
               r.exhaustedCards = [];
               r.combatActionCards = [];
               r.relics = r.relics.filter(r => r && !r.purged);

@@ -1838,7 +1838,7 @@ export const replenishCommodity = (G, playerID, count, plugins) => {
       }
     }
     else{
-      G.races[playerID].commodity += count;
+      G.races[playerID].commodity += Math.min(count, G.races[playerID].commCap);
 
       const law = G.laws.find(l => l.id === 'Minister of Commerce');
       if(law && law.decision === G.races[playerID].name){

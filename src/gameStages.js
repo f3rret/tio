@@ -32,6 +32,13 @@ export const useAgenda = ({G, ctx, playerID}, args) => {
   }
 }
 
+export const adjustToken = ({ G, playerID}, tag, inc) => {
+  let i = inc || 1;
+
+  G.races[playerID].tokens.new -= i;
+  G.races[playerID].tokens[tag] += i;
+}
+
 export const useRelic = ({G, ctx, playerID, ...plugins}, args) => {
 
   try{
