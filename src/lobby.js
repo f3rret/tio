@@ -23,7 +23,6 @@ let interval = null;
 
 export const Lobby = ({dispatch})=> {
 
-
     const { t, locale, setLocale } = useContext(LocalizationContext);
     const playerNames = useMemo(() => ['Alice', 'Bob', 'Cecil', 'David', 'Eva', 'Frank', 'Gregory', 'Heilen'], []);
     const races = useMemo(() => [...raceData.races, ...raceData.pokRaces], []);
@@ -43,6 +42,8 @@ export const Lobby = ({dispatch})=> {
     const [lorPage, setLorPage] = useState(0);
     const [autoJoinPrematch, setAutoJoinPrematch] = useState(false);
     const [cookie, setCookie] = useCookies(['matchID', 'playerID', 'playerCreds']);
+
+    const [bots, setBots] = useState({});
     //const [playerName, setPlayerName] = useState(playerNames[0]);
     
     const lobbyClient = useMemo(() => new LobbyClient({ server: window.location.protocol + '//' + settings.ip + ':8000' }), []);
@@ -101,6 +102,35 @@ export const Lobby = ({dispatch})=> {
         else{
             return false;
         }}, [prematchInfo]);
+
+    const addBot = useCallback((pid) => {
+        const client = new LobbyClient({ server: window.location.protocol + '//' + settings.ip + ':8000' });
+        client.joinMatch(prematchInfo.gameName, prematchID, {
+            playerName: 'bot ' + pid,
+            playerID: String(pid),
+            data: {ready: false, race: '0', bot: true}
+        })
+        .then(data => {
+            if(data.playerCredentials !== undefined){
+                setBots(produce(bots, draft => { draft[pid] = {creds: data.playerCredentials} }))
+            }
+        })
+        .catch(console.err);
+    }, [prematchID, prematchInfo, bots])
+
+    const removeBot = useCallback((pid) => {
+        if(!bots[pid]) return;
+
+        const client = new LobbyClient({ server: window.location.protocol + '//' + settings.ip + ':8000' });
+        client.leaveMatch('prematch', prematchID, {
+            playerID: String(pid), 
+            credentials: bots[pid].creds 
+        })
+        .then(() => {
+            setBots(produce(bots, draft => { delete draft[pid] }))
+        })
+        .catch(console.err)
+    }, [prematchID, bots])
 
     const refreshMatchList = useCallback(() => {
         lobbyClient.listMatches('prematch')
@@ -259,10 +289,13 @@ export const Lobby = ({dispatch})=> {
     }, [lobbyClient, playerID, playerCreds, prematchID, prematchInfoString]);
 
     const joinMatch = useCallback((mid) => {
+        const name = prematchInfo.players[playerID].name;
+        const players = prematchInfo.players.filter(p => p.name);
+        const pid = players.findIndex(p => p.name === name);
 
         lobbyClient.joinMatch('TIO', mid, {
             playerName: playerName,
-            playerID: playerID
+            playerID: String(pid) //playerID
         })
         .then(data => {
             if(prematchInfo.gameName === 'prematch'){
@@ -285,7 +318,7 @@ export const Lobby = ({dispatch})=> {
                 data.playerCredentials && setPlayerCreds(data.playerCredentials); //change creds from prematch to match 
 
                 setCookie('matchID', mid);
-                setCookie('playerID', playerID);
+                setCookie('playerID', String(pid)/*playerID*/);
                 setCookie('playerCreds', data.playerCredentials);
                 setCookie('playerName', playerName);
 
@@ -294,7 +327,7 @@ export const Lobby = ({dispatch})=> {
                 args.setPlayerCreds(data.playerCredentials);*/
                 dispatch({
                     type: 'connect',
-                    playerID,
+                    playerID: String(pid),
                     matchID: mid,
                     playerCreds: data.playerCredentials
                 });
@@ -327,9 +360,10 @@ export const Lobby = ({dispatch})=> {
     }, [cookie, prematchInfoString]);
 
     const runGame = useCallback((tiles) => {
-        
-        lobbyClient.createMatch('TIO', {numPlayers: prematchInfo.players.filter(p => p.name).length, 
-            setupData: {...prematchInfo.setupData, mapArray: tiles}})
+        const players = prematchInfo.players.filter(p => p.name);
+
+        lobbyClient.createMatch('TIO', {numPlayers: players.length, 
+            setupData: {...prematchInfo.setupData, mapArray: tiles, players}})
         .then(data => {
             if(data.matchID) {
                 clearInterval(interval);
@@ -545,9 +579,12 @@ export const Lobby = ({dispatch})=> {
                                 return <Row key={i} style={{ minHeight: '2.5rem'}}>
                                     <Col xs='1' style={{padding: 0}}><div style={{backgroundColor: trueColors[colors[i]][0], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
                                     {p.name && p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
-                                    {p.name && !p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
+                                    {p.name && !p.isConnected && <>
+                                        {p.data && p.data.bot && <Col xs='4' onClick={() => removeBot(i)} style={{alignSelf: 'center', color: 'yellow'}}>{p.name}</Col>}
+                                        {(!p.data || !p.data.bot) && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
+                                    </>}
                                     {!p.name && playerName && prematchID === prematchInfo.matchID && String(playerID) === String(p.id) && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
-                                    {!p.name && <Col xs='4' style={{alignSelf: 'center'}}>{'[ ' + t('lobby.open') + ' ]'}</Col>}
+                                    {!p.name && <Col xs='4' style={{alignSelf: 'center'}} onClick={() => addBot(i)}>{'[ ' + t('lobby.open') + ' ]'}</Col>}
                                     {p.name && <Col xs='7' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>
                                         {String(playerID) === String(p.id) && <Input style={{color: 'inherit', fontSize: 'inherit'}} disabled={p.data && p.data.ready} type='select' onChange={(e) => updatePlayerInfo({race: e.target.value})}>
                                             <option value='0'>{'--' + t('lobby.random_race') + '--'}</option>

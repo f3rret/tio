@@ -2,7 +2,7 @@
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
 import cardData from './cardData.json';
 import { getHexGrid, neighbors } from './Grid';
-import { ACTION_CARD_STAGE, ACTS_STAGES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer, useRelic, usePromissory, useAgenda,  adjustToken, dropSecretObjective } from './gameStages';
+import { ACTION_CARD_STAGE, ACTS_STAGES, STRAT_MOVES, secretObjectiveConfirm, producing, useHeroAbility, addTradeItem, delTradeItem, makeOffer, useRelic, usePromissory, useAgenda,  adjustToken, dropSecretObjective } from './gameStages';
 import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology, 
  getPlanetByName, votingProcessDone, dropACard, completeObjective, explorePlanetByName, 
  getPlayerUnits, UNITS_LIMIT, exploreFrontier, checkIonStorm, checkSecretObjective, 
@@ -12,6 +12,7 @@ import { checkTacticalActionCard, getUnitsTechnologies, haveTechnology,
  returnPromissoryToOwner,
  occupyPlanet} from './utils';
 import { EffectsPlugin } from 'bgio-effects/plugin';
+import { botMove } from './botPlugin';
 import settings from '../package.json'
 
 const effectsConfig = EffectsPlugin({
@@ -36,9 +37,11 @@ const effectsConfig = EffectsPlugin({
   },
 });
 
+//const botPlugin = BotPlugin({});
+
 export const TIO = {
     name: 'TIO',
-    plugins: [effectsConfig],
+    plugins: [effectsConfig/*, botPlugin*/],
     validateSetupData: (setupData, numPlayers) => {
       if(!setupData || !setupData.mapArray){
         return 'setup data not valid';
@@ -48,7 +51,7 @@ export const TIO = {
 
       const HexGrid = getHexGrid(setupData.mapArray);
       const hg = HexGrid.toArray().filter(a => a);
-      const races = getInitRaces(hg, ctx.numPlayers, setupData.colors);
+      const races = getInitRaces(hg, ctx.numPlayers, setupData.colors, setupData.players);
       
       return {
         matchName: setupData.matchName || 'New game',
@@ -69,7 +72,8 @@ export const TIO = {
         dice: (new Array(ctx.numPlayers)).map(a => { return {}}),
         HexGrid: JSON.stringify(HexGrid),
         vp: setupData.vp || 10,
-        discardedActions: []
+        discardedActions: [],
+        players: setupData.players
       }
     },
 
@@ -88,41 +92,15 @@ export const TIO = {
             actionCard: ACTION_CARD_STAGE
           },
 
-          onBegin: ({G, ctx, events}) => {
+          onBegin: ({G, ctx, events, ...plugins}) => {
             if(G.races[ctx.currentPlayer].exhaustedCards.indexOf('Political Stability') > -1){
               events.endTurn();
             }
+
+            botMove({G, ctx, events, plugins});
           }
         },
-        moves: {
-          dropActionCard: dropACard,
-          playActionCard: ({G, playerID, events}, card) => {
-            if(card.when === 'STRATEGY'){
-              G.races[playerID].currentActionCard = {...card, reaction: {}, playerID};
-              events.setActivePlayers({ all: 'actionCard' });
-            }
-          },
-          pickStrategy: ({G, playerID, events}, sid) => {
-            if(!cardData.strategy[sid]){
-              console.log('invalid card');
-              return INVALID_MOVE;
-            }
-
-            if(G.races.find( r => r.strategy.length && r.strategy.find(s => s.id === sid))){
-              console.log('already picked');
-              return INVALID_MOVE;
-            }
-
-            const init = cardData.strategy[sid].init;
-            
-            if(G.races[playerID].initiative === undefined || G.races[playerID].initiative > init){
-              G.races[playerID].initiative = init;
-            }
-
-            G.races[playerID].strategy.push({ id: sid, init });
-            events.endTurn();
-          }
-        },
+        moves: STRAT_MOVES,
         onBegin: ({ G, ctx, random, events }) => {
          try{
             if(!G.pubObjDeck || !G.pubObjDeck.length){
@@ -1867,5 +1845,13 @@ export const TIO = {
       }
         
     },
+
+    /*ai: {
+      enumerate: (G, ctx) => {
+        let moves = [];
+        moves.push({ move: 'endTurn', args: [0] });
+        return moves;
+      }
+    }*/
 };
 

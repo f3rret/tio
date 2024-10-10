@@ -4,9 +4,10 @@ import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveT
   completeObjective, loadUnitsOnRetreat, checkTacticalActionCard, playCombatAC, repairAllActiveTileUnits, 
   spliceCombatAC, checkIonStorm, checkSecretObjective, checkCommanderUnlock, useCommanderAbility, 
   adjustTechnologies, explorePlanetByName, occupyPlanet, getMaxActs, 
-  enemyHaveCombatAC,
+  enemyHaveCombatAC, dropACard,
   getPlayerPlanets,
   replenishCommodity, returnPromissoryToOwner} from './utils';
+import cardData from './cardData.json';
 
 export const useAgenda = ({G, ctx, playerID}, args) => {
   try{
@@ -2995,4 +2996,43 @@ export const ACTS_STAGES = {
       }
     }
   },
+}
+
+
+
+export const STRAT_MOVES = {
+  dropActionCard: dropACard,
+  playActionCard: ({G, playerID, events}, card) => {
+    if(card.when === 'STRATEGY'){
+      G.races[playerID].currentActionCard = {...card, reaction: {}, playerID};
+      events.setActivePlayers({ all: 'actionCard' });
+    }
+  },
+  pickStrategy: ({G, playerID, events}, sid) => {
+    try{
+      if(!cardData.strategy[sid]){
+        console.log('invalid card');
+        return INVALID_MOVE;
+      }
+
+      if(G.races.find( r => r.strategy.length && r.strategy.find(s => s.id === sid))){
+        console.log('already picked');
+        return INVALID_MOVE;
+      }
+
+      const init = cardData.strategy[sid].init;
+      
+      if(G.races[playerID].initiative === undefined || G.races[playerID].initiative > init){
+        G.races[playerID].initiative = init;
+      }
+
+      G.races[playerID].strategy.push({ id: sid, init });
+      events.endTurn();
+
+      //return G;
+    }
+    catch(e){
+      console.log(e)
+    }
+  }
 }
