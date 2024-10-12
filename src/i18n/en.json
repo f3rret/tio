@@ -17,6 +17,8 @@
             "start_game": "Start",
             "random_race": "random race",
             "open": "open",
+            "close": "close",
+            "bot": "bot",
             "connecting": "connecting",
             "reconnect": "Reconnect",
             "join_game": "Join game",

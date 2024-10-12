@@ -103,34 +103,47 @@ export const Lobby = ({dispatch})=> {
             return false;
         }}, [prematchInfo]);
 
-    const addBot = useCallback((pid) => {
+    const changeSlot = useCallback((pid, e) => {
         const client = new LobbyClient({ server: window.location.protocol + '//' + settings.ip + ':8000' });
-        client.joinMatch(prematchInfo.gameName, prematchID, {
-            playerName: 'bot ' + pid,
-            playerID: String(pid),
-            data: {ready: false, race: '0', bot: true}
-        })
-        .then(data => {
-            if(data.playerCredentials !== undefined){
-                setBots(produce(bots, draft => { draft[pid] = {creds: data.playerCredentials} }))
+
+        if(e.target?.value !== 'open'){
+            const bot = e.target?.value === 'bot';
+            const close = e.target?.value === 'close';
+
+            if(!bots[pid]){
+                client.joinMatch(prematchInfo.gameName, prematchID, {
+                    playerName: 'bot ' + pid,
+                    playerID: String(pid),
+                    data: {ready: false, race: '0', bot, close}
+                })
+                .then(data => {
+                    if(data.playerCredentials !== undefined){
+                        setBots(produce(bots, draft => { draft[pid] = {creds: data.playerCredentials} }))
+                    }
+                })
+                .catch(console.err);
             }
-        })
-        .catch(console.err);
-    }, [prematchID, prematchInfo, bots])
-
-    const removeBot = useCallback((pid) => {
-        if(!bots[pid]) return;
-
-        const client = new LobbyClient({ server: window.location.protocol + '//' + settings.ip + ':8000' });
-        client.leaveMatch('prematch', prematchID, {
-            playerID: String(pid), 
-            credentials: bots[pid].creds 
-        })
-        .then(() => {
-            setBots(produce(bots, draft => { delete draft[pid] }))
-        })
-        .catch(console.err)
-    }, [prematchID, bots])
+            else{
+                client.updatePlayer('prematch', prematchID, {
+                    playerID: String(pid),
+                    credentials: bots[pid].creds,
+                    data: {...prematchInfo.players[pid].data, bot, close}
+                })
+            }
+        }
+        else{
+            if(bots[pid]){
+                client.leaveMatch('prematch', prematchID, {
+                    playerID: String(pid), 
+                    credentials: bots[pid].creds 
+                })
+                .then(() => {
+                    setBots(produce(bots, draft => { delete draft[pid] }))
+                })
+                .catch(console.err)
+            }
+        }
+    }, [bots, prematchID, prematchInfo])
 
     const refreshMatchList = useCallback(() => {
         lobbyClient.listMatches('prematch')
@@ -288,14 +301,25 @@ export const Lobby = ({dispatch})=> {
     // eslint-disable-next-line
     }, [lobbyClient, playerID, playerCreds, prematchID, prematchInfoString]);
 
+    const remapPlayerID = (pid) => {
+        const pids = Object.keys(prematchInfo.players);
+        let adjust = 0;
+        pids.forEach(p => {
+            if(prematchInfo.players[p] && prematchInfo.players[p].close) adjust++;
+        })
+
+        return pid -= adjust;
+    }
+
     const joinMatch = useCallback((mid) => {
         const name = prematchInfo.players[playerID].name;
         const players = prematchInfo.players.filter(p => p.name);
         const pid = players.findIndex(p => p.name === name);
+        const remapedPid = String(remapPlayerID(pid));
 
         lobbyClient.joinMatch('TIO', mid, {
             playerName: playerName,
-            playerID: String(pid) //playerID
+            playerID: remapedPid //playerID
         })
         .then(data => {
             if(prematchInfo.gameName === 'prematch'){
@@ -318,7 +342,7 @@ export const Lobby = ({dispatch})=> {
                 data.playerCredentials && setPlayerCreds(data.playerCredentials); //change creds from prematch to match 
 
                 setCookie('matchID', mid);
-                setCookie('playerID', String(pid)/*playerID*/);
+                setCookie('playerID', remapedPid);
                 setCookie('playerCreds', data.playerCredentials);
                 setCookie('playerName', playerName);
 
@@ -327,7 +351,7 @@ export const Lobby = ({dispatch})=> {
                 args.setPlayerCreds(data.playerCredentials);*/
                 dispatch({
                     type: 'connect',
-                    playerID: String(pid),
+                    playerID: remapedPid,
                     matchID: mid,
                     playerCreds: data.playerCredentials
                 });
@@ -360,7 +384,7 @@ export const Lobby = ({dispatch})=> {
     }, [cookie, prematchInfoString]);
 
     const runGame = useCallback((tiles) => {
-        const players = prematchInfo.players.filter(p => p.name);
+        const players = prematchInfo.players.filter(p => p.name && (!p.data || !p.data.close));
 
         lobbyClient.createMatch('TIO', {numPlayers: players.length, 
             setupData: {...prematchInfo.setupData, mapArray: tiles, players}})
@@ -577,15 +601,25 @@ export const Lobby = ({dispatch})=> {
                             {prematchInfo.players && 
                             <Container style={{fontSize: '90%'}}>{prematchInfo.players.map((p, i) =>{
                                 return <Row key={i} style={{ minHeight: '2.5rem'}}>
-                                    <Col xs='1' style={{padding: 0}}><div style={{backgroundColor: trueColors[colors[i]][0], width: '2rem', height: '2rem', borderRadius: '50%'}}></div></Col>
-                                    {p.name && p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
-                                    {p.name && !p.isConnected && <>
-                                        {p.data && p.data.bot && <Col xs='4' onClick={() => removeBot(i)} style={{alignSelf: 'center', color: 'yellow'}}>{p.name}</Col>}
-                                        {(!p.data || !p.data.bot) && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
-                                    </>}
-                                    {!p.name && playerName && prematchID === prematchInfo.matchID && String(playerID) === String(p.id) && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
-                                    {!p.name && <Col xs='4' style={{alignSelf: 'center'}} onClick={() => addBot(i)}>{'[ ' + t('lobby.open') + ' ]'}</Col>}
-                                    {p.name && <Col xs='7' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>
+                                    <Col xs='1' style={{padding: 0}}>
+                                        <div style={{backgroundColor: trueColors[colors[i]][0], width: '2rem', height: '2rem', borderRadius: '50%'}}></div>
+                                    </Col>
+
+                                    <Col xs='4' style={{alignSelf: 'center'}}>
+                                        {p.name && p.isConnected && <>{p.name}</>}
+                                        {p.name && !p.isConnected && (!p.data || (!p.data.bot && !p.data.close)) &&
+                                            <>{'[ ' + t('lobby.connecting') + '... ]'}</>}
+                                        {!p.name && playerName && prematchID === prematchInfo.matchID && String(playerID) === String(p.id) && 
+                                            <>{'[ ' + t('lobby.connecting') + '... ]'}</>}
+                                        {playerID === '0' && ((!p.name && String(playerID) !== String(p.id)) || (!p.isConnected && p.data && (p.data.bot || p.data.close))) && <Input type='select' style={{color: 'inherit', fontSize: 'inherit'}} defaultValue='open' onChange={(e) => changeSlot(i, e)}>
+                                            <option value='open'>{'[ ' + t('lobby.open') + ' ]'}</option>
+                                            <option value='close'>{'[ ' + t('lobby.close') + ' ]'}</option>
+                                            <option value='bot'>{'[ ' + t('lobby.bot') + ' ]'}</option>
+                                        </Input>}
+                                    </Col>
+
+                                    
+                                    {p.name && (!p.data || !p.data.close) && <Col xs='7' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>
                                         {String(playerID) === String(p.id) && <Input style={{color: 'inherit', fontSize: 'inherit'}} disabled={p.data && p.data.ready} type='select' onChange={(e) => updatePlayerInfo({race: e.target.value})}>
                                             <option value='0'>{'--' + t('lobby.random_race') + '--'}</option>
                                             {sortedRacesList.map(([idx, label]) => {
@@ -654,3 +688,14 @@ export const Lobby = ({dispatch})=> {
         </>;
 }
 // {playerID && playerID !== '0' && !iAmReady &&  <button className='styledButton green' onClick={() => updatePlayerInfo({ready: true})}>{t('lobby.ready_to_play')} <b className='bi-check-square-fill' ></b></button>}
+/**
+ *  {false && <>
+                                        {p.name && p.isConnected && <Col xs='4' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>{p.name}</Col>}
+                                        {p.name && !p.isConnected && <>
+                                            {p.data && p.data.bot && <Col xs='4' onClick={() => removeBot(i)} style={{alignSelf: 'center', color: 'yellow'}}>{p.name}</Col>}
+                                            {(!p.data || !p.data.bot) && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
+                                        </>}
+                                        {!p.name && playerName && prematchID === prematchInfo.matchID && String(playerID) === String(p.id) && <Col xs='4' style={{alignSelf: 'center', color: 'yellow'}}>{'[ ' + t('lobby.connecting') + '... ]'}</Col>}
+                                        {!p.name && <Col xs='4' style={{alignSelf: 'center'}} onClick={() => addBot(i)}>{'[ ' + t('lobby.open') + ' ]'}</Col>}
+                                    </>}
+ */
