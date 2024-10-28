@@ -289,10 +289,12 @@ export const Lobby = ({dispatch})=> {
     }, [lobbyClient, playerID, playerCreds, prematchID]);*/
 
     const updatePlayerInfo = useCallback((info) => {
+        const pid = info.bot ? info.pid : playerID;
+
         lobbyClient.updatePlayer('prematch', prematchID, {
-            playerID: playerID,
-            credentials: playerCreds,
-            data: {...prematchInfo.players[playerID].data, ...info}
+            playerID: String(pid),
+            credentials: info.bot ? bots[info.pid].creds : playerCreds,
+            data: {...prematchInfo.players[pid].data, ...info}
         })
         .then(data => {
             //console.log(data);
@@ -616,18 +618,20 @@ export const Lobby = ({dispatch})=> {
                                             <option value='close'>{'[ ' + t('lobby.close') + ' ]'}</option>
                                             <option value='bot'>{'[ ' + t('lobby.bot') + ' ]'}</option>
                                         </Input>}
+                                        {playerID !== '0' && p.data && p.data.bot && <>{'[ ' + t('lobby.bot') + ' ]'}</>}
+                                        {playerID !== '0' && p.data && p.data.close && <>{'[ ' + t('lobby.close') + ' ]'}</>}
                                     </Col>
 
                                     
                                     {p.name && (!p.data || !p.data.close) && <Col xs='7' style={{alignSelf: 'center', color: p.data && p.data.ready ? 'lime' : 'none'}}>
-                                        {String(playerID) === String(p.id) && <Input style={{color: 'inherit', fontSize: 'inherit'}} disabled={p.data && p.data.ready} type='select' onChange={(e) => updatePlayerInfo({race: e.target.value})}>
+                                        {(String(playerID) === String(p.id) || (playerID === '0' && p.data.bot)) && <Input style={{color: 'inherit', fontSize: 'inherit'}} disabled={p.data && p.data.ready} type='select' onChange={(e) => updatePlayerInfo({pid: p.id, race: e.target.value, bot: p.data.bot})}>
                                             <option value='0'>{'--' + t('lobby.random_race') + '--'}</option>
                                             {sortedRacesList.map(([idx, label]) => {
                                                 const color = [1, 2].includes(idx) ? 'rgba(255,255,255,1)':'rgba(255,255,255,.5)'; 
                                                 return <option key={idx} style={{color: color}} value={idx}>{label}</option>
                                             })}
                                         </Input>}
-                                        {p.data && String(playerID) !== String(p.id) && <span style={{paddingLeft: '1.5rem'}}>
+                                        {p.data && String(playerID) !== String(p.id) && !(playerID === '0' && p.data.bot) && <span style={{paddingLeft: '1.5rem'}}>
                                             {p.data.race === '0' ? t('lobby.random_race'): t('races.' + p.data.race + '.name')}
                                         </span>}
                                     </Col>}
