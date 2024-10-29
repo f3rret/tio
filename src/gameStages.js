@@ -2844,7 +2844,7 @@ export const ACTS_STAGES = {
                   }
                 }
 
-                occupyPlanet(G, playerID, activePlanet, false, plugins);
+                occupyPlanet({G, playerID, planet: activePlanet, explore: false, plugins});
 
                 if(haveTechnology(G.races[playerID], 'DACXIVE_ANIMATORS')){
                   if(!activePlanet.units['infantry']) activePlanet.units['infantry']=[];
@@ -3588,7 +3588,7 @@ export const ACTS_MOVES = {
     try{
 
       let to = G.tiles[dst.tile].tdata.planets[dst.planet];
-      if(to.attach && to.attach.length && to.attach.indexOf('Demilitarized Zone')>-1) return;
+      if(to.attach && to.attach.length && to.attach.indexOf('Demilitarized Zone') > -1) return;
 
       const from = G.tiles[src.tile].tdata.fleet[src.unit];
     
@@ -3633,7 +3633,7 @@ export const ACTS_MOVES = {
           G.tiles[src.tile].tdata.fleet[src.unit][src.i].payload.filter(p => p);
 
         if(to.occupied === undefined){
-          occupyPlanet(G, playerID, to, to.trait, plugins);
+          occupyPlanet({G, playerID, planet: to, explore: to.trait, plugins});
         }
         else if(String(to.occupied) !== String(playerID) && G.races[to.occupied]){
           checkSecretObjective(G, to.occupied, 'Become a Martyr');
@@ -3646,7 +3646,7 @@ export const ACTS_MOVES = {
             }
           }
 
-          occupyPlanet(G, playerID, to, false, plugins);
+          occupyPlanet({G, playerID, planet: to, explore: false, plugins});
         }
       }
 

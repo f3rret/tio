@@ -1898,8 +1898,9 @@ export const haveRaceCommanderAbility = (G, race, rid) => {
   }
 }
 
-export const occupyPlanet = (G, playerID, planet, explore, plugins) => {
-  
+export const occupyPlanet = (args) => {
+  const {G, playerID, planet, explore, plugins} = args;
+
   try{
     planet.exhausted = true;
     planet.occupied = playerID;

@@ -540,7 +540,7 @@ export const Lobby = ({dispatch})=> {
                     <div id='lorPager' onClick={() => {if(lorPage < 9) {setLorPage(lorPage + 1)} else { setLorPage(0) }}}>
                         <div className={'lorPage' + lorPage}><Markup markup={t('lobby.greeting_lor')}/></div>
                     </div>
-                    <img src='/greeting.png' alt='greeting' style={{width: '45%', height: 'auto', opacity: .9}}/>
+                    <img src='/greeting.png' alt='greeting' style={{width: '45%', height: 'auto', opacity: .9, filter: 'drop-shadow(2px 2px 20px rgba(255,255,255,.25))'}}/>
                 </Card>}
                 {prematchInfo && <Card className='borderedPanel' style={{flex: 'auto', margin: '4rem 4rem 5%', overflowY: 'hidden', maxWidth: '42%', padding: '2rem'}}>
                     <CardTitle>
