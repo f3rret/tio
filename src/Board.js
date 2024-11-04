@@ -22,6 +22,7 @@ import { hudReducer } from './reducers.js';
 import { PixiStage } from './pixiStage.js';
 
 import { EffectsBoardWrapper, useEffectListener } from 'bgio-effects/react';
+import { commonEffectListener } from './botPlugin.js';
 
 function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages }) {
 
@@ -1128,106 +1129,8 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
   const MY_LAST_EFFECT = useRef('');
 
-  useEffectListener('*', (effectName, effectProps, boardProps) => { //! may doubled!!
-
-    try{
-      if(effectName === 'rift'){
-        if(String(playerID) === String(ctx.currentPlayer)){
-          const {unit, dices} = effectProps;
-          let rolls = '';
-          dices.forEach(d => {
-            if(d > 3){
-              rolls += ' /dice-green ' + d;
-            }
-            else{
-              rolls += ' /dice ' + d;
-            }
-          });
-          sendChatMessage(t('board.gravity_rift').toUpperCase() + ' ' + t('cards.techno.' + unit.toUpperCase() + '.label').toLowerCase() + ' ' + rolls);
-        }
-      }
-      else if(effectName === 'tg'){
-        if(boardProps.G && boardProps.G.races){
-          boardProps.G.races.forEach((nr, pid) => {
-
-            if(String(pid) === String(playerID)){//mine
-              if(G.races[pid].tg < nr.tg){
-                sendChatMessage('/gain-tg ' + (nr.tg - G.races[pid].tg))
-              }
-            }
-            else{
-              if(race.rid === 2 && neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){ //mentak pillage
-                if(G.races[pid].tg < nr.tg){
-                  dispatch({ type: 'ability', tag: 'pillage', add: true, playerID: pid })
-                }
-              }
-            }
-
-          })
-        }
-
-      }
-      else if(effectName === 'trade'){
-        const {src, dst, obj} = effectProps;
-        let pid = G.races.findIndex((r) => r.rid === src);
-
-        if(String(pid) === String(playerID)){
-          let subj = '';
-          Object.keys(obj).forEach(tradeItem => {
-            const count = obj[tradeItem];
-            subj += tradeItem === 'commodity' ? (count + ' ' + t('board.commodity')) : tradeItem === 'tg' ? (count + ' ' + t('board.trade_good')) : 
-            tradeItem === 'fragment.c' ? (count + ' ' + t('board.cultural') + ' ' + t('board.fragment')) :
-            tradeItem === 'fragment.h' ? (count + ' ' + t('board.hazardous') + ' ' + t('board.fragment')) :
-            tradeItem === 'fragment.i' ? (count + ' ' + t('board.industrial') + ' ' + t('board.fragment')) :
-            tradeItem === 'fragment.u' ? (count + ' ' + t('board.unknown') + ' ' + t('board.fragment')) :
-            
-            tradeItem.indexOf('action') === 0 ? t('cards.actions.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
-            tradeItem.indexOf('promissory') === 0 ? t('cards.promissory.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
-            tradeItem.substr(tradeItem.indexOf('.') + 1) 
-          })
-          sendChatMessage('/trade ' + t('races.' + dst + '.name') + ': ' + subj)
-        }
-
-        if(race.rid === 2){ //mentak
-          if(pid > -1 && src !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(src))){
-            if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
-              dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
-            }
-          }
-    
-          pid = G.races.findIndex((r) => r.rid === dst);
-          if(pid > -1 && dst !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(dst))){
-            if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
-              dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
-            }
-          }
-        }
-      }
-      else if(effectName === 'relic_ex'){
-        const {id, pid} = effectProps;
-    
-        if((pid !== undefined && String(playerID) === String(pid)) || (pid === undefined && String(playerID) === String(ctx.currentPlayer))){
-          if(MY_LAST_EFFECT.current !== id){
-            sendChatMessage(t('cards.relics.' + id + '.label'));
-            MY_LAST_EFFECT.current = id;
-          }
-        }
-      }
-      else if(effectName === 'promissory'){
-        const {src, dst, id} = effectProps;
-
-        if(String(src) === String(playerID)){
-          if(MY_LAST_EFFECT.current !== id){
-            sendChatMessage(t('cards.promissory.' + id + '.label') + ' ' + t('races.' + G.races[dst].rid + '.name') + ' ' + t('board.complete'));
-            MY_LAST_EFFECT.current = id;
-          }
-        }
-      }
-
-    }
-    catch(e){console.log(e)}
-    
-  }, [G_stringify, playerID, neighbors]);
+  useEffectListener('*', (...effectListenerProps) => 
+    commonEffectListener({playerID, neighbors, ctx, G, ...effectListenerProps, MY_LAST_EFFECT, sendChatMessage, hud, dispatch, t}), [G_stringify, playerID, neighbors]);
   
 
   //eslint-disable-next-line
@@ -1525,6 +1428,5 @@ export const BoardWithEffects = EffectsBoardWrapper(TIOBoard, {
   // Default: 1
   //speed: 10000,
 });
-
 
 

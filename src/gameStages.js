@@ -3773,6 +3773,7 @@ export const ACTS_MOVES = {
         }
       }
 
+      return 0;
     }
     catch(e){console.log(e)}
   },

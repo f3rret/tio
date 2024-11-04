@@ -8,7 +8,8 @@ export const credsReducer = (state, action) => {
                 playerID: action.playerID,
                 matchID: action.matchID,
                 credentials: action.playerCreds,
-                ready: action.playerID !== null && action.matchID !== null && action.playerCreds !== null
+                ready: action.playerID !== null && action.matchID !== null && action.playerCreds !== null,
+                bots: action.bots
             }
         }
         default: {

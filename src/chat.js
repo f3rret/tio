@@ -100,7 +100,7 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
           <CardBody style={{overflowY: 'auto'}}>
               <div style={{fontSize: '.8rem'}}>{messages}</div>
           </CardBody>
-          <CardFooter style={{borderTop: 'solid 1px rgba(255,255,255,.7)'}}>
+          <CardFooter style={{}}>
             <Input autoFocus={true} type='text' value={msg} onChange={onChange} style={{fontFamily: 'system-ui, arial', backgroundColor: 'rgba(255,255,255,.3)', borderColor: 'transparent'}} onKeyDown={onKeyDown}/>
           </CardFooter>
         </Card>}

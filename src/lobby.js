@@ -303,11 +303,26 @@ export const Lobby = ({dispatch})=> {
     // eslint-disable-next-line
     }, [lobbyClient, playerID, playerCreds, prematchID, prematchInfoString]);
 
+    const remapBots = (bots) => {
+        const newBots = {};
+
+        Object.keys(bots).forEach(botId => {
+            if(prematchInfo.players[botId] && prematchInfo.players[botId].data && prematchInfo.players[botId].data.bot){
+                const remaped = remapPlayerID(botId);
+                newBots[remaped] = bots[botId];
+            }
+        })
+
+        return newBots;
+    }
+
     const remapPlayerID = (pid) => {
         const pids = Object.keys(prematchInfo.players);
         let adjust = 0;
         pids.forEach(p => {
-            if(prematchInfo.players[p] && prematchInfo.players[p].close) adjust++;
+            if(parseInt(pid) > parseInt(p)){
+                if(prematchInfo.players[p] && prematchInfo.players[p].data && prematchInfo.players[p].data.close) adjust++;
+            }
         })
 
         return pid -= adjust;
@@ -355,7 +370,8 @@ export const Lobby = ({dispatch})=> {
                     type: 'connect',
                     playerID: remapedPid,
                     matchID: mid,
-                    playerCreds: data.playerCredentials
+                    playerCreds: data.playerCredentials,
+                    bots: remapBots(bots)
                 });
             }
         })

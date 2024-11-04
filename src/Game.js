@@ -6,7 +6,7 @@ import { ACTION_CARD_STAGE, ACTS_STAGES, STRAT_MOVES, secretObjectiveConfirm, us
 import { haveTechnology, getPlanetByName, votingProcessDone, dropACard, checkSecretObjective, 
  getInitRaces, getInitTiles, doFlagshipAbility, getRaceVP} from './utils';
 import { EffectsPlugin } from 'bgio-effects/plugin';
-import { botMove } from './botPlugin';
+//import { botMove } from './botPlugin';
 //import settings from '../package.json'
 
 const effectsConfig = EffectsPlugin({
@@ -91,7 +91,7 @@ export const TIO = {
               events.endTurn();
             }
 
-            botMove({G, ctx, events, plugins, random});
+            //botMove({G, ctx, events, plugins, random});
           }
         },
         moves: STRAT_MOVES,
@@ -233,7 +233,7 @@ export const TIO = {
                 }
               });
 
-              botMove({G, ctx, events, plugins, random});
+              //botMove({G, ctx, events, plugins, random});
             },
 
             onMove: ({ G, ctx, playerID, ...plugins }) => {
@@ -354,7 +354,7 @@ export const TIO = {
             actionCard: ACTION_CARD_STAGE
           },
           onBegin: ({G, ctx, events, random, ...plugins}) => {
-            botMove({G, ctx, events, plugins, random});
+            //botMove({G, ctx, events, plugins, random});
           }
         },
         moves: STATS_MOVES,

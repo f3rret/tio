@@ -1,6 +1,6 @@
 import React, {useState, useMemo, useReducer} from 'react';
 import { Lobby } from './lobby';
-import { App } from './App';
+import { App, BotApp } from './App';
 import ReactDOM from 'react-dom/client';
 
 import { I18n } from 'i18n-js';
@@ -26,12 +26,18 @@ const LangWrapper = () => {
     [locale]
   );
 
-  const [creds, dispatch] = useReducer(credsReducer, {ready: false, playerID: null, matchID: null, playerCreds: null});
+  const [creds, dispatch] = useReducer(credsReducer, {ready: false, playerID: null, matchID: null, playerCreds: null, bots: null});
 
   return (
     <LocalizationContext.Provider value={localizationContext}>
       {creds.ready && <div id='tempOverlay' style={{width: '100%', height: '100%', backgroundColor: 'black', position: 'absolute', top: 0, left: 0, zIndex: 101}}></div>}
-      {creds.ready && <App {...creds}/>}
+      {creds.ready && <>
+        <App {...creds}/>
+        {String(creds.playerID) === '0' && creds.bots &&
+        Object.keys(creds.bots).map(botId => {
+          return <BotApp key={botId} playerID={botId} matchID={creds.matchID}/>
+        })}
+      </>}
       {!creds.ready && <Lobby dispatch={dispatch}/>}
     </LocalizationContext.Provider>
   );
