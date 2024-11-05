@@ -8,6 +8,7 @@ import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveT
   getPlayerPlanets,
   replenishCommodity, returnPromissoryToOwner} from './utils';
 import cardData from './cardData.json';
+import { getPayloadedCarrier, getLandingForce, payloadCarrier } from './botPlugin';
 
 export const useAgenda = ({G, ctx, playerID}, args) => {
   try{
@@ -3773,7 +3774,6 @@ export const ACTS_MOVES = {
         }
       }
 
-      return 0;
     }
     catch(e){console.log(e)}
   },
@@ -3976,7 +3976,53 @@ export const ACTS_MOVES = {
       }
     }
   },
-  useHeroAbility
+  useHeroAbility,
+  bot_loadAndMoveCarrier: ({G, playerID, random, events, ...plugins}, {prefIdx, srcIdx, neigh2src}) => {
+
+    try{
+      const pref = G.tiles[prefIdx];
+      let shipIdx = getPayloadedCarrier(G.tiles[srcIdx]);
+
+      if(shipIdx === undefined){
+          shipIdx = payloadCarrier({G, playerID, tileIdx: srcIdx, tag: 'infantry', max: 3});
+          shipIdx = payloadCarrier({G, playerID, tileIdx: srcIdx, tag: 'fighter', max: 5});
+      }
+
+      if(shipIdx > -1){
+          let err = ACTS_MOVES.activateTile({G, playerID, events, ...plugins}, prefIdx);
+
+          if(!err){
+              err = ACTS_MOVES.moveShip({G, playerID, random, events, ...plugins}, {tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: 'carrier', shipIdx});
+
+              if(!err){
+                  if(G.tiles[srcIdx].tdata.fleet){ //send one ship to cover carrier
+                      let convoy = ['cruiser', 'destroyer'];
+                      convoy.forEach(c => {
+                          if(G.tiles[srcIdx].tdata.fleet[c]){
+                              err = ACTS_MOVES.moveShip({G, playerID, random, events, ...plugins}, {tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: c, shipIdx: 0});
+                          }
+                      });
+                  }
+
+                  //capture unowned planets
+                  pref.tdata.planets.forEach((p, pidx) => {
+                      if(String(p.occupied) !== String(playerID)){
+                          let force = getLandingForce(pref);
+
+                          if(force){
+                              err = ACTS_MOVES.unloadUnit({G, playerID, random, events, ...plugins}, {src: {...force, tile: prefIdx}, dst: {tile: prefIdx, planet: pidx}});
+                              if(G.races[playerID].explorationDialog){
+                                  ACTS_MOVES.choiceDialog({G, playerID, random, events, ...plugins}, 0);
+                              }
+                          }
+                      }
+                  });
+              }
+          }
+      }
+    }
+    catch(e){console.log(e)}
+  }
 
 }
 

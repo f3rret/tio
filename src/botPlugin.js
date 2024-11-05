@@ -1,10 +1,10 @@
 
 import cardData from './cardData.json';
-import { neighbors } from "./Grid";
-import { getUnitsTechnologies, LocalizationContext } from "./utils";
+import { neighbors as gridNeighbors} from "./Grid";
+import { LocalizationContext } from "./utils";
 import { EffectsBoardWrapper, useEffectListener } from 'bgio-effects/react';
 import { useEffect, useMemo, useRef, useContext } from "react";
-
+import { getUnitsTechnologies, getMyNeighbors } from './utils'; 
 
 
 function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages, events }) {
@@ -12,14 +12,35 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
     const G_stringify = useMemo(() => JSON.stringify(G), [G]);
     const G_tiles_stringify = useMemo(() => JSON.stringify(G.tiles), [G]);
     const G_races_stringify = useMemo(() => JSON.stringify(G.races), [G]);
-    const ctx_stringify = useMemo(() => JSON.stringify(ctx), [ctx]);
+    //const ctx_stringify = useMemo(() => JSON.stringify(ctx), [ctx]);
 
     //eslint-disable-next-line
     const race = useMemo(() => G.races[playerID], [G_races_stringify, playerID]);
     const isMyTurn = useMemo(() => ctx.currentPlayer === playerID, [ctx.currentPlayer, playerID]);
-    const prevStages = useRef(null);
+    //eslint-disable-next-line
+    const neighbors = useMemo(() => getMyNeighbors(G, playerID), [G_tiles_stringify]);
+    //const prevStages = useRef(null);
     const { t } = useContext(LocalizationContext);
     const random = useMemo(() => (new Random()).api(), []);
+
+    const PLANETS = useMemo(()=> {
+        const arr = [];
+
+        G.tiles.forEach( t => {
+            if(t.tdata.planets && t.tdata.planets.length){
+                t.tdata.planets.forEach((p, pidx) => {
+                    if(String(p.occupied) === String(playerID)){
+                    arr.push({...p, tid: t.tid, pidx});
+                    }
+                })
+            }
+        });
+
+        return arr;
+    //eslint-disable-next-line
+    }, [G_tiles_stringify, playerID]);
+
+    const PLANETS_stringify = useMemo(() => JSON.stringify(PLANETS), [PLANETS]);
 
     useEffect(() => {
 
@@ -47,7 +68,7 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
                     if(!ctx.activePlayers){
                         if(race.tokens.t > 0){
                             const ownTiles = getMyTiles(G, ctx.currentPlayer);
-                            console.log('ownTiles', ownTiles.length)
+ 
                             if(ownTiles && ownTiles.length){
                                 let neigh = [];
                                 let neigh2src = {};
@@ -55,15 +76,13 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
                                 //find most attractive tile to capture
                                 ownTiles.forEach(tile => {
                                     if(tile.tdata && !tile.tdata.tokens.includes(race.rid) && hasCarAndInf(tile)){//only for those which have carriers & inf
-                                        const n = neighbors(G.HexGrid, [tile.q, tile.r]).map(n => n.tileId);
+                                        const n = gridNeighbors(G.HexGrid, [tile.q, tile.r]).map(n => n.tileId);
                                         n.forEach(nn => neigh2src[nn] = tile.tid); //remember src tile
                                         neigh.push(...n);
                                     }
                                 });
     
                                 neigh.filter((n, i) => neigh.indexOf(n) === i); //unique
-                                console.log('neigh', neigh)
-                                console.log('neigh2src', neigh2src)
     
                                 if(neigh.length){
                                     let neighTiles = neigh.map(n => G.tiles.find(t => t.tid === n));
@@ -74,54 +93,11 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
                                         n.tdata.planets.find(p => p.occupied === undefined));
                               
                                     const pref = getPreferredTile(neighTiles);
-                                    console.log('pref', pref.tid)
+
                                     if(pref){
                                         const prefIdx = G.tiles.findIndex(t => t.tid === pref.tid);
                                         const srcIdx = G.tiles.findIndex(t => t.tid === neigh2src[pref.tid]);
-                                        let shipIdx = getPayloadedCarrier(G.tiles[srcIdx]);
-                                        console.log('shipIdx', shipIdx)
-                                        if(!shipIdx){
-                                            const technologies = getUnitsTechnologies(['carrier'], race);
-                                            console.log('technologies', JSON.stringify(technologies))
-                                            shipIdx = payloadCarrier(G.tiles[srcIdx], 0, technologies, 'infantry', 3); ///todo: make this through move!
-                                            console.log('shipIdx', shipIdx)
-                                            shipIdx = payloadCarrier(G.tiles[srcIdx], shipIdx, technologies, 'fighter', 5);
-                                            console.log('shipIdx', shipIdx)
-                                        }
-    
-                                        if(shipIdx > -1){
-                                            let err = moves.activateTile(prefIdx);
-                                            console.log('err', err);
-                                            
-                                            if(!err){
-                                                err = moves.moveShip({tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: 'carrier', shipIdx});
-                                
-                                                if(!err){
-                                                    if(G.tiles[srcIdx].tdata.fleet){ //send one ship to cover carrier
-                                                        let convoy = ['cruiser', 'destroyer'];
-                                                        convoy.forEach(c => {
-                                                            if(G.tiles[srcIdx].tdata.fleet[c]){
-                                                                err = moves.moveShip({tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: c, shipIdx: 0});
-                                                            }
-                                                        });
-                                                    }
-    
-                                                    //capture unowned planets
-                                                    pref.tdata.planets.forEach((p, pidx) => {
-                                                        if(String(p.occupied) !== String(ctx.currentPlayer)){
-                                                            let force = getLandingForce(pref);
-    
-                                                            if(force){
-                                                                err = moves.unloadUnit({src: {...force, tile: prefIdx}, dst: {tile: prefIdx, planet: pidx}});
-                                                                if(race.explorationDialog){
-                                                                    moves.choiceDialog(0);
-                                                                }
-                                                            }
-                                                        }
-                                                    });
-                                                }
-                                            }
-                                        }
+                                        moves.bot_loadAndMoveCarrier({prefIdx, srcIdx, neigh2src});
                                     }
                                     
                                     return events.endTurn();
@@ -152,10 +128,94 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
             console.log(e);
             return events.endTurn();
         }
-
+//eslint-disable-next-line
     }, [isMyTurn])
-  
-    return <></>
+
+    const PREV_TECHNODATA = useRef([]); //todo: replace with bgio-effects
+    useEffect(() => {
+
+        if(race.tempTechnoData && race.tempTechnoData.length && race.tempTechnoData.length > PREV_TECHNODATA.current.length){
+        const last = race.tempTechnoData.slice(PREV_TECHNODATA.current.length - race.tempTechnoData.length);
+        const summary = {INFANTRY2: []};
+        last.forEach(l => {
+            if(Object.keys(summary).includes(l.id)){
+            if(l.id === 'INFANTRY2'){
+                if(l.success){
+                summary[l.id].push('/dice-green ' + (l.dice === 10 ? 0:l.dice));
+                }
+                else{
+                summary[l.id].push('/dice ' + (l.dice === 10 ? 0:l.dice));
+                }
+            }
+            }
+        });
+        
+        Object.keys(summary).forEach(k => {
+            if(k === 'INFANTRY2' && summary['INFANTRY2'].length > 0){
+            sendChatMessage(t('cards.techno.INFANTRY2.label') + '   ' + summary['INFANTRY2'].join('  '));
+            }
+        });
+
+        }
+        PREV_TECHNODATA.current = race.tempTechnoData;
+    // eslint-disable-next-line
+    }, [race.tempTechnoData])
+
+    const PREV_EXPLORATION = useRef([]);//todo: replace with bgio-effects
+
+    useEffect(()=>{
+        if(race.exploration && race.exploration.length && race.exploration.length > PREV_EXPLORATION.current.length){
+        PREV_EXPLORATION.current = race.exploration;
+        sendChatMessage(t('board.got_new_exploration') + ' ' 
+        + t('cards.exploration.' + race.exploration[race.exploration.length-1].id + '.label').toUpperCase() + ' ('
+        + t('cards.exploration.' + race.exploration[race.exploration.length-1].id + '.effect') + ')');
+        }
+        // eslint-disable-next-line
+    }, [race.exploration]);
+
+    const PREV_RELICS = useRef([]);//todo: replace with bgio-effects
+
+    useEffect(()=>{
+        if(race.relics && race.relics.length && race.relics.length > PREV_RELICS.current.length){
+        PREV_RELICS.current = race.relics;
+        sendChatMessage(t('board.got_new_relic') + ': ' 
+        + t('cards.relics.' + race.relics[race.relics.length-1].id + '.label').toUpperCase() + ' ('
+        + t('cards.relics.' + race.relics[race.relics.length-1].id + '.effect'));
+        }
+        // eslint-disable-next-line
+    }, [race.relics]);
+    
+    const PREV_PLANETS = useRef([]);//todo: replace with bgio-effects
+
+    useEffect(()=>{  //occupied new planet
+        if(PLANETS && PLANETS.length){
+            if(!PREV_PLANETS.current || !PREV_PLANETS.current.length){
+                //PREV_PLANETS.current = PLANETS;
+            }
+            else{
+                if(PLANETS.length - PREV_PLANETS.current.length === 1){ //why 1?
+                const newOne = PLANETS.find(p => {
+                    const oldOne = PREV_PLANETS.current.find(pp => pp.name === p.name);
+                    return !oldOne;
+                });
+                if(newOne){
+                    //dispatch({type: 'just_occupied', payload: newOne.name});
+                    sendChatMessage(t('board.has_occupied_planet') + ' ' + t('planets.' + newOne.name));
+                    if(newOne.exploration === 'Freelancers'){
+                // dispatch({type: 'producing', planet: newOne.name});
+                    }
+                }
+                }
+            }
+            PREV_PLANETS.current = PLANETS;
+        }
+    console.log(PREV_PLANETS)
+    //eslint-disable-next-line
+    }, [PLANETS_stringify]);
+
+    const MY_LAST_EFFECT = useRef('');
+    useEffectListener('*', (...effectListenerProps) => 
+        commonEffectListener({playerID, neighbors, ctx, G, ...effectListenerProps, MY_LAST_EFFECT, sendChatMessage, /*hud, dispatch,*/ t}), [G_stringify, playerID, neighbors]);
   
 }
 
@@ -176,96 +236,95 @@ export const commonEffectListener = ({playerID, neighbors, MY_LAST_EFFECT, ctx, 
         const race = G.races[playerID];
 
         if(effectName === 'rift'){
-        if(String(playerID) === String(ctx.currentPlayer)){
-            const {unit, dices} = effectProps;
-            let rolls = '';
-            dices.forEach(d => {
-            if(d > 3){
-                rolls += ' /dice-green ' + d;
+            if(String(playerID) === String(ctx.currentPlayer)){
+                const {unit, dices} = effectProps;
+                let rolls = '';
+                dices.forEach(d => {
+                if(d > 3){
+                    rolls += ' /dice-green ' + d;
+                }
+                else{
+                    rolls += ' /dice ' + d;
+                }
+                });
+                sendChatMessage(t('board.gravity_rift').toUpperCase() + ' ' + t('cards.techno.' + unit.toUpperCase() + '.label').toLowerCase() + ' ' + rolls);
             }
-            else{
-                rolls += ' /dice ' + d;
-            }
-            });
-            sendChatMessage(t('board.gravity_rift').toUpperCase() + ' ' + t('cards.techno.' + unit.toUpperCase() + '.label').toLowerCase() + ' ' + rolls);
-        }
         }
         else if(effectName === 'tg'){
-        if(boardProps.G && boardProps.G.races){
-            boardProps.G.races.forEach((nr, pid) => {
+            if(boardProps.G && boardProps.G.races){
+                boardProps.G.races.forEach((nr, pid) => {
 
-            if(String(pid) === String(playerID)){//mine
-                if(G.races[pid].tg < nr.tg){
-                sendChatMessage('/gain-tg ' + (nr.tg - G.races[pid].tg))
+                if(String(pid) === String(playerID)){//mine
+                    if(G.races[pid].tg < nr.tg){
+                    sendChatMessage('/gain-tg ' + (nr.tg - G.races[pid].tg))
+                    }
                 }
+                else{
+                    if(race.rid === 2 && neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){ //mentak pillage
+                    if(G.races[pid].tg < nr.tg){
+                        if(dispatch) dispatch({ type: 'ability', tag: 'pillage', add: true, playerID: pid })
+                    }
+                    }
+                }
+
+                })
             }
-            else{
-                if(race.rid === 2 && neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){ //mentak pillage
-                if(G.races[pid].tg < nr.tg){
-                    dispatch({ type: 'ability', tag: 'pillage', add: true, playerID: pid })
-                }
-                }
-            }
-
-            })
-        }
-
         }
         else if(effectName === 'trade'){
-        const {src, dst, obj} = effectProps;
-        let pid = G.races.findIndex((r) => r.rid === src);
+            const {src, dst, obj} = effectProps;
+            let pid = G.races.findIndex((r) => r.rid === src);
 
-        if(String(pid) === String(playerID)){
-            let subj = '';
-            Object.keys(obj).forEach(tradeItem => {
-            const count = obj[tradeItem];
-            subj += tradeItem === 'commodity' ? (count + ' ' + t('board.commodity')) : tradeItem === 'tg' ? (count + ' ' + t('board.trade_good')) : 
-            tradeItem === 'fragment.c' ? (count + ' ' + t('board.cultural') + ' ' + t('board.fragment')) :
-            tradeItem === 'fragment.h' ? (count + ' ' + t('board.hazardous') + ' ' + t('board.fragment')) :
-            tradeItem === 'fragment.i' ? (count + ' ' + t('board.industrial') + ' ' + t('board.fragment')) :
-            tradeItem === 'fragment.u' ? (count + ' ' + t('board.unknown') + ' ' + t('board.fragment')) :
-            
-            tradeItem.indexOf('action') === 0 ? t('cards.actions.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
-            tradeItem.indexOf('promissory') === 0 ? t('cards.promissory.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
-            tradeItem.substr(tradeItem.indexOf('.') + 1) 
-            })
-            sendChatMessage('/trade ' + t('races.' + dst + '.name') + ': ' + subj)
-        }
+            if(String(pid) === String(playerID)){
+                let subj = '';
+                Object.keys(obj).forEach(tradeItem => {
+                const count = obj[tradeItem];
+                subj += tradeItem === 'commodity' ? (count + ' ' + t('board.commodity')) : tradeItem === 'tg' ? (count + ' ' + t('board.trade_good')) : 
+                tradeItem === 'fragment.c' ? (count + ' ' + t('board.cultural') + ' ' + t('board.fragment')) :
+                tradeItem === 'fragment.h' ? (count + ' ' + t('board.hazardous') + ' ' + t('board.fragment')) :
+                tradeItem === 'fragment.i' ? (count + ' ' + t('board.industrial') + ' ' + t('board.fragment')) :
+                tradeItem === 'fragment.u' ? (count + ' ' + t('board.unknown') + ' ' + t('board.fragment')) :
+                
+                tradeItem.indexOf('action') === 0 ? t('cards.actions.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
+                tradeItem.indexOf('promissory') === 0 ? t('cards.promissory.' + tradeItem.substr(tradeItem.indexOf('.') + 1) + '.label'):
+                tradeItem.substr(tradeItem.indexOf('.') + 1) 
+                })
+                sendChatMessage('/trade ' + t('races.' + dst + '.name') + ': ' + subj)
+            }
 
-        if(race.rid === 2){ //mentak
-            if(pid > -1 && src !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(src))){
-            if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
-                dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
+            if(race.rid === 2 && hud){ //mentak
+                if(pid > -1 && src !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(src))){
+                if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
+                    if(dispatch) dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
+                }
+                }
+        
+                pid = G.races.findIndex((r) => r.rid === dst);
+                if(pid > -1 && dst !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(dst))){
+                if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
+                    if(dispatch) dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
+                }
+                }
             }
-            }
-    
-            pid = G.races.findIndex((r) => r.rid === dst);
-            if(pid > -1 && dst !== 2 && (!hud.abilityData.pillage || !hud.abilityData.pillage.includes(dst))){
-            if(neighbors && neighbors.length > 0 && neighbors.includes(String(pid))){
-                dispatch({type: 'ability', tag: 'pillage', add: true, playerID: pid})
-            }
-            }
-        }
         }
         else if(effectName === 'relic_ex'){
-        const {id, pid} = effectProps;
-    
-        if((pid !== undefined && String(playerID) === String(pid)) || (pid === undefined && String(playerID) === String(ctx.currentPlayer))){
-            if(MY_LAST_EFFECT.current !== id){
-            sendChatMessage(t('cards.relics.' + id + '.label'));
-            MY_LAST_EFFECT.current = id;
+            const {id, pid} = effectProps;
+        
+            if((pid !== undefined && String(playerID) === String(pid)) || (pid === undefined && String(playerID) === String(ctx.currentPlayer))){
+                if(MY_LAST_EFFECT.current !== id){
+                sendChatMessage(t('cards.relics.' + id + '.label'));
+                MY_LAST_EFFECT.current = id;
+                }
             }
-        }
         }
         else if(effectName === 'promissory'){
-        const {src, dst, id} = effectProps;
+            const {src, dst, id} = effectProps;
 
-        if(String(src) === String(playerID)){
-            if(MY_LAST_EFFECT.current !== id){
-            sendChatMessage(t('cards.promissory.' + id + '.label') + ' ' + t('races.' + G.races[dst].rid + '.name') + ' ' + t('board.complete'));
-            MY_LAST_EFFECT.current = id;
+            if(String(src) === String(playerID)){
+                if(MY_LAST_EFFECT.current !== id){
+                sendChatMessage(t('cards.promissory.' + id + '.label') + ' ' + t('races.' + G.races[dst].rid + '.name') + ' ' + t('board.complete'));
+                MY_LAST_EFFECT.current = id;
+                }
             }
-        }
         }
 
     }
@@ -320,7 +379,10 @@ const hasCarAndInf = (tile) => {
 
 }
 
-const getPayloadedCarrier = (tile) => {
+
+
+
+export const getPayloadedCarrier = (tile) => {
 
     if(!tile.tdata) return;
     if(!tile.tdata.fleet || !tile.tdata.fleet.carrier) return;
@@ -332,7 +394,11 @@ const getPayloadedCarrier = (tile) => {
 
 }
 
-const payloadCarrier = (tile, shipIdx, technologies, tag, max) => {
+export const payloadCarrier = ({G, playerID, tileIdx, tag, max}) => {
+
+    const tile = G.tiles[tileIdx];
+    const race = G.races[playerID];
+    const technologies = getUnitsTechnologies(['carrier'], race);
 
     if(!tile.tdata) return -1;
     if(!tile.tdata.fleet || !tile.tdata.fleet.carrier) return -1;
@@ -340,7 +406,7 @@ const payloadCarrier = (tile, shipIdx, technologies, tag, max) => {
     const fleet = tile.tdata.fleet;
     if(!fleet.carrier || !fleet.carrier.length) return -1;
 
-    const car = fleet.carrier[shipIdx];
+    const car = fleet.carrier[0];
     if(!car) return -1;
     if(!car.payload) car.payload = [];
 
@@ -357,17 +423,16 @@ const payloadCarrier = (tile, shipIdx, technologies, tag, max) => {
         }
     });
 
-    return shipIdx;
+    return 0;
 
 }
 
-const getLandingForce = (tile) => {
+export const getLandingForce = (tile) => {
 
     if(!tile.tdata) return;
     if(!tile.tdata.fleet || !tile.tdata.fleet.carrier) return;
 
     const fleet = tile.tdata.fleet;
-    console.log('fleet', JSON.stringify(fleet));
     const i = fleet.carrier.findIndex(car => car.payload && car.payload.length && car.payload.find(p => p && p.id === 'infantry'));
     
     if(i > -1){
@@ -424,6 +489,11 @@ const getLandingForce = (tile) => {
     };
     return plugin;
 };*/
+
+
+
+
+
 
 
 
