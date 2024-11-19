@@ -12,7 +12,7 @@ import { useState } from 'react';
 export const App = Client({ 
     game: TIO,
     board: BoardWithEffects,
-    debug: (!process.env.NODE_ENV || process.env.NODE_ENV === 'development'),
+    debug: false,//(!process.env.NODE_ENV || process.env.NODE_ENV === 'development'),
     multiplayer: SocketIO({ server: window.location.protocol + '//' + settings.ip + ':8000' })
 })
 

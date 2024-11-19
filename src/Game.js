@@ -5,7 +5,7 @@ import { getHexGrid, neighbors } from './Grid';
 import { ACTION_CARD_STAGE, ACTS_STAGES, STRAT_MOVES, secretObjectiveConfirm, useRelic, usePromissory, dropSecretObjective, ACTS_MOVES, STATS_MOVES } from './gameStages';
 import { haveTechnology, getPlanetByName, votingProcessDone, dropACard, checkSecretObjective, 
  getInitRaces, getInitTiles, doFlagshipAbility, getRaceVP} from './utils';
-import { EffectsPlugin } from 'bgio-effects/plugin';
+import { EffectsPlugin } from './effects/plugin.js';
 //import { botMove } from './botPlugin';
 //import settings from '../package.json'
 
@@ -27,6 +27,9 @@ const effectsConfig = EffectsPlugin({
     relic_ex: {
       create: (value) => value,
       //duration: 2
+    },
+    planet: {
+      create: (value) => ({pname: value.pname, playerID: value.playerID, unid: value.unid})
     }
   },
 });
@@ -71,6 +74,7 @@ export const TIO = {
       }
     },
 
+    deltaState: true, //important to proper effects work!
     minPlayers: 1,
     maxPlayers: 8,
 

@@ -21,7 +21,7 @@ import { Persons, Stuff, CARD_STYLE, MyNavbar, GlobalPayment } from './component
 import { hudReducer } from './reducers.js';
 import { PixiStage } from './pixiStage.js';
 
-import { EffectsBoardWrapper, useEffectListener } from 'bgio-effects/react';
+import { EffectsBoardWrapper, useEffectListener } from './effects/react';
 import { commonEffectListener } from './botPlugin.js';
 
 function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages }) {
@@ -1010,7 +1010,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     // eslint-disable-next-line
   }, [race.relics]);
   
-  const PREV_PLANETS = useRef([]);//todo: replace with bgio-effects
+  /*const PREV_PLANETS = useRef([]);//todo: replace with bgio-effects
 
   useEffect(()=>{  //occupied new planet
     if(PLANETS && PLANETS.length){
@@ -1035,7 +1035,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
       PREV_PLANETS.current = PLANETS;
     }
   //eslint-disable-next-line
-  }, [PLANETS_stringify]);
+  }, [PLANETS_stringify]);*/
 
   useEffect(() => { //switch TechAction
     if(!hud.producing && hud.justOccupied){
@@ -1129,9 +1129,9 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
   const MY_LAST_EFFECT = useRef('');
 
-  useEffectListener('*', (...effectListenerProps) => 
-    commonEffectListener({playerID, neighbors, ctx, G, ...effectListenerProps, MY_LAST_EFFECT, sendChatMessage, hud, dispatch, t}), [G_stringify, playerID, neighbors]);
-  
+  useEffectListener('*', ()=>{}, [], (effectName, effectProps, boardProps) => 
+    commonEffectListener({playerID, neighbors, ctx, G, effectName, effectProps, boardProps, MY_LAST_EFFECT, sendChatMessage, hud, dispatch, t}), [G_stringify, playerID, neighbors]);
+
 
   //eslint-disable-next-line
   const initialImgs = useMemo(() => [...imgSrc.boardImages, ...getTilesAndRacesImgs(G.tiles)], []);
@@ -1422,7 +1422,8 @@ export const BoardWithEffects = EffectsBoardWrapper(TIOBoard, {
   // Delay passing the updated boardgame.io state to your board
   // until after the last effect has been triggered.
   // Default: false
-  updateStateAfterEffects: true,
+  //updateStateAfterEffects: true,
+  //speed: 1
 
   // Global control of the speed of effect playback.
   // Default: 1

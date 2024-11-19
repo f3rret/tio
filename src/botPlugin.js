@@ -2,14 +2,14 @@
 import cardData from './cardData.json';
 import { neighbors as gridNeighbors} from "./Grid";
 import { LocalizationContext } from "./utils";
-import { EffectsBoardWrapper, useEffectListener } from 'bgio-effects/react';
+import { EffectsBoardWrapper, useEffectListener } from './effects/react';
 import { useEffect, useMemo, useRef, useContext } from "react";
 import { getUnitsTechnologies, getMyNeighbors } from './utils'; 
 
 
 function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages, events }) {
 
-    const G_stringify = useMemo(() => JSON.stringify(G), [G]);
+    //const G_stringify = useMemo(() => JSON.stringify(G), [G]);
     const G_tiles_stringify = useMemo(() => JSON.stringify(G.tiles), [G]);
     const G_races_stringify = useMemo(() => JSON.stringify(G.races), [G]);
     //const ctx_stringify = useMemo(() => JSON.stringify(ctx), [ctx]);
@@ -23,7 +23,7 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
     const { t } = useContext(LocalizationContext);
     const random = useMemo(() => (new Random()).api(), []);
 
-    const PLANETS = useMemo(()=> {
+    /*const PLANETS = useMemo(()=> {
         const arr = [];
 
         G.tiles.forEach( t => {
@@ -38,9 +38,9 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
 
         return arr;
     //eslint-disable-next-line
-    }, [G_tiles_stringify, playerID]);
+    }, [G_tiles_stringify, playerID]);*/
 
-    const PLANETS_stringify = useMemo(() => JSON.stringify(PLANETS), [PLANETS]);
+    //const PLANETS_stringify = useMemo(() => JSON.stringify(PLANETS), [PLANETS]);
 
     useEffect(() => {
 
@@ -129,7 +129,7 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
             return events.endTurn();
         }
 //eslint-disable-next-line
-    }, [isMyTurn])
+    }, [isMyTurn, ctx.phase])
 
     const PREV_TECHNODATA = useRef([]); //todo: replace with bgio-effects
     useEffect(() => {
@@ -184,43 +184,19 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
         }
         // eslint-disable-next-line
     }, [race.relics]);
-    
-    const PREV_PLANETS = useRef([]);//todo: replace with bgio-effects
-
-    useEffect(()=>{  //occupied new planet
-        if(PLANETS && PLANETS.length){
-            if(!PREV_PLANETS.current || !PREV_PLANETS.current.length){
-                //PREV_PLANETS.current = PLANETS;
-            }
-            else{
-                if(PLANETS.length - PREV_PLANETS.current.length === 1){ //why 1?
-                const newOne = PLANETS.find(p => {
-                    const oldOne = PREV_PLANETS.current.find(pp => pp.name === p.name);
-                    return !oldOne;
-                });
-                if(newOne){
-                    //dispatch({type: 'just_occupied', payload: newOne.name});
-                    sendChatMessage(t('board.has_occupied_planet') + ' ' + t('planets.' + newOne.name));
-                    if(newOne.exploration === 'Freelancers'){
-                // dispatch({type: 'producing', planet: newOne.name});
-                    }
-                }
-                }
-            }
-            PREV_PLANETS.current = PLANETS;
-        }
-    console.log(PREV_PLANETS)
-    //eslint-disable-next-line
-    }, [PLANETS_stringify]);
 
     const MY_LAST_EFFECT = useRef('');
-    useEffectListener('*', (...effectListenerProps) => 
-        commonEffectListener({playerID, neighbors, ctx, G, ...effectListenerProps, MY_LAST_EFFECT, sendChatMessage, /*hud, dispatch,*/ t}), [G_stringify, playerID, neighbors]);
+    
+    useEffectListener('*', ()=>{}, [], (effectName, effectProps, boardProps) => {
+        commonEffectListener({playerID, neighbors, ctx, G, effectName, effectProps, boardProps, MY_LAST_EFFECT, sendChatMessage, /*hud, dispatch,*/ t})
+    //eslint-disable-next-line
+    }, [G]);
   
 }
 
 export const BotBoardWithEffects = EffectsBoardWrapper(BotTIOBoard, {
-
+    /*updateStateAfterEffects: true,
+    speed: 1*/
 });
 
 /*export const botMove = ({G, ctx, events, random, plugins}) => {
@@ -230,7 +206,7 @@ export const BotBoardWithEffects = EffectsBoardWrapper(BotTIOBoard, {
 }*/
 
 export const commonEffectListener = ({playerID, neighbors, MY_LAST_EFFECT, ctx, G, hud, dispatch, sendChatMessage, t,
-    effectName, effectProps, boardProps}) => { //! may doubled!!
+    effectName, effectProps, boardProps}) => {
 
     try{
         const race = G.races[playerID];
@@ -325,6 +301,11 @@ export const commonEffectListener = ({playerID, neighbors, MY_LAST_EFFECT, ctx, 
                 MY_LAST_EFFECT.current = id;
                 }
             }
+        }
+        else if(effectName === 'planet' && String(effectProps.playerID) === String(playerID)){
+            //if(effectProps.unid && !EFFECTS_QUEUE.includes(effectProps.unid)){
+                sendChatMessage(t('board.has_occupied_planet') + ' ' + t('planets.' + effectProps.pname));
+            //}
         }
 
     }
@@ -583,7 +564,7 @@ class Random {
         // Just use a temporary seed to execute the move without
         // crashing it. The move state itself is discarded,
         // so the actual value doesn't matter.
-        this.state = state || { seed: '0' };
+        this.state = state || { seed: Date.now().toString(36).slice(-10) };
         this.used = false;
     }
     /**

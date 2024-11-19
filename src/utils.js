@@ -1904,6 +1904,9 @@ export const occupyPlanet = (args) => {
   try{
     planet.exhausted = true;
     planet.occupied = playerID;
+    const unid = Date.now();
+
+    plugins.effects.planet({pname: planet.name, playerID, unid});
     checkCommanderUnlock(G, playerID);
 
     if(explore && planet.trait){
@@ -1915,7 +1918,7 @@ export const occupyPlanet = (args) => {
       G.races[playerID].tg++;
     }
 
-    if(plugins) plugins.effects.tg();
+    plugins.effects.tg();
   }
   catch(e){
     console.log(e)
