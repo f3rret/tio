@@ -6,7 +6,7 @@ import { ACTION_CARD_STAGE, ACTS_STAGES, STRAT_MOVES, secretObjectiveConfirm, us
 import { haveTechnology, getPlanetByName, votingProcessDone, dropACard, checkSecretObjective, 
  getInitRaces, getInitTiles, doFlagshipAbility, getRaceVP} from './utils';
 import { EffectsPlugin } from './effects/plugin.js';
-//import { botMove } from './botPlugin';
+import { botMove } from './botPlugin';
 //import settings from '../package.json'
 
 const effectsConfig = EffectsPlugin({
@@ -34,11 +34,9 @@ const effectsConfig = EffectsPlugin({
   },
 });
 
-//const botPlugin = BotPlugin({});
-
 export const TIO = {
     name: 'TIO',
-    plugins: [effectsConfig/*, botPlugin*/],
+    plugins: [effectsConfig],
     validateSetupData: (setupData, numPlayers) => {
       if(!setupData || !setupData.mapArray){
         return 'setup data not valid';
@@ -95,7 +93,7 @@ export const TIO = {
               events.endTurn();
             }
 
-            //botMove({G, ctx, events, plugins, random});
+            if(G.races[ctx.currentPlayer].isBot) botMove({G, ctx, events, plugins, random});
           }
         },
         moves: STRAT_MOVES,
@@ -237,7 +235,7 @@ export const TIO = {
                 }
               });
 
-              //botMove({G, ctx, events, plugins, random});
+              if(G.races[ctx.currentPlayer].isBot) botMove({G, ctx, events, plugins, random});
             },
 
             onMove: ({ G, ctx, playerID, ...plugins }) => {
@@ -892,12 +890,5 @@ export const TIO = {
         
     },
 
-    /*ai: {
-      enumerate: (G, ctx) => {
-        let moves = [];
-        moves.push({ move: 'endTurn', args: [0] });
-        return moves;
-      }
-    }*/
 };
 

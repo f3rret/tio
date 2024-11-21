@@ -4,24 +4,27 @@ import { neighbors as gridNeighbors} from "./Grid";
 import { LocalizationContext } from "./utils";
 import { EffectsBoardWrapper, useEffectListener } from './effects/react';
 import { useEffect, useMemo, useRef, useContext } from "react";
-import { getUnitsTechnologies, getMyNeighbors } from './utils'; 
+import { getUnitsTechnologies } from './utils'; 
+import { ACTS_MOVES, STRAT_MOVES } from './gameStages';
+
+/////////////////client side/////////////////////////////////
 
 
 function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages, events }) {
 
     //const G_stringify = useMemo(() => JSON.stringify(G), [G]);
-    const G_tiles_stringify = useMemo(() => JSON.stringify(G.tiles), [G]);
+    //const G_tiles_stringify = useMemo(() => JSON.stringify(G.tiles), [G]);
     const G_races_stringify = useMemo(() => JSON.stringify(G.races), [G]);
     //const ctx_stringify = useMemo(() => JSON.stringify(ctx), [ctx]);
 
     //eslint-disable-next-line
     const race = useMemo(() => G.races[playerID], [G_races_stringify, playerID]);
-    const isMyTurn = useMemo(() => ctx.currentPlayer === playerID, [ctx.currentPlayer, playerID]);
+    //const isMyTurn = useMemo(() => ctx.currentPlayer === playerID, [ctx.currentPlayer, playerID]);
     //eslint-disable-next-line
-    const neighbors = useMemo(() => getMyNeighbors(G, playerID), [G_tiles_stringify]);
+    //const neighbors = useMemo(() => getMyNeighbors(G, playerID), [G_tiles_stringify]);
     //const prevStages = useRef(null);
     const { t } = useContext(LocalizationContext);
-    const random = useMemo(() => (new Random()).api(), []);
+    //const random = useMemo(() => (new Random()).api(), []);
 
     /*const PLANETS = useMemo(()=> {
         const arr = [];
@@ -42,94 +45,11 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
 
     //const PLANETS_stringify = useMemo(() => JSON.stringify(PLANETS), [PLANETS]);
 
-    useEffect(() => {
+    /*useEffect(() => {
 
-        try{
-            if(isMyTurn && race && race.isBot){
-
-                if(ctx.phase === 'strat'){
-                    if(!ctx.activePlayers){
-                        let strats = Object.keys(cardData.strategy);
-                        G.races.forEach(race => {
-                            if(race.strategy && race.strategy.length){
-                                race.strategy.forEach(s => {
-                                    if(s.id){
-                                        strats = strats.filter(st => st !== s.id);
-                                    }
-                                });
-                            }
-                        });
-    
-                        const rand = random.Die(strats.length);
-                        moves.pickStrategy(strats[rand-1]);
-                    }
-                }
-                else if(ctx.phase === 'acts'){
-                    if(!ctx.activePlayers){
-                        if(race.tokens.t > 0){
-                            const ownTiles = getMyTiles(G, ctx.currentPlayer);
- 
-                            if(ownTiles && ownTiles.length){
-                                let neigh = [];
-                                let neigh2src = {};
-    
-                                //find most attractive tile to capture
-                                ownTiles.forEach(tile => {
-                                    if(tile.tdata && !tile.tdata.tokens.includes(race.rid) && hasCarAndInf(tile)){//only for those which have carriers & inf
-                                        const n = gridNeighbors(G.HexGrid, [tile.q, tile.r]).map(n => n.tileId);
-                                        n.forEach(nn => neigh2src[nn] = tile.tid); //remember src tile
-                                        neigh.push(...n);
-                                    }
-                                });
-    
-                                neigh.filter((n, i) => neigh.indexOf(n) === i); //unique
-    
-                                if(neigh.length){
-                                    let neighTiles = neigh.map(n => G.tiles.find(t => t.tid === n));
-    
-                                    //not own anyone and with planet
-                                    neighTiles = neighTiles.filter( n => n.tdata && n.tdata.occupied === undefined && 
-                                        !n.tdata.tokens.includes(race.rid) && n.tdata.planets && 
-                                        n.tdata.planets.find(p => p.occupied === undefined));
-                              
-                                    const pref = getPreferredTile(neighTiles);
-
-                                    if(pref){
-                                        const prefIdx = G.tiles.findIndex(t => t.tid === pref.tid);
-                                        const srcIdx = G.tiles.findIndex(t => t.tid === neigh2src[pref.tid]);
-                                        moves.bot_loadAndMoveCarrier({prefIdx, srcIdx, neigh2src});
-                                    }
-                                    
-                                    return events.endTurn();
-                                }
-                                else{
-                                    return events.endTurn();
-                                }
-                            }
-    
-                        }
-                        else{
-                            return moves.pass();
-                        }
-                    }
-                }
-                else if(ctx.phase === 'stats'){
-                    if(!ctx.activePlayers){
-                        return moves.pass();
-                    }
-                }
-                else{
-                    console.log('unknown phase:', ctx.phase);
-                    return events.endTurn();
-                }
-            }
-        }
-        catch(e){
-            console.log(e);
-            return events.endTurn();
-        }
+        
 //eslint-disable-next-line
-    }, [isMyTurn, ctx.phase])
+    }, [isMyTurn, ctx.phase])*/
 
     const PREV_TECHNODATA = useRef([]); //todo: replace with bgio-effects
     useEffect(() => {
@@ -188,7 +108,7 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
     const MY_LAST_EFFECT = useRef('');
     
     useEffectListener('*', ()=>{}, [], (effectName, effectProps, boardProps) => {
-        commonEffectListener({playerID, neighbors, ctx, G, effectName, effectProps, boardProps, MY_LAST_EFFECT, sendChatMessage, /*hud, dispatch,*/ t})
+        commonEffectListener({playerID, /*neighbors,*/ ctx, G, effectName, effectProps, boardProps, MY_LAST_EFFECT, sendChatMessage, /*hud, dispatch,*/ t})
     //eslint-disable-next-line
     }, [G]);
   
@@ -198,12 +118,6 @@ export const BotBoardWithEffects = EffectsBoardWrapper(BotTIOBoard, {
     /*updateStateAfterEffects: true,
     speed: 1*/
 });
-
-/*export const botMove = ({G, ctx, events, random, plugins}) => {
-
-    
-   
-}*/
 
 export const commonEffectListener = ({playerID, neighbors, MY_LAST_EFFECT, ctx, G, hud, dispatch, sendChatMessage, t,
     effectName, effectProps, boardProps}) => {
@@ -313,6 +227,37 @@ export const commonEffectListener = ({playerID, neighbors, MY_LAST_EFFECT, ctx, 
         
 }
 
+
+
+///////////////server side///////////////////////////////////
+
+
+const doProduction = (G, ctx) => {
+
+    const preferredBaseTile = G.tiles.find(tile => { //find spacedock closest to mecatol
+        if(tile.tdata && tile.tdata.planets){
+            return tile.tdata.planets.find(planet => String(planet.occupied) === String(ctx.currentPlayer) && planet.units && planet.units.spacedock && planet.units.spacedock.length);
+        }
+
+        return false;
+    });
+
+    if(!preferredBaseTile) return;
+
+    let preferredBasePlanet = preferredBaseTile.tdata.planets[0]; //get planet with spacedock
+    preferredBaseTile.tdata.planets.length > 1 && preferredBaseTile.tdata.planets.forEach(planet => {
+        if(planet.units && planet.units.spacedock && planet.units.spacedock.length){
+            preferredBasePlanet = planet;
+        }
+    });
+
+    if(preferredBaseTile.active !== true){
+        ACTS_MOVES.activateTile()
+    }
+
+
+}
+
 const getMyTiles = (G, playerID) => {
     
     return G.tiles.filter(t => 
@@ -360,10 +305,7 @@ const hasCarAndInf = (tile) => {
 
 }
 
-
-
-
-export const getPayloadedCarrier = (tile) => {
+const getPayloadedCarrier = (tile) => {
 
     if(!tile.tdata) return;
     if(!tile.tdata.fleet || !tile.tdata.fleet.carrier) return;
@@ -375,7 +317,7 @@ export const getPayloadedCarrier = (tile) => {
 
 }
 
-export const payloadCarrier = ({G, playerID, tileIdx, tag, max}) => {
+const payloadCarrier = ({G, playerID, tileIdx, tag, max}) => {
 
     const tile = G.tiles[tileIdx];
     const race = G.races[playerID];
@@ -408,7 +350,7 @@ export const payloadCarrier = ({G, playerID, tileIdx, tag, max}) => {
 
 }
 
-export const getLandingForce = (tile) => {
+const getLandingForce = (tile) => {
 
     if(!tile.tdata) return;
     if(!tile.tdata.fleet || !tile.tdata.fleet.carrier) return;
@@ -419,6 +361,145 @@ export const getLandingForce = (tile) => {
     if(i > -1){
         const j = fleet.carrier[i].payload.findIndex(p => p && p.id === 'infantry');
         if(j > -1) return {unit: 'carrier', i, j};
+    }
+
+}
+
+
+
+export const botMove = ({G, ctx, random, events, plugins}) => {
+
+    try{
+        const playerID = ctx.currentPlayer;
+        const race = G.races[playerID];
+
+        if(ctx.phase === 'strat'){
+            if(!ctx.activePlayers){
+                let strats = Object.keys(cardData.strategy);
+                G.races.forEach(race => {
+                    if(race.strategy && race.strategy.length){
+                        race.strategy.forEach(s => {
+                            if(s.id){
+                                strats = strats.filter(st => st !== s.id);
+                            }
+                        });
+                    }
+                });
+
+                const rand = random.Die(strats.length);
+                STRAT_MOVES.pickStrategy({G, playerID, events}, strats[rand-1]);
+            }
+        }
+        else if(ctx.phase === 'acts'){
+
+            if(!ctx.activePlayers){
+                if(race.tokens.t > 0){
+                    const ownTiles = getMyTiles(G, ctx.currentPlayer);
+
+                    if(ownTiles && ownTiles.length){
+                        let neigh = [];
+                        let neigh2src = {};
+
+                        //find most attractive tile to capture
+                        ownTiles.forEach(tile => {
+                            if(tile.tdata && !tile.tdata.tokens.includes(race.rid) && hasCarAndInf(tile)){//only for those which have carriers & inf
+                                const n = gridNeighbors(G.HexGrid, [tile.q, tile.r]).map(n => n.tileId);
+                                n.forEach(nn => neigh2src[nn] = tile.tid); //remember src tile
+                                neigh.push(...n);
+                            }
+                        });
+                        console.log('ownTiles', ownTiles)
+
+                        neigh.filter((n, i) => neigh.indexOf(n) === i); //unique
+
+                        if(neigh.length){
+                            let neighTiles = neigh.map(n => G.tiles.find(t => t.tid === n));
+                            console.log('neighTiles', neighTiles)
+
+                            //not own anyone and with planet
+                            neighTiles = neighTiles.filter( n => n.tdata && n.tdata.occupied === undefined && 
+                                !n.tdata.tokens.includes(race.rid) && n.tdata.planets && 
+                                n.tdata.planets.find(p => p.occupied === undefined));
+                        
+                            const pref = getPreferredTile(neighTiles);
+
+                            console.log(pref);
+
+                            if(pref){
+                                const prefIdx = G.tiles.findIndex(t => t.tid === pref.tid);
+                                const srcIdx = G.tiles.findIndex(t => t.tid === neigh2src[pref.tid]);
+                                
+                                const pref = G.tiles[prefIdx];
+                                let shipIdx = getPayloadedCarrier(G.tiles[srcIdx]);
+
+                                if(shipIdx === undefined){
+                                    shipIdx = payloadCarrier({G, playerID, tileIdx: srcIdx, tag: 'infantry', max: 3});
+                                    shipIdx = payloadCarrier({G, playerID, tileIdx: srcIdx, tag: 'fighter', max: 5});
+                                }
+
+                                if(shipIdx > -1){
+                                    let err = ACTS_MOVES.activateTile({G, playerID, events, ...plugins}, prefIdx);
+
+                                    if(!err){
+                                        err = ACTS_MOVES.moveShip({G, playerID, random, events, ...plugins}, {tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: 'carrier', shipIdx});
+
+                                        if(!err){
+                                            if(G.tiles[srcIdx].tdata.fleet){ //send one ship to cover carrier
+                                                let convoy = ['cruiser', 'destroyer'];
+                                                convoy.forEach(c => {
+                                                    if(G.tiles[srcIdx].tdata.fleet[c]){
+                                                        err = ACTS_MOVES.moveShip({G, playerID, random, events, ...plugins}, {tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: c, shipIdx: 0});
+                                                    }
+                                                });
+                                            }
+
+                                            //capture unowned planets
+                                            pref.tdata.planets.forEach((p, pidx) => {
+                                                if(String(p.occupied) !== String(playerID)){
+                                                    let force = getLandingForce(pref);
+
+                                                    if(force){
+                                                        err = ACTS_MOVES.unloadUnit({G, playerID, random, events, ...plugins}, {src: {...force, tile: prefIdx}, dst: {tile: prefIdx, planet: pidx}});
+                                                        if(G.races[playerID].explorationDialog){
+                                                            ACTS_MOVES.choiceDialog({G, playerID, random, events, ...plugins}, 0);
+                                                        }
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            doProduction(G, ctx);
+                            return events.endTurn();
+                        }
+                        else{
+                            doProduction(G, ctx);
+                            return events.endTurn();
+                        }
+                    }
+
+                }
+                else{
+                    return ACTS_MOVES.pass({G, playerID, events, ctx});
+                }
+            }
+
+        }
+        else if(ctx.phase === 'stats'){
+            if(!ctx.activePlayers){
+                return ACTS_MOVES.pass({G, playerID, events, ctx});
+            }
+        }
+        else{
+            console.log('unknown phase:', ctx.phase);
+            return events.endTurn();
+        }
+    }
+    catch(e){
+        console.log(e);
+        return events.endTurn();
     }
 
 }
@@ -471,12 +552,7 @@ export const getLandingForce = (tile) => {
     return plugin;
 };*/
 
-
-
-
-
-
-
+/*
 
 class Alea {
     constructor(seed) {
@@ -554,11 +630,11 @@ function alea(seed, state) {
  * Uses a seed from ctx, and also persists the PRNG
  * state in ctx so that moves can stay pure.
  */
-class Random {
+/*class Random {
     /**
      * constructor
      * @param {object} ctx - The ctx object to initialize from.
-     */
+     *
     constructor(state) {
         // If we are on the client, the seed is not present.
         // Just use a temporary seed to execute the move without
@@ -569,7 +645,7 @@ class Random {
     }
     /**
      * Generates a new seed from the current date / time.
-     */
+     *
     static seed() {
         return Date.now().toString(36).slice(-10);
     }
@@ -581,7 +657,7 @@ class Random {
     }
     /**
      * Generate a random number.
-     */
+     *
     _random() {
         this.used = true;
         const R = this.state;
@@ -632,7 +708,7 @@ class Random {
              * D10: (diceCount) => value
              * D12: (diceCount) => value
              * D20: (diceCount) => value
-             */
+             *
             ...predefined,
             /**
              * Roll a die of specified spot value.
@@ -641,11 +717,11 @@ class Random {
              * @param {number} diceCount - number of dice to throw.
              *                             if not defined, defaults to 1 and returns the value directly.
              *                             if defined, returns an array containing the random dice values.
-             */
+             *
             Die,
             /**
              * Generate a random number between 0 and 1.
-             */
+             *
             Number: () => {
                 return random();
             },
@@ -654,7 +730,7 @@ class Random {
              *
              * @param {Array} deck - The array to shuffle. Does not mutate
              *                       the input, but returns the shuffled array.
-             */
+             *
             Shuffle: (deck) => {
                 const clone = [...deck];
                 let sourceIndex = deck.length;
@@ -671,3 +747,4 @@ class Random {
         };
     }
 }
+*/
