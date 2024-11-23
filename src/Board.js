@@ -22,7 +22,7 @@ import { hudReducer } from './reducers.js';
 import { PixiStage } from './pixiStage.js';
 
 import { EffectsBoardWrapper, useEffectListener } from './effects/react';
-import { commonEffectListener } from './botPlugin.js';
+import { commonEffectListener } from './botPlugin_cs';
 
 function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages }) {
 

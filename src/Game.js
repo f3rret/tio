@@ -6,7 +6,7 @@ import { ACTION_CARD_STAGE, ACTS_STAGES, STRAT_MOVES, secretObjectiveConfirm, us
 import { haveTechnology, getPlanetByName, votingProcessDone, dropACard, checkSecretObjective, 
  getInitRaces, getInitTiles, doFlagshipAbility, getRaceVP} from './utils';
 import { EffectsPlugin } from './effects/plugin.js';
-import { botMove } from './botPlugin';
+import { botMove } from './botPlugin_ss.js';
 //import settings from '../package.json'
 
 const effectsConfig = EffectsPlugin({
@@ -93,7 +93,7 @@ export const TIO = {
               events.endTurn();
             }
 
-            if(G.races[ctx.currentPlayer].isBot) botMove({G, ctx, events, plugins, random});
+            if(G.races[ctx.currentPlayer].isBot) botMove({G, ctx, events, random, ...plugins});
           }
         },
         moves: STRAT_MOVES,
@@ -235,7 +235,7 @@ export const TIO = {
                 }
               });
 
-              if(G.races[ctx.currentPlayer].isBot) botMove({G, ctx, events, plugins, random});
+              if(G.races[ctx.currentPlayer].isBot) botMove({G, ctx, events, random, ...plugins});
             },
 
             onMove: ({ G, ctx, playerID, ...plugins }) => {
@@ -356,7 +356,7 @@ export const TIO = {
             actionCard: ACTION_CARD_STAGE
           },
           onBegin: ({G, ctx, events, random, ...plugins}) => {
-            //botMove({G, ctx, events, plugins, random});
+            if(G.races[ctx.currentPlayer].isBot) botMove({G, ctx, events, random, ...plugins});
           }
         },
         moves: STATS_MOVES,

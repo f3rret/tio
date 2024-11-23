@@ -3,7 +3,7 @@ import { Client } from 'boardgame.io/react';
 import { /*Local,*/ SocketIO } from 'boardgame.io/multiplayer';
 import { TIO } from './Game';
 import { BoardWithEffects } from './Board';
-import { BotBoardWithEffects } from './botPlugin';
+import { BotBoardWithEffects } from './botPlugin_cs';
 import './scss/custom.scss'
 import settings from '../package.json';
 import { LobbyClient } from 'boardgame.io/client';
@@ -12,7 +12,7 @@ import { useState } from 'react';
 export const App = Client({ 
     game: TIO,
     board: BoardWithEffects,
-    debug: false,//(!process.env.NODE_ENV || process.env.NODE_ENV === 'development'),
+    debug: (!process.env.NODE_ENV || process.env.NODE_ENV === 'development'),
     multiplayer: SocketIO({ server: window.location.protocol + '//' + settings.ip + ':8000' })
 })
 

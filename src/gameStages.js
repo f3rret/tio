@@ -314,7 +314,7 @@ export const producing = ({G, playerID, ctx, events}, pname, deploy, payment, ex
 
     if(pname){
       planet = activeTile.tdata.planets.find(p => p.name === pname);
-      if(planet.attach && planet.attach.length && planet.attach.indexOf('Demilitarized Zone')>-1) return;
+      if(planet && planet.attach && planet.attach.length && planet.attach.indexOf('Demilitarized Zone')>-1) return;
       if(planet.exploration === 'Freelancers') delete planet['exploration'];
     }
     else if(!G.races[playerID].makeCustomProducing){

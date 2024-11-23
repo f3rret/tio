@@ -1416,7 +1416,7 @@ export const PlanetsRows = ({PLANETS, onClick, exhausted, variant, resClick, inf
                         
                         {(!psArch || p.exhausted) && <Col />}
                         {psArch && !p.exhausted && specialty && <Col style={{padding: 0, cursor: 'pointer', position: 'relative'}}>
-                            <button className='styledButton green' style={{width: '3rem', padding: 0, position: 'absolute', left: '.5rem', boxShadow: '-2px 0px 10px gold'}} onClick={(e)=>{e.stopPropagation(); moves.exhaustForTg(p.name)}}>
+                            <button className='styledButton green' style={{width: '3rem', padding: 0, position: 'absolute', left: '.5rem', boxShadow: '-2px 0px 10px gold'}} onClick={(e)=>{e.stopPropagation(); if(String(p.occupied) === String(playerID)) moves.exhaustForTg(p.name)}}>
                                 <img style={{width: '1.5rem'}} src='icons/trade_good_1.png' alt='tg'/> 
                             </button>
                         </Col>}
