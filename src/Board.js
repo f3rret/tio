@@ -941,7 +941,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
       dispatch({
         type: 'flush_exhausted_cards'
       });
-      MY_LAST_EFFECT.current = '';
+      //MY_LAST_EFFECT.current = '';
     //}
     if(race.exhaustedCards.length){
       flushTempCt();
@@ -1127,10 +1127,10 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     }
   }, [isMyTurn, dispatch])
 
-  const MY_LAST_EFFECT = useRef('');
+  //const MY_LAST_EFFECT = useRef('');
 
   useEffectListener('*', ()=>{}, [], (effectName, effectProps, boardProps) => 
-    commonEffectListener({playerID, neighbors, ctx, G, effectName, effectProps, boardProps, MY_LAST_EFFECT, sendChatMessage, hud, dispatch, t}), [G_stringify, playerID, neighbors]);
+    commonEffectListener({playerID, neighbors, ctx, G, effectName, effectProps, boardProps, /*MY_LAST_EFFECT, */sendChatMessage, hud, dispatch, t}), [G_stringify, playerID, neighbors]);
 
 
   //eslint-disable-next-line

@@ -93,7 +93,7 @@ export const TIO = {
               events.endTurn();
             }
 
-            if(G.races[ctx.currentPlayer].isBot) botMove({G, ctx, events, random, ...plugins});
+            if(G.races[ctx.currentPlayer].isBot) botMove({G, ctx, events, random, playerID: ctx.currentPlayer, plugins});
           }
         },
         moves: STRAT_MOVES,
@@ -235,7 +235,7 @@ export const TIO = {
                 }
               });
 
-              if(G.races[ctx.currentPlayer].isBot) botMove({G, ctx, events, random, ...plugins});
+              if(G.races[ctx.currentPlayer].isBot) botMove({G, playerID: ctx.currentPlayer, ctx, events, random, plugins});
             },
 
             onMove: ({ G, ctx, playerID, ...plugins }) => {
@@ -356,7 +356,7 @@ export const TIO = {
             actionCard: ACTION_CARD_STAGE
           },
           onBegin: ({G, ctx, events, random, ...plugins}) => {
-            if(G.races[ctx.currentPlayer].isBot) botMove({G, ctx, events, random, ...plugins});
+            if(G.races[ctx.currentPlayer].isBot) botMove({G, playerID: ctx.currentPlayer, ctx, events, random, plugins});
           }
         },
         moves: STATS_MOVES,

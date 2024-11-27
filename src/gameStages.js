@@ -8,6 +8,7 @@ import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveT
   getPlayerPlanets,
   replenishCommodity, returnPromissoryToOwner} from './utils';
 import cardData from './cardData.json';
+import { botMove } from './botPlugin_ss';
 
 export const useAgenda = ({G, ctx, playerID}, args) => {
   try{
@@ -1300,6 +1301,9 @@ export const ACTS_STAGES = {
   actionCard: ACTION_CARD_STAGE,
   strategyCard: {
     moves: {
+      botStageMove: ({ G, ctx, playerID, random, events, ...plugins }) => {
+        botMove({G, playerID, ctx, events, random, plugins});
+      },
       joinStrategy: ({ G, ctx, playerID, events, ...plugins }, {exhausted, payment, result, exhaustedCards}) => {
         const exhaustPlanet = (revert) => {
           if(exhausted && exhausted.length){
@@ -3799,7 +3803,7 @@ export const ACTS_MOVES = {
 
           if(rifts && rifts.length){
             let dices = random.D10(rifts.length);//rifts.length);
-            plugins.effects.rift({unit: args.unit, dices: dices});
+            plugins.effects.rift({pid: playerID, unit: args.unit, dices: dices});
             
             if(dices.find(d => d < 4)){
               G.tiles[args.tile].tdata.fleet[args.unit].splice(args.shipIdx, 1);

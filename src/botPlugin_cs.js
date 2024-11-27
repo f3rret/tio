@@ -101,10 +101,20 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
         // eslint-disable-next-line
     }, [race.relics]);
 
-    const MY_LAST_EFFECT = useRef('');
+    useEffect(() => {
+        if(ctx.activePlayers && ctx.activePlayers[playerID]){
+            if(ctx.activePlayers[playerID] === 'strategyCard'){
+                console.log('bot stage move');
+                moves.botStageMove();
+            }
+        }
+    //eslint-disable-next-line
+    }, [ctx.activePlayers])
+
+    //const MY_LAST_EFFECT = useRef('');
     
     useEffectListener('*', ()=>{}, [], (effectName, effectProps, boardProps) => {
-        commonEffectListener({playerID, /*neighbors,*/ ctx, G, effectName, effectProps, boardProps, MY_LAST_EFFECT, sendChatMessage, /*hud, dispatch,*/ t})
+        commonEffectListener({playerID, /*neighbors,*/ ctx, G, effectName, effectProps, boardProps, /*MY_LAST_EFFECT,*/ sendChatMessage, /*hud, dispatch,*/ t})
     //eslint-disable-next-line
     }, [G]);
   
@@ -115,15 +125,16 @@ export const BotBoardWithEffects = EffectsBoardWrapper(BotTIOBoard, {
     speed: 1*/
 });
 
-export const commonEffectListener = ({playerID, neighbors, MY_LAST_EFFECT, ctx, G, hud, dispatch, sendChatMessage, t,
+export const commonEffectListener = ({playerID, neighbors, /*MY_LAST_EFFECT,*/ ctx, G, hud, dispatch, sendChatMessage, t,
     effectName, effectProps, boardProps}) => {
 
     try{
         const race = G.races[playerID];
 
         if(effectName === 'rift'){
-            if(String(playerID) === String(ctx.currentPlayer)){
-                const {unit, dices} = effectProps;
+            const {pid, unit, dices} = effectProps;
+
+            if(String(playerID) === String(pid)){
                 let rolls = '';
                 dices.forEach(d => {
                 if(d > 3){
@@ -196,20 +207,20 @@ export const commonEffectListener = ({playerID, neighbors, MY_LAST_EFFECT, ctx, 
             const {id, pid} = effectProps;
         
             if((pid !== undefined && String(playerID) === String(pid)) || (pid === undefined && String(playerID) === String(ctx.currentPlayer))){
-                if(MY_LAST_EFFECT.current !== id){
+                //if(MY_LAST_EFFECT.current !== id){
                 sendChatMessage(t('cards.relics.' + id + '.label'));
-                MY_LAST_EFFECT.current = id;
-                }
+                //MY_LAST_EFFECT.current = id;
+                //}
             }
         }
         else if(effectName === 'promissory'){
             const {src, dst, id} = effectProps;
 
             if(String(src) === String(playerID)){
-                if(MY_LAST_EFFECT.current !== id){
+                //if(MY_LAST_EFFECT.current !== id){
                 sendChatMessage(t('cards.promissory.' + id + '.label') + ' ' + t('races.' + G.races[dst].rid + '.name') + ' ' + t('board.complete'));
-                MY_LAST_EFFECT.current = id;
-                }
+                //MY_LAST_EFFECT.current = id;
+                //}
             }
         }
         else if(effectName === 'planet' && String(effectProps.playerID) === String(playerID)){

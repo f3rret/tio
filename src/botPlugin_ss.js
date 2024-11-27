@@ -2,7 +2,7 @@
 import cardData from './cardData.json';
 import { neighbors as gridNeighbors} from "./Grid";
 import { getUnitsTechnologies } from './utils'; 
-import { ACTS_MOVES, STATS_MOVES, STRAT_MOVES } from './gameStages';
+import { ACTS_MOVES, STATS_MOVES, STRAT_MOVES, ACTS_STAGES } from './gameStages';
 //import { current } from 'immer';
 
 
@@ -64,6 +64,25 @@ const getPreferredTile = (tiles) => {
     values.sort((a, b) => {
         if(a.value > b.value) return -1;
         if(a.value < b.value) return 1;
+        return 0;
+    });
+
+    return tiles[values[0].idx];
+
+}
+
+const getTileClosestToMecatol = (tiles) => {
+
+    if(!tiles || !tiles.length) return;
+
+    const values = tiles.map( (t, idx) => {
+        let value = Math.abs(t.q) + Math.abs(t.r);
+        return {idx, value}
+    });
+
+    values.sort((a, b) => {
+        if(a.value < b.value) return -1;
+        if(a.value > b.value) return 1;
         return 0;
     });
 
@@ -150,10 +169,9 @@ const getLandingForce = (tile) => {
 
 
 
-export const botMove = ({G, ctx, random, events, ...plugins}) => {
+export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
 
     try{
-        const playerID = ctx.currentPlayer;
         const race = G.races[playerID];
 
         if(ctx.phase === 'strat'){
@@ -198,7 +216,7 @@ export const botMove = ({G, ctx, random, events, ...plugins}) => {
 
                         neigh.filter((n, i) => neigh.indexOf(n) === i); //unique
 
-                        if(neigh.length){
+                        if(race.tokens.t > 1 && neigh.length){
                             //not own anyone and with planet
                             let neighTiles = neigh.map(n => G.tiles.find(t => t.tid === n))
                                                 .filter( n => n.tdata && n.tdata.occupied === undefined && 
@@ -252,8 +270,45 @@ export const botMove = ({G, ctx, random, events, ...plugins}) => {
                                     }
                                 }
                             }
-                            else{
-                                if(!doProduction({G, ctx, playerID, events, plugins})){
+                            else{//try to move fleet close to Mecatol
+                                neighTiles = neigh.map(n => G.tiles.find(t => t.tid === n))
+                                                .filter( n => n.tdata && (n.tdata.occupied === undefined || String(n.tdata.occupied) !== String(playerID)));
+
+                                pref = getTileClosestToMecatol(neighTiles);
+
+                                if(pref){
+                                    const prefIdx = G.tiles.findIndex(t => t.tid === pref.tid);
+                                    const srcIdx = G.tiles.findIndex(t => t.tid === neigh2src[pref.tid]);
+                                    
+                                    pref = G.tiles[prefIdx];
+                                    let shipIdx = getPayloadedCarrier(G.tiles[srcIdx]);
+
+                                    if(shipIdx === undefined){
+                                        shipIdx = payloadCarrier({G, playerID, tileIdx: srcIdx, tag: 'infantry', max: 3});
+                                        shipIdx = payloadCarrier({G, playerID, tileIdx: srcIdx, tag: 'fighter', max: 5});
+                                    }
+
+                                    if(shipIdx > -1){
+                                        let err = ACTS_MOVES.activateTile({G, playerID, events, effects: plugins.effects}, prefIdx);
+
+                                        if(!err){
+                                            err = ACTS_MOVES.moveShip({G, playerID, random, events, effects: plugins.effects}, {tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: 'carrier', shipIdx});
+    
+                                            if(!err){
+                                                if(G.tiles[srcIdx].tdata.fleet){ //send one ship to cover carrier
+                                                    let convoy = ['cruiser', 'destroyer'];
+                                                    convoy.forEach(c => {
+                                                        if(G.tiles[srcIdx].tdata.fleet[c]){
+                                                            err = ACTS_MOVES.moveShip({G, playerID, random, events, effects: plugins.effects}, {tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: c, shipIdx: 0});
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                }
+                                else if(!doProduction({G, ctx, playerID, events, plugins})){
                                     return ACTS_MOVES.pass({G, playerID, events, ctx});
                                 }
                             }
@@ -271,6 +326,9 @@ export const botMove = ({G, ctx, random, events, ...plugins}) => {
                 else{
                     return ACTS_MOVES.pass({G, playerID, events, ctx});
                 }
+            }
+            else if(ctx.activePlayers[0] === 'strategyCard'){
+                ACTS_STAGES.strategyCard.moves.passStrategy({G, ctx, events})
             }
 
         }
