@@ -29,7 +29,10 @@ const effectsConfig = EffectsPlugin({
       //duration: 2
     },
     planet: {
-      create: (value) => ({pname: value.pname, playerID: value.playerID, unid: value.unid})
+      create: (value) => ({pname: value.pname, playerID: value.playerID})
+    },
+    pass: {
+      create: (value) => value
     }
   },
 });

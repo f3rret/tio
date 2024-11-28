@@ -1129,8 +1129,8 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
 
   //const MY_LAST_EFFECT = useRef('');
 
-  useEffectListener('*', ()=>{}, [], (effectName, effectProps, boardProps) => 
-    commonEffectListener({playerID, neighbors, ctx, G, effectName, effectProps, boardProps, /*MY_LAST_EFFECT, */sendChatMessage, hud, dispatch, t}), [G_stringify, playerID, neighbors]);
+  useEffectListener('*', /*()=>{}, [],*/ (effectName, effectProps, boardProps) => 
+    commonEffectListener({playerID, neighbors, ctx, G, effectName, effectProps, boardProps, /*MY_LAST_EFFECT, */sendChatMessage, hud, dispatch, t}), [/*G_stringify,*/ playerID, neighbors]);
 
 
   //eslint-disable-next-line

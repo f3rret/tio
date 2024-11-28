@@ -320,6 +320,16 @@ li.list-group-item{
     left: 5rem;
     color: antiquewhite!important;
 }
+.chat-pass{
+    display: inline-block;
+    background-color: brown;
+    padding: 0 .5rem;
+    color: antiquewhite;
+    border-radius: 5px;
+    font-family: 'system-ui';
+    font-weight: bold;
+    line-height: 1.5rem
+}
 .chat-dice{
     display: inline-block;
     background-color: antiquewhite;

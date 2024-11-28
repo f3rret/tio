@@ -3880,7 +3880,9 @@ export const ACTS_MOVES = {
     catch(e){console.log(e)}
 
   },
-  pass: ({ G, playerID, events, ctx }) => {
+  pass: ({ G, playerID, events, ctx, ...plugins }) => {
+    plugins.effects.pass({pid: playerID})
+
     let endLater = false;
 
     if(!G.passedPlayers.includes(String(playerID))){

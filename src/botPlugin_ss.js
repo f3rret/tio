@@ -309,13 +309,13 @@ export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
 
                                 }
                                 else if(!doProduction({G, ctx, playerID, events, plugins})){
-                                    return ACTS_MOVES.pass({G, playerID, events, ctx});
+                                    return ACTS_MOVES.pass({G, playerID, events, ctx, effects: plugins.effects});
                                 }
                             }
                         }
                         else{
                             if(!doProduction({G, ctx, playerID, events, plugins})){
-                                return ACTS_MOVES.pass({G, playerID, events, ctx});
+                                return ACTS_MOVES.pass({G, playerID, events, ctx, effects: plugins.effects});
                             }
                         }
 
@@ -324,7 +324,7 @@ export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
 
                 }
                 else{
-                    return ACTS_MOVES.pass({G, playerID, events, ctx});
+                    return ACTS_MOVES.pass({G, playerID, events, ctx, effects: plugins.effects});
                 }
             }
             else if(ctx.activePlayers[0] === 'strategyCard'){

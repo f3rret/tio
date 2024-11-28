@@ -24,7 +24,8 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
         'chat-dice': /(\/dice\s\d{1,2})/,
         'chat-dice-green': /(\/dice-green\s\d{1,2})/,
         'chat-gain-tg': /(\/gain-tg\s\d{1,2})/,
-        'chat-trade': /(\/trade\s.*)/
+        'chat-trade': /(\/trade\s.*)/,
+        'chat-pass': /(\/pass\s.{3,4})/,
         /*'chat-gain-comm': /(\/gain-comm\s\d{1,2})/,
         'chat-ability': /(\/ability\s\S+\s\d\s\S+)/*/
       }
@@ -39,9 +40,14 @@ export const ChatBoard = ({sendChatMessage, chatMessages})=>{
               </span>
             }
             else if(className === 'chat-trade'){
-                return <span key={className + i} className='bi bi-arrow-right-square-fill'>
-                    {match.replace(/(\/trade)/, '')}
-                  </span>
+              return <span key={className + i} className='bi bi-arrow-right-square-fill'>
+                  {match.replace(/(\/trade)/, '')}
+                </span>
+            }
+            else if(className === 'chat-pass'){
+              return <span key={className + i} className={className}>
+                  {match.replace(/(\/pass)/, '')}
+                </span>
             }
             /*else if(className === 'chat-gain-comm'){
               return <span key={className + i} className={className}>

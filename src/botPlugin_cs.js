@@ -113,10 +113,10 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
 
     //const MY_LAST_EFFECT = useRef('');
     
-    useEffectListener('*', ()=>{}, [], (effectName, effectProps, boardProps) => {
+    useEffectListener('*', /*()=>{}, [],*/ (effectName, effectProps, boardProps) => {
         commonEffectListener({playerID, /*neighbors,*/ ctx, G, effectName, effectProps, boardProps, /*MY_LAST_EFFECT,*/ sendChatMessage, /*hud, dispatch,*/ t})
     //eslint-disable-next-line
-    }, [G]);
+    }, [playerID]);
   
 }
 
@@ -131,6 +131,12 @@ export const commonEffectListener = ({playerID, neighbors, /*MY_LAST_EFFECT,*/ c
     try{
         const race = G.races[playerID];
 
+        if(effectName === 'pass'){
+            const {pid} = effectProps;
+            if(String(playerID) === String(pid)){
+                sendChatMessage('/pass ' + t('board.nav.pass'));
+            }
+        }
         if(effectName === 'rift'){
             const {pid, unit, dices} = effectProps;
 
@@ -224,9 +230,7 @@ export const commonEffectListener = ({playerID, neighbors, /*MY_LAST_EFFECT,*/ c
             }
         }
         else if(effectName === 'planet' && String(effectProps.playerID) === String(playerID)){
-            //if(effectProps.unid && !EFFECTS_QUEUE.includes(effectProps.unid)){
-                sendChatMessage(t('board.has_occupied_planet') + ' ' + t('planets.' + effectProps.pname));
-            //}
+            sendChatMessage(t('board.has_occupied_planet') + ' ' + t('planets.' + effectProps.pname));
         }
 
     }
