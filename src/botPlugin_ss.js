@@ -1,19 +1,82 @@
 
 import cardData from './cardData.json';
 import { neighbors as gridNeighbors} from "./Grid";
-import { getUnitsTechnologies } from './utils'; 
+import { getUnitsTechnologies, UNITS_LIMIT } from './utils'; 
 import { ACTS_MOVES, STATS_MOVES, STRAT_MOVES, ACTS_STAGES } from './gameStages';
 //import { current } from 'immer';
 
 
 ///////////////server side///////////////////////////////////
 
+const fleetCount = (tile, playerID) => {
+    let fc = 0;
+
+    if(tile.tdata && tile.tdata.fleet && String(tile.tdata.occupied) === String(playerID)){
+        const fleetKeys = Object.keys(tile.tdata.fleet);
+
+        fleetKeys.forEach(fk => {
+            if(tile.tdata.fleet[fk] && fk.toUpperCase() !== 'FIGHTER') fc += tile.tdata.fleet[fk].length;
+        });
+    }
+
+    return fc;
+}
+
+const allUnitsCount = (G, playerID)=> {
+    const units = [];
+
+    G.tiles.forEach( t => {
+      if(String(t.tdata.occupied) === String(playerID)){
+        if(t.tdata.fleet){ //todo: or invasion fleet
+          Object.keys(t.tdata.fleet).forEach( k => { 
+            if(!units[k]) units[k] = 0;
+            units[k] += t.tdata.fleet[k].length;
+            
+            t.tdata.fleet[k].forEach(ship => {
+              if(ship && ship.payload && ship.payload.length){
+                ship.payload.forEach(pl => {
+                  if(pl && pl.id){
+                    if(!units[pl.id]) units[pl.id] = 0;
+                    units[pl.id]++;
+                  }
+                });
+              }
+            });
+          });
+        }
+      }
+
+      if(t.tdata.planets && t.tdata.planets.length){
+        t.tdata.planets.forEach(p => {
+          if(String(p.occupied) === String(playerID)){ //todo: or attacker forces
+            if(p.units){
+              Object.keys(p.units).forEach( k => {
+                if(!units[k]) units[k] = 0;
+                units[k] += Array.isArray(p.units[k]) ? p.units[k].length:p.units[k];
+              });
+            }
+          }
+        })
+      }
+    });
+    
+    return units;
+}
 
 const doProduction = ({G, ctx, playerID, plugins, events}) => {
 
     let prefIdx;
     const preferredBaseTile = G.tiles.find((tile, idx) => { //find spacedock closest to mecatol
         if(tile.tdata && tile.tdata.planets && (tile.active || !tile.tdata.tokens.includes(G.races[playerID].rid))){
+
+            if(tile.tdata.occupied !== undefined && String(tile.tdata.occupied) !== String(playerID)){ //blocked by enemy
+                return false;
+            }
+
+            if(fleetCount(tile, playerID) >= G.races[playerID].tokens.f - 1){
+                return false;
+            }
+
             prefIdx = idx;
             return tile.tdata.planets.find(planet => String(planet.occupied) === String(ctx.currentPlayer) && planet.units && planet.units.spacedock && planet.units.spacedock.length);
         }
@@ -34,9 +97,28 @@ const doProduction = ({G, ctx, playerID, plugins, events}) => {
         ACTS_MOVES.activateTile({G, playerID, events, effects: plugins.effects}, prefIdx);
     }
 
-    const deploy={carrier: 1, infantry: 2, fighter: 2};
+
+    const deploy = [
+        {carrier: 1, destroyer: 1, infantry: 2, fighter: 2},
+        {destroyer: 1, cruiser: 1},
+        {dreadnought: 1, fighter: 1},
+        {flagship: 1, infantry: 2, fighter: 2},
+        {warsun: 1, infantry: 2, fighter: 2}
+    ]
+
+    //const fc = fleetCount(preferredBaseTile, playerID);
+    const units = allUnitsCount(G, playerID);
+
+    const dp = deploy.find(variant => {
+        return !Object.keys(variant).find(key => {
+            return units[key] + variant[key] > UNITS_LIMIT[key]
+        })
+    });
+
+    if(!dp) return false;
+
     const payment = {resources: [], influence: []};
-    ACTS_MOVES.producing({G, playerID, ctx, events}, preferredBasePlanet.name, deploy, payment/*, exhaustedCards*/);
+    ACTS_MOVES.producing({G, playerID, ctx, events}, preferredBasePlanet.name, dp, payment/*, exhaustedCards*/);
 
     return true;
 }
@@ -167,7 +249,44 @@ const getLandingForce = (tile) => {
 
 }
 
+const payloadAnyTransport = ({G, playerID, tile}) => {
 
+    const race = G.races[playerID];
+    const transport = ['carrier', 'cruiser', 'dreadnought', 'flagship', 'warsun'];
+    const technologies = getUnitsTechnologies(transport, race);
+
+    if(!tile.tdata) return -1;
+
+    const fleet = tile.tdata.fleet;
+    if(!fleet) return -1;
+
+    const planets = tile.tdata.planets;
+    if(!planets || !planets.length) return -1;
+    
+    if(!fleet.carrier || !fleet.carrier.length) return -1;
+
+    Object.keys(fleet).forEach(cartag => {
+        if(fleet[cartag] && fleet[cartag].length && technologies[cartag] && technologies[cartag].capacity){
+            fleet[cartag].forEach(car => {
+                if(!car.payload) car.payload = [];
+
+                planets.forEach(p => {
+                    ['infantry', 'fighter', 'mech'].forEach(tag => {
+                        while(p.units && p.units[tag] && p.units[tag].length && car.payload.length < technologies[cartag].capacity){
+                            const unit = {...p.units[tag].pop(), id: tag};
+                            car.payload.push(unit);
+
+                            if(!p.units[tag].length) delete p.units[tag];
+                        }
+                    })
+                });
+            })
+        }
+    });
+
+    return 0;
+
+}
 
 export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
 
@@ -200,81 +319,71 @@ export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
                     const ownTiles = getMyTiles({G, playerID: ctx.currentPlayer});
 
                     if(ownTiles && ownTiles.length){
-                        let neigh = [];
-                        let neigh2src = {};
+                        if(race.tokens.t === 1){
+                            if(!doProduction({G, ctx, playerID, events, plugins})){ //need move fleet from spacedock
 
-                        //find most attractive tile to capture
-                        ownTiles.forEach(tile => {
-                            if(tile.tdata && !tile.tdata.tokens.includes(race.rid) && hasCarAndInf(tile)){//only for those which have carriers & inf
-                                const n = gridNeighbors(G.HexGrid, [tile.q, tile.r]).map(n => n.tileId);
-                                
-                                n.forEach(nn => neigh2src[nn] = tile.tid); //remember src tile
-                                neigh.push(...n);
-                            }
-                        });
-                        
+                                const preferredBaseTile = G.tiles.find((tile, idx) => { //find spacedock closest to mecatol
+                                    if(tile.tdata && String(tile.tdata.occupied) === String(playerID) && tile.tdata.fleet && tile.tdata.planets && !tile.tdata.tokens.includes(G.races[playerID].rid)){
+                                        return tile.tdata.planets.find(planet => String(planet.occupied) === String(ctx.currentPlayer) && planet.units && planet.units.spacedock && planet.units.spacedock.length);
+                                    }
+                            
+                                    return false;
+                                });
 
-                        neigh.filter((n, i) => neigh.indexOf(n) === i); //unique
+                                if(preferredBaseTile){
+                                    const neigh = gridNeighbors(G.HexGrid, [preferredBaseTile.q, preferredBaseTile.r]).map(n => n.tileId);
+                                    const neighTiles = neigh.map(n => G.tiles.find(t => t.tid === n))
+                                                    .filter( n => n.tdata && (n.tdata.occupied === undefined || String(n.tdata.occupied) !== String(playerID)));
 
-                        if(race.tokens.t > 1 && neigh.length){
-                            //not own anyone and with planet
-                            let neighTiles = neigh.map(n => G.tiles.find(t => t.tid === n))
-                                                .filter( n => n.tdata && n.tdata.occupied === undefined && 
-                                                    !n.tdata.tokens.includes(race.rid) && n.tdata.planets && 
-                                                    n.tdata.planets.find(p => p.occupied === undefined));
+                                    const destination = getTileClosestToMecatol(neighTiles);
+                                    if(destination){
+                                        const destIdx = G.tiles.findIndex(t => t.tid === destination.tid);
+                                        const srcIdx = G.tiles.findIndex(t => t.tid === preferredBaseTile.tid);
 
-                            let pref = getPreferredTile(neighTiles);
-
-                            if(pref){
-                                const prefIdx = G.tiles.findIndex(t => t.tid === pref.tid);
-                                const srcIdx = G.tiles.findIndex(t => t.tid === neigh2src[pref.tid]);
-                                
-                                pref = G.tiles[prefIdx];
-                                let shipIdx = getPayloadedCarrier(G.tiles[srcIdx]);
-
-                                if(shipIdx === undefined){
-                                    shipIdx = payloadCarrier({G, playerID, tileIdx: srcIdx, tag: 'infantry', max: 3});
-                                    shipIdx = payloadCarrier({G, playerID, tileIdx: srcIdx, tag: 'fighter', max: 5});
-                                }
-
-                                if(shipIdx > -1){
-                                    let err = ACTS_MOVES.activateTile({G, playerID, events, effects: plugins.effects}, prefIdx);
-
-                                    if(!err){
-                                        err = ACTS_MOVES.moveShip({G, playerID, random, events, effects: plugins.effects}, {tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: 'carrier', shipIdx});
-
+                                        let err = ACTS_MOVES.activateTile({G, playerID, events, effects: plugins.effects}, destIdx);
                                         if(!err){
-                                            if(G.tiles[srcIdx].tdata.fleet){ //send one ship to cover carrier
-                                                let convoy = ['cruiser', 'destroyer'];
-                                                convoy.forEach(c => {
-                                                    if(G.tiles[srcIdx].tdata.fleet[c]){
-                                                        err = ACTS_MOVES.moveShip({G, playerID, random, events, effects: plugins.effects}, {tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: c, shipIdx: 0});
-                                                    }
-                                                });
-                                            }
-
-                                            //capture unowned planets
-                                            pref.tdata.planets.forEach((p, pidx) => {
-                                                if(String(p.occupied) !== String(playerID)){
-                                                    let force = getLandingForce(pref);
-
-                                                    if(force){
-                                                        err = ACTS_MOVES.unloadUnit({G, playerID, random, events, effects: plugins.effects}, {src: {...force, tile: prefIdx}, dst: {tile: prefIdx, planet: pidx}});
-                                                        if(G.races[playerID].explorationDialog){
-                                                            ACTS_MOVES.choiceDialog({G, playerID, random, events, effects: plugins.effects}, 0);
-                                                        }
-                                                    }
+                                            payloadAnyTransport({G, playerID, tile: preferredBaseTile});
+                                            Object.keys(preferredBaseTile.tdata.fleet).forEach(c => {
+                                                if(preferredBaseTile.tdata.fleet[c]){
+                                                    err = ACTS_MOVES.moveShip({G, playerID, random, events, effects: plugins.effects}, {tile: srcIdx, path: [preferredBaseTile.tid, destination.tid], unit: c, shipIdx: 0});
                                                 }
                                             });
+
+                                            return events.endTurn();
                                         }
+
                                     }
                                 }
+                                
                             }
-                            else{//try to move fleet close to Mecatol
-                                neighTiles = neigh.map(n => G.tiles.find(t => t.tid === n))
-                                                .filter( n => n.tdata && (n.tdata.occupied === undefined || String(n.tdata.occupied) !== String(playerID)));
 
-                                pref = getTileClosestToMecatol(neighTiles);
+                            return ACTS_MOVES.pass({G, playerID, events, ctx, effects: plugins.effects});
+                        }
+                        else{
+                            let neigh = [];
+                            let neigh2src = {};
+
+                            //find most attractive tile to capture
+                            ownTiles.forEach(tile => {
+                                if(tile.tdata && !tile.tdata.tokens.includes(race.rid) && hasCarAndInf(tile)){//only for those which have carriers & inf
+                                    const n = gridNeighbors(G.HexGrid, [tile.q, tile.r]).map(n => n.tileId);
+                                    
+                                    n.forEach(nn => neigh2src[nn] = tile.tid); //remember src tile
+                                    neigh.push(...n);
+                                }
+                            });
+                            
+
+                            neigh.filter((n, i) => neigh.indexOf(n) === i); //unique
+
+                            if(neigh.length){
+                                //not own anyone and with planet
+                                let neighTiles = neigh.map(n => G.tiles.find(t => t.tid === n))
+                                                    .filter( n => n.tdata && n.tdata.occupied === undefined && 
+                                                        !n.tdata.tokens.includes(race.rid) && n.tdata.planets && 
+                                                        n.tdata.planets.find(p => p.occupied === undefined));
+
+                                let pref = getPreferredTile(neighTiles);
 
                                 if(pref){
                                     const prefIdx = G.tiles.findIndex(t => t.tid === pref.tid);
@@ -293,7 +402,7 @@ export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
 
                                         if(!err){
                                             err = ACTS_MOVES.moveShip({G, playerID, random, events, effects: plugins.effects}, {tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: 'carrier', shipIdx});
-    
+
                                             if(!err){
                                                 if(G.tiles[srcIdx].tdata.fleet){ //send one ship to cover carrier
                                                     let convoy = ['cruiser', 'destroyer'];
@@ -303,19 +412,71 @@ export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
                                                         }
                                                     });
                                                 }
+
+                                                //capture unowned planets
+                                                pref.tdata.planets.forEach((p, pidx) => {
+                                                    if(String(p.occupied) !== String(playerID)){
+                                                        let force = getLandingForce(pref);
+
+                                                        if(force){
+                                                            err = ACTS_MOVES.unloadUnit({G, playerID, random, events, effects: plugins.effects}, {src: {...force, tile: prefIdx}, dst: {tile: prefIdx, planet: pidx}});
+                                                            if(G.races[playerID].explorationDialog){
+                                                                ACTS_MOVES.choiceDialog({G, playerID, random, events, effects: plugins.effects}, 0);
+                                                            }
+                                                        }
+                                                    }
+                                                });
                                             }
                                         }
                                     }
-
                                 }
-                                else if(!doProduction({G, ctx, playerID, events, plugins})){
-                                    return ACTS_MOVES.pass({G, playerID, events, ctx, effects: plugins.effects});
+                                else{//try to move fleet close to Mecatol
+                                    neighTiles = neigh.map(n => G.tiles.find(t => t.tid === n))
+                                                    .filter( n => n.tdata && (n.tdata.occupied === undefined || String(n.tdata.occupied) !== String(playerID)));
+
+                                    pref = getTileClosestToMecatol(neighTiles);
+
+                                    if(pref){
+                                        const prefIdx = G.tiles.findIndex(t => t.tid === pref.tid);
+                                        const srcIdx = G.tiles.findIndex(t => t.tid === neigh2src[pref.tid]);
+                                        
+                                        //pref = G.tiles[prefIdx];
+                                        let shipIdx = getPayloadedCarrier(G.tiles[srcIdx]);
+
+                                        if(shipIdx === undefined){
+                                            shipIdx = payloadCarrier({G, playerID, tileIdx: srcIdx, tag: 'infantry', max: 3});
+                                            shipIdx = payloadCarrier({G, playerID, tileIdx: srcIdx, tag: 'fighter', max: 5});
+                                        }
+
+                                        if(shipIdx > -1){
+                                            let err = ACTS_MOVES.activateTile({G, playerID, events, effects: plugins.effects}, prefIdx);
+
+                                            if(!err){
+                                                err = ACTS_MOVES.moveShip({G, playerID, random, events, effects: plugins.effects}, {tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: 'carrier', shipIdx});
+        
+                                                if(!err){
+                                                    if(G.tiles[srcIdx].tdata.fleet){ //send one ship to cover carrier
+                                                        let convoy = ['cruiser', 'destroyer'];
+                                                        convoy.forEach(c => {
+                                                            if(G.tiles[srcIdx].tdata.fleet[c]){
+                                                                err = ACTS_MOVES.moveShip({G, playerID, random, events, effects: plugins.effects}, {tile: srcIdx, path: [neigh2src[pref.tid], pref.tid], unit: c, shipIdx: 0});
+                                                            }
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                    else if(!doProduction({G, ctx, playerID, events, plugins})){
+                                        return ACTS_MOVES.pass({G, playerID, events, ctx, effects: plugins.effects});
+                                    }
                                 }
                             }
-                        }
-                        else{
-                            if(!doProduction({G, ctx, playerID, events, plugins})){
-                                return ACTS_MOVES.pass({G, playerID, events, ctx, effects: plugins.effects});
+                            else{
+                                if(!doProduction({G, ctx, playerID, events, plugins})){
+                                    return ACTS_MOVES.pass({G, playerID, events, ctx, effects: plugins.effects});
+                                }
                             }
                         }
 

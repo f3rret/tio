@@ -311,13 +311,14 @@ export const MyNavbar = ({leftPanel, setLeftPanel, undo, activeTile, isMyTurn, n
                     <Col xs='1' style={{}}>
                       <CardImg style={{width: '2rem', maxHeight: '2rem', margin: '.5rem'}} src={'race/icons/' + r.rid + '.png'} />
                     </Col>
-                    <Col xs='8' style={{padding: '1rem 1rem 0 2rem', fontFamily: 'Handel Gothic', textDecoration: G.passedPlayers.includes(''+pid) ? 'line-through':''}}>
+                    <Col xs='8' style={{padding: '1rem 1rem 0 2rem', fontFamily: 'Handel Gothic'}}>
                       {t('races.' + r.rid + '.name')} {G.speaker === r.rid ? ' (' + t('board.speaker') + ')': ''}</Col>
                     <Col xs='3' style={{padding: '.5rem 0'}}>
                       {r.strategy.map((s, i) => 
                         <p key={i} style={{fontSize: '75%', margin: 0, textDecoration: s.exhausted ? 'line-through':''}}>
                           {t('cards.strategy.' + s.id + '.label') + ' [' + (s.init+1) + ']'}</p>)}
                     </Col>
+                    {G.passedPlayers.includes(''+pid) && <span className='chat-pass' style={{position: 'absolute', width: '3.5rem', right: '-1rem'}}>{t('board.nav.pass')}</span>}
                   </Row>
                 </AccordionHeader>
                 <AccordionBody style={{padding: '0 0 1rem 1rem'}} accordionId={String(idx)}>
