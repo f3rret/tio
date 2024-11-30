@@ -2,7 +2,7 @@
 import cardData from './cardData.json';
 import { neighbors as gridNeighbors} from "./Grid";
 import { getUnitsTechnologies, UNITS_LIMIT } from './utils'; 
-import { ACTS_MOVES, STATS_MOVES, STRAT_MOVES, ACTS_STAGES } from './gameStages';
+import { ACTS_MOVES, STATS_MOVES, STRAT_MOVES, ACTS_STAGES, AGENDA_MOVES } from './gameStages';
 //import { current } from 'immer';
 
 
@@ -502,6 +502,11 @@ export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
 
                 race.vp++;
                 return STATS_MOVES.pass({G, playerID, events});
+            }
+        }
+        else if(ctx.phase === 'agenda'){
+            if(!ctx.activePlayers){
+                return AGENDA_MOVES.pass({G, playerID, events});
             }
         }
         else{

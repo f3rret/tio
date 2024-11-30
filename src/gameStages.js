@@ -5,7 +5,7 @@ import { getUnitsTechnologies, haveTechnology, computeVoteResolution, enemyHaveT
   spliceCombatAC, checkIonStorm, checkSecretObjective, checkCommanderUnlock, useCommanderAbility, 
   adjustTechnologies, explorePlanetByName, occupyPlanet, getMaxActs, 
   enemyHaveCombatAC, dropACard, getPlayerUnits, UNITS_LIMIT, exploreFrontier, returnPromissory, 
-  getPlayerPlanets,
+  getPlayerPlanets, votingProcessDone,
   replenishCommodity, returnPromissoryToOwner} from './utils';
 import cardData from './cardData.json';
 import { botMove } from './botPlugin_ss';
@@ -4007,3 +4007,305 @@ export const STATS_MOVES = {
     events.endTurn();
   }
 } 
+
+export const AGENDA_MOVES = {
+  useRelic,
+  usePromissory,
+  secretObjectiveConfirm,
+  dropSecretObjective,
+  vote: ({G, playerID, random, events, ...plugins}, result) => {
+    try{
+      let votes = 0;
+      const exhaustPlanet = (exhausted, revert) => {
+        if(exhausted && exhausted.length){
+          G.tiles.forEach(tile => {
+            const planets = tile.tdata.planets;
+
+            if(planets && planets.length){
+              planets.forEach( p => {
+                if(String(p.occupied) === String(playerID)){
+                  if(exhausted.indexOf(p.name) > -1){
+                    p.exhausted = !revert;
+                    votes += p.influence;
+                  }
+                }
+              });
+            }
+          });
+        }
+      };
+
+      if(result.exhaustedCards && result.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE')>-1){
+        votes += 3;
+        G.races[playerID].exhaustedCards.push('PREDICTIVE_INTELLIGENCE');
+      }
+
+      exhaustPlanet(result.payment.influence);
+      
+      let vr = {vote: result.vote, count: votes};
+      if(result.exhaustedCards && result.exhaustedCards.indexOf('PREDICTIVE_INTELLIGENCE')>-1){
+        vr.withTech = 'PREDICTIVE_INTELLIGENCE';
+      }
+      G.races[playerID].voteResults.push(vr);
+
+      const agendaNumber = G.vote2 ? 2:1;
+
+      if(G.races.every(r => r.voteResults.length === agendaNumber)){ // voting process done
+        if(!G.agendaDeck.length) G.agendaDeck = random.Shuffle(cardData.agenda.filter(a => a.ready));
+        votingProcessDone({G, agendaNumber, playerID, events});
+        
+        
+        
+        if(G['vote' + agendaNumber].id === 'Archived Secret'){
+          const elected = G.races.find(r => r.name === G['vote' + agendaNumber].decision);
+          if(elected){
+            elected.secretObjectives.push(...G.secretObjDeck.splice(-1));
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'Compensated Disarmament'){
+          const elected = getPlanetByName(G.tiles, G['vote' + agendaNumber].decision);
+          if(elected && elected.occupied !== undefined){
+            let count = 0;
+            if(elected.units){
+              Object.keys(elected.units).forEach(k => {
+                if(elected.units[k]) count += elected.units[k].length;
+              });
+            }
+
+            if(count){
+              const r = G.races[elected.occupied];
+              if(r){
+                r.tg += count;
+              }
+            }
+
+            elected.units = undefined;
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'Economic Equality'){
+          if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+            G.races.forEach(r => {
+              r.tg = 5;
+            })
+          }
+          else{
+            G.races.forEach(r => {
+              r.tg = 0;
+            })
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'Incentive Program'){
+          if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+            const oi = G.pubObjDeck.findIndex(o => o.vp === 1);
+            const obj = G.pubObjDeck.splice(oi, 1)[0];
+            obj.players = [];
+            G.pubObjectives.push(obj);
+          }
+          else{
+            const oi = G.pubObjDeck.findIndex(o => o.vp === 2);
+            if(oi === -1){
+              const vp2 = random.Shuffle(cardData.objectives.public.filter( o => o.vp === 2));
+              G.pubObjectives.push({...vp2.pop(), players: []});
+            }
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'Mutiny'){
+          if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+            G.races.forEach(r => {
+              const v = r.voteResults[agendaNumber - 1];
+              if(v && v.vote && v.vote.toUpperCase() === 'FOR'){
+                r.vp++;
+              }
+            });
+          }
+          else{
+            G.races.forEach(r => {
+              const v = r.voteResults[agendaNumber - 1];
+              if(v && v.vote && v.vote.toUpperCase() === 'FOR'){
+                if(r.vp > 0) r.vp--;
+              }
+            });
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'New Constitution'){
+          if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+            G.laws = [];
+            G.NEW_CONSTITUTION = true;
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'Shared Research'){
+          if(G['vote' + agendaNumber].decision.toUpperCase() === 'AGAINST'){
+            G.races.forEach(r => {
+              if(r.tokens.t + r.tokens.s + r.tokens.f + r.tokens.new < 16){
+                const home = G.tiles.find(t => t.tid === r.rid);
+
+                if(home && home.tdata){
+                  if(!home.tdata.tokens) home.tdata.tokens = [];
+                  home.tdata.tokens.push(r.rid);
+                }
+              }
+            })
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'Swords to Plowshares'){
+          if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+
+            G.races.forEach((r, pid) => {
+              let tg = 0;
+
+              G.tiles.forEach( t => {
+                if(t.tdata.planets && t.tdata.planets.length){
+            
+                    t.tdata.planets.forEach(p => {
+                      if(String(p.occupied) === String(pid)){
+                        if(p.units && p.units.infantry && p.units.infantry.length){
+                          const count = Math.ceil(p.units.infantry.length / 2);
+                          tg += count;
+                          
+                          p.units.infantry.splice(-count);
+                          if(!p.units.infantry.length) delete p.units['infantry'];
+                          if(!Object.keys(p.units).length) delete p['units'];
+                        }
+                      }
+                    })
+                  
+                }
+              });
+              
+              r.tg += tg;
+            })
+            
+          }
+          else if(G['vote' + agendaNumber].decision.toUpperCase() === 'AGAINST'){
+            G.tiles.forEach( t => {
+              if(t.tdata.planets && t.tdata.planets.length){
+          
+                  t.tdata.planets.forEach(p => {
+                    if(p.occupied !== undefined){
+                      if(!(p.attach && p.attach.length && p.attach.indexOf('Demilitarized Zone') > -1)){
+                        if(!p.units) p.units = {};
+                        if(!p.units.infantry) p.units.infantry = [];
+                        p.units.infantry.push({});
+                      }
+                    }
+                  })
+                
+              }
+            });
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'Unconventional Measures'){
+          if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+            G.races.forEach(r => {
+              const v = r.voteResults[agendaNumber - 1];
+              if(v && v.vote && v.vote.toUpperCase() === 'FOR'){
+                G.races[playerID].actionCards.push(...G.actionsDeck.splice(-2));
+              }
+            });
+          }
+          else{
+            G.races.forEach(r => {
+              const v = r.voteResults[agendaNumber - 1];
+              if(v && v.vote && v.vote.toUpperCase() === 'FOR'){
+                G.discardedActions.push(...G.races[playerID].actionCards);
+                G.races[playerID].actionCards = [];
+              }
+            });
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'Wormhole Reconstruction'){
+          if(G['vote' + agendaNumber].decision.toUpperCase() === 'AGAINST'){
+            G.tiles.forEach(t => {
+              if(t && t.tdata && (t.tdata.wormhole === 'alpha' || t.tdata.wormhole === 'beta')){
+                if(t.tdata.occupied !== undefined){
+                  if(!t.tdata.tokens) t.tdata.tokens = [];
+                  const rid = G.races[t.tdata.occupied].rid;
+                  if(!t.tdata.tokens.includes(rid)) t.tdata.tokens.push(rid);
+                }
+              }
+            })
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'Armed Forces Standardization'){
+          const elected = G.races.find(r => r.name === G['vote' + agendaNumber].decision);
+          if(elected){
+            elected.tokens = {t: 3, f: 3, s: 2, new: 0}
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'Clandestine Operations'){
+          if(G['vote' + agendaNumber].decision.toUpperCase() === 'FOR'){
+            G.races.forEach(r => r.tokens.new -= 2)
+          }
+          else{
+            G.races.forEach(r => { if(r.tokens.f > 0) r.tokens.f-- });
+          }
+        }
+        else if(G['vote' + agendaNumber].id === 'Minister of Antiques'){
+          const elected = G.races.find(r => r.name === G['vote' + agendaNumber].decision);
+          if(elected && G.relicsDeck.length){
+            elected.relics.push(G.relicsDeck.pop());
+          }
+        }
+        
+        if(G['vote' + agendaNumber].type === 'LAW' && G['vote' + agendaNumber].decision && G['vote' + agendaNumber].decision.toUpperCase() !== 'AGAINST'){
+          G.laws.push(G['vote' + agendaNumber]);
+        }
+        
+
+        if(G.laws && G.laws.length > 2){
+          G.races.forEach((r, i) => {
+            checkSecretObjective(G, i, 'Dictate Policy');
+          });
+        }
+
+        if(G['vote' + agendaNumber].elect === 'Player'){
+          const electedRace = G.races.findIndex(r => r.name === G['vote' + agendaNumber].decision);
+          if(electedRace > -1) checkSecretObjective(G, electedRace, 'Drive the Debate');
+        }
+
+        if(G['vote' + agendaNumber].elect && G['vote' + agendaNumber].elect.indexOf('Planet') > -1){
+          const planet = getPlanetByName(G.tiles, G['vote' + agendaNumber].decision);
+          if(planet && planet.occupied !== undefined){
+            checkSecretObjective(G, planet.occupied, 'Drive the Debate');
+          }
+        }
+      }
+      else if(G.vote2){
+        if(G.passedPlayers.indexOf(playerID) === -1){
+          G.passedPlayers.push(playerID);
+        }
+
+        events.endTurn();
+      }
+      else{
+        events.endTurn();
+      }
+      
+      plugins.effects.tg();
+
+    }
+    catch(e){console.log(e)}
+  },
+  endVote: ({G, playerID, events}) => {
+    G.passedPlayers.push(playerID);
+    events.endTurn();
+  },
+  pass: ({G, playerID, events}) => {
+    G.races[playerID].actions.push('PASS');
+    events.endTurn();
+  },
+  dropActionCard: dropACard,
+  playActionCard: ({G, playerID, events}, card) => {
+    if(card.when === 'AGENDA'){
+      const agendaNumber = G.vote2 ? 2:1;
+
+      if(G.races[playerID].actions.length >= agendaNumber){
+        console.log('too many actions');
+        return INVALID_MOVE;
+      }
+
+      G.currentAgendaActionCard = {...card, reaction: {}, playerID};
+      events.setActivePlayers({ all: 'actionCard' });
+    } 
+  }
+}
