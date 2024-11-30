@@ -627,8 +627,8 @@ export const checkSecretObjective = (G, playerID, oid, param) => {
   }
   else if(oid === 'Spark a Rebellion'){
     if(param && !isNaN(param) && G.races[param]){
-      const enemyVP = getVP(G, parseInt(param));
-      if(!G.races.find((r,i) => getVP(G,i) > enemyVP)){
+      const enemyVP = getRaceVP(G, parseInt(param));
+      if(!G.races.find((r,i) => getRaceVP(G,i) > enemyVP)){
         makeDialog();
         return true;
       }
@@ -1652,7 +1652,7 @@ export const isNumeric = function(param) {
   return !isNaN(parseFloat(param)) && isFinite(param);
 };
 
-export const getVP = function(G, playerID) {
+/*export const getVP = function(G, playerID) {
   let result = 0;
   const race = G.races[playerID];
 
@@ -1667,7 +1667,7 @@ export const getVP = function(G, playerID) {
   }
 
   return result;
-}
+}*/
 
 export const shuffle = (array) => {
   let m = array.length, t, i;

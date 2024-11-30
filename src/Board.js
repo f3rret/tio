@@ -5,9 +5,10 @@ import { ButtonGroup, Card, CardImg, CardText, CardTitle, UncontrolledTooltip, C
    } from 'reactstrap';
 import { PaymentDialog, StrategyDialog, AgendaDialog, getStratColor, UnitsList,
 ObjectivesList, TradePanel, ProducingPanel, ChoiceDialog, CardsPager, CardsPagerItem, Overlay, StrategyPick, Gameover,
-SelectDiscardedActions} from './dialogs';
+SelectDiscardedActions,
+VPLine} from './dialogs';
 import { ActionCardDialog, PlanetsDialog, TechnologyDialog } from './actionCardDialog'; 
-import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT, getMyNeighbors, checkIfMyNearbyUnit, getRaceVP, getMaxActs } from './utils';
+import { checkObjective, StateContext, haveTechnology, haveAbility, LocalizationContext, UNITS_LIMIT, getMyNeighbors, checkIfMyNearbyUnit, getMaxActs } from './utils';
 
 import { ChatBoard } from './chat';
 import { SpaceCannonAttack, AntiFighterBarrage, SpaceCombat, CombatRetreat, Bombardment, Invasion, ChooseAndDestroy } from './combat';
@@ -133,10 +134,10 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
     }
   }, [race]);
 
-  const VP = useMemo(() => {
+  /*const VP = useMemo(() => {
     return getRaceVP(G, playerID);
   //eslint-disable-next-line
-  }, [G_races_stringify, playerID]);
+  }, [G_races_stringify, playerID]);*/
 
   const GP = useMemo(() => {
 
@@ -1159,7 +1160,7 @@ function TIOBoard({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages
                 {!race.isSpectator && <>
                   {hud.leftPanel === 'techno' && <TechnologyDialog selected={hud.selectedTech && hud.selectedTech.techno ? [hud.selectedTech.techno.id]:[]} onSelect={({techno, rid}) => dispatch({type: 'selected_tech', payload: {techno, rid}})}/>}
                   {hud.leftPanel === 'objectives' && <Card id='objListMain' className='subPanel' style={{ padding: '4rem 1rem 1rem', backgroundColor: 'rgba(33, 37, 41, 0.95)'}}>
-                      <CardTitle><h6 style={{textAlign: 'right', margin: 0}}>{t('board.victory_points').toUpperCase() + ': ' + VP + '/' + G.vp}</h6></CardTitle>
+                      <CardTitle><VPLine /></CardTitle>
                       <ObjectivesList playerID={playerID} mustSecObj={mustSecObj} onSelect={ctx.phase === 'stats' && isMyTurn ? completeObjective: mustSecObj ? dropSecretObjective: ()=>{}}/>
                     </Card>}
                   
@@ -1431,3 +1432,6 @@ export const BoardWithEffects = EffectsBoardWrapper(TIOBoard, {
 });
 
 
+//*
+//<h6 style={{textAlign: 'right', margin: 0}}>{t('board.victory_points').toUpperCase() + ': ' + VP + '/' + G.vp}</h6>
+//

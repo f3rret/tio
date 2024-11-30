@@ -2215,3 +2215,26 @@ export const SelectDiscardedActions = ({maxCount, onEnd}) => {
     </CardsPager>
 
 }
+
+export const VPLine = () => {
+
+    const { G, playerID } = useContext(StateContext);
+    const sorted = useMemo(() => {
+        return G.races.map(race => ({rid: race.rid, pid: race.pid, vp: getRaceVP(G, race.pid)})).sort((a, b) => {
+            if(a.vp > b.vp) return 1;
+            if(a.vp < b.vp) return -1;
+            return 0;
+        });
+    }, [G])
+
+    return <ButtonGroup style={{}}>
+        {sorted.map((race, i) => 
+                <button className={'styledButton ' + (String(playerID) === String(race.pid) ? 'white':'black')} 
+                    style={{padding: '.5rem', width: '4rem', position: 'relative'}} 
+                    key={i}><img alt={race.rid} style={{height: '1.5rem'}} src={'/race/icons/' + race.rid + '.png'}/>
+                    <b style={{position: 'absolute', right: '.5rem'}}>{race.vp}</b>
+                    </button>
+            )}
+    </ButtonGroup>
+
+}
