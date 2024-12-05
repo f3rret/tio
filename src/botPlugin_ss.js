@@ -491,6 +491,17 @@ export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
             else if(ctx.activePlayers[0] === 'strategyCard'){
                 ACTS_STAGES.strategyCard.moves.passStrategy({G, ctx, events})
             }
+            else if(ctx.activePlayers[0] === 'spaceCombat'){
+                //ACTS_STAGES.strategyCard.moves.passStrategy({G, ctx, events})
+            }
+            else if(ctx.activePlayers[0] === 'spaceCombat_step2'){
+                let hits = {};
+                ACTS_STAGES.spaceCombat_step2.moves.nextStep({G, playerID, ctx, random, events, effects: plugins.effects}, hits);
+            }
+            else if(ctx.activePlayers[0] === 'spaceCombat_await'){
+                //ACTS_STAGES.strategyCard.moves.passStrategy({G, ctx, events})
+            }
+
 
         }
         else if(ctx.phase === 'stats'){
@@ -506,7 +517,26 @@ export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
         }
         else if(ctx.phase === 'agenda'){
             if(!ctx.activePlayers){
-                return AGENDA_MOVES.pass({G, playerID, events});
+                //let err = AGENDA_MOVES.pass({G, playerID, events});
+                //console.log('bot pass', playerID, err);
+                //G.passedPlayers.push(playerID);
+
+                const agendaNumber = G.vote2 ? 2:1;
+
+                if(!G.races[playerID].voteResults || G.races[playerID].voteResults.length < agendaNumber){
+                    if(!G.races[playerID].actions || G.races[playerID].actions.length < agendaNumber){
+                        AGENDA_MOVES.pass({G, playerID, events});
+                    }
+                    else{
+                        AGENDA_MOVES.vote({G, playerID, random, events, effects: plugins.effects}, {vote: 'pass', payment:{influence: []}});
+                    }
+                }
+                else if(agendaNumber === 2){
+                    AGENDA_MOVES.endVote({G, playerID, events});
+                }
+                
+                //err = AGENDA_MOVES.endVote({G, playerID, events});
+                //console.log('bot end vote', playerID, err);
             }
         }
         else{

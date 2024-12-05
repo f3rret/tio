@@ -488,10 +488,20 @@ export const TIO = {
                     events.endTurn();
                   }
                 }
+                else{
+                  if(G.races[ctx.currentPlayer].isBot){
+                    botMove({G, playerID: ctx.currentPlayer, ctx, events, random, plugins});
+                  }
+                }
+              }
+              else{
+                if(G.races[ctx.currentPlayer].isBot){
+                  botMove({G, playerID: ctx.currentPlayer, ctx, events, random, plugins});
+                }
               }
             }
+            
 
-            //if(G.races[ctx.currentPlayer].isBot) botMove({G, playerID: ctx.currentPlayer, ctx, events, random, plugins});
           },
           stages: {
             actionCard: ACTION_CARD_STAGE,

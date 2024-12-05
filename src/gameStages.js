@@ -1304,6 +1304,15 @@ export const ACTS_STAGES = {
       botStageMove: ({ G, ctx, playerID, random, events, ...plugins }) => {
         botMove({G, playerID, ctx, events, random, plugins});
       },
+      botSpaceCombat: ({ G, ctx, playerID, random, events, ...plugins }) => {
+        botMove({G, playerID, ctx, events, random, plugins});
+      },
+      botSpaceCombat2: ({ G, ctx, playerID, random, events, ...plugins }) => {
+        botMove({G, playerID, ctx, events, random, plugins});
+      },
+      botSpaceCombatAwait: ({ G, ctx, playerID, random, events, ...plugins }) => {
+        botMove({G, playerID, ctx, events, random, plugins});
+      },
       joinStrategy: ({ G, ctx, playerID, events, ...plugins }, {exhausted, payment, result, exhaustedCards}) => {
         const exhaustPlanet = (revert) => {
           if(exhausted && exhausted.length){

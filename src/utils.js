@@ -1866,8 +1866,11 @@ export const getRaceVP = (G, pid) => {
 
   if(race){
     race.secretObjectives.concat(G.pubObjectives).forEach(o => {
+      
       if(o && o.players && o.players.length > 0){
-        if(o.players.indexOf(pid) > -1) result += (o.vp ? o.vp : 1);
+        if(o.players.find(p => String(p) === String(pid))){
+          result += (o.vp ? o.vp : 1);
+        }
       }
     });
 

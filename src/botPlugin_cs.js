@@ -104,8 +104,16 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
     useEffect(() => {
         if(ctx.activePlayers && ctx.activePlayers[playerID]){
             if(ctx.activePlayers[playerID] === 'strategyCard'){
-                console.log('bot stage move');
                 moves.botStageMove();
+            }
+            else if(ctx.activePlayers[playerID] === 'spaceCombat'){
+                moves.botSpaceCombat();
+            }
+            else if(ctx.activePlayers[playerID] === 'spaceCombat_step2'){
+                moves.botSpaceCombat2();
+            }
+            else if(ctx.activePlayers[playerID] === 'spaceCombat_await'){
+                moves.botSpaceCombatAwait();
             }
         }
     //eslint-disable-next-line
