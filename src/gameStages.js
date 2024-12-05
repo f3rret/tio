@@ -1304,15 +1304,6 @@ export const ACTS_STAGES = {
       botStageMove: ({ G, ctx, playerID, random, events, ...plugins }) => {
         botMove({G, playerID, ctx, events, random, plugins});
       },
-      botSpaceCombat: ({ G, ctx, playerID, random, events, ...plugins }) => {
-        botMove({G, playerID, ctx, events, random, plugins});
-      },
-      botSpaceCombat2: ({ G, ctx, playerID, random, events, ...plugins }) => {
-        botMove({G, playerID, ctx, events, random, plugins});
-      },
-      botSpaceCombatAwait: ({ G, ctx, playerID, random, events, ...plugins }) => {
-        botMove({G, playerID, ctx, events, random, plugins});
-      },
       joinStrategy: ({ G, ctx, playerID, events, ...plugins }, {exhausted, payment, result, exhaustedCards}) => {
         const exhaustPlanet = (revert) => {
           if(exhausted && exhausted.length){
@@ -1759,6 +1750,9 @@ export const ACTS_STAGES = {
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
       secretObjectiveConfirm,
       useHeroAbility,
+      botAntiFighterBarrage: ({ G, ctx, playerID, random, events, ...plugins }) => {
+        botMove({G, playerID, ctx, events, random, plugins});
+      },
 
       rollDice: ({G, playerID, random}, unit, count) => {
         const dice = random.D10(count || 1);
@@ -1901,6 +1895,9 @@ export const ACTS_STAGES = {
       actionCardPass: ACTION_CARD_STAGE.moves.pass,
       actionCardDone: ACTION_CARD_STAGE.moves.done,
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
+      botSpaceCombat: ({ G, ctx, playerID, random, events, ...plugins }) => {
+        botMove({G, playerID, ctx, events, random, plugins});
+      },
 
       chooseAndDestroy: chooseAndDestroyMove,
       rollDice: ({G, playerID, random}, unit, count) => {
@@ -2056,6 +2053,9 @@ export const ACTS_STAGES = {
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
       secretObjectiveConfirm,
       useHeroAbility,
+      botSpaceCombat2: ({ G, ctx, playerID, random, events, ...plugins }) => {
+        botMove({G, playerID, ctx, events, random, plugins});
+      },
 
       chooseAndDestroy: chooseAndDestroyMove,
       nextStep: ({G, playerID, ctx, events, random, ...plugins}, hits, ability) => {
@@ -2275,6 +2275,10 @@ export const ACTS_STAGES = {
       actionCardSabotage: ACTION_CARD_STAGE.moves.sabotage,
       secretObjectiveConfirm,
       chooseAndDestroy: chooseAndDestroyMove,
+      botSpaceCombatAwait: ({ G, ctx, playerID, random, events, ...plugins }) => {
+        botMove({G, playerID, ctx, events, random, plugins});
+      },
+
       endBattle: ({G, events, playerID, ctx, ...plugins}) => {
         const activeTile = G.tiles.find(t => t.active === true);
         let looser;

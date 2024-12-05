@@ -11,6 +11,8 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
     //const G_stringify = useMemo(() => JSON.stringify(G), [G]);
     //const G_tiles_stringify = useMemo(() => JSON.stringify(G.tiles), [G]);
     const G_races_stringify = useMemo(() => JSON.stringify(G.races), [G]);
+    const activePlayers_stringify = useMemo(() => JSON.stringify(ctx.activePlayers), [ctx]);
+    const G_dice_stringify = useMemo(() => JSON.stringify(G.dice), [G.dice]);
     //const ctx_stringify = useMemo(() => JSON.stringify(ctx), [ctx]);
 
     //eslint-disable-next-line
@@ -106,8 +108,8 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
             if(ctx.activePlayers[playerID] === 'strategyCard'){
                 moves.botStageMove();
             }
-            else if(ctx.activePlayers[playerID] === 'spaceCombat'){
-                moves.botSpaceCombat();
+            else if(ctx.activePlayers[playerID] === 'antiFighterBarrage'){
+                moves.botAntiFighterBarrage();
             }
             else if(ctx.activePlayers[playerID] === 'spaceCombat_step2'){
                 moves.botSpaceCombat2();
@@ -117,7 +119,16 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
             }
         }
     //eslint-disable-next-line
-    }, [ctx.activePlayers])
+    }, [activePlayers_stringify])
+
+    useEffect(() => {
+        if(ctx.activePlayers && ctx.activePlayers[playerID]){
+            if(ctx.activePlayers[playerID] === 'spaceCombat'){ //cos may repeat step until successful shot
+                if(!G.dice || !G.dice[playerID] || !Object.keys(G.dice[playerID]).length) moves.botSpaceCombat();
+            }
+        }
+    //eslint-disable-next-line
+    }, [G_dice_stringify])
 
     //const MY_LAST_EFFECT = useRef('');
     

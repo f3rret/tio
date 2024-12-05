@@ -1,7 +1,7 @@
 
 import cardData from './cardData.json';
 import { neighbors as gridNeighbors} from "./Grid";
-import { getUnitsTechnologies, UNITS_LIMIT } from './utils'; 
+import { getUnitsTechnologies, UNITS_LIMIT, getEnemyId } from './utils'; 
 import { ACTS_MOVES, STATS_MOVES, STRAT_MOVES, ACTS_STAGES, AGENDA_MOVES } from './gameStages';
 //import { current } from 'immer';
 
@@ -491,14 +491,77 @@ export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
             else if(ctx.activePlayers[0] === 'strategyCard'){
                 ACTS_STAGES.strategyCard.moves.passStrategy({G, ctx, events})
             }
-            else if(ctx.activePlayers[0] === 'spaceCombat'){
-                //ACTS_STAGES.strategyCard.moves.passStrategy({G, ctx, events})
+            else if(ctx.activePlayers[playerID] === 'antiFighterBarrage'){
+                console.log('bot make antifighter barrage');
+                const enemyId = getEnemyId(ctx.activePlayers, playerID);
+                
+                if(ctx.activePlayers[enemyId] === 'spaceCombat_await'){
+                    ACTS_STAGES.antiFighterBarrage.moves.nextStep({G, playerID, ctx, random, events, effects: plugins.effects});
+                }
             }
-            else if(ctx.activePlayers[0] === 'spaceCombat_step2'){
+            else if(ctx.activePlayers[playerID] === 'spaceCombat'){
+                console.log('bot make space combat');
+                const activeTile = G.tiles.find(t => t.active === true);
+                if(!activeTile){
+                    console.log('no active tile');
+                    return;
+                }
+
+                let fleet;
+
+                if(String(ctx.currentPlayer) === String(playerID)){
+                    fleet = activeTile.tdata.attacker;
+                }
+                else{
+                    fleet = activeTile.tdata.fleet;
+                }
+
+                const units = (()=> {
+                    let payload = {
+                        fighter: [], mech: [], infantry: []
+                    };
+
+                    if(fleet){
+                        Object.keys(fleet).forEach(unit => {
+                            fleet[unit].forEach( car =>{
+                                if(car.payload && car.payload.length){
+                                    car.payload.forEach(p => {
+                                        if(p && payload[p.id]) payload[p.id].push(p);
+                                    })
+                                }
+                            })
+                        });
+                    }
+            
+                    Object.keys(payload).forEach(k => {
+                        if(payload[k].length === 0) delete payload[k];
+                    })
+            
+                    return {...fleet, ...payload}
+                })();
+
+                const technologies = (()=>{
+                    let result = getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech', 'infantry'], race);
+                    //result = adjustTechnologies(G, ctx, owner, result);
+            
+                    return result;
+                })();
+
+                Object.keys(units).forEach(u => {
+                    if(!['mech', 'infantry'].includes(u)){
+                        const shots = technologies[u] && technologies[u].shot ? technologies[u].shot : 1;
+                        const count = Array.isArray(units[u]) ? units[u].length : units[u];
+
+                        ACTS_STAGES.spaceCombat.moves.rollDice({G, playerID, ctx, random, events, effects: plugins.effects}, u, shots*count);
+                    }
+                })
+                
+            }
+            else if(ctx.activePlayers[playerID] === 'spaceCombat_step2'){
                 let hits = {};
                 ACTS_STAGES.spaceCombat_step2.moves.nextStep({G, playerID, ctx, random, events, effects: plugins.effects}, hits);
             }
-            else if(ctx.activePlayers[0] === 'spaceCombat_await'){
+            else if(ctx.activePlayers[playerID] === 'spaceCombat_await'){
                 //ACTS_STAGES.strategyCard.moves.passStrategy({G, ctx, events})
             }
 
