@@ -1944,3 +1944,122 @@ export const getMaxActs = (G, playerID) => {
     console.log(e)
   }
 }
+
+export const calculateSpaceCombatHits = ({G, ctx, playerID, prevStages}) => {
+
+  try{
+    const activeTile = G.tiles.find(t => t.active === true);
+    const ambush = G.spaceCombat && G.spaceCombat.ambush;
+    const assaultCannon = !ambush && G.spaceCombat && G.spaceCombat.assaultCannon;
+
+    let result = {};
+
+    if(assaultCannon){
+        const enemy = Object.keys(ctx.activePlayers).find(k => String(k)!==String(playerID));
+        result[enemy] = 1;
+        return result;
+    }
+
+    Object.keys(ctx.activePlayers).forEach(pid => {
+        let h = 0;
+        if(G.dice[pid]){
+            Object.keys(G.dice[pid]).forEach(unit => {
+                let adj = (unit === 'fighter' && G.races[pid].combatActionCards.indexOf('Fighter Prototype') > -1 &&
+                    prevStages[pid].filter(s => s === 'spaceCombat').length === 1) ? 2:0;
+                if(G.races[pid].combatActionCards.indexOf('Morale Boost') > -1 && unit !== 'pds' && unit !== 'spacedock'){
+                    adj++;
+                }
+                if(G.races[pid].combatActionCards.includes('NEBULA') && !ambush) adj++;
+
+                const technology = G.races[pid].technologies.find(t => t.id === unit.toUpperCase());
+                
+                if(technology && technology.combat){
+                    //h += G.dice[pid][unit].dice.filter(d => d+adj >= technology.combat).length;
+
+                    h += G.dice[pid][unit].dice.filter((die, idx) => {
+                        const val = G.dice[pid][unit].reroll ? G.dice[pid][unit].reroll[idx] || die : die;
+                        return val+adj >= technology.combat}).length;
+                }
+
+                if(G.races[pid].combatActionCards.indexOf('Reflective Shielding') > -1){
+                    let fleet = (String(pid) === String(ctx.currentPlayer)) ? activeTile.tdata.attacker : activeTile.tdata.fleet;
+                    let hitted = Object.keys(fleet).find(tag =>{
+                        if(fleet[tag] && fleet[tag].length){
+                            return fleet[tag].find(c => c.hit && c.hit > 0)
+                        }
+                        return false;
+                    }); 
+                        
+                    if(hitted) h += 2;
+                }
+                if(enemyHaveCombatAC(G.races, ctx.activePlayers, pid, 'Shields Holding')){
+                    h -= 2;
+                    if(h < 0) h=0;
+                }
+            });
+        }
+        result[pid] = h;
+    });
+
+    return result;
+  }
+  catch(e){console.log(e)}
+
+}
+
+export const setSpaceCombatHit = ({G, hits, units, technologies}, {tag, idx, pidx, payloadId}) => {
+
+  try{
+    const ambush = G.spaceCombat && G.spaceCombat.ambush;
+    const assaultCannon = !ambush && G.spaceCombat && G.spaceCombat.assaultCannon;
+
+    return produce(hits, draft => {
+      if(!draft[tag]) draft[tag]=[];
+      if(pidx === undefined){
+          const dmg = draft[tag].findIndex(ship => ship.idx === idx);
+          if(dmg === -1){
+              draft[tag].push({idx, payload:[], hit: (assaultCannon && technologies[tag].sustain) ? 2:1});
+          }
+          else{
+              if(assaultCannon && technologies[tag].sustain){
+                  draft[tag][dmg].hit += 2;
+                  if(draft[tag][dmg].hit > 2) draft[tag][dmg].hit = 0;
+              }
+              else if(technologies[tag].sustain && !units[tag][dmg].hit){
+                  draft[tag][dmg].hit = (draft[tag][dmg].hit || 0 ) + 1;
+                  if(draft[tag][dmg].hit > 2) draft[tag][dmg].hit = 0;
+              }
+              else{
+                  draft[tag][dmg].hit = !draft[tag][dmg].hit;
+              }
+          }
+      }
+      else{
+          const dmg = draft[tag].findIndex(ship => ship.idx === idx);
+          let carrier = draft[tag][dmg];
+          if(!carrier){
+              draft[tag].push({idx, payload: [{pidx, id: payloadId, hit: 1}]});
+          }
+          else{       
+              let index = carrier.payload.findIndex(p => p.pidx === pidx);
+              if(index === -1){
+                  carrier.payload.push({pidx, id: payloadId, hit: 1});
+              }
+              else{
+                  if(technologies[payloadId].sustain && !units[tag][dmg].payload[index].hit){
+                      carrier.payload[index].hit++;
+                      if(carrier.payload[index].hit > 2) carrier.payload[index].hit = 0;
+                  }
+                  else{
+                      carrier.payload[index].hit = !carrier.payload[index].hit;
+                  }
+              }
+          }
+      }
+    })
+  }
+  catch(e){
+    console.log(e)
+  }
+
+}

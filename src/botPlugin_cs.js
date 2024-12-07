@@ -8,46 +8,15 @@ import { useEffect, useMemo, useRef, useContext } from "react";
 
 function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMessages, events }) {
 
-    //const G_stringify = useMemo(() => JSON.stringify(G), [G]);
-    //const G_tiles_stringify = useMemo(() => JSON.stringify(G.tiles), [G]);
     const G_races_stringify = useMemo(() => JSON.stringify(G.races), [G]);
     const activePlayers_stringify = useMemo(() => JSON.stringify(ctx.activePlayers), [ctx]);
     const G_dice_stringify = useMemo(() => JSON.stringify(G.dice), [G.dice]);
-    //const ctx_stringify = useMemo(() => JSON.stringify(ctx), [ctx]);
 
     //eslint-disable-next-line
     const race = useMemo(() => G.races[playerID], [G_races_stringify, playerID]);
-    //const isMyTurn = useMemo(() => ctx.currentPlayer === playerID, [ctx.currentPlayer, playerID]);
-    //eslint-disable-next-line
-    //const neighbors = useMemo(() => getMyNeighbors(G, playerID), [G_tiles_stringify]);
-    //const prevStages = useRef(null);
+    const prevStages = useRef(null);
     const { t } = useContext(LocalizationContext);
-    //const random = useMemo(() => (new Random()).api(), []);
 
-    /*const PLANETS = useMemo(()=> {
-        const arr = [];
-
-        G.tiles.forEach( t => {
-            if(t.tdata.planets && t.tdata.planets.length){
-                t.tdata.planets.forEach((p, pidx) => {
-                    if(String(p.occupied) === String(playerID)){
-                    arr.push({...p, tid: t.tid, pidx});
-                    }
-                })
-            }
-        });
-
-        return arr;
-    //eslint-disable-next-line
-    }, [G_tiles_stringify, playerID]);*/
-
-    //const PLANETS_stringify = useMemo(() => JSON.stringify(PLANETS), [PLANETS]);
-
-    /*useEffect(() => {
-
-        
-//eslint-disable-next-line
-    }, [isMyTurn, ctx.phase])*/
 
     const PREV_TECHNODATA = useRef([]); //todo: replace with bgio-effects
     useEffect(() => {
@@ -104,18 +73,54 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
     }, [race.relics]);
 
     useEffect(() => {
+        if(ctx.activePlayers && Object.keys(ctx.activePlayers).filter(ap => !ap.endsWith('ctionCard')).length){
+          if(!prevStages.current){
+            prevStages.current = {...ctx.activePlayers};
+            Object.keys(prevStages.current).forEach(k => {
+              if(!k.endsWith('ctionCard')){
+                prevStages.current[k] = [prevStages.current[k]];
+              }
+              else{
+                prevStages.current[k] = undefined;
+              }
+            });
+          }
+          else{
+            Object.keys(ctx.activePlayers).filter(ap => !ap.endsWith('ctionCard')).forEach(ap => {
+              if(!prevStages.current[ap] || !prevStages.current[ap].length){
+                prevStages.current[ap]=[ctx.activePlayers[ap]];
+              }
+              else if(prevStages.current[ap][prevStages.current[ap].length-1] !== ctx.activePlayers[ap]){
+                prevStages.current[ap].push(ctx.activePlayers[ap]);
+              }
+            });
+          }
+        }
+    
+        else{
+          prevStages.current = null;
+        }
+    
+      }, [ctx.activePlayers, prevStages]);
+
+    useEffect(() => {
         if(ctx.activePlayers && ctx.activePlayers[playerID]){
             if(ctx.activePlayers[playerID] === 'strategyCard'){
                 moves.botStageMove();
             }
             else if(ctx.activePlayers[playerID] === 'antiFighterBarrage'){
-                moves.botAntiFighterBarrage();
+                moves.botAntiFighterBarrage({ prevStages: prevStages.current });
+            }
+            else if(ctx.activePlayers[playerID] === 'spaceCombat'){ //after enemy moves to step2
+                if(G.dice && G.dice[playerID] && Object.keys(G.dice[playerID]).length){
+                    moves.botSpaceCombat({ prevStages: prevStages.current });
+                }
             }
             else if(ctx.activePlayers[playerID] === 'spaceCombat_step2'){
-                moves.botSpaceCombat2();
+                moves.botSpaceCombat2({ prevStages: prevStages.current });
             }
             else if(ctx.activePlayers[playerID] === 'spaceCombat_await'){
-                moves.botSpaceCombatAwait();
+                moves.botSpaceCombatAwait({ prevStages: prevStages.current });
             }
         }
     //eslint-disable-next-line
@@ -124,7 +129,7 @@ function BotTIOBoard ({ ctx, G, moves, undo, playerID, sendChatMessage, chatMess
     useEffect(() => {
         if(ctx.activePlayers && ctx.activePlayers[playerID]){
             if(ctx.activePlayers[playerID] === 'spaceCombat'){ //cos may repeat step until successful shot
-                if(!G.dice || !G.dice[playerID] || !Object.keys(G.dice[playerID]).length) moves.botSpaceCombat();
+                if(!G.dice || !G.dice[playerID] || !Object.keys(G.dice[playerID]).length) moves.botSpaceCombat({ prevStages: prevStages.current });
             }
         }
     //eslint-disable-next-line

@@ -1,7 +1,7 @@
 
 import cardData from './cardData.json';
 import { neighbors as gridNeighbors} from "./Grid";
-import { getUnitsTechnologies, UNITS_LIMIT, getEnemyId } from './utils'; 
+import { calculateSpaceCombatHits, getUnitsTechnologies, UNITS_LIMIT, getEnemyId, setSpaceCombatHit } from './utils'; 
 import { ACTS_MOVES, STATS_MOVES, STRAT_MOVES, ACTS_STAGES, AGENDA_MOVES } from './gameStages';
 //import { current } from 'immer';
 
@@ -288,9 +288,55 @@ const payloadAnyTransport = ({G, playerID, tile}) => {
 
 }
 
-export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
+const getMyFleet = ({G, ctx, playerID}) => {
+
+    const activeTile = G.tiles.find(t => t.active === true);
+    if(!activeTile){
+        console.log('no active tile');
+        return;
+    }
+
+    let fleet;
+
+    if(String(ctx.currentPlayer) === String(playerID)){
+        fleet = activeTile.tdata.attacker;
+    }
+    else{
+        fleet = activeTile.tdata.fleet;
+    }
+
+    return fleet;
+}
+
+const getFleetUnits = (fleet) => {
+
+    let payload = {
+        fighter: [], mech: [], infantry: []
+    };
+
+    if(fleet){
+        Object.keys(fleet).forEach(unit => {
+            fleet[unit].forEach( car =>{
+                if(car.payload && car.payload.length){
+                    car.payload.forEach(p => {
+                        if(p && payload[p.id]) payload[p.id].push(p);
+                    })
+                }
+            })
+        });
+    }
+
+    Object.keys(payload).forEach(k => {
+        if(payload[k].length === 0) delete payload[k];
+    })
+
+    return {...fleet, ...payload}
+}
+
+export const botMove = ({G, playerID, ctx, random, events, plugins}, args) => {
 
     try{
+        const prevStages = args ? args.prevStages : [];
         const race = G.races[playerID];
 
         if(ctx.phase === 'strat'){
@@ -493,76 +539,89 @@ export const botMove = ({G, playerID, ctx, random, events, plugins}) => {
             }
             else if(ctx.activePlayers[playerID] === 'antiFighterBarrage'){
                 console.log('bot make antifighter barrage');
-                const enemyId = getEnemyId(ctx.activePlayers, playerID);
                 
-                if(ctx.activePlayers[enemyId] === 'spaceCombat_await'){
-                    ACTS_STAGES.antiFighterBarrage.moves.nextStep({G, playerID, ctx, random, events, effects: plugins.effects});
-                }
-            }
-            else if(ctx.activePlayers[playerID] === 'spaceCombat'){
-                console.log('bot make space combat');
-                const activeTile = G.tiles.find(t => t.active === true);
-                if(!activeTile){
-                    console.log('no active tile');
-                    return;
-                }
-
-                let fleet;
-
-                if(String(ctx.currentPlayer) === String(playerID)){
-                    fleet = activeTile.tdata.attacker;
-                }
-                else{
-                    fleet = activeTile.tdata.fleet;
-                }
-
-                const units = (()=> {
-                    let payload = {
-                        fighter: [], mech: [], infantry: []
-                    };
-
-                    if(fleet){
-                        Object.keys(fleet).forEach(unit => {
-                            fleet[unit].forEach( car =>{
-                                if(car.payload && car.payload.length){
-                                    car.payload.forEach(p => {
-                                        if(p && payload[p.id]) payload[p.id].push(p);
-                                    })
-                                }
-                            })
-                        });
-                    }
-            
-                    Object.keys(payload).forEach(k => {
-                        if(payload[k].length === 0) delete payload[k];
-                    })
-            
-                    return {...fleet, ...payload}
-                })();
-
-                const technologies = (()=>{
-                    let result = getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech', 'infantry'], race);
-                    //result = adjustTechnologies(G, ctx, owner, result);
-            
-                    return result;
-                })();
+                //const enemyId = getEnemyId(ctx.activePlayers, playerID);
+                const fleet = getMyFleet({G, ctx, playerID});
+                const units = getFleetUnits(fleet);
+                const technologies = getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech'], race);
 
                 Object.keys(units).forEach(u => {
-                    if(!['mech', 'infantry'].includes(u)){
-                        const shots = technologies[u] && technologies[u].shot ? technologies[u].shot : 1;
+                    if(technologies[u] && technologies[u].barrage){
+                        const shots = technologies[u].barrage.count || 1;
                         const count = Array.isArray(units[u]) ? units[u].length : units[u];
 
                         ACTS_STAGES.spaceCombat.moves.rollDice({G, playerID, ctx, random, events, effects: plugins.effects}, u, shots*count);
                     }
                 })
-                
+
+                ACTS_STAGES.antiFighterBarrage.moves.nextStep({G, playerID, ctx, random, events, effects: plugins.effects});
+            }
+            else if(ctx.activePlayers[playerID] === 'spaceCombat'){
+                console.log('bot make space combat');
+
+                if(!G.dice || !G.dice[playerID] || !Object.keys(G.dice[playerID]).length){
+                    console.log('roll dice')
+                    const fleet = getMyFleet({G, ctx, playerID});
+                    const units = getFleetUnits(fleet);
+                    const technologies = getUnitsTechnologies([...Object.keys(units), 'fighter', 'mech', 'infantry'], race);
+
+                    Object.keys(units).forEach(u => {
+                        if(!['mech', 'infantry'].includes(u)){
+                            const shots = technologies[u] && technologies[u].shot ? technologies[u].shot : 1;
+                            const count = Array.isArray(units[u]) ? units[u].length : units[u];
+
+                            ACTS_STAGES.spaceCombat.moves.rollDice({G, playerID, ctx, random, events, effects: plugins.effects}, u, shots*count);
+                        }
+                    })
+                }
+                else{
+                    console.log('next step')
+                    const hits = calculateSpaceCombatHits({ G, ctx, playerID, prevStages });
+                    ACTS_STAGES.spaceCombat.moves.nextStep({G, playerID, ctx, random, events, effects: plugins.effects}, hits);
+                }
             }
             else if(ctx.activePlayers[playerID] === 'spaceCombat_step2'){
-                let hits = {};
-                ACTS_STAGES.spaceCombat_step2.moves.nextStep({G, playerID, ctx, random, events, effects: plugins.effects}, hits);
+                console.log('bot make space combat 2');
+                const hitsCount = calculateSpaceCombatHits({ G, ctx, playerID, prevStages });
+                const enemyId = getEnemyId(ctx.activePlayers, playerID);
+
+                console.log('hitsCount', enemyId, JSON.stringify(hitsCount));
+                let assignedHits = {};
+                const fleet = getMyFleet({G, ctx, playerID});
+                const technologies = getUnitsTechnologies([...Object.keys(fleet), 'fighter', 'mech'], race);
+                
+                let remain = hitsCount[enemyId];
+                if(remain && remain > 0){
+                    Object.keys(fleet).forEach((tag, idx) => {
+                        if(fleet[tag][idx] && fleet[tag][idx].payload && fleet[tag][idx].payload.length){//payload first
+                            fleet[tag][idx].payload.forEach((p, pidx) => {
+                                if(remain > 0 && p && p.id && p.id !== 'infantry'){
+                                    assignedHits = setSpaceCombatHit({G, units: fleet, hits: assignedHits, technologies}, {tag, idx, pidx, payloadId: p.id});
+                                    remain--;
+                                }
+                            })
+                        }
+                    });
+
+                    if(remain > 0){
+                        Object.keys(fleet).forEach((tag, idx) => {
+                            if(remain > 0 && fleet[tag][idx]){
+                                assignedHits = setSpaceCombatHit({G, units: fleet, hits: assignedHits, technologies}, {tag, idx});
+                                remain--;
+                            }
+                        });
+                    }
+                }
+                console.log('assignedHits', JSON.stringify(assignedHits));
+                ACTS_STAGES.spaceCombat_step2.moves.nextStep({G, playerID, ctx, random, events, effects: plugins.effects}, assignedHits);
+                //
             }
             else if(ctx.activePlayers[playerID] === 'spaceCombat_await'){
-                //ACTS_STAGES.strategyCard.moves.passStrategy({G, ctx, events})
+                console.log('bot make space combat await');
+                if(Object.keys(ctx.activePlayers).length === 1){
+                    console.log('end combat');
+                    ACTS_STAGES.spaceCombat_await.moves.endBattle({G, ctx, events, playerID, effects: plugins.effects})
+                }
             }
 
 
